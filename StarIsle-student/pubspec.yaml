@@ -1,0 +1,71 @@
+name: starisle_student_app
+description: 星屿 StarIsle - 青少年心理健康AI陪伴应用
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 状态管理
+  flutter_riverpod: ^2.4.9
+  
+  # 网络通信
+  http: ^1.1.0
+  web_socket_channel: ^2.4.0
+  
+  # 加密
+  cryptography: ^2.5.4
+  
+  # 本地存储
+  shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.0.0
+  
+  # 音频播放
+  just_audio: ^0.9.36
+  audio_session: ^0.1.18
+  
+  # 动画
+  lottie: ^2.7.0
+  rive: ^0.12.4
+  
+  # 图表
+  fl_chart: ^0.66.0
+  
+  # 图片处理
+  cached_network_image: ^3.3.0
+  
+  # UI组件
+  flutter_animate: ^4.3.0
+  shimmer: ^3.0.0
+  
+  # 国际化
+  intl: ^0.18.1
+  
+  # 工具类
+  uuid: ^4.2.2
+  url_launcher: ^6.2.2
+  permission_handler: ^11.1.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.1
+  mockito: ^5.4.4
+  build_runner: ^2.4.8
+
+flutter:
+  uses-material-design: true
+  
+  assets:
+    - assets/images/
+    - assets/audio/
+    - assets/animations/
+    - assets/icons/
+  
+  fonts:
+    - family: StarIsleIcons
+      fonts:
+        - asset: assets/fonts/StarIsleIcons.ttf

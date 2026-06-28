@@ -1,0 +1,80 @@
+# Flutter gitignore
+
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# VS Code related
+.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+**/test_coverage
+**/test/.test_coverage.dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Web related
+lib/generated_plugin_registrant.dart
+
+# Platform specific
+/android/
+/ios/
+/macos/
+/linux/
+/windows/
+/web/
+
+# Exceptions
+!android/app/src/main/java/io/flutter/plugins/GeneratedPluginRegistrant.java
+!ios/Flutter/Generated.xcconfig
+!macos/Flutter/GeneratedPluginRegistrant.swift
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Secrets
+*.pem
+*.key
+credentials.json
+
+# Coverage
+coverage/
+*.lcov
+
+# Test results
+test-results/

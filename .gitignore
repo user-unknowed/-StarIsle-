@@ -1,0 +1,132 @@
+# Git忽略文件配置
+
+## Flutter前端
+frontend/.dart_tool/
+frontend/.flutter-plugins
+frontend/.flutter-plugins-dependencies
+frontend/.packages
+frontend/.pub-cache/
+frontend/.pub/
+frontend/build/
+frontend/.metadata
+frontend/.idea/
+frontend/.vscode/
+frontend/*.iml
+frontend/android/.gradle/
+frontend/android/app/build/
+frontend/android/local.properties
+frontend/ios/.symlinks/
+frontend/ios/Pods/
+frontend/ios/Podfile.lock
+frontend/ios/.generated/
+frontend/ios/Flutter/App.framework
+frontend/ios/Flutter/Flutter.framework
+frontend/ios/Flutter/Generated.xcconfig
+
+## Go后端
+backend/*.exe
+backend/*.exe~
+backend/*.dll
+backend/*.so
+backend/*.dylib
+backend/*.test
+backend/*.out
+backend/go.sum
+backend/vendor/
+backend/.idea/
+backend/.vscode/
+backend/*.iml
+
+## Python AI引擎
+ai-engine/__pycache__/
+ai-engine/*.py[cod]
+ai-engine/*$py.class
+ai-engine/.Python
+ai-engine/build/
+ai-engine/develop-eggs/
+ai-engine/dist/
+ai-engine/downloads/
+ai-engine/eggs/
+ai-engine/.eggs/
+ai-engine/lib/
+ai-engine/lib64/
+ai-engine/parts/
+ai-engine/sdist/
+ai-engine/var/
+ai-engine/wheels/
+ai-engine/*.egg-info/
+ai-engine/.installed.cfg
+ai-engine/*.egg
+ai-engine/.env
+ai-engine/venv/
+ai-engine/ENV/
+ai-engine/.idea/
+ai-engine/.vscode/
+ai-engine/*.iml
+
+## 数据库
+database/*.sql.backup
+database/*.dump
+database/data/
+
+## 部署配置
+deployment/nginx/ssl/*.key
+deployment/nginx/ssl/*.crt
+deployment/kubernetes/secrets/*.yaml
+
+## 环境变量
+.env
+.env.local
+.env.production
+
+## 日志文件
+*.log
+logs/
+*.pid
+*.seed
+*.pid.lock
+
+## 操作系统
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+## 编辑器
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+## 临时文件
+tmp/
+temp/
+*.tmp
+*.bak
+*.cache
+
+## 文档
+docs/*.pdf.backup
+docs/*.md.backup
+
+## 测试覆盖率
+coverage/
+.coverage
+htmlcov/
+
+## 依赖包
+node_modules/
+bower_components/
+
+## 静态资源（不需要版本控制的大型文件）
+assets/audio/*.mp3.backup
+assets/images/*.jpg.backup
+assets/animations/*.json.backup

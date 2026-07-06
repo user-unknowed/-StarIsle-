@@ -57,54 +57,23 @@
 ## 项目目录结构
 
 ```
--StarIsle-/\n├── StarIsle-student/         # 学生端应用
-│   ├── lib/
-│   │   ├── main.dart
-│   │   ├── src/
-│   │   ├── screens/
-│   │   ├── providers/        # 状态管理
-│   │   └── services/         # 服务层
-│   │       ├── ai_service.dart
-│   │       └── memory_storage/
-│   │           ├── memory_storage_service.dart
-│   │           ├── maintenance_scheduler.dart
-│   │           └── storage_monitor.dart
-│   ├── assets/
-│   └── pubspec.yaml
-├── StarIsle-teacher/         # 教师端应用
-│   ├── lib/
-│   │   ├── main.dart
-│   │   ├── src/
-│   │   ├── screens/
-│   │   ├── providers/
-│   │   ├── models/
-│   │   └── services/
-│   │       ├── ai_service.dart
-│   │       └── memory_storage/
-│   ├── assets/
-│   └── pubspec.yaml
-├── ai-engine/                # AI对话引擎
-│   ├── app/
-│   ├── models/
-│   ├── prompts/
-│   └── services/
-├── backend/                  # 后端微服务
-│   ├── cmd/
-│   ├── internal/
-│   └── go.mod
-├── database/                 # 数据库配置
-│   └── postgres/
-├── deployment/               # 部署配置
-│   ├── docker-compose.yml
-│   ├── kubernetes/
-│   └── nginx/
-├── docs/                     # 技术文档
-│   ├── API文档.md
-│   ├── 学生端/
-│   ├── 教师端/
-│   └── 通用文档/
-├── testing/                  # 测试配置
-└── README.md
+-StarIsle-/
+├── 学生端/                    # 学生用户下载内容
+│   ├── StarIsle-student/      # 学生端Flutter应用
+│   ├── docs/                  # 学生端产品文档
+│   └── app_docs/              # 学生端补充文档
+├── 教师端/                    # 教师用户下载内容
+│   ├── StarIsle-teacher/      # 教师端Flutter应用
+│   ├── docs/                  # 教师端产品文档
+│   └── app_docs/              # 教师端补充文档
+├── 后台/                      # 管理员/运维人员下载内容
+│   ├── ai-engine/             # AI对话引擎
+│   ├── backend/               # 后端微服务
+│   ├── database/              # 数据库配置
+│   ├── deployment/            # 部署配置
+│   ├── docs/                  # 技术文档
+│   └── testing/               # 测试配置
+└── README.md                  # 项目总览说明
 ```
 
 ## 快速开始
@@ -122,27 +91,27 @@
 
 #### 学生端
 ```bash
-cd StarIsle-student
+cd 学生端/StarIsle-student
 flutter pub get
 flutter run
 ```
 
 #### 教师端
 ```bash
-cd StarIsle-teacher
+cd 教师端/StarIsle-teacher
 flutter pub get
 flutter run
 ```
 
 #### 后端启动
 ```bash
-cd backend
+cd 后台/deployment
 docker-compose up -d
 ```
 
 #### AI引擎启动
 ```bash
-cd ai-engine
+cd 后台/ai-engine
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt

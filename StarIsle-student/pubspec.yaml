@@ -48,6 +48,16 @@ dependencies:
   uuid: ^4.2.2
   url_launcher: ^6.2.2
   permission_handler: ^11.1.0
+  
+  # 本地数据库（sqflite_sqlcipher替代sqflite，提供加密支持）
+  sqflite_sqlcipher: ^2.3.3
+  path_provider: ^2.1.2
+  
+  # 后台任务调度
+  workmanager: ^0.5.1
+  
+  # 本地通知
+  flutter_local_notifications: ^17.2.0
 
 dev_dependencies:
   flutter_test:

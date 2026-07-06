@@ -49,7 +49,11 @@ class MemoryStorageService {
       path,
       version: 1,
       onConfigure: (db) async {
+<<<<<<< HEAD
         await db.execute('PRAGMA key = "key"');
+=======
+        await db.execute('PRAGMA key = "$key"');
+>>>>>>> e70e7a7 (feat: 实现本地记忆存储管理系统)
         await db.execute('PRAGMA cipher_compatibility = 3');
       },
       onCreate: (db, version) async {

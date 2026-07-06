@@ -71,9 +71,15 @@ class StorageMonitor {
   }
 
   String formatSize(int bytes) {
+<<<<<<< HEAD
     if (bytes < 1024) return 'bytes B';
     if (bytes < 1024 * 1024) return '{(bytes / 1024).toStringAsFixed(2)} KB';
     return '{(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+=======
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(2)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(2)} MB';
+>>>>>>> e70e7a7 (feat: 实现本地记忆存储管理系统)
   }
 }
 
@@ -125,9 +131,15 @@ class MaintenanceRecord {
   String get duration {
     if (completedAt == null) return '进行中';
     Duration diff = completedAt!.difference(startedAt);
+<<<<<<< HEAD
     if (diff.inSeconds < 60) return '{diff.inSeconds}秒';
     if (diff.inMinutes < 60) return '{diff.inMinutes}分钟';
     return '{diff.inHours}小时';
+=======
+    if (diff.inSeconds < 60) return '${diff.inSeconds}秒';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}分钟';
+    return '${diff.inHours}小时';
+>>>>>>> e70e7a7 (feat: 实现本地记忆存储管理系统)
   }
 
   String get actionTypeLabel {

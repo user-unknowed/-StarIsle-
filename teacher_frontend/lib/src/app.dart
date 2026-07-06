@@ -5,7 +5,6 @@ import '../screens/workbench_screen.dart';
 import '../screens/students_screen.dart';
 import '../screens/chat_screen.dart';
 import '../screens/profile_screen.dart';
-import '../screens/ai_tools_screen.dart';
 
 class StarIsleTeacherApp extends ConsumerWidget {
   StarIsleTeacherApp({super.key});

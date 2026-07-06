@@ -5,7 +5,6 @@ import '../screens/home_screen.dart';
 import '../screens/chat_screen.dart';
 import '../screens/explore_screen.dart';
 import '../screens/profile_screen.dart';
-import '../screens/ai_tools_screen.dart';
 import '../theme/app_theme.dart';
 
 class StarIsleApp extends ConsumerWidget {
@@ -26,7 +25,6 @@ class StarIsleApp extends ConsumerWidget {
         '/chat': (context) => const ChatScreen(),
         '/explore': (context) => const ExploreScreen(),
         '/profile': (context) => const ProfileScreen(),
-        '/ai-tools': (context) => const AiToolsScreen(),
       },
     );
   }

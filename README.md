@@ -60,19 +60,50 @@
 -StarIsle-/
 ├── 学生端/                    # 学生用户下载内容
 │   ├── StarIsle-student/      # 学生端Flutter应用
+│   │   ├── lib/
+│   │   ├── assets/
+│   │   └── pubspec.yaml
 │   ├── docs/                  # 学生端产品文档
+│   │   ├── 星屿-StarIsle-MVP-PRD.md
+│   │   ├── 星屿-StarIsle-产品设计方案.md
+│   │   └── 星屿-小星虚拟形象设计文档.md
 │   └── app_docs/              # 学生端补充文档
+│       ├── 星屿-StarIsle-MVP-评审材料.md
+│       └── 青少年心理健康APP用户需求分析报告.md
 ├── 教师端/                    # 教师用户下载内容
 │   ├── StarIsle-teacher/      # 教师端Flutter应用
+│   │   ├── lib/
+│   │   ├── assets/
+│   │   └── pubspec.yaml
 │   ├── docs/                  # 教师端产品文档
+│   │   └── 星屿-StarIsle-教师端APP设计文档.md
 │   └── app_docs/              # 教师端补充文档
 ├── 后台/                      # 管理员/运维人员下载内容
 │   ├── ai-engine/             # AI对话引擎
+│   │   ├── app/
+│   │   ├── models/
+│   │   ├── prompts/
+│   │   └── services/
 │   ├── backend/               # 后端微服务
+│   │   ├── cmd/
+│   │   ├── internal/
+│   │   └── go.mod
 │   ├── database/              # 数据库配置
+│   │   └── postgres/
 │   ├── deployment/            # 部署配置
+│   │   ├── docker-compose.yml
+│   │   ├── kubernetes/
+│   │   └── nginx/
 │   ├── docs/                  # 技术文档
-│   └── testing/               # 测试配置
+│   │   ├── API文档.md
+│   │   ├── 开发规范.md
+│   │   ├── 部署指南.md
+│   │   └── 验证报告.md
+│   ├── testing/               # 测试配置
+│   ├── .env.template          # 环境变量模板
+│   ├── .gitignore             # Git忽略配置
+│   ├── CHANGELOG.md           # 变更日志
+│   └── 星屿-StarIsle-MVP-评审材料.md
 └── README.md                  # 项目总览说明
 ```
 

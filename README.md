@@ -37,8 +37,8 @@
 - **实时通信**: WebSocket
 
 ### 后端 (Backend)
-- **API服务**: Go (Gin/Fiber)
-- **AI服务**: Python (FastAPI)
+- **API服务**: Java (Spring Boot 3.2)
+- **AI服务**: Java (Spring Boot集成)
 - **数据库**: PostgreSQL + MongoDB + Redis
 - **消息队列**: Kafka/RabbitMQ
 
@@ -79,12 +79,12 @@
 │   │   └── 星屿-StarIsle-教师端APP设计文档.md
 │   └── app_docs/              # 教师端补充文档
 ├── 后台/                      # 管理员/运维人员下载内容
-│   ├── ai-engine/             # AI对话引擎
+│   ├── ai-engine/             # AI对话引擎(Python)
 │   │   ├── app/
 │   │   ├── models/
 │   │   ├── prompts/
 │   │   └── services/
-│   ├── backend/               # 后端微服务
+│   ├── backend/               # 后端微服务(Go)
 │   │   ├── cmd/
 │   │   ├── internal/
 │   │   └── go.mod
@@ -104,6 +104,16 @@
 │   ├── .gitignore             # Git忽略配置
 │   ├── CHANGELOG.md           # 变更日志
 │   └── 星屿-StarIsle-MVP-评审材料.md
+├── backend-java/              # Java后端服务(Spring Boot)
+│   ├── src/main/java/com/starisle/
+│   │   ├── config/            # 配置类
+│   │   ├── controller/        # REST控制器
+│   │   ├── service/           # 业务服务层
+│   │   ├── utils/             # 工具类
+│   │   └── websocket/         # WebSocket处理
+│   ├── src/main/resources/
+│   │   └── application.yml    # 应用配置
+│   └── pom.xml                # Maven配置
 └── README.md                  # 项目总览说明
 ```
 
@@ -112,8 +122,8 @@
 ### 环境要求
 
 - Flutter SDK >= 3.0
-- Go >= 1.21
-- Python >= 3.10
+- Java JDK >= 21
+- Maven >= 3.8
 - PostgreSQL >= 14
 - MongoDB >= 6.0
 - Redis >= 7.0
@@ -138,6 +148,13 @@ flutter run
 ```bash
 cd 后台/deployment
 docker-compose up -d
+```
+
+#### Java后端服务启动
+```bash
+cd backend-java
+mvn clean compile
+mvn spring-boot:run
 ```
 
 #### AI引擎启动
@@ -177,8 +194,8 @@ python app/main.py
 ## 开发团队
 
 - 产品设计: 产品团队
-- 前端开发: Flutter开发团队
-- 后端开发: Go/Java开发团队
+- 前端开发: Flutter开发团队 (Dart)
+- 后端开发: Java开发团队 (Spring Boot)
 - AI研发: 大模型算法团队
 - 测试: QA团队
 
@@ -186,6 +203,7 @@ python app/main.py
 
 - **v1.0 MVP** (2026-06): 核心功能验证
 - **v1.1** (2026-07): 本地记忆存储管理实现、AI服务集成
+- **v1.2** (2026-07): 后端服务迁移至Java (Spring Boot)、编译路径重构
 
 ## 联系方式
 

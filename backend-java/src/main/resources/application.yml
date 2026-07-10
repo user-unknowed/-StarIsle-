@@ -1,0 +1,52 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: starisle-backend
+  
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/starisle}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  
+  data:
+    mongodb:
+      uri: ${MONGODB_URL:mongodb://localhost:27017/starisle}
+  
+  redis:
+    host: ${REDIS_HOST:localhost}
+    port: ${REDIS_PORT:6379}
+  
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+starisle:
+  jwt:
+    secret: ${JWT_SECRET:your-secret-key}
+    expiration: 86400000
+  
+  ai-service:
+    url: ${AI_SERVICE_URL:http://localhost:8000}
+  
+  encryption:
+    key: ${ENCRYPTION_KEY:your-encryption-key}
+  
+  rate-limit:
+    rps: ${RATE_LIMIT_RPS:100}
+
+logging:
+  level:
+    com.starisle: DEBUG
+    org.springframework: INFO

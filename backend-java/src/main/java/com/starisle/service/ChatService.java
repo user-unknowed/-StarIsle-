@@ -12,10 +12,10 @@ import java.util.Map;
 @Service
 public class ChatService {
     
-    private final Star宝SystemPrompt systemPrompt;
+    private final StarIsleSystemPrompt systemPrompt;
     private final EncryptionUtil encryptionUtil;
     
-    public ChatService(Star宝SystemPrompt systemPrompt, EncryptionUtil encryptionUtil) {
+    public ChatService(StarIsleSystemPrompt systemPrompt, EncryptionUtil encryptionUtil) {
         this.systemPrompt = systemPrompt;
         this.encryptionUtil = encryptionUtil;
     }

@@ -4,29 +4,43 @@ server:
 spring:
   application:
     name: starisle-backend
-  
+
+  # H2 Database for development (no external PostgreSQL needed)
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/starisle}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:password}
-    driver-class-name: org.postgresql.Driver
-  
+    url: ${DATABASE_URL:jdbc:h2:mem:starisle;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
+    username: ${DATABASE_USERNAME:sa}
+    password: ${DATABASE_PASSWORD:}
+    driver-class-name: ${DATABASE_DRIVER:org.h2.Driver}
+
   jpa:
     hibernate:
       ddl-auto: update
     show-sql: true
     properties:
       hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-  
+        dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
+        format_sql: true
+
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
   data:
     mongodb:
       uri: ${MONGODB_URL:mongodb://localhost:27017/starisle}
-  
-  redis:
-    host: ${REDIS_HOST:localhost}
-    port: ${REDIS_PORT:6379}
-  
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+
+  # Exclude MongoDB and Redis auto-configuration for development
+  # Remove these exclusions in production when services are available
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.mongo.MongoDataAutoConfiguration
+      - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
+
   servlet:
     multipart:
       max-file-size: 10MB
@@ -34,15 +48,15 @@ spring:
 
 starisle:
   jwt:
-    secret: ${JWT_SECRET:your-secret-key}
+    secret: ${JWT_SECRET:starisle-jwt-secret-key-2026-very-secure}
     expiration: 86400000
-  
+
   ai-service:
     url: ${AI_SERVICE_URL:http://localhost:8000}
-  
+
   encryption:
-    key: ${ENCRYPTION_KEY:your-encryption-key}
-  
+    key: ${ENCRYPTION_KEY:starisle-encryption-key-2026-very-secure}
+
   rate-limit:
     rps: ${RATE_LIMIT_RPS:100}
 
@@ -50,3 +64,4 @@ logging:
   level:
     com.starisle: DEBUG
     org.springframework: INFO
+    org.hibernate.SQL: DEBUG

@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import java.util.Map;
 
 @Component
-public class Star宝SystemPrompt {
+public class StarIsleSystemPrompt {
     
     public String generatePrompt(Map<String, Object> userProfile) {
         StringBuilder basePrompt = new StringBuilder();

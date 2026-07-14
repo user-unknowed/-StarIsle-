@@ -34,7 +34,7 @@ public class RiskDetectionService {
     
     public String detectRisk(String userId, String content) {
         KeywordDetectionResult keywordRisk = detectKeywords(content);
-        SemanticAnalysisResult semanticRisk = semanticAnalyzer.analyze(content);
+        SemanticAnalyzer.SemanticAnalysisResult semanticRisk = semanticAnalyzer.analyze(content);
         
         return calculateFinalRisk(keywordRisk, semanticRisk);
     }
@@ -64,7 +64,7 @@ public class RiskDetectionService {
         }
     }
     
-    private String calculateFinalRisk(KeywordDetectionResult keywordRisk, SemanticAnalysisResult semanticRisk) {
+    private String calculateFinalRisk(KeywordDetectionResult keywordRisk, SemanticAnalyzer.SemanticAnalysisResult semanticRisk) {
         if ("red".equals(keywordRisk.getLevel())) {
             return "red";
         }
@@ -81,7 +81,7 @@ public class RiskDetectionService {
     
     public RiskDetectionDetails getDetectionDetails(String content) {
         KeywordDetectionResult keywordResult = detectKeywords(content);
-        SemanticAnalysisResult semanticResult = semanticAnalyzer.analyze(content);
+        SemanticAnalyzer.SemanticAnalysisResult semanticResult = semanticAnalyzer.analyze(content);
         
         return new RiskDetectionDetails(
             keywordResult.getKeywords(),

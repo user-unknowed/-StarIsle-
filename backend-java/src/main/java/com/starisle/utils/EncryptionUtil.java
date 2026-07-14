@@ -20,10 +20,11 @@ public class EncryptionUtil {
     private final String encryptionKey;
     
     public EncryptionUtil() {
-        this.encryptionKey = System.getenv("ENCRYPTION_KEY");
-        if (this.encryptionKey == null || this.encryptionKey.isEmpty()) {
-            this.encryptionKey = generateKey();
+        String key = System.getenv("ENCRYPTION_KEY");
+        if (key == null || key.isEmpty()) {
+            key = generateKey();
         }
+        this.encryptionKey = key;
     }
     
     private String generateKey() {

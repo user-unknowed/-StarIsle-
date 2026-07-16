@@ -1,7 +1,9 @@
 package com.starisle.controller;
 
+import com.starisle.dto.ApiResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -10,12 +12,13 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/content")
 @RequiredArgsConstructor
+@Validated
 public class ContentController {
-    
+
     @GetMapping("/meditations")
-    public ResponseEntity<Map<String, Object>> getMeditationList(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMeditationList(
             @RequestParam(defaultValue = "all") String category) {
-        return ResponseEntity.ok(Map.of(
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
             "category", category,
             "meditations", List.of(
                 Map.of(
@@ -43,24 +46,24 @@ public class ContentController {
                     "description", "安抚情绪风暴，找回内心平静"
                 )
             )
-        ));
+        )));
     }
-    
+
     @GetMapping("/meditation/{id}")
-    public ResponseEntity<Map<String, Object>> getMeditationDetail(@PathVariable String id) {
-        return ResponseEntity.ok(Map.of(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMeditationDetail(@PathVariable String id) {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
             "id", id,
             "title", "考前放松",
             "duration", 5,
             "audio_url", "https://cdn.example.com/meditation1.mp3",
             "background_image", "https://cdn.example.com/background1.jpg",
             "script", "闭上眼睛，深呼吸..."
-        ));
+        )));
     }
-    
+
     @GetMapping("/breathing/{type}")
-    public ResponseEntity<Map<String, Object>> getBreathingExercise(@PathVariable String type) {
-        return ResponseEntity.ok(Map.of(
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getBreathingExercise(@PathVariable String type) {
+        return ResponseEntity.ok(ApiResponse.success(Map.of(
             "type", type,
             "steps", List.of(
                 Map.of("name", "吸气", "duration", 4, "instruction", "慢慢吸气"),
@@ -69,6 +72,6 @@ public class ContentController {
             ),
             "recommended_duration", 3,
             "animation_url", "https://cdn.example.com/breathing_animation.json"
-        ));
+        )));
     }
 }

@@ -2,6 +2,7 @@ package com.starisle.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -18,6 +19,7 @@ import java.util.List;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(prePostEnabled = true)
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
@@ -31,28 +33,29 @@ public class SecurityConfig {
         http
             .csrf(csrf -> csrf.disable())
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()))
+            .headers(headers -> headers
+                .frameOptions(frame -> frame.disable())
+                .contentTypeOptions(contentType -> contentType.disable())
+                .xssProtection(xss -> xss.disable())
+            )
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health").permitAll()
-                .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/api/v1/users/register").permitAll()
-                .requestMatchers("/api/v1/chat/topics").permitAll()
+                .requestMatchers("/api/v1/users/login").permitAll()
+                .requestMatchers("/api/v1/parents/register").permitAll()
+                .requestMatchers("/api/v1/parents/login").permitAll()
                 .requestMatchers("/api/v1/risk/crisis/hotlines").permitAll()
                 .requestMatchers("/api/v1/content/**").permitAll()
+                .requestMatchers("/api/v1/chat/topics").permitAll()
                 .requestMatchers("/api/v1/assessment/questions/**").permitAll()
                 .requestMatchers("/ws/**").permitAll()
-                .requestMatchers("/api/v1/mood/checkin").permitAll()
-                .requestMatchers("/api/v1/mood/history/**").permitAll()
-                .requestMatchers("/api/v1/mood/chart/**").permitAll()
-                .requestMatchers("/api/v1/chat/message").permitAll()
-                .requestMatchers("/api/v1/chat/history/**").permitAll()
-                .requestMatchers("/api/v1/risk/detect").permitAll()
-                .requestMatchers("/api/v1/risk/level/**").permitAll()
-                .requestMatchers("/api/v1/risk/crisis/report").permitAll()
-                .requestMatchers("/api/v1/assessment/submit").permitAll()
-                .requestMatchers("/api/v1/assessment/result/**").permitAll()
-                .requestMatchers("/api/v1/users/**").permitAll()
+                .requestMatchers("/api/v1/parents/**").hasRole("PARENT")
+                .requestMatchers("/api/v1/users/**").hasAnyRole("STUDENT", "TEACHER", "PARENT")
+                .requestMatchers("/api/v1/mood/**").hasAnyRole("STUDENT", "TEACHER", "PARENT")
+                .requestMatchers("/api/v1/chat/**").hasAnyRole("STUDENT", "TEACHER", "PARENT")
+                .requestMatchers("/api/v1/risk/**").hasAnyRole("STUDENT", "TEACHER", "PARENT")
+                .requestMatchers("/api/v1/assessment/**").hasAnyRole("STUDENT", "TEACHER")
                 .anyRequest().authenticated()
             )
             .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
@@ -62,15 +65,27 @@ public class SecurityConfig {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        return new BCryptPasswordEncoder(12);
     }
 
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOriginPatterns(List.of("*"));
+        configuration.setAllowedOriginPatterns(List.of(
+            "http://localhost:*",
+            "http://127.0.0.1:*",
+            "https://*.starisle.com",
+            "https://*.starisle.cn"
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("*"));
+        configuration.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "Accept",
+            "Origin",
+            "X-Requested-With"
+        ));
+        configuration.setExposedHeaders(List.of("Authorization", "X-Total-Count"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

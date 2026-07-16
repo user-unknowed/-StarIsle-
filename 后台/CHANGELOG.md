@@ -1,5 +1,52 @@
 # 星屿项目变更日志
 
+## [v1.2.0] - 2026-07-16 家长端API安全漏洞修复与接口规范统一
+
+### 安全漏洞修复
+
+| 漏洞类型 | 修复内容 | 影响范围 | 严重程度 |
+| :--- | :--- | :--- | :--- |
+| 身份验证绕过 | 修复SecurityConfig中所有端点permitAll的安全漏洞，实现基于角色的访问控制（RBAC） | 全部API端点 | 高 |
+| 授权缺失 | 为所有Controller添加用户身份校验，防止IDOR（用户A访问用户B数据） | UserController、MoodController、ChatController、RiskController | 高 |
+| 输入验证不足 | 添加Jakarta Validation注解（@NotBlank、@Size、@Pattern、@Min、@Max） | 所有请求DTO | 中 |
+| CORS配置不当 | 限制CORS允许源为已知域名，禁止通配符 | SecurityConfig | 中 |
+| 敏感信息泄露 | 统一API响应格式，隐藏敏感字段，统一错误处理 | 所有控制器 | 中 |
+
+### 新增功能
+
+- ✅ 家长端完整后端API层（注册、登录、孩子绑定、应急预案）
+- ✅ 统一API响应包装器 `ApiResponse<T>`
+- ✅ 全局异常处理器 `GlobalExceptionHandler`
+- ✅ 家长角色认证与授权机制
+- ✅ 应急预案与紧急联系人管理
+
+### 技术改进
+
+- **Entity层**: 新增 `ParentUser`、`ParentStudentBinding`、`EmergencyAlert`、`EmergencyResource`
+- **Repository层**: 新增4个Repository接口及查询方法
+- **Service层**: 新增 `ParentService` 业务逻辑层
+- **DTO层**: 统一请求/响应数据传输对象，添加验证注解
+- **Controller层**: 新增 `ParentController`，重构所有现有控制器
+
+### API规范统一
+
+- 统一响应格式：`{"code": 200, "message": "success", "data": {...}, "timestamp": "..."}`
+- 统一状态码：200(成功)、201(创建)、400(参数错误)、401(未认证)、403(未授权)、404(不存在)、500(服务器错误)
+- 统一错误处理：全局异常捕获，参数校验失败返回字段级错误信息
+
+### 提交记录
+
+| 提交SHA | 提交信息 |
+| :--- | :--- |
+| cd3b05e | security: 家长端API安全漏洞检测与修复，统一接口规范梳理 |
+| 88fbd57 | security: 上传Repository和Service层代码 |
+| 241e5c3 | security: 上传DTO和Controller层代码 |
+| 2b5e1da | security: 上传ParentController和安全配置文件 |
+| 01ef7d4 | security: 上传更新后的其他控制器文件 |
+| d9d8852 | security: 上传ChatController、RiskController、ContentController和Repository更新 |
+
+---
+
 ## [v1.0.0] - 2026-06-27 MVP版本发布
 
 ### 新增功能

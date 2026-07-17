@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星屿 StarIsle — 项目答辩报告</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css" id="theme">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+  /* ===== Design System ===== */
+  :root {
+    /* Primary palette */
+    --c-primary: #15375a;
+    --c-primary-light: #2b6cb0;
+    --c-secondary: #2c7fd0;
+    --c-accent: #1a5490;
+    --c-text: #1e293b;
+    --c-text-light: #64748b;
+    --c-text-muted: #94a3b8;
+    --c-bg: #f7f9fc;
+    --c-surface: #eef2f7;
+    --c-card: #ffffff;
+    --c-card-alt: #f8fafc;
+    --c-border: #d8e0ea;
+    --c-border-light: #e8edf3;
+    --c-orange: #c2700f;
+    --c-orange-bg: #fef8ec;
+    --c-green: #15803d;
+    --c-green-bg: #f0fdf4;
+    --c-red: #c53030;
+    --c-red-bg: #fef2f2;
+    --c-purple: #6b3fa0;
+    --c-purple-bg: #faf5ff;
+    --c-teal: #0d7c7c;
+    --c-teal-bg: #f0fdfa;
+
+    /* Spacing scale */
+    --sp-1: 4px;
+    --sp-2: 8px;
+    --sp-3: 12px;
+    --sp-4: 16px;
+    --sp-5: 20px;
+    --sp-6: 24px;
+    --sp-8: 32px;
+  }
+
+  /* ===== Base Typography ===== */
+  .reveal {
+    font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    font-size: 27px;
+    line-height: 1.55;
+    color: var(--c-text);
+  }
+  .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+    font-family: 'Noto Sans SC', 'Microsoft YaHei', sans-serif;
+    font-weight: 700;
+    color: var(--c-primary);
+    text-transform: none;
+    line-height: 1.3;
+  }
+  .reveal .slides section {
+    text-align: left;
+    box-sizing: border-box;
+  }
+
+  /* ===== Slide Header ===== */
+  .slide-header {
+    border-left: 5px solid var(--c-secondary);
+    padding-left: 16px;
+    margin-bottom: 22px;
+  }
+  .slide-header h2 {
+    font-size: 0.82em !important;
+    margin: 2px 0 0 0;
+    letter-spacing: 0.5px;
+  }
+  .slide-header .subtitle {
+    font-size: 0.32em;
+    color: var(--c-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    font-weight: 500;
+  }
+
+  /* ===== Cards ===== */
+  .card {
+    background: var(--c-card);
+    border: 1px solid var(--c-border);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin: 8px 0;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+  }
+  .card-title {
+    font-weight: 700;
+    color: var(--c-primary);
+    font-size: 0.58em;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card ul {
+    margin: 0;
+    padding-left: 18px;
+  }
+  .card li {
+    font-size: 0.46em;
+    line-height: 1.75;
+    color: var(--c-text);
+  }
+  .card li strong { color: var(--c-primary); }
+
+  /* ===== Layout Utilities ===== */
+  .two-col { display: flex; gap: 18px; }
+  .two-col > div { flex: 1; }
+  .three-col { display: flex; gap: 14px; }
+  .three-col > div { flex: 1; }
+  .section-label {
+    font-weight: 700;
+    color: var(--c-primary);
+    font-size: 0.56em;
+    margin: 14px 0 6px 0;
+    display: block;
+  }
+  .desc-list {
+    font-size: 0.46em;
+    line-height: 1.7;
+    margin: 0;
+    padding-left: 18px;
+  }
+  .desc-list li { margin-bottom: 3px; }
+
+  /* ===== Tables ===== */
+  .styled-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.44em;
+  }
+  .styled-table th {
+    background: var(--c-primary);
+    color: white;
+    padding: 9px 10px;
+    text-align: center;
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+  .styled-table td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--c-border-light);
+    text-align: center;
+    line-height: 1.5;
+  }
+  .styled-table td:first-child {
+    font-weight: 700;
+    color: var(--c-primary);
+  }
+  .styled-table tr:nth-child(even) td { background: var(--c-card-alt); }
+  .styled-table tr:hover td { background: var(--c-surface); }
+
+  /* ===== Tags / Badges ===== */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 4px;
+    font-size: 0.4em;
+    font-weight: 500;
+    color: white;
+    margin: 2px;
+    letter-spacing: 0.2px;
+  }
+  .tag-blue { background: var(--c-secondary); }
+  .tag-orange { background: var(--c-orange); }
+  .tag-green { background: var(--c-green); }
+  .tag-red { background: var(--c-red); }
+  .tag-purple { background: var(--c-purple); }
+  .tag-teal { background: var(--c-teal); }
+
+  /* ===== Flow Steps ===== */
+  .flow-step {
+    display: inline-block;
+    padding: 9px 16px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.46em;
+    margin: 0 3px;
+  }
+  .flow-arrow {
+    display: inline-block;
+    color: var(--c-text-muted);
+    font-size: 0.55em;
+    margin: 0 1px;
+  }
+
+  /* ===== Number Circle ===== */
+  .num-circle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: var(--c-secondary);
+    color: white;
+    font-weight: 700;
+    font-size: 0.48em;
+    margin-right: 12px;
+    vertical-align: middle;
+    flex-shrink: 0;
+  }
+
+  /* ===== Footer ===== */
+  .footer-info {
+    position: absolute;
+    bottom: 12px;
+    right: 24px;
+    font-size: 0.28em;
+    color: var(--c-text-muted);
+  }
+
+  /* ===== Highlights ===== */
+  .highlight { color: var(--c-secondary); font-weight: 700; }
+  .highlight-orange { color: var(--c-orange); font-weight: 700; }
+
+  /* ===== Feature List ===== */
+  .feature-list { list-style: none; padding: 0; margin: 0; }
+  .feature-list li {
+    padding: 4px 0;
+    font-size: 0.46em;
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+  }
+  .feature-list li::before {
+    content: "\2713";
+    color: var(--c-green);
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  /* ===== Timeline ===== */
+  .timeline-item {
+    display: flex;
+    align-items: flex-start;
+    margin: 10px 0;
+  }
+  .timeline-version {
+    flex-shrink: 0;
+    width: 68px;
+    text-align: center;
+    padding: 6px;
+    border-radius: 8px;
+    color: white;
+    font-weight: 700;
+    font-size: 0.5em;
+    margin-right: 16px;
+  }
+  .timeline-content { flex: 1; }
+  .timeline-content .title {
+    font-weight: 700;
+    color: var(--c-primary);
+    font-size: 0.54em;
+  }
+  .timeline-content .title .date {
+    color: var(--c-text-muted);
+    font-weight: 400;
+    font-size: 0.82em;
+    margin-left: 6px;
+  }
+  .timeline-content .desc {
+    color: var(--c-text-light);
+    font-size: 0.44em;
+    margin-top: 2px;
+  }
+
+  /* ===== Controller Tags ===== */
+  .controller-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 12px;
+    font-size: 0.4em;
+    margin-top: 8px;
+    line-height: 2;
+  }
+  .controller-grid .ctrl-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* ===== Cover Slide ===== */
+  .cover-slide {
+    background: linear-gradient(135deg, #15375a 0%, #2b6cb0 100%) !important;
+    color: white !important;
+    text-align: center !important;
+  }
+  .cover-slide h1 { color: white !important; font-size: 1.9em !important; letter-spacing: 2px; }
+  .cover-slide h2 { color: #9dc4e8 !important; font-size: 1.1em !important; font-weight: 400 !important; }
+  .cover-slide .cover-subtitle { color: #a8c8e8; font-size: 0.68em; margin-top: 20px; }
+  .cover-slide .cover-version { color: #8099b8; font-size: 0.48em; margin-top: 8px; }
+  .cover-slide .cover-info {
+    color: #8fa8c8;
+    font-size: 0.46em;
+    margin-top: 36px;
+    line-height: 1.8;
+  }
+
+  /* ===== Story Slide ===== */
+  .story-slide {
+    background: linear-gradient(135deg, #15375a 0%, #21467a 55%, #2b6cb0 100%) !important;
+    color: #dbe4f0 !important;
+  }
+  .story-slide .slide-header { border-left-color: #5a8dc0; }
+  .story-slide .slide-header h2 { color: white !important; }
+  .story-slide .subtitle { color: #7da8d0 !important; }
+  .story-text {
+    font-size: 0.6em;
+    line-height: 2.3;
+    color: #b8c8de;
+    font-style: italic;
+  }
+  .story-text p { margin: 0; }
+  .story-highlight {
+    color: #9dc4e8;
+    font-weight: 700;
+    font-style: normal;
+  }
+  .story-conclusion {
+    font-size: 0.68em;
+    color: white;
+    font-weight: 700;
+    margin-top: 28px;
+    text-align: center;
+    letter-spacing: 1px;
+  }
+
+  /* ===== Thanks Slide ===== */
+  .thanks-slide {
+    background: linear-gradient(135deg, #15375a 0%, #2b6cb0 100%) !important;
+    color: white !important;
+    text-align: center !important;
+  }
+  .thanks-slide h1 { color: white !important; font-size: 2em !important; }
+  .thanks-slide .slogan { color: #9dc4e8; font-size: 1em; }
+  .thanks-slide .info { color: #8fa8c8; font-size: 0.52em; margin-top: 30px; line-height: 2; }
+
+  /* ===== Banner ===== */
+  .banner-primary {
+    background: var(--c-primary);
+    color: white;
+    padding: 14px 20px;
+    border-radius: 10px;
+    text-align: center;
+    margin-top: 14px;
+    box-shadow: 0 2px 8px rgba(21,55,90,0.2);
+  }
+  .banner-primary strong { font-size: 0.68em; letter-spacing: 0.5px; }
+
+  /* ===== Architecture Layer ===== */
+  .arch-layer {
+    display: flex;
+    gap: 10px;
+    margin: 7px 0;
+    align-items: stretch;
+  }
+  .arch-label {
+    width: 130px;
+    color: white;
+    padding: 11px;
+    border-radius: 8px;
+    text-align: center;
+    font-weight: 700;
+    font-size: 0.46em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .arch-content {
+    flex: 1;
+    background: var(--c-card-alt);
+    border: 1px solid var(--c-border);
+    padding: 11px 14px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 0.46em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .arch-arrow {
+    text-align: center;
+    color: var(--c-text-muted);
+    font-size: 0.5em;
+    line-height: 1;
+  }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ================================================== -->
+<!-- Slide 1: 封面                                       -->
+<!-- ================================================== -->
+<section class="cover-slide">
+  <h1>星屿 StarIsle</h1>
+  <h2>青少年心理健康 AI 陪伴应用</h2>
+  <p class="cover-subtitle">项目答辩报告</p>
+  <p class="cover-version">版本：MVP v1.3</p>
+  <p class="cover-info">
+    报告小组：CS-1组<br>
+    报告人：陈尹涛 &nbsp;|&nbsp; 学号：2540144243<br>
+    指导老师：陈文渊老师 &nbsp;|&nbsp; 2026.07
+  </p>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 2: 目录                                       -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">CONTENTS</div>
+    <h2>目录</h2>
+  </div>
+  <div style="font-size: 0.56em; line-height: 2.4;">
+    <p style="display: flex; align-items: center; margin: 6px 0;"><span class="num-circle">01</span><strong style="color: var(--c-primary);">项目概述</strong>&nbsp;&mdash;&nbsp;项目背景、目标、用户与版本历程</p>
+    <p style="display: flex; align-items: center; margin: 6px 0;"><span class="num-circle">02</span><strong style="color: var(--c-primary);">技术架构</strong>&nbsp;&mdash;&nbsp;整体架构、前后端技术栈、AI引擎、安全合规</p>
+    <p style="display: flex; align-items: center; margin: 6px 0;"><span class="num-circle">03</span><strong style="color: var(--c-primary);">核心功能展示</strong>&nbsp;&mdash;&nbsp;学生端、教师端、家长端、风险检测、API设计</p>
+    <p style="display: flex; align-items: center; margin: 6px 0;"><span class="num-circle">04</span><strong style="color: var(--c-primary);">项目亮点与难点分析</strong>&nbsp;&mdash;&nbsp;亮点总结、技术难点与解决方案、工程挑战</p>
+    <p style="display: flex; align-items: center; margin: 6px 0;"><span class="num-circle">05</span><strong style="color: var(--c-primary);">测试与部署</strong>&nbsp;&mdash;&nbsp;测试策略、部署方案、CI/CD流程</p>
+    <p style="display: flex; align-items: center; margin: 6px 0;"><span class="num-circle">06</span><strong style="color: var(--c-primary);">未来迭代规划</strong>&nbsp;&mdash;&nbsp;迭代路线图、长期愿景</p>
+  </div>
+  <div class="footer-info">2 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 3: 项目背景 — 故事                            -->
+<!-- ================================================== -->
+<section class="story-slide">
+  <div class="slide-header">
+    <div class="subtitle">PROJECT BACKGROUND</div>
+    <h2>项目背景：根本项目愿景</h2>
+  </div>
+  <div class="story-text">
+    <p>从一个故事说起......</p>
+    <p>一个热爱计算机的孩子，</p>
+    <p>曾经受到了校园欺凌，</p>
+    <p>他被欺负了但是不敢告诉老师和爸爸妈妈。</p>
+    <p>即使是转了学之后他的经历还是耿耿于怀，</p>
+    <p>于是乎，</p>
+    <p>一个小小的梦想从他的心中悄然而生：</p>
+    <p>希望像他一样的人，</p>
+    <p>被欺负了之后能够<span class="story-highlight">"说出来"</span>。</p>
+    <p>换一句话说：</p>
+    <p>让心理异常有<span class="story-highlight">"难言之隐"</span>的孩子</p>
+    <p><span class="story-highlight">"有话可说"</span></p>
+  </div>
+  <div class="story-conclusion">于是，"星屿（StarIsle）"应运而生</div>
+  <div class="footer-info" style="color: #5a7da0;">3 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 4: 项目背景                                   -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">PROJECT BACKGROUND</div>
+    <h2>项目背景</h2>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">青少年心理健康现状</div>
+      <ul>
+        <li>12-18岁群体心理问题日益突出，焦虑抑郁比例上升</li>
+        <li>专业心理咨询师资源匮乏，师生比严重不足</li>
+        <li>学生对传统心理咨询存在病耻感和抵触心理</li>
+        <li>早期情绪干预缺失，问题往往积累至危机才被发现</li>
+      </ul>
+    </div>
+    <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a;">
+      <div class="card-title" style="color: var(--c-orange);">核心痛点分析</div>
+      <ul>
+        <li>求助门槛高：面对面咨询心理压力大，预约流程复杂</li>
+        <li>隐私顾虑：担心个人信息泄露，不愿主动求助</li>
+        <li>家校信息不对称：家长/教师无法及时了解学生情绪状态</li>
+        <li>缺乏持续性支持：传统咨询受限于时间和地点</li>
+      </ul>
+    </div>
+  </div>
+  <div class="banner-primary">
+    <strong>项目定位：AI 情绪成长伙伴 &mdash;&mdash; 零压力的第一心理求助站</strong>
+  </div>
+  <p style="text-align: center; color: var(--c-secondary); font-size: 0.56em; margin-top: 10px; font-style: italic;">「你的情绪星球，永远亮着灯」</p>
+  <div class="footer-info">4 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 5: 项目目标与 MVP 指标                        -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">GOALS &amp; METRICS</div>
+    <h2>项目目标与 MVP 验证指标</h2>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">核心目标</div>
+      <ul class="desc-list">
+        <li>为学生提供 24/7 零压力的情绪支持与 AI 对话</li>
+        <li>为教师提供心理守护协同工作台与风险预警</li>
+        <li>为家长提供孩子情绪状态查看与 AI 心理咨询</li>
+        <li>实现家校共育的心理健康守护闭环</li>
+      </ul>
+    </div>
+    <div>
+      <table class="styled-table">
+        <thead><tr><th>验证指标</th><th>目标值</th></tr></thead>
+        <tbody>
+          <tr><td>7日留存率</td><td>&gt; 30%</td></tr>
+          <tr><td>30日留存率</td><td>&gt; 15%</td></tr>
+          <tr><td>日均心情打卡率</td><td>&gt; 40%</td></tr>
+          <tr><td>用户NPS（净推荐值）</td><td>&gt; 40</td></tr>
+          <tr><td>高风险热线触达率</td><td>&gt; 80%</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <div style="margin-top: 14px;">
+    <span class="section-label">验证策略说明</span>
+    <ul class="desc-list">
+      <li>采用 MVP（最小可行产品）策略，先验证核心假设再逐步扩展功能</li>
+      <li>通过留存率和活跃度指标验证产品价值，通过 NPS 验证用户满意度</li>
+      <li>高风险热线触达率确保安全底线：危机情况下能够及时触达专业资源</li>
+    </ul>
+  </div>
+  <div class="footer-info">5 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 6: 目标用户与使用场景                         -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">TARGET USERS &amp; SCENARIOS</div>
+    <h2>目标用户与使用场景</h2>
+  </div>
+  <div class="three-col">
+    <div class="card" style="border-top: 3px solid var(--c-secondary);">
+      <div style="background: var(--c-secondary); color: white; padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 0.56em;">学生端</div>
+      <p style="text-align: center; color: var(--c-text-muted); font-size: 0.4em; margin: 6px 0;">12-18岁初高中生</p>
+      <ul style="font-size: 0.42em; line-height: 1.9; padding-left: 16px;">
+        <li>匿名注册，保护隐私</li>
+        <li>日常心情打卡与记录</li>
+        <li>AI星宝24/7对话疏导</li>
+        <li>情绪测评与冥想放松</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-accent);">
+      <div style="background: var(--c-accent); color: white; padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 0.56em;">教师端</div>
+      <p style="text-align: center; color: var(--c-text-muted); font-size: 0.4em; margin: 6px 0;">班主任/心理教师</p>
+      <ul style="font-size: 0.42em; line-height: 1.9; padding-left: 16px;">
+        <li>工作台概览与风险告警</li>
+        <li>学生情绪趋势查看</li>
+        <li>症状反馈与上报处理</li>
+        <li>对话观察与介入干预</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-orange);">
+      <div style="background: var(--c-orange); color: white; padding: 8px; border-radius: 6px; text-align: center; font-weight: 700; font-size: 0.56em;">家长端（正在开发）</div>
+      <p style="text-align: center; color: var(--c-text-muted); font-size: 0.4em; margin: 6px 0;">学生家长/监护人</p>
+      <ul style="font-size: 0.42em; line-height: 1.9; padding-left: 16px;">
+        <li>孩子情绪状态查看</li>
+        <li>AI心理顾问（大星）对话</li>
+        <li>情绪趋势分析（7/30/90天）</li>
+        <li>应急预案与知识库</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top: 18px;">
+    <span class="section-label">核心使用场景流程</span>
+    <p style="text-align: center; color: var(--c-secondary); font-size: 0.56em; margin-top: 8px; font-weight: 500;">
+      日常心情打卡 &rarr; AI 对话疏导 &rarr; 风险检测预警 &rarr; 教师介入干预 &rarr; 家长协同关注
+    </p>
+  </div>
+  <div class="footer-info">6 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 7: 版本演进                                   -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">VERSION HISTORY</div>
+    <h2>版本演进历程</h2>
+  </div>
+  <div style="font-size: 0.55em;">
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-secondary);">v1.0</div>
+      <div class="timeline-content">
+        <div class="title">MVP 核心功能验证<span class="date">2026-06</span></div>
+        <div class="desc">Flutter 学生端/教师端基础功能、Go 后端 API、Python AI 引擎初版</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-secondary);">v1.1</div>
+      <div class="timeline-content">
+        <div class="title">本地存储与 AI 集成<span class="date">2026-07</span></div>
+        <div class="desc">本地记忆存储管理系统、AI 服务深度集成、数据加密存储</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-secondary);">v1.2</div>
+      <div class="timeline-content">
+        <div class="title">后端迁移至 Java<span class="date">2026-07</span></div>
+        <div class="desc">Spring Boot 3.2 重构后端、统一服务层、编译路径修复</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-orange);">v1.3</div>
+      <div class="timeline-content">
+        <div class="title">Web 前端三端实现<span class="date">2026-07</span></div>
+        <div class="desc">React+TS Web 前端、家长端功能上线、多角色统一入口</div>
+      </div>
+    </div>
+  </div>
+  <p style="text-align: center; color: var(--c-secondary); font-size: 0.52em; margin-top: 18px; font-weight: 500;">
+    累计 31 次提交 &nbsp;|&nbsp; 3 周迭代周期 &nbsp;|&nbsp; 2 位开发者协作 &nbsp;|&nbsp; 4 个主要版本
+  </p>
+  <div class="footer-info">7 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 8: 系统整体架构                               -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">SYSTEM ARCHITECTURE</div>
+    <h2>系统整体架构</h2>
+  </div>
+  <div style="font-size: 0.5em;">
+    <div class="arch-layer">
+      <div class="arch-label" style="background: var(--c-secondary);">客户端层</div>
+      <div class="arch-content">Flutter 3.x（学生端/教师端原生App） &nbsp;|&nbsp; React 18 + TypeScript（Web 前端三端）</div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer">
+      <div class="arch-label" style="background: var(--c-accent);">网关层</div>
+      <div class="arch-content">Nginx 反向代理 &nbsp;|&nbsp; SSL/TLS 终止 &nbsp;|&nbsp; 负载均衡 &nbsp;|&nbsp; CORS 跨域处理</div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer">
+      <div class="arch-label" style="background: var(--c-primary);">服务层</div>
+      <div class="arch-content">Spring Boot 3.2（REST API + WebSocket） &nbsp;|&nbsp; Python AI 引擎（对话/情绪分析/风险检测）</div>
+    </div>
+    <div class="arch-arrow">&darr;</div>
+    <div class="arch-layer">
+      <div class="arch-label" style="background: var(--c-purple);">数据层</div>
+      <div class="arch-content">PostgreSQL（业务数据） &nbsp;|&nbsp; MongoDB（对话记录） &nbsp;|&nbsp; Redis（缓存/会话）</div>
+    </div>
+  </div>
+  <p style="text-align: center; font-size: 0.42em; color: var(--c-text-muted); margin-top: 14px;">
+    四层分离架构：客户端多样接入 &rarr; 网关统一入口 &rarr; 服务层业务处理 &rarr; 数据层持久化存储
+  </p>
+  <div class="footer-info">8 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 9: 前端技术栈                                 -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">FRONTEND TECH STACK</div>
+    <h2>前端技术栈</h2>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Web 前端（React）</div>
+      <ul class="desc-list">
+        <li>框架：React 18.3.1 + TypeScript 5.8.3</li>
+        <li>构建工具：Vite 6.3.5（极速热更新）</li>
+        <li>状态管理：Zustand（轻量级）</li>
+        <li>路由：React Router DOM 7.3.0</li>
+        <li>样式：TailwindCSS 3.4.17</li>
+        <li>图标：Lucide React</li>
+        <li>三端统一入口：学生/教师/家长角色切换</li>
+      </ul>
+    </div>
+    <div class="card" style="background: var(--c-teal-bg); border-color: var(--c-teal);">
+      <div class="card-title" style="color: var(--c-teal);">原生前端（Flutter）</div>
+      <ul class="desc-list">
+        <li>框架：Flutter 3.x（跨平台 iOS/Android）</li>
+        <li>状态管理：Riverpod</li>
+        <li>加密：AES-256-GCM + SQLCipher</li>
+        <li>实时通信：WebSocket</li>
+        <li>本地数据库：sqflite_sqlcipher</li>
+        <li>后台任务：Workmanager</li>
+        <li>密钥管理：Flutter Secure Storage</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top: 14px;">
+    <span class="section-label">双前端架构选型理由</span>
+    <ul class="desc-list">
+      <li>Web 前端：快速开发、跨平台访问、便于家长端轻量化使用，无需安装 App</li>
+      <li>原生前端：保障数据本地加密存储、离线可用性、推送通知，适合学生日常高频使用</li>
+      <li>两者共用后端 API，通过角色权限区分功能，实现代码复用与体验优化</li>
+    </ul>
+  </div>
+  <div class="footer-info">9 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 10: 后端技术栈                                -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">BACKEND TECH STACK</div>
+    <h2>后端技术栈</h2>
+  </div>
+  <div class="two-col">
+    <div class="card">
+      <div class="card-title">Java 后端服务</div>
+      <ul class="desc-list">
+        <li>框架：Spring Boot 3.2.5 + Java 21</li>
+        <li>Web：Spring Web + WebSocket</li>
+        <li>数据访问：Spring Data JPA + MongoDB Driver</li>
+        <li>认证：JWT（Json Web Token）</li>
+        <li>缓存：Redis（Jedis 客户端）</li>
+        <li>构建：Maven 3.8+</li>
+        <li>加密：AES-256-GCM 工具类</li>
+      </ul>
+    </div>
+    <div class="card" style="background: var(--c-orange-bg); border-color: var(--c-orange);">
+      <div class="card-title" style="color: var(--c-orange);">数据库设计</div>
+      <ul class="desc-list">
+        <li>PostgreSQL 14+：用户、心情、测评等核心业务数据</li>
+        <li>MongoDB 6.0+：AI 对话记录（灵活文档结构）</li>
+        <li>Redis 7.0+：会话缓存、热点数据、实时状态</li>
+        <li>消息队列：Kafka/RabbitMQ（高并发对话场景）</li>
+        <li>数据分离策略：关系型/文档型/缓存各司其职</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top: 10px;">
+    <span class="section-label">RESTful API 设计 &mdash; 7 大控制器</span>
+    <div class="controller-grid">
+      <div class="ctrl-item"><span class="tag tag-blue">UserController</span><span style="font-size: 0.9em;">用户注册/查询/更新/删除/导出</span></div>
+      <div class="ctrl-item"><span class="tag tag-blue">ChatController</span><span style="font-size: 0.9em;">消息发送/历史/话题 + WebSocket</span></div>
+      <div class="ctrl-item"><span class="tag tag-blue">MoodController</span><span style="font-size: 0.9em;">心情打卡/历史/图表</span></div>
+      <div class="ctrl-item"><span class="tag tag-blue">RiskController</span><span style="font-size: 0.9em;">风险检测/等级查询</span></div>
+      <div class="ctrl-item"><span class="tag tag-blue">ContentController</span><span style="font-size: 0.9em;">冥想内容/呼吸练习</span></div>
+      <div class="ctrl-item"><span class="tag tag-blue">AssessmentController</span><span style="font-size: 0.9em;">测评题目/提交/结果</span></div>
+      <div class="ctrl-item"><span class="tag tag-blue">HealthController</span><span style="font-size: 0.9em;">服务健康检查</span></div>
+    </div>
+  </div>
+  <div class="footer-info">10 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 11: AI 引擎设计                               -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">AI ENGINE DESIGN</div>
+    <h2>AI 引擎设计</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div class="card" style="border-top: 3px solid var(--c-secondary);">
+      <div style="background: var(--c-secondary); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">对话模型</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>基于国产大模型微调</li>
+        <li>Qwen / DeepSeek 双模型支持</li>
+        <li>CBT 认知行为疗法框架</li>
+        <li>星宝（学生）/ 大星（家长/老师）</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-accent);">
+      <div style="background: var(--c-accent); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">情绪分析</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>BERT-based 文本分类</li>
+        <li>实时情绪状态识别</li>
+        <li>多维度情绪评分</li>
+        <li>情绪趋势追踪</li>
+      </ul>
+    </div>
+  </div>
+  <div class="two-col" style="font-size: 0.5em; margin-top: 10px;">
+    <div class="card" style="border-top: 3px solid var(--c-orange);">
+      <div style="background: var(--c-orange); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">风险检测</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>L1：关键词匹配检测</li>
+        <li>L2：语义分析深度检测</li>
+        <li>三级风险分级响应</li>
+        <li>危机热线自动推送</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-red);">
+      <div style="background: var(--c-red); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">安全过滤</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>多层内容审核机制</li>
+        <li>输入/输出双向过滤</li>
+        <li>敏感词库动态管理</li>
+        <li>未成年人保护策略</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-info">11 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 12: 安全与合规                                -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">SECURITY &amp; COMPLIANCE</div>
+    <h2>安全与合规体系</h2>
+  </div>
+  <div class="three-col" style="font-size: 0.5em;">
+    <div class="card">
+      <div class="card-title">传输安全</div>
+      <ul class="desc-list">
+        <li>HTTPS / TLS 1.3 全程加密</li>
+        <li>AES-256-GCM 端到端加密</li>
+        <li>JWT 身份认证</li>
+        <li>CORS 跨域安全配置</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-title">存储安全</div>
+      <ul class="desc-list">
+        <li>SQLCipher 本地加密存储</li>
+        <li>数据最小化采集原则</li>
+        <li>用户一键删除所有数据</li>
+        <li>Flutter Secure Storage 密钥管理</li>
+      </ul>
+    </div>
+    <div class="card" style="background: var(--c-orange-bg); border-color: var(--c-orange);">
+      <div class="card-title" style="color: var(--c-orange);">合规要求</div>
+      <ul class="desc-list">
+        <li>《个人信息保护法》合规</li>
+        <li>《未成年人网络保护条例》</li>
+        <li>《生成式AI服务管理暂行办法》</li>
+        <li>等保三级认证准备</li>
+      </ul>
+    </div>
+  </div>
+  <div style="background: var(--c-surface); border: 1px solid var(--c-border); border-radius: 10px; padding: 14px 18px; margin-top: 14px; font-size: 0.5em;">
+    <strong style="color: var(--c-primary); font-size: 0.56em;">安全设计原则</strong>
+    <ul class="desc-list" style="margin-top: 6px;">
+      <li>零信任架构：所有请求均需认证，不信任任何未经验证的访问</li>
+      <li>纵深防御：传输加密 + 存储加密 + 访问控制 + 内容审核多重保障</li>
+      <li>隐私优先：未成年人数据采集最小化，支持用户完全控制个人数据</li>
+      <li>安全可审计：关键操作日志记录，风险事件可追溯</li>
+    </ul>
+  </div>
+  <div class="footer-info">12 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 13: 学生端功能                                -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">STUDENT FEATURES</div>
+    <h2>核心功能 &mdash; 学生端</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; 匿名注册与隐私保护</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">无需真实身份信息，匿名注册机制保护学生隐私</p>
+      </div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; 极简心情打卡</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">5档表情选择，一键记录每日情绪状态</p>
+      </div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; AI 星宝对话</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">基于CBT框架的AI对话，24/7情绪疏导</p>
+      </div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; 情绪探索测评</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">PHQ-9抑郁量表映射，科学评估心理状态</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; 冥想放松</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">3-5个引导音频，帮助缓解焦虑压力</p>
+      </div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; 风险检测与危机响应</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">实时检测高风险信号，自动触发危机干预</p>
+      </div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; 本地记忆存储管理</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">加密数据库存储、定时整理、存储监控</p>
+      </div>
+      <div class="card" style="margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-primary);">&#10003; AI 工具中心</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">文本生成、内容摘要、风格转换等实用工具</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer-info">13 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 14: 教师端功能                                -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">TEACHER FEATURES</div>
+    <h2>核心功能 &mdash; 教师端</h2>
+  </div>
+  <div style="font-size: 0.52em;">
+    <div class="card" style="margin: 7px 0;">
+      <strong style="color: var(--c-accent);">&#10003; 工作台概览</strong>
+      <span style="color: var(--c-text-light); margin-left: 14px;">班级学生情绪状态全景视图，关键指标一目了然</span>
+    </div>
+    <div class="card" style="margin: 7px 0;">
+      <strong style="color: var(--c-accent);">&#10003; 高风险告警</strong>
+      <span style="color: var(--c-text-light); margin-left: 14px;">实时推送高风险学生预警，支持分级管理</span>
+    </div>
+    <div class="card" style="margin: 7px 0;">
+      <strong style="color: var(--c-accent);">&#10003; 学生列表与情绪趋势</strong>
+      <span style="color: var(--c-text-light); margin-left: 14px;">查看每位学生的情绪历史记录与趋势图表</span>
+    </div>
+    <div class="card" style="margin: 7px 0;">
+      <strong style="color: var(--c-accent);">&#10003; 症状反馈与上报处理</strong>
+      <span style="color: var(--c-text-light); margin-left: 14px;">记录学生症状反馈，生成上报流程</span>
+    </div>
+    <div class="card" style="margin: 7px 0;">
+      <strong style="color: var(--c-accent);">&#10003; 对话观察与介入干预</strong>
+      <span style="color: var(--c-text-light); margin-left: 14px;">查看学生AI对话内容（授权后），必要时介入</span>
+    </div>
+    <div class="card" style="margin: 7px 0;">
+      <strong style="color: var(--c-accent);">&#10003; 本地记忆存储管理</strong>
+      <span style="color: var(--c-text-light); margin-left: 14px;">教师端数据加密存储、定时整理与监控</span>
+    </div>
+  </div>
+  <div class="footer-info">14 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 15: 家长端功能                                -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">PARENT FEATURES</div>
+    <h2>核心功能 &mdash; 家长端</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; 孩子情绪状态查看</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">首页直观展示孩子当日情绪状态与打卡记录</p>
+      </div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; AI 心理顾问（大星）对话</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">家长专属AI心理咨询师，解答育儿困惑</p>
+      </div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; 情绪趋势分析</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">7/30/90天多维度情绪趋势图表分析</p>
+      </div>
+    </div>
+    <div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; 应急预案与预警管理</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">自定义应急预案，接收风险预警通知</p>
+      </div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; 心理健康知识库</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">专业心理健康文章与指导内容</p>
+      </div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; 通知设置与隐私管理</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">自定义通知频率与内容，管理隐私授权</p>
+      </div>
+      <div class="card" style="background: var(--c-orange-bg); border-color: #e8c87a; margin: 5px 0; padding: 10px 14px;">
+        <strong style="color: var(--c-orange);">&#10003; 孩子绑定与授权管理</strong>
+        <p style="color: var(--c-text-light); font-size: 0.88em; margin: 3px 0 0 0;">扫码绑定孩子账号，管理查看权限</p>
+      </div>
+    </div>
+  </div>
+  <div class="footer-info">15 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 16: 风险检测流程                              -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">RISK DETECTION &amp; CRISIS RESPONSE</div>
+    <h2>风险检测与危机响应流程</h2>
+  </div>
+  <div style="text-align: center; font-size: 0.5em; margin-bottom: 8px;">
+    <div style="display: inline-block; vertical-align: top; margin: 0 2px;">
+      <div class="flow-step" style="background: var(--c-secondary);">用户输入</div>
+      <p style="font-size: 0.78em; color: var(--c-text-muted); margin-top: 5px;">学生发送消息/打卡</p>
+    </div>
+    <span class="flow-arrow">&rarr;</span>
+    <div style="display: inline-block; vertical-align: top; margin: 0 2px;">
+      <div class="flow-step" style="background: var(--c-accent);">L1 关键词检测</div>
+      <p style="font-size: 0.78em; color: var(--c-text-muted); margin-top: 5px;">关键词库快速匹配</p>
+    </div>
+    <span class="flow-arrow">&rarr;</span>
+    <div style="display: inline-block; vertical-align: top; margin: 0 2px;">
+      <div class="flow-step" style="background: var(--c-orange);">L2 语义分析</div>
+      <p style="font-size: 0.78em; color: var(--c-text-muted); margin-top: 5px;">BERT模型深度语义理解</p>
+    </div>
+    <span class="flow-arrow">&rarr;</span>
+    <div style="display: inline-block; vertical-align: top; margin: 0 2px;">
+      <div class="flow-step" style="background: var(--c-red);">风险分级</div>
+      <p style="font-size: 0.78em; color: var(--c-text-muted); margin-top: 5px;">三级风险等级判定</p>
+    </div>
+    <span class="flow-arrow">&rarr;</span>
+    <div style="display: inline-block; vertical-align: top; margin: 0 2px;">
+      <div class="flow-step" style="background: var(--c-primary);">响应策略</div>
+      <p style="font-size: 0.78em; color: var(--c-text-muted); margin-top: 5px;">差异化干预措施</p>
+    </div>
+  </div>
+  <span class="section-label" style="margin-top: 16px;">三级风险响应策略</span>
+  <div class="three-col" style="font-size: 0.5em; margin-top: 8px;">
+    <div class="card" style="border-top: 3px solid var(--c-green);">
+      <div style="background: var(--c-green); color: white; padding: 7px; border-radius: 6px; text-align: center; font-weight: 700;">L1 &mdash; 低风险</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>正常 AI 对话继续</li>
+        <li>记录情绪数据</li>
+        <li>日常情绪引导</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-orange);">
+      <div style="background: var(--c-orange); color: white; padding: 7px; border-radius: 6px; text-align: center; font-weight: 700;">L2 &mdash; 中风险</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>AI 引导建议与资源推荐</li>
+        <li>通知教师关注</li>
+        <li>推荐测评与冥想</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-red);">
+      <div style="background: var(--c-red); color: white; padding: 7px; border-radius: 6px; text-align: center; font-weight: 700;">L3 &mdash; 高风险</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>即时教师告警</li>
+        <li>自动推送心理热线</li>
+        <li>启动应急预案</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-info">16 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 17: API 接口设计                              -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">API DESIGN OVERVIEW</div>
+    <h2>API 接口设计概览</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div>
+      <table class="styled-table">
+        <thead><tr><th>服务模块</th><th>主要端点</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>用户服务</td><td>POST /api/v1/users/register</td><td>用户注册</td></tr>
+          <tr><td></td><td>GET /api/v1/users/{id}</td><td>获取用户信息</td></tr>
+          <tr><td></td><td>DELETE /api/v1/users/{id}</td><td>删除用户</td></tr>
+          <tr><td>心情服务</td><td>POST /api/v1/mood/checkin</td><td>心情打卡</td></tr>
+          <tr><td></td><td>GET /api/v1/mood/history/{userId}</td><td>心情历史</td></tr>
+          <tr><td>对话服务</td><td>POST /api/v1/chat/message</td><td>发送消息</td></tr>
+          <tr><td></td><td>WS /ws/chat/{userId}</td><td>WebSocket实时对话</td></tr>
+          <tr><td>测评服务</td><td>POST /api/v1/assessment/submit</td><td>提交测评</td></tr>
+          <tr><td>风险服务</td><td>POST /api/v1/risk/detect</td><td>风险检测</td></tr>
+          <tr><td>内容服务</td><td>GET /api/v1/content/meditations</td><td>冥想列表</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="card">
+      <div class="card-title">API 设计原则</div>
+      <ul class="desc-list">
+        <li>RESTful 风格</li>
+        <li>统一 /api/v1/ 前缀</li>
+        <li>JSON 数据格式</li>
+        <li>JWT Bearer 认证</li>
+        <li>标准化错误响应</li>
+        <li>分页与过滤支持</li>
+        <li>WebSocket 实时通信</li>
+        <li>接口版本化管理</li>
+        <li>Swagger 文档生成</li>
+        <li>CORS 跨域配置</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-info">17 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 18: 项目亮点                                  -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">PROJECT HIGHLIGHTS</div>
+    <h2>项目亮点</h2>
+  </div>
+  <div style="font-size: 0.5em;">
+    <div class="card" style="border-left: 4px solid var(--c-secondary); margin: 8px 0;">
+      <strong style="color: var(--c-secondary);">1. 多端协同 &middot; 家校共育闭环</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">学生/教师/家长三端联动，从情绪记录&rarr;AI疏导&rarr;风险预警&rarr;教师干预&rarr;家长关注，形成完整的心理健康守护闭环</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-accent); margin: 8px 0;">
+      <strong style="color: var(--c-accent);">2. AI 驱动 &middot; CBT + 双层风险检测</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">基于认知行为疗法（CBT）框架的AI对话，结合L1关键词+L2语义分析双层风险检测，保障对话安全边界</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-orange); margin: 8px 0;">
+      <strong style="color: var(--c-orange);">3. 安全先行 &middot; 端到端加密 + 多重合规</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">AES-256-GCM端到端加密 + SQLCipher本地加密 + 数据最小化采集，全面符合未成年人保护与AI服务管理法规</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-purple); margin: 8px 0;">
+      <strong style="color: var(--c-purple);">4. 渐进式架构 &middot; 技术栈平滑演进</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">从Go后端&rarr;Java Spring Boot迁移，从Flutter原生&rarr;React Web扩展，架构随业务需求渐进式演进，降低重构风险</p>
+    </div>
+  </div>
+  <div class="footer-info">18 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 19: 技术难点与解决方案                        -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">CHALLENGES &amp; SOLUTIONS</div>
+    <h2>技术难点与解决方案</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div class="card" style="border-top: 3px solid var(--c-orange);">
+      <div style="background: var(--c-orange); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">难点 1：AI 对话安全边界</div>
+      <p style="margin-top: 8px;"><strong>挑战：</strong>AI生成内容可能包含不当建议或忽略风险信号</p>
+      <p style="margin-top: 5px;"><strong style="color: var(--c-orange);">解决方案：</strong></p>
+      <p style="margin-top: 3px; color: var(--c-text-light);">双层风险检测（L1关键词+L2语义分析）+ 多层内容审核 + CBT框架约束 + 危机热线自动推送</p>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-red);">
+      <div style="background: var(--c-red); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">难点 2：未成年人数据隐私</div>
+      <p style="margin-top: 8px;"><strong>挑战：</strong>未成年人个人信息保护要求极高，数据泄露风险大</p>
+      <p style="margin-top: 5px;"><strong style="color: var(--c-red);">解决方案：</strong></p>
+      <p style="margin-top: 3px; color: var(--c-text-light);">AES-256-GCM端到端加密 + SQLCipher本地加密 + 数据最小化采集 + 匿名注册 + 一键删除</p>
+    </div>
+  </div>
+  <div class="two-col" style="font-size: 0.5em; margin-top: 10px;">
+    <div class="card" style="border-top: 3px solid var(--c-accent);">
+      <div style="background: var(--c-accent); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">难点 3：多端状态同步</div>
+      <p style="margin-top: 8px;"><strong>挑战：</strong>Flutter原生与React Web需实时同步对话与情绪状态</p>
+      <p style="margin-top: 5px;"><strong style="color: var(--c-accent);">解决方案：</strong></p>
+      <p style="margin-top: 3px; color: var(--c-text-light);">WebSocket实时通信 + Zustand状态管理 + REST API数据同步 + Redis会话缓存</p>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-primary);">
+      <div style="background: var(--c-primary); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">难点 4：后端技术栈迁移</div>
+      <p style="margin-top: 8px;"><strong>挑战：</strong>从Python AI + Go API迁移至Java统一服务层</p>
+      <p style="margin-top: 5px;"><strong style="color: var(--c-primary);">解决方案：</strong></p>
+      <p style="margin-top: 3px; color: var(--c-text-light);">渐进式迁移策略：先迁移API层至Spring Boot，再整合AI服务为Java服务层，保留Python引擎接口</p>
+    </div>
+  </div>
+  <div class="footer-info">19 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 20: 工程难点                                  -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">ENGINEERING CHALLENGES</div>
+    <h2>工程角度难点分析</h2>
+  </div>
+  <div style="font-size: 0.5em;">
+    <div class="card" style="margin: 8px 0; border-left: 4px solid var(--c-secondary);">
+      <strong style="color: var(--c-primary);">1. 跨平台一致性 &mdash; Flutter 与 React 双前端维护</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">两套前端代码库需要保持功能一致性和UI统一性，增加了维护成本。通过共用后端API、统一设计规范和类型定义（TypeScript类型共享），降低不一致风险。</p>
+      <p style="color: var(--c-secondary); margin-top: 5px; font-weight: 500;">统一API契约 + 共享类型定义 + 设计系统规范化</p>
+    </div>
+    <div class="card" style="margin: 8px 0; border-left: 4px solid var(--c-accent);">
+      <strong style="color: var(--c-primary);">2. AI 模型选型与微调 &mdash; Qwen/DeepSeek 本地化 vs API 调用</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">本地部署需GPU资源投入但延迟低、数据不出境；API调用成本低但依赖外部服务。当前MVP阶段采用API调用快速验证，后续计划逐步迁移至本地微调模型。</p>
+      <p style="color: var(--c-secondary); margin-top: 5px; font-weight: 500;">渐进式策略：API验证 &rarr; 本地微调 &rarr; 混合部署</p>
+    </div>
+    <div class="card" style="margin: 8px 0; border-left: 4px solid var(--c-orange);">
+      <strong style="color: var(--c-primary);">3. 消息队列可靠性 &mdash; Kafka/RabbitMQ 高并发对话场景</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">在高并发AI对话场景下，消息队列需保障消息不丢失、顺序性和 Exactly-Once 语义。通过消息持久化、消费者确认机制和死信队列处理异常消息。</p>
+      <p style="color: var(--c-secondary); margin-top: 5px; font-weight: 500;">消息持久化 + ACK确认 + 死信队列 + 监控告警</p>
+    </div>
+  </div>
+  <div class="footer-info">20 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 21: 测试方案                                  -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">TESTING STRATEGY</div>
+    <h2>测试方案</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div class="card" style="border-top: 3px solid var(--c-secondary);">
+      <div style="background: var(--c-secondary); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">单元测试</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>后端：JUnit 5 + Mockito</li>
+        <li>前端：Vitest + React Testing Library</li>
+        <li>覆盖率目标：核心模块 &gt; 80%</li>
+        <li>测试用例：Service层业务逻辑、工具类</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-accent);">
+      <div style="background: var(--c-accent); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">集成测试</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>API 接口联调测试</li>
+        <li>WebSocket 连通性验证</li>
+        <li>数据库交互测试（H2内存库）</li>
+        <li>前后端联调：端到端场景验证</li>
+      </ul>
+    </div>
+  </div>
+  <div class="two-col" style="font-size: 0.5em; margin-top: 10px;">
+    <div class="card" style="border-top: 3px solid var(--c-orange);">
+      <div style="background: var(--c-orange); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">安全测试</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>加密验证：AES-256-GCM 加解密</li>
+        <li>权限边界：越权访问测试</li>
+        <li>注入防护：SQL注入/XSS测试</li>
+        <li>JWT 令牌：过期/伪造/重放测试</li>
+      </ul>
+    </div>
+    <div class="card" style="border-top: 3px solid var(--c-purple);">
+      <div style="background: var(--c-purple); color: white; padding: 7px 12px; border-radius: 6px; font-weight: 700;">部署测试</div>
+      <ul class="desc-list" style="margin-top: 8px;">
+        <li>Docker Compose 编排验证</li>
+        <li>Kubernetes 集群部署测试</li>
+        <li>Nginx 反向代理配置验证</li>
+        <li>环境变量与配置一致性检查</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-info">21 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 22: 部署方案                                  -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">DEPLOYMENT STRATEGY</div>
+    <h2>部署方案</h2>
+  </div>
+  <div class="two-col" style="font-size: 0.5em;">
+    <div class="card">
+      <div class="card-title">容器化部署（Docker Compose）</div>
+      <ul class="desc-list">
+        <li>Docker 多服务容器编排</li>
+        <li>docker-compose.yml 统一管理</li>
+        <li>服务：API + AI Engine + DB + Redis + Nginx</li>
+        <li>一键启动：docker-compose up -d</li>
+        <li>开发/测试环境快速部署</li>
+      </ul>
+    </div>
+    <div class="card" style="background: var(--c-teal-bg); border-color: var(--c-teal);">
+      <div class="card-title" style="color: var(--c-teal);">Kubernetes 集群部署（生产）</div>
+      <ul class="desc-list">
+        <li>K8s 集群编排管理</li>
+        <li>Pod 自动伸缩（HPA）</li>
+        <li>滚动更新与回滚</li>
+        <li>ConfigMap/Secret 配置管理</li>
+        <li>生产环境高可用保障</li>
+      </ul>
+    </div>
+  </div>
+  <div style="margin-top: 14px;">
+    <span class="section-label">CI/CD 持续集成与交付流程</span>
+    <div style="text-align: center; font-size: 0.5em; margin-top: 8px;">
+      <span class="flow-step" style="background: var(--c-secondary);">代码提交</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step" style="background: var(--c-accent);">分支管理</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step" style="background: var(--c-orange);">自动构建</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step" style="background: var(--c-purple);">测试验证</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step" style="background: var(--c-primary);">部署 staging</span>
+      <span class="flow-arrow">&rarr;</span>
+      <span class="flow-step" style="background: var(--c-green);">生产发布</span>
+    </div>
+  </div>
+  <p style="text-align: center; font-size: 0.46em; color: var(--c-text-muted); margin-top: 12px;">
+    Git 分支管理规范：feat: 新功能 &nbsp;|&nbsp; fix: 修复Bug &nbsp;|&nbsp; docs: 文档更新 &nbsp;|&nbsp; refactor: 代码重构 &nbsp;|&nbsp; style: 样式调整 &nbsp;&nbsp;&rarr;&nbsp;&nbsp; Pull Request 审核合并至 main 分支
+  </p>
+  <div class="footer-info">22 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 23: 迭代路线图                                -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">ITERATION ROADMAP</div>
+    <h2>迭代路线图</h2>
+  </div>
+  <div style="font-size: 0.55em;">
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-secondary);">v2.0</div>
+      <div class="timeline-content">
+        <div class="title">AI 升级</div>
+        <div class="desc">AI 模型升级（更大参数量）| 多模态情绪识别（语音/表情）| 个性化推荐算法优化 | 对话质量评估体系</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-accent);">v2.1</div>
+      <div class="timeline-content">
+        <div class="title">社交与游戏化</div>
+        <div class="desc">同伴互助社区（匿名）| 游戏化激励机制 | 成就系统与勋章 | 情绪日记与成长档案</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-orange);">v2.2</div>
+      <div class="timeline-content">
+        <div class="title">数据与管理</div>
+        <div class="desc">数据分析仪表盘 | 学校级管理后台 | 班级/年级维度分析 | 批量导入与导出</div>
+      </div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-version" style="background: var(--c-purple);">v3.0</div>
+      <div class="timeline-content">
+        <div class="title">规模化与开放</div>
+        <div class="desc">全国推广部署 | 多语言/多地区支持 | 开放 API 平台 | 第三方插件生态</div>
+      </div>
+    </div>
+  </div>
+  <div class="footer-info">23 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 24: 长期愿景                                  -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">LONG-TERM VISION</div>
+    <h2>长期愿景</h2>
+  </div>
+  <div style="font-size: 0.5em;">
+    <div class="card" style="border-left: 4px solid var(--c-secondary); margin: 10px 0;">
+      <strong style="color: var(--c-secondary); font-size: 1.1em;">产品愿景</strong>
+      <p style="font-weight: 700; color: var(--c-primary); margin: 5px 0;">成为中国青少年心理健康第一站</p>
+      <p style="color: var(--c-text-light);">从校园场景出发，逐步覆盖全国青少年群体，打造最受信任的AI心理健康品牌，让每个孩子都能获得零压力的情绪支持</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-accent); margin: 10px 0;">
+      <strong style="color: var(--c-accent); font-size: 1.1em;">技术演进</strong>
+      <p style="font-weight: 700; color: var(--c-primary); margin: 5px 0;">从 MVP 验证到生态化平台</p>
+      <p style="color: var(--c-text-light);">MVP 验证 &rarr; 规模化部署 &rarr; 数据驱动优化 &rarr; 开放API生态。持续探索多模态AI、个性化推荐、群体心理预警等前沿技术</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-orange); margin: 10px 0;">
+      <strong style="color: var(--c-orange); font-size: 1.1em;">社会价值</strong>
+      <p style="font-weight: 700; color: var(--c-primary); margin: 5px 0;">降低心理求助门槛，构建守护网络</p>
+      <p style="color: var(--c-text-light);">通过AI技术降低青少年心理求助门槛，构建学生-教师-家长-专业机构四级守护网络，为青少年心理健康保驾护航</p>
+    </div>
+  </div>
+  <div class="footer-info">24 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 25: 未来发展计划                               -->
+<!-- ================================================== -->
+<section>
+  <div class="slide-header">
+    <div class="subtitle">FUTURE DEV-PLANNING</div>
+    <h2>未来发展计划</h2>
+  </div>
+  <div style="font-size: 0.5em;">
+    <div class="card" style="border-left: 4px solid var(--c-secondary); margin: 10px 0;">
+      <strong style="color: var(--c-secondary);">Step 1</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">完善和 AI Agent 的开发与对接</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-accent); margin: 10px 0;">
+      <strong style="color: var(--c-accent);">Step 2</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">扩大测试的数据量，开始进行试点测试</p>
+      <p style="color: var(--c-text-light); margin-top: 3px;">与广宁县的一所学校达成合作，并对其进行测试</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-orange); margin: 10px 0;">
+      <strong style="color: var(--c-orange);">Step 3</strong>
+      <p style="margin-top: 5px; color: var(--c-text-light);">扩大测试范围，并进行服务器的设置</p>
+    </div>
+    <div class="card" style="border-left: 4px solid var(--c-purple); margin: 10px 0;">
+      <strong style="color: var(--c-purple);">......</strong>
+    </div>
+  </div>
+  <p style="text-align: center; font-size: 0.56em; color: var(--c-secondary); margin-top: 20px; font-style: italic; font-weight: 700;">
+    way is long, but hope is real.
+  </p>
+  <div class="footer-info">25 / 26</div>
+</section>
+
+<!-- ================================================== -->
+<!-- Slide 26: 致谢                                      -->
+<!-- ================================================== -->
+<section class="thanks-slide">
+  <h1>感谢聆听</h1>
+  <p style="font-size: 1.2em; color: #9dc4e8; margin-top: 20px;">Q &amp; A</p>
+  <p class="slogan" style="margin-top: 30px;">「你的情绪星球，永远亮着灯」</p>
+  <div class="info">
+    <p>项目名称：星屿 StarIsle &mdash; 青少年心理健康 AI 陪伴应用</p>
+    <p>版本：MVP v1.3</p>
+    <p>GitHub：https://github.com/user-unknowed/-StarIsle-</p>
+    <p style="margin-top: 14px;">报告小组：CS-1组 &nbsp;|&nbsp; 报告人：陈尹涛 &nbsp;|&nbsp; 学号：2540144243 &nbsp;|&nbsp; 指导老师：陈文渊老师 &nbsp;|&nbsp; 2026.07</p>
+  </div>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    transition: 'slide',
+    transitionSpeed: 'default',
+    controls: true,
+    progress: true,
+    center: false,
+    width: 1280,
+    height: 720,
+    margin: 0.08,
+    minScale: 0.2,
+    maxScale: 2.0
+  });
+</script>
+</body>
+</html>

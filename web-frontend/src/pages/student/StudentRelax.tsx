@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header } from '../../components/common/Header';
-import { Music, Play, Pause, SkipForward, SkipBack, Volume2, Waves, Sparkles, Heart } from 'lucide-react';
+import BubbleWrapGame from '../../components/BubbleWrapGame';
+import { Music, Play, Pause, SkipForward, SkipBack, Volume2, Waves, Sparkles, Heart, Grid3X3 } from 'lucide-react';
 
 const breathingExercises = [
   { id: '478', name: '4-7-8呼吸法', description: '吸气4秒，屏息7秒，呼气8秒', color: 'from-blue-500 to-cyan-500' },
@@ -18,7 +19,7 @@ const musicList = [
 ];
 
 export default function StudentRelax() {
-  const [activeTab, setActiveTab] = useState<'music' | 'breathing'>('music');
+  const [activeTab, setActiveTab] = useState<'music' | 'breathing' | 'bubble'>('music');
   const [currentTrack, setCurrentTrack] = useState(musicList[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -142,6 +143,17 @@ export default function StudentRelax() {
           >
             <Waves className="w-5 h-5 inline-block mr-2" />
             呼吸练习
+          </button>
+          <button
+            onClick={() => setActiveTab('bubble')}
+            className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all duration-300 ${
+              activeTab === 'bubble'
+                ? 'bg-gradient-to-r from-pink-400 to-rose-500 text-white shadow-lg'
+                : 'bg-white text-gray-600 hover:bg-gray-50'
+            }`}
+          >
+            <Grid3X3 className="w-5 h-5 inline-block mr-2" />
+            捏气泡纸
           </button>
         </div>
 
@@ -301,6 +313,10 @@ export default function StudentRelax() {
               </div>
             </div>
           </div>
+        )}
+
+        {activeTab === 'bubble' && (
+          <BubbleWrapGame />
         )}
       </main>
     </div>

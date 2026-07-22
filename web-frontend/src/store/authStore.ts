@@ -1,5 +1,16 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { User, LoginRequest, RegisterRequest } from '../types';
+
+export type LoginMethod = 'credentials' | 'wechat' | 'qq' | 'apple' | 'phone';
+
+export interface ThirdPartyUserInfo {
+  provider: string;
+  openId: string;
+  nickname?: string;
+  avatar?: string;
+  unionId?: string;
+}
 
 interface AuthState {
   user: User | null;
@@ -7,11 +18,15 @@ interface AuthState {
   isLoggedIn: boolean;
   isLoading: boolean;
   error: string | null;
+  loginMethod: LoginMethod | null;
   
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  loginWithThirdParty: (provider: LoginMethod, userInfo: ThirdPartyUserInfo) => Promise<void>;
+  loginWithPhone: (phone: string, code: string) => Promise<void>;
+  setLoginMethod: (method: LoginMethod | null) => void;
 }
 
 const mockUsers: Record<string, User> = {
@@ -38,70 +53,141 @@ const mockUsers: Record<string, User> = {
   },
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  token: null,
-  isLoggedIn: false,
-  isLoading: false,
-  error: null,
-
-  login: async (credentials) => {
-    set({ isLoading: true, error: null });
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const mockUser = mockUsers[credentials.username];
-    
-    if (mockUser && mockUser.role === credentials.role) {
-      set({
-        user: mockUser,
-        token: 'mock-jwt-token',
-        isLoggedIn: true,
-        isLoading: false,
-      });
-    } else {
-      set({
-        error: '用户名或密码错误',
-        isLoading: false,
-      });
-    }
-  },
-
-  register: async (data) => {
-    set({ isLoading: true, error: null });
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const newUser: User = {
-      id: `user-${Date.now()}`,
-      nickname: data.nickname,
-      avatar: '',
-      role: data.role,
-      ageGroup: data.ageGroup,
-      signature: '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    
-    set({
-      user: newUser,
-      token: 'mock-jwt-token',
-      isLoggedIn: true,
-      isLoading: false,
-    });
-  },
-
-  logout: () => {
-    set({
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
       user: null,
       token: null,
       isLoggedIn: false,
       isLoading: false,
       error: null,
-    });
-  },
+      loginMethod: null,
 
-  clearError: () => {
-    set({ error: null });
-  },
-}));
+      login: async (credentials) => {
+        set({ isLoading: true, error: null });
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const mockUser = mockUsers[credentials.username];
+        
+        if (mockUser && mockUser.role === credentials.role) {
+          set({
+            user: mockUser,
+            token: 'mock-jwt-token',
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: 'credentials',
+          });
+        } else {
+          set({
+            error: '用户名或密码错误',
+            isLoading: false,
+          });
+        }
+      },
+
+      register: async (data) => {
+        set({ isLoading: true, error: null });
+        
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        const newUser: User = {
+          id: `user-${Date.now()}`,
+          nickname: data.nickname,
+          avatar: '',
+          role: data.role,
+          ageGroup: data.ageGroup,
+          signature: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        set({
+          user: newUser,
+          token: 'mock-jwt-token',
+          isLoggedIn: true,
+          isLoading: false,
+          loginMethod: 'credentials',
+        });
+      },
+
+      loginWithThirdParty: async (provider, userInfo) => {
+        set({ isLoading: true, error: null });
+        
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        const newUser: User = {
+          id: `user-${userInfo.openId}`,
+          nickname: userInfo.nickname || '用户',
+          avatar: userInfo.avatar || '',
+          role: 'student',
+          ageGroup: '',
+          signature: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        set({
+          user: newUser,
+          token: 'mock-jwt-token',
+          isLoggedIn: true,
+          isLoading: false,
+          loginMethod: provider,
+        });
+      },
+
+      loginWithPhone: async (phone, code) => {
+        set({ isLoading: true, error: null });
+        
+        await new Promise(resolve => setTimeout(resolve, 600));
+        
+        const newUser: User = {
+          id: `user-${phone}`,
+          nickname: phone,
+          avatar: '',
+          role: 'student',
+          ageGroup: '',
+          signature: '',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
+        
+        set({
+          user: newUser,
+          token: 'mock-jwt-token',
+          isLoggedIn: true,
+          isLoading: false,
+          loginMethod: 'phone',
+        });
+      },
+
+      logout: () => {
+        set({
+          user: null,
+          token: null,
+          isLoggedIn: false,
+          isLoading: false,
+          error: null,
+          loginMethod: null,
+        });
+      },
+
+      clearError: () => {
+        set({ error: null });
+      },
+
+      setLoginMethod: (method) => {
+        set({ loginMethod: method });
+      },
+    }),
+    {
+      name: 'starisle-auth',
+      partialize: (state) => ({
+        user: state.user,
+        token: state.token,
+        isLoggedIn: state.isLoggedIn,
+        loginMethod: state.loginMethod,
+      }),
+    }
+  )
+);

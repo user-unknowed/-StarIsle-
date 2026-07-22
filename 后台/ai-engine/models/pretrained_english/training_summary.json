@@ -1,0 +1,36 @@
+{
+  "config": {
+    "vector_size": 300,
+    "window": 5,
+    "min_count": 5,
+    "sg": 1,
+    "hs": 0,
+    "negative": 5,
+    "workers": 4,
+    "epochs": 15,
+    "seed": 42,
+    "output_dir": "./models/pretrained_english"
+  },
+  "vocab_size": 777,
+  "total_sentences": 2386,
+  "total_tokens": 21478,
+  "training_losses": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "completed_at": "2026-07-22T12:59:54.322422",
+  "perplexity": 1.0963846128328727
+}

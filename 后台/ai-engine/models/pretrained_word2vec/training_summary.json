@@ -1,0 +1,30 @@
+{
+  "config": {
+    "vector_size": 300,
+    "window": 5,
+    "min_count": 3,
+    "sg": 1,
+    "hs": 0,
+    "negative": 5,
+    "workers": 4,
+    "epochs": 10,
+    "seed": 42,
+    "output_dir": "./models/pretrained_word2vec"
+  },
+  "vocab_size": 1689,
+  "total_sentences": 2746,
+  "total_tokens": 29473,
+  "training_losses": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "completed_at": "2026-07-22T12:58:54.373857"
+}

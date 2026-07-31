@@ -61,7 +61,7 @@ class SemanticAnalyzer:
         for indicator in self_harm_indicators:
             if indicator in content:
                 # 进一步检查上下文
-                if any(word in content for word in ["活着", "生命", "未来", "自己"]:
+                if any(word in content for word in ["活着", "生命", "未来", "自己"]):
                     return "self_harm"
         
         # 求助意图检测

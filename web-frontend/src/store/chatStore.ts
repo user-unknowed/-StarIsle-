@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { ChatMessage, TopicCard } from '../types';
+import { chatApi } from '../services/api';
+import { ApiError } from '../services/http';
 
 interface ChatState {
   messages: ChatMessage[];
@@ -7,6 +9,7 @@ interface ChatState {
   isTyping: boolean;
   inputValue: string;
   isLoading: boolean;
+  isUsingMockData: boolean;
 
   fetchMessages: (userId: string) => Promise<void>;
   sendMessage: (userId: string, content: string) => Promise<void>;
@@ -34,11 +37,20 @@ export const useChatStore = create<ChatState>((set) => ({
   isTyping: false,
   inputValue: '',
   isLoading: false,
+  isUsingMockData: false,
 
   fetchMessages: async (userId) => {
     set({ isLoading: true });
-    await new Promise(resolve => setTimeout(resolve, 500));
-    set({ messages: mockMessages, isLoading: false });
+    try {
+      const messages = await chatApi.getHistory(userId);
+      set({ messages, isLoading: false, isUsingMockData: false });
+    } catch (error) {
+      console.warn(
+        '[chatStore] fetchMessages 调用失败，降级使用 mock 数据:',
+        error instanceof ApiError ? `${error.message} (status: ${error.status})` : error
+      );
+      set({ messages: mockMessages, isLoading: false, isUsingMockData: true });
+    }
   },
 
   sendMessage: async (userId, content) => {
@@ -54,28 +66,50 @@ export const useChatStore = create<ChatState>((set) => ({
       inputValue: '',
     }));
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    try {
+      const data = await chatApi.sendMessage({ userId, message: content });
+      set((state) => ({
+        messages: [...state.messages, {
+          id: `msg-${Date.now()}`,
+          userId,
+          content: data.response,
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+          riskLevel: data.riskLevel,
+        }],
+        isTyping: false,
+        isUsingMockData: false,
+      }));
+    } catch (error) {
+      console.warn(
+        '[chatStore] sendMessage 调用失败，降级使用 mock 回复:',
+        error instanceof ApiError ? `${error.message} (status: ${error.status})` : error
+      );
 
-    const responses = [
-      '小星听到了。听起来你今天有点低落呢...要和小星聊聊吗？',
-      '抱抱～小星在这里陪着你。',
-      '嗯，我懂你的感受。有时候事情确实会让人觉得很难。',
-      '谢谢你愿意和小星分享这些。你很勇敢呢。',
-      '小星觉得你已经做得很好了。慢慢来，不着急。',
-    ];
+      await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      const responses = [
+        '小星听到了。听起来你今天有点低落呢...要和小星聊聊吗？',
+        '抱抱～小星在这里陪着你。',
+        '嗯，我懂你的感受。有时候事情确实会让人觉得很难。',
+        '谢谢你愿意和小星分享这些。你很勇敢呢。',
+        '小星觉得你已经做得很好了。慢慢来，不着急。',
+      ];
 
-    set((state) => ({
-      messages: [...state.messages, {
-        id: `msg-${Date.now()}`,
-        userId,
-        content: randomResponse,
-        role: 'assistant',
-        timestamp: new Date().toISOString(),
-      }],
-      isTyping: false,
-    }));
+      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+
+      set((state) => ({
+        messages: [...state.messages, {
+          id: `msg-${Date.now()}`,
+          userId,
+          content: randomResponse,
+          role: 'assistant',
+          timestamp: new Date().toISOString(),
+        }],
+        isTyping: false,
+        isUsingMockData: true,
+      }));
+    }
   },
 
   selectTopic: (topic) => {

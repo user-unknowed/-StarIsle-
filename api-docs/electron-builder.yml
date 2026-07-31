@@ -1,0 +1,37 @@
+appId: com.starisle.apidocs
+productName: 星屿API文档
+copyright: Copyright © 2026 StarIsle
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - electron/**/*
+  - dist/**/*
+  - package.json
+
+win:
+  icon: public/icon.svg
+  target:
+    - target: nsis
+      arch:
+        - x64
+
+nsis:
+  oneClick: false
+  perMachine: true
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: 星屿API文档
+  uninstallDisplayName: 星屿API文档
+  installerIcon: public/icon.svg
+  uninstallerIcon: public/icon.svg
+  installerHeaderIcon: public/icon.svg
+  language:
+    - 2052
+
+asar: true
+asarUnpack:
+  - node_modules/**/*

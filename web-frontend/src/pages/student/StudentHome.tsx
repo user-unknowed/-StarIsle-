@@ -22,6 +22,7 @@ export default function StudentHome() {
     selectedMood,
     checkinStatus,
     checkinMessage,
+    continuousDays,
     fetchMoodHistory,
     checkinMood,
     selectMood,
@@ -170,7 +171,7 @@ export default function StudentHome() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">连续打卡</p>
-                <p className="text-2xl font-bold text-gray-800">5天</p>
+                <p className="text-2xl font-bold text-gray-800">{continuousDays}天</p>
               </div>
             </div>
           </div>

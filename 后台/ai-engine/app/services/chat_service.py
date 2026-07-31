@@ -4,11 +4,13 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 import torch
 from app.prompts.star宝_system_prompt import Star宝SystemPrompt
 from app.utils.encryption import EncryptionUtil
+from app.services.knowledge_service import KnowledgeService
 import time
 
 class ChatService:
     """
     AI对话服务 - 基于国产大模型的CBT对话引擎
+    集成RAG（检索增强生成），从心理咨询知识库中检索相关知识
     """
     
     def __init__(self):
@@ -30,6 +32,7 @@ class ChatService:
         
         self.system_prompt = Star宝SystemPrompt()
         self.encryption_util = EncryptionUtil()
+        self.knowledge_service = KnowledgeService()
     
     async def generate_response(
         self, 
@@ -39,7 +42,7 @@ class ChatService:
         user_profile: Optional[Dict] = {}
     ) -> Dict:
         """
-        生成对话回复 - CBT框架驱动
+        生成对话回复 - CBT框架驱动 + RAG知识增强
         
         Args:
             user_id: 用户ID
@@ -54,6 +57,16 @@ class ChatService:
         
         # 构建System Prompt
         system_prompt = self.system_prompt.generate_prompt(user_profile)
+        
+        # RAG检索：从心理咨询知识库中检索相关知识
+        knowledge_context = await self.knowledge_service.get_relevant_knowledge_for_chat(
+            user_message=message,
+            user_profile=user_profile
+        )
+        
+        # 将检索到的知识注入到System Prompt中（不修改模型参数，仅作为上下文参考）
+        if knowledge_context:
+            system_prompt += f"\n\n【专业知识参考】\n你可以参考以下心理咨询专业知识来帮助用户，但请以自己的方式表达，不要直接引用原文：\n{knowledge_context}\n\n注意：这些知识仅作为参考，你需要结合小星的身份和说话风格来组织回复。"
         
         # 构建对话历史
         messages = [
@@ -78,10 +91,15 @@ class ChatService:
             
             response_time_ms = int((time.time() - start_time) * 1000)
             
+            # 获取知识库检索统计
+            knowledge_stats = await self.knowledge_service.get_stats()
+            
             return {
                 "content": response_text,
                 "response_time_ms": response_time_ms,
-                "model": self.model_name
+                "model": self.model_name,
+                "rag_enhanced": knowledge_context != "",
+                "knowledge_mode": knowledge_stats.get("mode", "unknown")
             }
             
         except Exception as e:
@@ -89,7 +107,8 @@ class ChatService:
             return {
                 "content": "小星好像有点迷糊了，请稍后再试试～",
                 "response_time_ms": 2000,
-                "error": str(e)
+                "error": str(e),
+                "rag_enhanced": False
             }
     
     async def _generate_api(self, messages: List[Dict]) -> str:

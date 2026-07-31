@@ -1,6 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, LoginRequest, RegisterRequest } from '../types';
+import { authApi } from '../services/api';
+import { ApiError } from '../services/http';
 
 export type LoginMethod = 'credentials' | 'wechat' | 'qq' | 'apple' | 'phone';
 
@@ -19,7 +21,8 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   loginMethod: LoginMethod | null;
-  
+  isUsingMockData: boolean;
+
   login: (credentials: LoginRequest) => Promise<void>;
   register: (data: RegisterRequest) => Promise<void>;
   logout: () => void;
@@ -29,6 +32,7 @@ interface AuthState {
   setLoginMethod: (method: LoginMethod | null) => void;
 }
 
+// Mock 数据（降级使用）
 const mockUsers: Record<string, User> = {
   'student1': {
     id: 'student1',
@@ -62,25 +66,39 @@ export const useAuthStore = create<AuthState>()(
       isLoading: false,
       error: null,
       loginMethod: null,
+      isUsingMockData: false,
 
       login: async (credentials) => {
         set({ isLoading: true, error: null });
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const mockUser = mockUsers[credentials.username];
-        
-        if (mockUser && mockUser.role === credentials.role) {
+
+        try {
+          const response = await authApi.login(credentials);
           set({
-            user: mockUser,
-            token: 'mock-jwt-token',
+            user: response.user,
+            token: response.token,
             isLoggedIn: true,
             isLoading: false,
             loginMethod: 'credentials',
+            isUsingMockData: false,
           });
-        } else {
+        } catch (error) {
+          // 降级到 mock 数据
+          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+            const mockUser = mockUsers[credentials.username];
+            if (mockUser && mockUser.role === credentials.role) {
+              set({
+                user: mockUser,
+                token: 'mock-jwt-token',
+                isLoggedIn: true,
+                isLoading: false,
+                loginMethod: 'credentials',
+                isUsingMockData: true,
+              });
+              return;
+            }
+          }
           set({
-            error: '用户名或密码错误',
+            error: error instanceof ApiError ? error.message : '登录失败，请稍后重试',
             isLoading: false,
           });
         }
@@ -88,77 +106,136 @@ export const useAuthStore = create<AuthState>()(
 
       register: async (data) => {
         set({ isLoading: true, error: null });
-        
-        await new Promise(resolve => setTimeout(resolve, 800));
-        
-        const newUser: User = {
-          id: `user-${Date.now()}`,
-          nickname: data.nickname,
-          avatar: '',
-          role: data.role,
-          ageGroup: data.ageGroup,
-          signature: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        set({
-          user: newUser,
-          token: 'mock-jwt-token',
-          isLoggedIn: true,
-          isLoading: false,
-          loginMethod: 'credentials',
-        });
+
+        try {
+          const response = await authApi.register(data);
+          set({
+            user: response.user,
+            token: response.token,
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: 'credentials',
+            isUsingMockData: false,
+          });
+        } catch (error) {
+          // 降级到 mock 数据
+          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+            const newUser: User = {
+              id: `user-${Date.now()}`,
+              nickname: data.nickname,
+              avatar: '',
+              role: data.role,
+              ageGroup: data.ageGroup,
+              signature: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            set({
+              user: newUser,
+              token: 'mock-jwt-token',
+              isLoggedIn: true,
+              isLoading: false,
+              loginMethod: 'credentials',
+              isUsingMockData: true,
+            });
+            return;
+          }
+          set({
+            error: error instanceof ApiError ? error.message : '注册失败，请稍后重试',
+            isLoading: false,
+          });
+        }
       },
 
       loginWithThirdParty: async (provider, userInfo) => {
         set({ isLoading: true, error: null });
-        
-        await new Promise(resolve => setTimeout(resolve, 600));
-        
-        const newUser: User = {
-          id: `user-${userInfo.openId}`,
-          nickname: userInfo.nickname || '用户',
-          avatar: userInfo.avatar || '',
-          role: 'student',
-          ageGroup: '',
-          signature: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        set({
-          user: newUser,
-          token: 'mock-jwt-token',
-          isLoggedIn: true,
-          isLoading: false,
-          loginMethod: provider,
-        });
+
+        try {
+          const response = await authApi.loginWithThirdParty(
+            userInfo.provider,
+            userInfo.openId,
+            userInfo.nickname,
+            userInfo.avatar
+          );
+          set({
+            user: response.user,
+            token: response.token,
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: provider,
+            isUsingMockData: false,
+          });
+        } catch (error) {
+          // 降级到 mock 数据
+          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+            const newUser: User = {
+              id: `user-${userInfo.openId}`,
+              nickname: userInfo.nickname || '用户',
+              avatar: userInfo.avatar || '',
+              role: 'student',
+              ageGroup: '',
+              signature: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            set({
+              user: newUser,
+              token: 'mock-jwt-token',
+              isLoggedIn: true,
+              isLoading: false,
+              loginMethod: provider,
+              isUsingMockData: true,
+            });
+            return;
+          }
+          set({
+            error: error instanceof ApiError ? error.message : '第三方登录失败',
+            isLoading: false,
+          });
+        }
       },
 
       loginWithPhone: async (phone, code) => {
         set({ isLoading: true, error: null });
-        
-        await new Promise(resolve => setTimeout(resolve, 600));
-        
-        const newUser: User = {
-          id: `user-${phone}`,
-          nickname: phone,
-          avatar: '',
-          role: 'student',
-          ageGroup: '',
-          signature: '',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        };
-        
-        set({
-          user: newUser,
-          token: 'mock-jwt-token',
-          isLoggedIn: true,
-          isLoading: false,
-          loginMethod: 'phone',
-        });
+
+        try {
+          const response = await authApi.loginWithPhone(phone, code);
+          set({
+            user: response.user,
+            token: response.token,
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: 'phone',
+            isUsingMockData: false,
+          });
+        } catch (error) {
+          // 降级到 mock 数据
+          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+            const newUser: User = {
+              id: `user-${phone}`,
+              nickname: phone,
+              avatar: '',
+              role: 'student',
+              ageGroup: '',
+              signature: '',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+            };
+            set({
+              user: newUser,
+              token: 'mock-jwt-token',
+              isLoggedIn: true,
+              isLoading: false,
+              loginMethod: 'phone',
+              isUsingMockData: true,
+            });
+            return;
+          }
+          set({
+            error: error instanceof ApiError ? error.message : '手机号登录失败',
+            isLoading: false,
+          });
+        }
       },
 
       logout: () => {
@@ -169,6 +246,7 @@ export const useAuthStore = create<AuthState>()(
           isLoading: false,
           error: null,
           loginMethod: null,
+          isUsingMockData: false,
         });
       },
 

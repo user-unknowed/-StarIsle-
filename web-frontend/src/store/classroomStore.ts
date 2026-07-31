@@ -1,11 +1,14 @@
 import { create } from 'zustand';
 import { StudentWithMood, ClassStats } from '../types';
+import { classroomApi } from '../services/api';
+import { ApiError } from '../services/http';
 
 interface ClassroomState {
   students: StudentWithMood[];
   stats: ClassStats | null;
   selectedClassId: string;
   isLoading: boolean;
+  isUsingMockData: boolean;
 
   fetchClassStats: (classId: string) => Promise<void>;
   fetchStudents: (classId: string) => Promise<void>;
@@ -35,17 +38,36 @@ export const useClassroomStore = create<ClassroomState>((set) => ({
   stats: null,
   selectedClassId: 'class1',
   isLoading: false,
+  isUsingMockData: false,
 
   fetchClassStats: async (classId) => {
     set({ isLoading: true });
-    await new Promise(resolve => setTimeout(resolve, 500));
-    set({ stats: mockStats, isLoading: false });
+    try {
+      const stats = await classroomApi.getClassStats(classId);
+      set({ stats, isUsingMockData: false, isLoading: false });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.warn(`[classroomStore] fetchClassStats API 失败 (${error.status})，降级使用 mock 数据`, error.message);
+      } else {
+        console.warn('[classroomStore] fetchClassStats API 失败，降级使用 mock 数据', error);
+      }
+      set({ stats: mockStats, isUsingMockData: true, isLoading: false });
+    }
   },
 
   fetchStudents: async (classId) => {
     set({ isLoading: true });
-    await new Promise(resolve => setTimeout(resolve, 500));
-    set({ students: mockStudents, isLoading: false });
+    try {
+      const students = await classroomApi.getStudents(classId);
+      set({ students, isUsingMockData: false, isLoading: false });
+    } catch (error) {
+      if (error instanceof ApiError) {
+        console.warn(`[classroomStore] fetchStudents API 失败 (${error.status})，降级使用 mock 数据`, error.message);
+      } else {
+        console.warn('[classroomStore] fetchStudents API 失败，降级使用 mock 数据', error);
+      }
+      set({ students: mockStudents, isUsingMockData: true, isLoading: false });
+    }
   },
 
   selectClass: (classId) => {

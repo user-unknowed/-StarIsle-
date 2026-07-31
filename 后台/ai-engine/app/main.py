@@ -7,14 +7,47 @@ from dotenv import load_dotenv
 from app.services.chat_service import ChatService
 from app.services.risk_detection_service import RiskDetectionService
 from app.services.emotion_analysis_service import EmotionAnalysisService
+from app.services.knowledge_service import KnowledgeService
+from contextlib import asynccontextmanager
 
 # 加载环境变量
 load_dotenv()
 
+# 初始化服务
+chat_service = ChatService()
+risk_service = RiskDetectionService()
+emotion_service = EmotionAnalysisService()
+knowledge_service = KnowledgeService()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # 启动时加载知识库
+    print("[AI-Engine] 正在加载心理咨询知识库...")
+    knowledge_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data",
+        "knowledge_base.json"
+    )
+    if os.path.exists(knowledge_file):
+        count = await knowledge_service.import_from_json(knowledge_file)
+        print(f"[AI-Engine] 知识库加载完成，共 {count} 条知识")
+    else:
+        print("[AI-Engine] 知识库文件未找到，使用空知识库")
+    
+    stats = await knowledge_service.get_stats()
+    print(f"[AI-Engine] 知识库模式: {stats.get('mode')}, 文档数: {stats.get('total_documents')}")
+    print("[AI-Engine] AI引擎启动完成，RAG增强已就绪")
+    
+    yield
+    
+    # 关闭时清理
+    print("[AI-Engine] 正在关闭AI引擎...")
+
 app = FastAPI(
     title="星屿AI对话引擎",
-    description="基于CBT框架的青少年心理健康AI对话服务",
-    version="1.0.0"
+    description="基于CBT框架的青少年心理健康AI对话服务 | 集成心理咨询知识库RAG增强",
+    version="1.0.0",
+    lifespan=lifespan
 )
 
 # CORS配置
@@ -25,11 +58,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# 初始化服务
-chat_service = ChatService()
-risk_service = RiskDetectionService()
-emotion_service = EmotionAnalysisService()
 
 # API数据模型
 class ChatRequest(BaseModel):
@@ -43,6 +71,8 @@ class ChatResponse(BaseModel):
     risk_level: str
     emotion_tags: List[str]
     response_time_ms: int
+    rag_enhanced: bool = False
+    knowledge_mode: str = "unknown"
 
 class RiskCheckRequest(BaseModel):
     user_id: str
@@ -60,10 +90,13 @@ async def health_check():
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
     """
-    AI对话接口 - 核心功能
+    AI对话接口 - 核心功能（集成RAG知识增强）
+    
+    知识库来源：ima知识库《心理咨询技术》（26本心理学经典书籍）
+    知识仅作为上下文参考，AI模型不进行训练
     """
     try:
-        # 生成对话回复
+        # 生成对话回复（含RAG知识增强）
         response = await chat_service.generate_response(
             user_id=request.user_id,
             message=request.message,
@@ -84,7 +117,9 @@ async def chat(request: ChatRequest):
             response=response["content"],
             risk_level=risk_level,
             emotion_tags=emotion_tags,
-            response_time_ms=response["response_time_ms"]
+            response_time_ms=response["response_time_ms"],
+            rag_enhanced=response.get("rag_enhanced", False),
+            knowledge_mode=response.get("knowledge_mode", "unknown")
         )
         
     except Exception as e:
@@ -140,7 +175,7 @@ async def get_topic_cards():
 @app.websocket("/ws/chat/{user_id}")
 async def websocket_chat(websocket, user_id: str):
     """
-    WebSocket实时对话接口
+    WebSocket实时对话接口（集成RAG知识增强）
     """
     await websocket.accept()
     
@@ -149,7 +184,7 @@ async def websocket_chat(websocket, user_id: str):
             # 接收消息
             data = await websocket.receive_text()
             
-            # 生成回复
+            # 生成回复（含RAG知识增强）
             response = await chat_service.generate_response(
                 user_id=user_id,
                 message=data
@@ -161,6 +196,107 @@ async def websocket_chat(websocket, user_id: str):
     except Exception as e:
         print(f"WebSocket error: {e}")
         await websocket.close()
+
+# ==================== 知识库管理API ====================
+
+class KnowledgeSearchRequest(BaseModel):
+    query: str
+    category: Optional[str] = None
+    top_k: int = 5
+
+class KnowledgeImportRequest(BaseModel):
+    json_path: Optional[str] = None
+
+@app.post("/knowledge/search")
+async def search_knowledge(request: KnowledgeSearchRequest):
+    """
+    知识库搜索接口 - 搜索心理咨询技术知识
+    
+    知识库来源：ima知识库《心理咨询技术》
+    """
+    try:
+        results = await knowledge_service.search_knowledge(
+            query=request.query,
+            category=request.category,
+            top_k=request.top_k
+        )
+        
+        return {
+            "query": request.query,
+            "total_results": len(results),
+            "results": [
+                {
+                    "title": r.document.title,
+                    "source": r.document.source,
+                    "category": r.document.category,
+                    "content_preview": r.document.content[:200],
+                    "techniques": r.document.techniques[:5],
+                    "score": r.relevance_score,
+                    "matched_keywords": r.matched_keywords
+                }
+                for r in results
+            ]
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/knowledge/stats")
+async def get_knowledge_stats():
+    """
+    获取知识库统计信息
+    """
+    try:
+        stats = await knowledge_service.get_stats()
+        return {
+            "source": "ima知识库 - 心理咨询技术",
+            "source_url": "https://ima.qq.com/wiki/?shareId=8c7d46dc19ed72214c4bd5183ff7cc95c77705fb587dce3e257adde06bd34d81",
+            "description": "基于26本心理学经典书籍的心理咨询技术知识库",
+            "usage": "知识仅作为RAG检索增强的参考，AI模型不进行训练",
+            **stats
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/knowledge/import")
+async def import_knowledge(request: KnowledgeImportRequest):
+    """
+    重新导入知识库数据
+    """
+    try:
+        json_path = request.json_path
+        if not json_path:
+            json_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+                "data",
+                "knowledge_base.json"
+            )
+        
+        count = await knowledge_service.import_from_json(json_path)
+        stats = await knowledge_service.get_stats()
+        
+        return {
+            "success": True,
+            "imported_count": count,
+            "total_documents": stats.get("total_documents", 0),
+            "mode": stats.get("mode", "unknown")
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/knowledge/categories")
+async def get_knowledge_categories():
+    """
+    获取知识库分类列表
+    """
+    try:
+        stats = await knowledge_service.get_stats()
+        return {
+            "categories": stats.get("categories", []),
+            "total_documents": stats.get("total_documents", 0)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 if __name__ == "__main__":
     import uvicorn

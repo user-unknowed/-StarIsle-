@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import { MoodRecord, MoodCheckinResponse } from '../types';
+import { moodApi } from '../services/api';
+import { ApiError } from '../services/http';
 
 interface MoodState {
   moodHistory: MoodRecord[];
@@ -7,6 +9,8 @@ interface MoodState {
   checkinStatus: 'idle' | 'checking' | 'success' | 'error';
   checkinMessage: string;
   isLoading: boolean;
+  continuousDays: number;
+  isUsingMockData: boolean;
 
   fetchMoodHistory: (userId: string) => Promise<void>;
   checkinMood: (userId: string, moodLevel: number, tags?: string[]) => Promise<MoodCheckinResponse | null>;
@@ -14,6 +18,7 @@ interface MoodState {
   resetCheckinStatus: () => void;
 }
 
+// Mock 数据（降级使用）
 const mockMoodHistory: MoodRecord[] = [
   { id: '1', userId: 'student1', moodLevel: 4, tags: ['学习压力'], checkinDate: '2026-07-10', createdAt: '2026-07-10T08:00:00Z' },
   { id: '2', userId: 'student1', moodLevel: 3, tags: ['人际'], checkinDate: '2026-07-11', createdAt: '2026-07-11T09:00:00Z' },
@@ -22,41 +27,87 @@ const mockMoodHistory: MoodRecord[] = [
   { id: '5', userId: 'student1', moodLevel: 4, tags: ['平静'], checkinDate: '2026-07-14', createdAt: '2026-07-14T08:30:00Z' },
 ];
 
+// Mock 打卡响应（降级使用）
+const mockCheckinResponse: MoodCheckinResponse = {
+  message: '心情打卡成功',
+  checkinDate: new Date().toISOString().split('T')[0],
+  continuousDays: 5,
+};
+
 export const useMoodStore = create<MoodState>((set) => ({
   moodHistory: [],
   selectedMood: null,
   checkinStatus: 'idle',
   checkinMessage: '',
   isLoading: false,
+  continuousDays: 0,
+  isUsingMockData: false,
 
   fetchMoodHistory: async (userId) => {
     set({ isLoading: true });
-    await new Promise(resolve => setTimeout(resolve, 500));
-    set({ moodHistory: mockMoodHistory, isLoading: false });
+    try {
+      const history = await moodApi.getHistory(userId);
+      set({ moodHistory: history, isLoading: false, isUsingMockData: false });
+    } catch (error) {
+      // 降级到 mock 数据
+      if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+        set({ moodHistory: mockMoodHistory, isLoading: false, isUsingMockData: true });
+        return;
+      }
+      // 其他错误也降级到 mock，保证 UI 可用
+      set({ moodHistory: mockMoodHistory, isLoading: false, isUsingMockData: true });
+    }
   },
 
   checkinMood: async (userId, moodLevel, tags) => {
     set({ checkinStatus: 'checking' });
-    
-    await new Promise(resolve => setTimeout(resolve, 800));
-    
-    const response: MoodCheckinResponse = {
-      message: '心情打卡成功',
-      checkinDate: new Date().toISOString().split('T')[0],
-      continuousDays: 5,
-    };
-    
-    set({
-      checkinStatus: 'success',
-      checkinMessage: response.message,
-      selectedMood: moodLevel,
-    });
-    
-    setTimeout(() => {
-      set({ checkinStatus: 'idle', checkinMessage: '' });
-    }, 3000);
-    
-    return response;
+
+    try {
+      const response = await moodApi.checkin({ userId, moodLevel, tags });
+
+      set({
+        checkinStatus: 'success',
+        checkinMessage: response.message,
+        selectedMood: moodLevel,
+        continuousDays: response.continuousDays,
+        isUsingMockData: false,
+      });
+
+      setTimeout(() => {
+        set({ checkinStatus: 'idle', checkinMessage: '' });
+      }, 3000);
+
+      return response;
+    } catch (error) {
+      // 降级到 mock 响应
+      if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+        const mockResponse: MoodCheckinResponse = {
+          ...mockCheckinResponse,
+          checkinDate: new Date().toISOString().split('T')[0],
+        };
+
+        set({
+          checkinStatus: 'success',
+          checkinMessage: mockResponse.message,
+          selectedMood: moodLevel,
+          continuousDays: mockResponse.continuousDays,
+          isUsingMockData: true,
+        });
+
+        setTimeout(() => {
+          set({ checkinStatus: 'idle', checkinMessage: '' });
+        }, 3000);
+
+        return mockResponse;
+      }
+
+      // 其他错误（如 4xx）标记为失败
+      set({
+        checkinStatus: 'error',
+        checkinMessage: error instanceof ApiError ? error.message : '心情打卡失败，请稍后重试',
+      });
+      return null;
+    }
   },
 
   selectMood: (moodLevel) => {

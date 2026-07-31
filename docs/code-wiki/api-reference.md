@@ -450,7 +450,7 @@ Content-Type: application/json
 
 ---
 
-## AI 引擎接口（后台/ai-engine）
+## AI 引擎接口（server-services/ai-engine）
 
 > **基础 URL**: `http://localhost:8000`
 

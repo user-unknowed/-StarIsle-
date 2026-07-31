@@ -63,7 +63,7 @@ flowchart TB
   - 请求路由与负载均衡
   - CORS 跨域处理
   - 速率限制
-- **注意**: 当前项目处于过渡期，`backend-java/`（Spring Boot）是主要开发版本，`后台/backend/`（Go）作为 API 网关保留。
+- **注意**: 当前项目处于过渡期，`backend-java/`（Spring Boot）是主要开发版本，`server-services/backend/`（Go）作为 API 网关保留。
 
 ### 3. 服务端层
 
@@ -78,7 +78,7 @@ flowchart TB
   - 家长绑定与授权管理
   - 端到端加密通信
 
-#### 3.2 AI 对话引擎（后台/ai-engine）
+#### 3.2 AI 对话引擎（server-services/ai-engine）
 
 - **技术**: Python 3.10 + FastAPI 0.108.x
 - **职责**:

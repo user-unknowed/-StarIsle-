@@ -245,12 +245,12 @@
 
 ---
 
-## 3. AI 引擎（后台/ai-engine）
+## 3. AI 引擎（server-services/ai-engine）
 
 ### 3.1 入口
 
 #### `main.py`
-- **路径**: `后台/ai-engine/app/main.py`
+- **路径**: `server-services/ai-engine/app/main.py`
 - **职责**: FastAPI 应用实例、服务初始化、路由注册
 - **关键对象**:
   - `chat_service = ChatService()`
@@ -267,7 +267,7 @@
 ### 3.2 服务层
 
 #### `ChatService`
-- **路径**: `后台/ai-engine/app/services/chat_service.py`
+- **路径**: `server-services/ai-engine/app/services/chat_service.py`
 - **职责**: AI 对话生成核心
 - **关键函数**:
   - `generate_response(user_id, message, context, user_profile)`: 生成回复
@@ -279,7 +279,7 @@
   - `_generate_local(messages)`: 本地 Transformer 模型推理（HuggingFace）
 
 #### `RiskDetectionService`
-- **路径**: `后台/ai-engine/app/services/risk_detection_service.py`
+- **路径**: `server-services/ai-engine/app/services/risk_detection_service.py`
 - **职责**: 双层风险检测
 - **关键函数**:
   - `detect_risk(user_id, content)`: 综合检测
@@ -289,27 +289,27 @@
   - `get_detection_details(content)`: 返回关键词命中列表、语义意图、置信度
 
 #### `EmotionAnalysisService`
-- **路径**: `后台/ai-engine/app/services/emotion_analysis_service.py`
+- **路径**: `server-services/ai-engine/app/services/emotion_analysis_service.py`
 - **职责**: 情绪标签提取
 
 ### 3.3 模型与提示词
 
 #### `SemanticAnalyzer`
-- **路径**: `后台/ai-engine/app/models/semantic_analyzer.py`
+- **路径**: `server-services/ai-engine/app/models/semantic_analyzer.py`
 - **职责**: 语义分析模型封装（Word2Vec / Transformers）
 
 #### `Star宝SystemPrompt`
-- **路径**: `后台/ai-engine/app/prompts/star宝_system_prompt.py`
+- **路径**: `server-services/ai-engine/app/prompts/star宝_system_prompt.py`
 - **职责**: 生成星宝角色的 CBT 框架系统提示词
 
 ### 3.4 工具类
 
 #### `KeywordManager`
-- **路径**: `后台/ai-engine/app/utils/keyword_manager.py`
+- **路径**: `server-services/ai-engine/app/utils/keyword_manager.py`
 - **职责**: 风险关键词库的动态加载与更新
 
 #### `EncryptionUtil`
-- **路径**: `后台/ai-engine/app/utils/encryption.py`
+- **路径**: `server-services/ai-engine/app/utils/encryption.py`
 - **职责**: 与 Java 后端对齐的加密/解密实现
 
 ---
@@ -319,7 +319,7 @@
 ### 4.1 学生端
 
 #### `main.dart`
-- **路径**: `学生端/StarIsle-student/lib/main.dart`
+- **路径**: `student-app/StarIsle-student/lib/main.dart`
 - **职责**: Flutter 应用入口
 - **初始化流程**:
   1. `WidgetsFlutterBinding.ensureInitialized()`
@@ -376,7 +376,7 @@
 ## 5. 家长端
 
 ### `ParentHome.tsx`
-- **路径**: `家长端/src/pages/parent/ParentHome.tsx`
+- **路径**: `parent-app/src/pages/parent/ParentHome.tsx`
 - **职责**: 家长首页核心页面
 - **关键逻辑**:
   - 展示当前绑定孩子的情绪状态与风险等级
@@ -386,7 +386,7 @@
   - 底部导航：首页 / 聊一聊 / 我的
 
 ### `parentStore.ts`
-- **路径**: `家长端/src/store/parentStore.ts`
+- **路径**: `parent-app/src/store/parentStore.ts`
 - **职责**: 家长端全局状态
 - **关键状态**:
   - `children: ChildBinding[]`: 绑定的孩子列表

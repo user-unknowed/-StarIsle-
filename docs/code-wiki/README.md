@@ -23,7 +23,7 @@
 
 ```bash
 # 一键启动全部服务（推荐）
-cd 后台/deployment
+cd server-services/deployment
 cp .env.template .env
 # 编辑 .env 配置密码
 docker-compose up -d
@@ -55,14 +55,14 @@ mvn spring-boot:run
 -StarIsle-/
 ├── backend-java/          # Java Spring Boot 核心业务后端
 ├── web-frontend/          # React Web 前端（学生/教师/家长）
-├── 后台/                   # 后台服务集合
+├── server-services/                   # 后台服务集合
 │   ├── ai-engine/         # Python AI 对话引擎
 │   ├── backend/           # Go API 网关
 │   ├── database/          # 数据库初始化脚本
 │   └── deployment/        # Docker/K8s 部署配置
-├── 学生端/                 # Flutter 学生端 App
-├── 教师端/                 # Flutter 教师端 App
-├── 家长端/                 # React 家长端页面扩展
+├── student-app/                 # Flutter 学生端 App
+├── teacher-app/                 # Flutter 教师端 App
+├── parent-app/                 # React 家长端页面扩展
 ├── api-docs/              # API 文档（Electron 桌面应用）
 ├── security-assessment/   # 安全评估文档
 └── docs/                  # 项目文档

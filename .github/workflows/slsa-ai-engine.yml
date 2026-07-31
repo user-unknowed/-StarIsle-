@@ -45,8 +45,8 @@ jobs:
         id: push
         uses: docker/build-push-action@v5
         with:
-          context: ./后台/ai-engine
-          file: ./后台/ai-engine/dockerfile
+          context: ./server-services/ai-engine
+          file: ./server-services/ai-engine/dockerfile
           push: true
           tags: |
             ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}:latest

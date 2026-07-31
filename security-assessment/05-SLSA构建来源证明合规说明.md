@@ -73,7 +73,7 @@ SLSA 是一套安全框架和标准，旨在防止软件供应链攻击，确保
 | 组件 | Dockerfile 路径 | 构建阶段 | 运行时镜像 | 安全特性 |
 |------|----------------|----------|-----------|--------|
 | 后端 Java | `backend-java/Dockerfile` | Maven 构建 → JAR | `eclipse-temurin:21-jre-alpine` | 非 root 用户 (starisle) |
-| AI 引擎 | `后台/ai-engine/dockerfile` | pip 安装 | `python:3.10-slim` | 最小依赖 |
+| AI 引擎 | `server-services/ai-engine/dockerfile` | pip 安装 | `python:3.10-slim` | 最小依赖 |
 | Web 前端 | `web-frontend/Dockerfile` | Node.js 构建 → dist | `nginx:alpine` | 非 root 用户 (nginx) |
 
 ### 工作流触发机制

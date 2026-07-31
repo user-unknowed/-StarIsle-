@@ -22,7 +22,7 @@
 ### 步骤
 
 ```bash
-cd 后台/deployment
+cd server-services/deployment
 
 # 1. 复制环境变量模板
 cp .env.template .env
@@ -161,10 +161,10 @@ export REDIS_PORT=6379
 mvn spring-boot:run
 ```
 
-### 3. AI 引擎 (`后台/ai-engine/`)
+### 3. AI 引擎 (`server-services/ai-engine/`)
 
 ```bash
-cd 后台/ai-engine
+cd server-services/ai-engine
 
 # 创建虚拟环境
 python -m venv venv
@@ -196,10 +196,10 @@ export MODEL_NAME=deepseek-ai/deepseek-chat
 python app/main.py
 ```
 
-### 4. Go API 网关 (`后台/backend/`)
+### 4. Go API 网关 (`server-services/backend/`)
 
 ```bash
-cd 后台/backend
+cd server-services/backend
 
 # 下载依赖
 go mod download
@@ -211,10 +211,10 @@ go run cmd/api-gateway/main.go
 # 服务运行在 http://localhost:8080
 ```
 
-### 5. 学生端 Flutter App (`学生端/StarIsle-student/`)
+### 5. 学生端 Flutter App (`student-app/StarIsle-student/`)
 
 ```bash
-cd 学生端/StarIsle-student
+cd student-app/StarIsle-student
 
 # 获取依赖
 flutter pub get
@@ -229,10 +229,10 @@ flutter build apk
 flutter build ios
 ```
 
-### 6. 教师端 Flutter App (`教师端/StarIsle-teacher/`)
+### 6. 教师端 Flutter App (`teacher-app/StarIsle-teacher/`)
 
 ```bash
-cd 教师端/StarIsle-teacher
+cd teacher-app/StarIsle-teacher
 
 flutter pub get
 flutter run
@@ -372,7 +372,7 @@ flutter pub get
 ### 使用 Kubernetes
 
 ```bash
-cd 后台/deployment/kubernetes
+cd server-services/deployment/kubernetes
 
 # 应用部署文件
 kubectl apply -f starisle-deployment.yml
@@ -384,7 +384,7 @@ kubectl get svc
 
 ### Nginx 反向代理配置
 
-参考 `后台/deployment/nginx/nginx.conf`：
+参考 `server-services/deployment/nginx/nginx.conf`：
 
 ```nginx
 server {

@@ -12,12 +12,12 @@ flowchart TB
     end
 
     subgraph Gateway["网关层"]
-        GO["后台/backend<br/>Go + Gin"]
+        GO["server-services/backend<br/>Go + Gin"]
     end
 
     subgraph Service["服务层"]
         BJ["backend-java<br/>Spring Boot"]
-        AI["后台/ai-engine<br/>FastAPI"]
+        AI["server-services/ai-engine<br/>FastAPI"]
     end
 
     subgraph Data["数据层"]
@@ -59,7 +59,7 @@ flowchart TB
 | `ParentHome.tsx` | `GET /api/v1/parents/mood-trend` | backend-java |
 | `ParentChat.tsx` | `POST /api/v1/chat/message` | backend-java |
 
-### Flutter 学生端 (`学生端/StarIsle-student`)
+### Flutter 学生端 (`student-app/StarIsle-student`)
 
 | Dart 组件 | 依赖 API | 说明 |
 |----------|---------|------|
@@ -68,7 +68,7 @@ flowchart TB
 | `chat_screen.dart` | `POST /api/v1/chat/message` | HTTP 对话备选 |
 | `ai_service.dart` | `GET /api/v1/content/meditations` | 冥想列表 |
 
-### Flutter 教师端 (`教师端/StarIsle-teacher`)
+### Flutter 教师端 (`teacher-app/StarIsle-teacher`)
 
 | Dart 组件 | 依赖 API | 说明 |
 |----------|---------|------|
@@ -114,9 +114,9 @@ flowchart TD
 
 | 依赖方 | 被依赖方 | 调用方式 | 用途 |
 |--------|---------|---------|------|
-| `ChatService` | `后台/ai-engine` | HTTP POST `/chat` | AI 对话生成 |
-| `RiskDetectionService` | `后台/ai-engine` | HTTP POST `/risk/check` | 风险检测（备选） |
-| `EmotionAnalysisService` | `后台/ai-engine` | HTTP POST `/emotion/analyze` | 情绪分析（备选） |
+| `ChatService` | `server-services/ai-engine` | HTTP POST `/chat` | AI 对话生成 |
+| `RiskDetectionService` | `server-services/ai-engine` | HTTP POST `/risk/check` | 风险检测（备选） |
+| `EmotionAnalysisService` | `server-services/ai-engine` | HTTP POST `/emotion/analyze` | 情绪分析（备选） |
 | backend-java | PostgreSQL | JDBC / JPA | 用户、心情、班级、预警数据 |
 | backend-java | MongoDB | spring-data-mongodb | 聊天消息存储 |
 | backend-java | Redis | Jedis | 会话缓存、热点数据 |
@@ -128,8 +128,8 @@ flowchart TD
 | `ChatService` | DeepSeek API | OpenAI SDK HTTP | 大模型对话生成 |
 | `RiskDetectionService` | `SemanticAnalyzer` | 本地模型 | 语义风险分析 |
 | `SemanticAnalyzer` | Word2Vec 模型 | 本地文件 | 词向量语义分析 |
-| 后台/ai-engine | MongoDB | pymongo | 对话上下文存储 |
-| 后台/ai-engine | Redis | redis-py | 缓存 |
+| server-services/ai-engine | MongoDB | pymongo | 对话上下文存储 |
+| server-services/ai-engine | Redis | redis-py | 缓存 |
 
 ## 数据流依赖
 
@@ -267,7 +267,7 @@ sequenceDiagram
 | redis | 5.0.1 | Redis |
 | kafka-python | 2.0.2 | 消息队列 |
 
-### Go (后台/backend)
+### Go (server-services/backend)
 
 | 依赖 | 版本 | 用途 |
 |------|------|------|

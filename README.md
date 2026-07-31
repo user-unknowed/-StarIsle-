@@ -107,11 +107,11 @@
 | 组件 | 技术栈 | 职责 |
 |------|--------|------|
 | `backend-java/` | Java Spring Boot | 核心业务服务（认证、用户管理、情绪数据、聊天、风险检测） |
-| `后台/backend/` | Go Gin | API网关（请求路由、负载均衡、统一认证入口） |
-| `后台/ai-engine/` | Python FastAPI | AI对话引擎（情绪分析、风险检测、语义分析） |
+| `server-services/backend/` | Go Gin | API网关（请求路由、负载均衡、统一认证入口） |
+| `server-services/ai-engine/` | Python FastAPI | AI对话引擎（情绪分析、风险检测、语义分析） |
 | `web-frontend/` | React TypeScript | Web端多角色应用（学生/教师/家长） |
-| `学生端/` | Flutter | 学生端原生移动应用 |
-| `教师端/` | Flutter | 教师端原生移动应用 |
+| `student-app/` | Flutter | 学生端原生移动应用 |
+| `teacher-app/` | Flutter | 教师端原生移动应用 |
 
 ## 项目目录结构
 
@@ -162,7 +162,7 @@
 │   ├── package.json                  # npm依赖配置
 │   ├── vite.config.ts                # Vite构建配置
 │   └── tailwind.config.js            # TailwindCSS配置
-├── 后台/                             # 后台服务（Go后端 + AI引擎）
+├── server-services/                             # 后台服务（Go后端 + AI引擎）
 │   ├── ai-engine/                    # AI对话引擎（Python）
 │   │   ├── app/
 │   │   │   ├── models/               # 语义分析模型
@@ -194,7 +194,7 @@
 │   ├── testing/                      # 测试配置
 │   ├── .env.template                 # 环境变量模板
 │   └── CHANGELOG.md                  # 变更日志
-├── 学生端/                           # 学生端原生应用
+├── student-app/                           # 学生端原生应用
 │   ├── StarIsle-student/             # Flutter应用
 │   │   ├── lib/                      # Dart源码
 │   │   │   ├── providers/            # Riverpod providers
@@ -204,13 +204,13 @@
 │   │   ├── assets/                   # 静态资源
 │   │   └── pubspec.yaml              # Flutter依赖
 │   └── docs/                         # 学生端产品文档
-├── 教师端/                           # 教师端原生应用
+├── teacher-app/                           # 教师端原生应用
 │   ├── StarIsle-teacher/             # Flutter应用
 │   │   ├── lib/                      # Dart源码
 │   │   ├── assets/                   # 静态资源
 │   │   └── pubspec.yaml              # Flutter依赖
 │   └── docs/                         # 教师端产品文档
-├── 家长端/                           # 家长端组件（Web）
+├── parent-app/                           # 家长端组件（Web）
 │   ├── src/
 │   │   ├── pages/parent/             # 家长端页面组件
 │   │   └── store/parentStore.ts      # 家长端状态管理
@@ -270,7 +270,7 @@ backend-java/StarIsleApplication.java
 ### AI引擎依赖
 
 ```
-后台/ai-engine/app/main.py
+server-services/ai-engine/app/main.py
     ├── services/chat_service.py
     │   ├── models/semantic_analyzer.py
     │   └── prompts/star宝_system_prompt.py
@@ -298,7 +298,7 @@ backend-java/StarIsleApplication.java
 ### 使用Docker Compose启动（推荐）
 
 ```bash
-cd 后台/deployment
+cd server-services/deployment
 cp .env.template .env
 # 编辑 .env 文件，配置数据库密码等环境变量
 docker-compose up -d
@@ -327,7 +327,7 @@ mvn spring-boot:run
 ### AI引擎启动
 
 ```bash
-cd 后台/ai-engine
+cd server-services/ai-engine
 python -m venv venv
 source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
@@ -339,7 +339,7 @@ python app/main.py
 ### Go API网关启动
 
 ```bash
-cd 后台/backend
+cd server-services/backend
 go mod download
 go run cmd/api-gateway/main.go
 ```
@@ -349,7 +349,7 @@ go run cmd/api-gateway/main.go
 ### 学生端原生开发
 
 ```bash
-cd 学生端/StarIsle-student
+cd student-app/StarIsle-student
 flutter pub get
 flutter run
 ```
@@ -357,7 +357,7 @@ flutter run
 ### 教师端原生开发
 
 ```bash
-cd 教师端/StarIsle-teacher
+cd teacher-app/StarIsle-teacher
 flutter pub get
 flutter run
 ```
@@ -435,7 +435,7 @@ A: 在家长端首页点击"情绪趋势"卡片，查看详细的情绪变化图
 A: Web前端先运行 `npm run check` 检查TypeScript类型错误，再运行 `npm run lint` 检查代码规范问题。
 
 ### Q: 后端服务有两个版本（Go和Java），应该使用哪个？
-A: 当前项目处于过渡期，`backend-java/`（Spring Boot）是主要开发版本，`后台/backend/`（Go）作为API网关保留。生产环境建议使用Docker Compose启动完整服务。
+A: 当前项目处于过渡期，`backend-java/`（Spring Boot）是主要开发版本，`server-services/backend/`（Go）作为API网关保留。生产环境建议使用Docker Compose启动完整服务。
 
 ### Q: 如何验证构建来源证明？
 A: 安装GitHub CLI后运行 `gh attestation verify` 命令，或在GitHub仓库的Security页面查看Attestations。
@@ -613,9 +613,9 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 项目使用的第三方库遵循其各自的开源许可证，详见各模块的依赖配置文件：
 - `backend-java/pom.xml` - Java/Maven依赖
 - `web-frontend/package.json` - npm依赖
-- `后台/ai-engine/requirements.txt` - Python依赖
-- `学生端/StarIsle-student/pubspec.yaml` - Flutter依赖
-- `教师端/StarIsle-teacher/pubspec.yaml` - Flutter依赖
+- `server-services/ai-engine/requirements.txt` - Python依赖
+- `student-app/StarIsle-student/pubspec.yaml` - Flutter依赖
+- `teacher-app/StarIsle-teacher/pubspec.yaml` - Flutter依赖
 
 ## 联系方式
 

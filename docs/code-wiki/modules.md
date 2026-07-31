@@ -6,11 +6,11 @@
 |---------|--------|---------|---------|
 | `backend-java/` | Java 21 + Spring Boot 3.2 | 核心业务后端 | Docker / JAR |
 | `web-frontend/` | React 18 + TypeScript + Vite | Web 多端应用 | Docker / 静态资源 |
-| `后台/ai-engine/` | Python 3.10 + FastAPI | AI 对话与情绪分析 | Docker / Python |
-| `后台/backend/` | Go 1.21 + Gin | API 网关（过渡期） | Docker / 二进制 |
-| `学生端/StarIsle-student/` | Flutter 3.x | 学生移动端 App | APK / IPA |
-| `教师端/StarIsle-teacher/` | Flutter 3.x | 教师移动端 App | APK / IPA |
-| `家长端/` | React + TypeScript | 家长端 Web 页面扩展 | 同 web-frontend |
+| `server-services/ai-engine/` | Python 3.10 + FastAPI | AI 对话与情绪分析 | Docker / Python |
+| `server-services/backend/` | Go 1.21 + Gin | API 网关（过渡期） | Docker / 二进制 |
+| `student-app/StarIsle-student/` | Flutter 3.x | 学生移动端 App | APK / IPA |
+| `teacher-app/StarIsle-teacher/` | Flutter 3.x | 教师移动端 App | APK / IPA |
+| `parent-app/` | React + TypeScript | 家长端 Web 页面扩展 | 同 web-frontend |
 | `api-docs/` | React + Electron | API 文档桌面应用 | Electron 安装包 |
 
 ---
@@ -173,7 +173,7 @@ web-frontend/
 
 ---
 
-## 3. 后台/ai-engine（AI 对话引擎）
+## 3. server-services/ai-engine（AI 对话引擎）
 
 ### 职责
 - 基于 CBT（认知行为疗法）框架的青少年心理咨询对话生成
@@ -185,7 +185,7 @@ web-frontend/
 ### 目录结构
 
 ```
-后台/ai-engine/
+server-services/ai-engine/
 ├── app/
 │   ├── models/
 │   │   └── semantic_analyzer.py      # 语义分析模型封装
@@ -226,7 +226,7 @@ web-frontend/
 
 ---
 
-## 4. 后台/backend（Go API 网关）
+## 4. server-services/backend（Go API 网关）
 
 ### 职责
 - 统一 API 入口，请求路由转发
@@ -237,7 +237,7 @@ web-frontend/
 ### 目录结构
 
 ```
-后台/backend/
+server-services/backend/
 ├── cmd/api-gateway/
 │   └── main.go              # 入口
 ├── internal/
@@ -268,7 +268,7 @@ web-frontend/
 
 ---
 
-## 5. 学生端/StarIsle-student（Flutter 学生 App）
+## 5. student-app/StarIsle-student（Flutter 学生 App）
 
 ### 职责
 - 学生移动端原生体验（iOS/Android）
@@ -280,7 +280,7 @@ web-frontend/
 ### 目录结构
 
 ```
-学生端/StarIsle-student/
+student-app/StarIsle-student/
 ├── lib/
 │   ├── providers/
 │   │   └── ai_provider.dart         # AI 服务 Provider
@@ -320,7 +320,7 @@ web-frontend/
 
 ---
 
-## 6. 教师端/StarIsle-teacher（Flutter 教师 App）
+## 6. teacher-app/StarIsle-teacher（Flutter 教师 App）
 
 ### 职责
 - 教师工作台概览与高风险学生告警
@@ -332,7 +332,7 @@ web-frontend/
 ### 目录结构
 
 ```
-教师端/StarIsle-teacher/
+teacher-app/StarIsle-teacher/
 ├── lib/
 │   ├── models/
 │   │   └── teacher_models.dart      # 教师端数据模型
@@ -372,7 +372,7 @@ web-frontend/
 ### 目录结构
 
 ```
-家长端/
+parent-app/
 ├── src/
 │   ├── pages/parent/
 │   │   ├── EmergencyDetail.tsx      # 预警详情

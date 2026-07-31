@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
 import { Header } from '../../components/common/Header';
-import { Send, Sparkles, Shield, BookOpen } from 'lucide-react';
+import { Send, Sparkles, Shield, BookOpen, AlertTriangle } from 'lucide-react';
+import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
 
 const professionalTopics = [
   { id: 'pt1', title: '学生情绪波动分析', category: '分析' },
@@ -42,7 +43,7 @@ export default function TeacherChat() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -52,7 +53,8 @@ export default function TeacherChat() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
       <Header role="teacher" />
-      
+      <EmergencyHelpButton />
+
       <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden h-[calc(100vh-8rem)] flex flex-col">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
@@ -158,7 +160,7 @@ export default function TeacherChat() {
                 <textarea
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="输入您的问题，获取专业的心理咨询建议..."
                   rows={1}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"

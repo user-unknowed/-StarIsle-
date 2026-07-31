@@ -2,7 +2,7 @@
  * API 模块 - 各业务模块的 API 调用函数
  * 对接后端 Java API 网关 (8080) 和 AI 引擎 (8000)
  */
-import { get, post, del } from './http';
+import { get, post, del, ApiError } from './http';
 import type {
   User,
   LoginRequest,
@@ -32,27 +32,27 @@ import type {
 export const authApi = {
   /** 账号密码登录 */
   login: (data: LoginRequest) =>
-    post<LoginResponse>('/auth/login', data),
+    post<LoginResponse>('/v1/auth/login', data),
 
   /** 注册 */
   register: (data: RegisterRequest) =>
-    post<LoginResponse>('/auth/register', data),
+    post<LoginResponse>('/v1/auth/register', data),
 
   /** 第三方登录 */
   loginWithThirdParty: (provider: string, openId: string, nickname?: string, avatar?: string) =>
-    post<LoginResponse>('/auth/third-party', { provider, openId, nickname, avatar }),
+    post<LoginResponse>('/v1/auth/third-party', { provider, openId, nickname, avatar }),
 
   /** 手机号登录 */
   loginWithPhone: (phone: string, code: string) =>
-    post<LoginResponse>('/auth/phone', { phone, code }),
+    post<LoginResponse>('/v1/auth/phone', { phone, code }),
 
   /** 发送短信验证码 */
   sendSmsCode: (phone: string) =>
-    post<{ success: boolean }>('/auth/sms/send', { phone }),
+    post<{ success: boolean }>('/v1/auth/sms/send', { phone }),
 
   /** 获取用户信息 */
   getProfile: (userId: string) =>
-    get<User>(`/users/${userId}`),
+    get<User>(`/v1/users/${userId}`),
 };
 
 // ==================== 心情打卡模块 ====================
@@ -60,31 +60,35 @@ export const authApi = {
 export const moodApi = {
   /** 心情打卡 */
   checkin: (data: MoodCheckinRequest) =>
-    post<MoodCheckinResponse>('/mood/checkin', data),
+    post<MoodCheckinResponse>('/v1/mood/checkin', data),
 
   /** 获取心情历史 */
   getHistory: (userId: string, days = 7) =>
-    get<MoodRecord[]>(`/mood/history?userId=${userId}&days=${days}`),
+    get<MoodRecord[]>(`/v1/mood/history/${userId}?days=${days}`),
 
   /** 获取心情统计 */
   getStats: (userId: string) =>
-    get<{ continuousDays: number; averageMood: number }>(`/mood/stats?userId=${userId}`),
+    get<{ continuousDays: number; averageMood: number }>(`/v1/mood/stats?userId=${userId}`),
 };
 
 // ==================== AI 对话模块 ====================
 
 export const chatApi = {
   /** 发送消息（对接 AI 引擎 /chat 接口） */
-  sendMessage: (data: ChatRequest) =>
-    post<ChatResponse>('/chat', data),
+  sendMessage: (data: ChatRequest) => {
+    if (data.message.length > 2000) {
+      throw new ApiError('消息长度不能超过2000字', 400, 'MESSAGE_TOO_LONG');
+    }
+    return post<ChatResponse>('/v1/chat/message', data);
+  },
 
   /** 获取对话历史 */
   getHistory: (userId: string, limit = 20) =>
-    get<ChatMessage[]>(`/chat/history?userId=${userId}&limit=${limit}`),
+    get<ChatMessage[]>(`/v1/chat/history/${userId}?limit=${limit}`),
 
   /** 获取话题卡片 */
   getTopics: () =>
-    get<{ topics: TopicCard[] }>('/topics'),
+    get<{ topics: TopicCard[] }>('/v1/chat/topics'),
 };
 
 // ==================== 班级管理模块 ====================
@@ -92,15 +96,15 @@ export const chatApi = {
 export const classroomApi = {
   /** 获取班级统计 */
   getClassStats: (classId: string) =>
-    get<ClassStats>(`/classroom/${classId}/stats`),
+    get<ClassStats>(`/v1/classroom/${classId}/stats`),
 
   /** 获取班级学生列表 */
   getStudents: (classId: string) =>
-    get<StudentWithMood[]>(`/classroom/${classId}/students`),
+    get<StudentWithMood[]>(`/v1/classroom/${classId}/students`),
 
   /** 获取预警列表 */
   getAlerts: (classId: string) =>
-    get<Alert[]>(`/classroom/${classId}/alerts`),
+    get<Alert[]>(`/v1/classroom/${classId}/alerts`),
 };
 
 // ==================== 知识库模块（对接 AI 引擎） ====================
@@ -120,7 +124,7 @@ export const knowledgeApi = {
         score: number;
         matched_keywords: string[];
       }>;
-    }>('/knowledge/search', { query, category, top_k: topK }),
+    }>('/v1/knowledge/search', { query, category, top_k: topK }),
 
   /** 获取知识库统计 */
   getStats: () =>
@@ -129,11 +133,11 @@ export const knowledgeApi = {
       total_documents: number;
       categories: string[];
       mode: string;
-    }>('/knowledge/stats'),
+    }>('/v1/knowledge/stats'),
 
   /** 获取分类列表 */
   getCategories: () =>
-    get<{ categories: string[]; total_documents: number }>('/knowledge/categories'),
+    get<{ categories: string[]; total_documents: number }>('/v1/knowledge/categories'),
 };
 
 // ==================== 家长端模块（对接 /api/v1/parents） ====================

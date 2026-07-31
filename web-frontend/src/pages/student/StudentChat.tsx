@@ -2,7 +2,8 @@ import { useEffect, useRef } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
 import { Header } from '../../components/common/Header';
-import { Send, MessageCircle, Sparkles } from 'lucide-react';
+import { Send, MessageCircle, Sparkles, AlertTriangle } from 'lucide-react';
+import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
 
 export default function StudentChat() {
   const user = useAuthStore((state) => state.user);
@@ -35,7 +36,7 @@ export default function StudentChat() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -45,7 +46,8 @@ export default function StudentChat() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
       <Header role="student" />
-      
+      <EmergencyHelpButton />
+
       <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden h-[calc(100vh-8rem)] flex flex-col">
           <div className="bg-gradient-to-r from-indigo-600 to-purple-600 p-5 text-white">
@@ -110,6 +112,14 @@ export default function StudentChat() {
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === 'assistant' && (message.riskLevel === 'red' || message.riskLevel === 'orange') && (
+                        <div className={`mt-2 p-2 rounded-xl flex items-center gap-2 ${message.riskLevel === 'red' ? 'bg-red-50 border border-red-200' : 'bg-orange-50 border border-orange-200'}`}>
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                          <p className="text-xs text-red-600 font-medium">
+                            检测到风险信号，请点击右下角紧急帮助按钮获取支持
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${message.role === 'user' ? 'order-1 ml-2' : 'order-2 mr-2'}`}>
@@ -148,7 +158,7 @@ export default function StudentChat() {
                 <textarea
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleKeyDown}
                   placeholder="输入你想说的话..."
                   rows={1}
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"

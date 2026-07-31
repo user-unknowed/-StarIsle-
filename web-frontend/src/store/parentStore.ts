@@ -29,6 +29,7 @@ interface ParentState {
   unbindChild: (bindingId: string) => Promise<void>;
   fetchAlerts: () => Promise<void>;
   confirmAlert: (alertId: string) => Promise<void>;
+  checkAlertTimeout: () => void;
   fetchResources: (type?: string) => Promise<void>;
   clearError: () => void;
 }
@@ -110,6 +111,20 @@ const mockResources: EmergencyResource[] = [
     content: '就近提供免费心理咨询服务，支持线下预约',
     contact: '社区服务中心',
     phone: '021-87654321',
+  },
+  {
+    type: 'community',
+    title: '学校心理老师',
+    content: '学校专业心理辅导老师，可预约面对面咨询',
+    contact: '学校心理辅导室',
+    phone: '请通过班主任联系',
+  },
+  {
+    type: 'community',
+    title: '班主任',
+    content: '孩子的班主任，了解孩子在校情况的第一联系人',
+    contact: '班级群',
+    phone: '请查看班级通讯录',
   },
 ];
 
@@ -277,6 +292,11 @@ export const useParentStore = create<ParentState>((set, get) => ({
 
   fetchAlerts: async () => {
     set({ isLoading: true, error: null });
+    // 测试用：模拟告警延迟（通过 localStorage.__test_alert_delay 控制毫秒数）
+    const testAlertDelay = typeof localStorage !== 'undefined' && localStorage.getItem('__test_alert_delay');
+    if (testAlertDelay) {
+      await new Promise(r => setTimeout(r, parseInt(testAlertDelay)));
+    }
     try {
       const alert = await parentApi.getEmergencyAlert();
       set({
@@ -284,9 +304,11 @@ export const useParentStore = create<ParentState>((set, get) => ({
         isLoading: false,
         isUsingMockData: false,
       });
+      get().checkAlertTimeout();
     } catch (error) {
       if (isDegradable(error)) {
         set({ emergencyAlerts: mockAlerts, isLoading: false, isUsingMockData: true });
+        get().checkAlertTimeout();
         return;
       }
       set({
@@ -320,6 +342,22 @@ export const useParentStore = create<ParentState>((set, get) => ({
         error: error instanceof ApiError ? error.message : '确认告警失败',
       });
     }
+  },
+
+  checkAlertTimeout: () => {
+    const alerts = get().emergencyAlerts;
+    const now = Date.now();
+    const TWO_HOURS = 2 * 60 * 60 * 1000;
+    const updated = alerts.map(a => {
+      if (a.level === 'red' && !a.confirmed) {
+        const created = new Date(a.createdAt).getTime();
+        if (now - created > TWO_HOURS) {
+          return { ...a, reason: a.reason + ' [已超时升级：请心理组长介入]' };
+        }
+      }
+      return a;
+    });
+    set({ emergencyAlerts: updated });
   },
 
   fetchResources: async (type) => {

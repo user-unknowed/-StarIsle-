@@ -132,7 +132,7 @@ export interface ChatRequest {
 
 export interface ChatResponse {
   response: string;
-  riskLevel?: string;
+  riskLevel?: RiskLevelType;
   emotionTags?: string[];
   responseTimeMs: number;
 }
@@ -159,7 +159,7 @@ export interface ChildBinding {
 export interface EmergencyAlert {
   alertId: string;
   studentId: string;
-  level: string;
+  level: RiskLevelType;
   reason: string;
   createdAt: string;
   confirmed: boolean;
@@ -173,9 +173,11 @@ export interface EmergencyResource {
   phone: string;
 }
 
+export type RiskLevelType = 'green' | 'yellow' | 'orange' | 'red';
+
 export interface RiskLevel {
   userId: string;
-  level: string;
+  level: RiskLevelType;
   score: number;
   reason: string;
 }
@@ -190,6 +192,7 @@ export interface AssessmentResult {
   id: string;
   type: string;
   score: number;
-  level: string;
-  suggestion: string;
+  risk_level: string;
+  description: string;
+  suggestions: string[];
 }

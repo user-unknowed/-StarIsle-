@@ -7,8 +7,15 @@ import { apiDebugStore } from '../store/apiDebugStore';
 const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 const TIMEOUT_MS = 10000;
 
+const SENSITIVE_PATHS = ['/auth/', '/parents/login', '/parents/register', '/login'];
+function shouldSanitizeBody(url: string): boolean {
+  return SENSITIVE_PATHS.some(p => url.includes(p));
+}
+
+let isRedirecting = false;
+
 /** 获取本地存储的 JWT Token */
-function getToken(): string | null {
+export function getToken(): string | null {
   try {
     const stored = localStorage.getItem('starisle-auth');
     if (stored) {
@@ -80,7 +87,7 @@ export async function request<T>(
       apiDebugStore.addLog({
         method,
         url,
-        requestBody: body,
+        requestBody: shouldSanitizeBody(url) ? '[REDACTED]' : body,
         status,
         responseBody,
         duration: Date.now() - startTime,
@@ -93,6 +100,11 @@ export async function request<T>(
   };
 
   try {
+    // 测试用：模拟网络延迟（通过 localStorage.__test_delay 控制毫秒数）
+    const testDelay = typeof localStorage !== 'undefined' && localStorage.getItem('__test_delay');
+    if (testDelay) {
+      await new Promise(r => setTimeout(r, parseInt(testDelay)));
+    }
     const response = await fetch(url, {
       method,
       headers: requestHeaders,
@@ -120,8 +132,11 @@ export async function request<T>(
 
       // 401 未授权 - 清除登录状态
       if (response.status === 401) {
-        localStorage.removeItem('starisle-auth');
-        window.location.href = '/';
+        if (!isRedirecting) {
+          isRedirecting = true;
+          localStorage.removeItem('starisle-auth');
+          window.location.href = '/';
+        }
       }
 
       recordLog(response.status, errorData, errorMessage);
@@ -131,9 +146,13 @@ export async function request<T>(
     // 处理空响应
     const contentType = response.headers.get('content-type');
     if (contentType && contentType.includes('application/json')) {
-      const data = await response.json() as T;
+      const data = await response.json();
+      // 解包统一响应格式 {code, message, data}
+      const unwrapped = (data && typeof data === 'object' && 'code' in data && 'data' in data)
+        ? (data as Record<string, unknown>).data
+        : data;
       recordLog(response.status, data);
-      return data;
+      return unwrapped as T;
     }
     recordLog(response.status, undefined);
     return undefined as unknown as T;

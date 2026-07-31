@@ -3,6 +3,8 @@
  * 支持自动重连、心跳保活、消息队列
  */
 
+import { getToken } from './http';
+
 const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
 
 type MessageHandler = (data: unknown) => void;
@@ -35,10 +37,22 @@ export class WebSocketManager {
     this.notifyStatus('connecting');
 
     try {
+      // 生产环境强制 wss://
+      if (import.meta.env.PROD && !this.url.startsWith('wss://')) {
+        console.error('[WS] 生产环境必须使用 wss:// 协议');
+        this.notifyStatus('error');
+        return;
+      }
+
       const fullUrl = `${this.url}/chat/${userId}`;
       this.ws = new WebSocket(fullUrl);
 
       this.ws.onopen = () => {
+        // 首条消息发送 JWT Token 鉴权
+        const token = getToken();
+        if (token && this.ws) {
+          this.ws.send(JSON.stringify({ type: 'auth', token }));
+        }
         this.reconnectAttempts = 0;
         this.notifyStatus('connected');
         this.startHeartbeat();

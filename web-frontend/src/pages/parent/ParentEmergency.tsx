@@ -76,6 +76,7 @@ export default function ParentEmergency() {
 
   const toast = useToast();
   const [filter, setFilter] = useState<FilterType>('all');
+  const [confirmingAlertId, setConfirmingAlertId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAlerts();
@@ -83,6 +84,11 @@ export default function ParentEmergency() {
   }, [fetchAlerts, fetchResources]);
 
   const handleConfirm = async (alertId: string) => {
+    if (confirmingAlertId !== alertId) {
+      setConfirmingAlertId(alertId);
+      return;
+    }
+    setConfirmingAlertId(null);
     await confirmAlert(alertId);
     toast.success('已确认告警');
   };
@@ -97,9 +103,55 @@ export default function ParentEmergency() {
 
   const activeAlerts = emergencyAlerts.filter((a) => !a.confirmed);
   const confirmedAlerts = emergencyAlerts.filter((a) => a.confirmed);
+  const hasUnconfirmedRed = activeAlerts.some(a => a.level === 'red');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
+      {hasUnconfirmedRed && (
+        <div className="fixed inset-0 z-50 bg-red-900/80 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden">
+            <div className="bg-gradient-to-r from-red-600 to-rose-700 p-6 text-white text-center">
+              <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
+              <h2 className="text-xl font-bold">紧急告警</h2>
+              <p className="text-red-100 text-sm mt-1">检测到高风险信号，请立即确认处理</p>
+            </div>
+            <div className="p-6">
+              {activeAlerts.filter(a => a.level === 'red').map(alert => (
+                <div key={alert.alertId} className="mb-4">
+                  <p className="text-gray-700 text-sm mb-3">{alert.reason}</p>
+                  <div className="bg-red-50 rounded-xl p-4 mb-4">
+                    <p className="text-xs font-medium text-red-700 mb-2">建议行动：</p>
+                    <ul className="text-xs text-red-600 space-y-1">
+                      <li>1. 确保孩子当前安全，不要离开孩子</li>
+                      <li>2. 拨打危机热线：12355 / 400-161-9995</li>
+                      <li>3. 前往最近医院急诊或心理卫生中心</li>
+                      <li>4. 联系学校心理老师或班主任</li>
+                    </ul>
+                  </div>
+                  <div className="flex gap-2 mb-3">
+                    <a href="tel:12355" className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium text-center hover:bg-red-600">
+                      拨打 12355
+                    </a>
+                    <a href="tel:400-161-9995" className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium text-center hover:bg-red-600">
+                      拨打希望热线
+                    </a>
+                  </div>
+                  <button
+                    onClick={() => handleConfirm(alert.alertId)}
+                    className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                      confirmingAlertId === alert.alertId
+                        ? 'bg-red-600 text-white'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    }`}
+                  >
+                    {confirmingAlertId === alert.alertId ? '再次点击确认告警' : '确认已处理'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <Header role="parent" />
       <ToastContainer toasts={toast.toasts} />
 
@@ -166,14 +218,26 @@ export default function ParentEmergency() {
                       </div>
                       <p className="text-gray-700 text-sm">{alert.reason}</p>
                       <p className="text-xs text-gray-400 mt-1">孩子ID：{alert.studentId}</p>
+                      {alert.level === 'red' || alert.level === 'orange' ? (
+                        <div className="mt-3 p-3 bg-white/60 rounded-xl">
+                          <p className="text-xs font-medium text-gray-600 mb-1">建议行动：</p>
+                          <ul className="text-xs text-gray-500 space-y-0.5">
+                            {alert.level === 'red' && <li>确保孩子安全，拨打 12355 危机热线</li>}
+                            <li>联系学校心理老师或班主任</li>
+                            <li>关注孩子情绪变化，72小时内跟进</li>
+                          </ul>
+                        </div>
+                      ) : null}
                     </div>
                     <Button
                       size="sm"
                       onClick={() => handleConfirm(alert.alertId)}
-                      className="bg-gradient-to-r from-[#F4A261] to-[#E76F51]"
+                      className={confirmingAlertId === alert.alertId
+                        ? "bg-red-600"
+                        : "bg-gradient-to-r from-[#F4A261] to-[#E76F51]"}
                     >
                       <CheckCircle className="w-4 h-4" />
-                      确认告警
+                      {confirmingAlertId === alert.alertId ? '再次点击确认' : '确认告警'}
                     </Button>
                   </div>
                 </div>
@@ -266,6 +330,17 @@ export default function ParentEmergency() {
                         <Phone className="w-4 h-4" />
                         {resource.phone}
                       </a>
+                      {resource.type === 'hospital' && (
+                        <a
+                          href={`https://uri.amap.com/marker?position=121.4737,31.2304&name=${encodeURIComponent(resource.title)}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          导航
+                        </a>
+                      )}
                     </div>
                   </div>
                 );

@@ -117,11 +117,11 @@ export default function StudentProfile() {
       // 降级到 mock 结果
       setAssessmentSource('mock');
       const total = answers.reduce((a, b) => a + b, 0);
-      const level = total <= 2 ? 'green' : total <= 5 ? 'yellow' : 'orange';
+      const level = total <= 2 ? 'green' : total <= 4 ? 'yellow' : total <= 6 ? 'orange' : 'red';
       setAssessmentResult({
         total_score: total,
         risk_level: level,
-        description: '（示例结果）根据你的作答，大星为你生成了初步评估。',
+        description: '（示例结果）根据你的作答，小星为你生成了初步评估。',
         suggestions: ['继续每天的心情打卡', '试试呼吸练习保持放松', '和小星聊聊最近的感受'],
       });
     } finally {
@@ -354,10 +354,13 @@ export default function StudentProfile() {
                     <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                       (assessmentResult.risk_level || assessmentResult.level) === 'green' ? 'bg-green-100 text-green-600' :
                       (assessmentResult.risk_level || assessmentResult.level) === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
+                      (assessmentResult.risk_level || assessmentResult.level) === 'red' ? 'bg-red-100 text-red-600' :
                       'bg-orange-100 text-orange-600'
                     }`}>
                       {(assessmentResult.risk_level || assessmentResult.level || 'green') === 'green' ? '正常' :
-                       (assessmentResult.risk_level || assessmentResult.level) === 'yellow' ? '低风险' : '中风险'}
+                      (assessmentResult.risk_level || assessmentResult.level) === 'yellow' ? '低风险' :
+                      (assessmentResult.risk_level || assessmentResult.level) === 'red' ? '高风险' :
+                      '中风险'}
                     </span>
                   </div>
                 </div>

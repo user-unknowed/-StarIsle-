@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { ChatMessage, TopicCard } from '../types';
 import { chatApi } from '../services/api';
+import { riskApi } from '../services/api';
 import { ApiError } from '../services/http';
 
 interface ChatState {
@@ -49,7 +50,7 @@ export const useChatStore = create<ChatState>((set) => ({
         '[chatStore] fetchMessages 调用失败，降级使用 mock 数据:',
         error instanceof ApiError ? `${error.message} (status: ${error.status})` : error
       );
-      set({ messages: mockMessages, isLoading: false, isUsingMockData: true });
+      set({ messages: [], isLoading: false, isUsingMockData: true });
     }
   },
 
@@ -68,6 +69,16 @@ export const useChatStore = create<ChatState>((set) => ({
 
     try {
       const data = await chatApi.sendMessage({ userId, message: content });
+
+      // 如果检测到高风险，上报危机事件
+      if (data.riskLevel === 'red' || data.riskLevel === 'orange') {
+        try {
+          await riskApi.reportCrisis({ userId, riskLevel: data.riskLevel, triggerType: 'chat' });
+        } catch {
+          // 上报失败不影响主流程
+        }
+      }
+
       set((state) => ({
         messages: [...state.messages, {
           id: `msg-${Date.now()}`,
@@ -86,14 +97,16 @@ export const useChatStore = create<ChatState>((set) => ({
         error instanceof ApiError ? `${error.message} (status: ${error.status})` : error
       );
 
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // 测试用：模拟 AI 回复延迟（通过 localStorage.__test_ai_delay 控制毫秒数）
+      const testAiDelay = typeof localStorage !== 'undefined' && localStorage.getItem('__test_ai_delay');
+      await new Promise(resolve => setTimeout(resolve, testAiDelay ? parseInt(testAiDelay) : 1500));
 
       const responses = [
-        '小星听到了。听起来你今天有点低落呢...要和小星聊聊吗？',
-        '抱抱～小星在这里陪着你。',
-        '嗯，我懂你的感受。有时候事情确实会让人觉得很难。',
-        '谢谢你愿意和小星分享这些。你很勇敢呢。',
-        '小星觉得你已经做得很好了。慢慢来，不着急。',
+        '小星听到了呀～听起来你今天有点低落呢。',
+        '抱抱～小星在这里陪着你呢。',
+        '小星懂你呀～有时候确实有点难呢。',
+        '谢谢你愿意和小星分享这些呀。你很勇敢呢～',
+        '小星觉得你已经做得很好啦。慢慢来，不着急呢～',
       ];
 
       const randomResponse = responses[Math.floor(Math.random() * responses.length)];

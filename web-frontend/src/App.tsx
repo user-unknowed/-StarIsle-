@@ -165,7 +165,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
 
-      <ApiDebugOverlay />
+      {import.meta.env.DEV && <ApiDebugOverlay />}
     </Router>
   );
 }

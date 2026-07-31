@@ -3,26 +3,37 @@ import { useAuthStore } from '../../store/authStore';
 import { Header } from '../../components/common/Header';
 import { post } from '../../services/http';
 import { ApiError } from '../../services/http';
-import { Send, Sparkles, AlertCircle } from 'lucide-react';
+import { Send, Sparkles, AlertCircle, AlertTriangle } from 'lucide-react';
+import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
+import { riskApi } from '../../services/api';
 import type { ChatMessage } from '../../types';
 
 const parentTopics = [
-  { id: 't1', title: '孩子最近情绪低落怎么办？', category: '情绪' },
-  { id: 't2', title: '如何与青春期孩子沟通', category: '沟通' },
-  { id: 't3', title: '孩子不愿意上学', category: '学业' },
-  { id: 't4', title: '发现孩子有自伤倾向', category: '危机' },
+  { id: 't1', title: '孩子不愿意跟我说话怎么办', category: '沟通' },
+  { id: 't2', title: '怎么判断孩子是否需要专业帮助', category: '评估' },
+  { id: 't3', title: '青春期孩子情绪波动正常吗', category: '情绪' },
+  { id: 't4', title: '发现孩子自伤怎么办', category: '危机' },
+  { id: 't5', title: '如何跟孩子聊心理话题', category: '沟通' },
+  { id: 't6', title: '家长自己压力大怎么调节', category: '自助' },
 ];
 
 const mockReplies = [
-  '大星理解您的担心。青春期的孩子情绪波动较大，建议先冷静倾听孩子的想法，避免说教。可以尝试在孩子情绪平稳时，一起做一些轻松的活动。',
-  '您能注意到孩子的变化，说明您是很用心的家长。建议多给孩子安全感，表达「无论发生什么，我都支持你」。如情况持续，可寻求专业心理帮助。',
-  '听到您的描述，大星建议：1) 保持稳定的家庭氛围；2) 不过度追问，给孩子空间；3) 若出现持续低落、失眠等情况，及时联系学校心理老师或专业机构。',
-  '这种情况下，请先确保孩子的安全。您可以拨打 12355 青少年服务热线获取专业指导，必要时带孩子到精神卫生中心评估。您不是一个人在面对。',
+  '大星理解您的担心。咱们慢慢来，先听听孩子的想法呢。',
+  '您是很用心的家长。慢慢来，多给孩子安全感就好。',
+  '保持稳定的家庭氛围。若您感觉孩子状态让您担忧，可寻求专业心理支持。',
+  '请先确保孩子安全。可拨打 12355 或 400-161-9995 获取专业指导。咱们一起面对，慢慢来。',
+];
+
+const CRISIS_HOTLINES = [
+  { name: '12355 青少年服务热线', number: '12355' },
+  { name: '希望24热线', number: '400-161-9995' },
+  { name: '北京心理危机干预中心', number: '010-82951332' },
 ];
 
 interface ChatApiData {
   response?: string;
-  data?: { response?: string };
+  riskLevel?: string;
+  data?: { response?: string; riskLevel?: string };
   [key: string]: unknown;
 }
 
@@ -53,6 +64,23 @@ export default function ParentChat() {
     };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
+
+    // 前端危机关键词检测
+    const crisisKeywords = ['自伤', '自杀', '不想活', '想死', '结束生命'];
+    if (crisisKeywords.some(kw => content.includes(kw))) {
+      setMessages((prev) => [...prev, userMessage]);
+      setInputValue('');
+      setMessages((prev) => [...prev, {
+        id: `a-${Date.now()}`,
+        userId: user.id,
+        content: '听到您的描述，大星非常关心您和孩子的安全。请立即拨打危机热线获取专业指导。',
+        role: 'assistant',
+        timestamp: new Date().toISOString(),
+        riskLevel: 'red',
+      }]);
+      return;
+    }
+
     setIsTyping(true);
 
     try {
@@ -66,6 +94,7 @@ export default function ParentChat() {
         (data && (data.response || data.data?.response)) as string | undefined;
 
       if (reply) {
+        const riskLevel = (data && (data.riskLevel || data.data?.riskLevel)) as string | undefined;
         setMessages((prev) => [
           ...prev,
           {
@@ -74,9 +103,19 @@ export default function ParentChat() {
             content: reply,
             role: 'assistant',
             timestamp: new Date().toISOString(),
+            riskLevel,
           },
         ]);
         setIsUsingMock(false);
+
+        // 如果检测到高风险，展示风险提示
+        if (riskLevel === 'red' || riskLevel === 'orange') {
+          try {
+            await riskApi.reportCrisis({ userId: user.id, riskLevel, triggerType: 'chat' });
+          } catch {
+            // 上报失败不影响主流程
+          }
+        }
       } else {
         throw new Error('响应缺少回复内容');
       }
@@ -84,7 +123,7 @@ export default function ParentChat() {
       // 降级到 mock 回复
       const isNetError =
         err instanceof ApiError && (err.status === 0 || err.status >= 500);
-      if (isNetError || err instanceof Error) {
+      if (isNetError) {
         setIsUsingMock(true);
         await new Promise((r) => setTimeout(r, 1200));
         const reply = mockReplies[Math.floor(Math.random() * mockReplies.length)];
@@ -106,7 +145,7 @@ export default function ParentChat() {
     }
   };
 
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSend();
@@ -116,6 +155,7 @@ export default function ParentChat() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <Header role="parent" />
+      <EmergencyHelpButton />
 
       <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden h-[calc(100vh-8rem)] flex flex-col">
@@ -155,7 +195,21 @@ export default function ParentChat() {
                   {parentTopics.map((t) => (
                     <button
                       key={t.id}
-                      onClick={() => setInputValue(t.title)}
+                      onClick={() => {
+                        if (t.id === 't4') {
+                          // 危机话题：弹出提示而非直接填入
+                          setMessages((prev) => [...prev, {
+                            id: `system-${Date.now()}`,
+                            userId: user?.id || '',
+                            content: '如果您发现孩子有自伤倾向，请立即拨打危机热线：12355 / 400-161-9995 / 010-82951332。您不是一个人在面对，大星在这里陪您。',
+                            role: 'assistant',
+                            timestamp: new Date().toISOString(),
+                            riskLevel: 'red',
+                          }]);
+                        } else {
+                          setInputValue(t.title);
+                        }
+                      }}
                       className="text-left p-3 bg-gray-50 hover:bg-orange-50 rounded-xl transition-colors border border-gray-100"
                     >
                       <span className="text-xs text-orange-500 mb-1 block">{t.category}</span>
@@ -189,6 +243,14 @@ export default function ParentChat() {
                       }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                      {message.role === 'assistant' && (message.riskLevel === 'red' || message.riskLevel === 'orange') && (
+                        <div className={`mt-2 p-2 rounded-xl flex items-center gap-2 ${message.riskLevel === 'red' ? 'bg-red-50 border border-red-200' : 'bg-orange-50 border border-orange-200'}`}>
+                          <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                          <p className="text-xs text-red-600 font-medium">
+                            检测到风险信号，请点击右下角紧急帮助按钮获取支持
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div
@@ -236,7 +298,7 @@ export default function ParentChat() {
               <textarea
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
-                onKeyPress={handleKeyPress}
+                onKeyDown={handleKeyDown}
                 placeholder="输入您想咨询的内容..."
                 rows={1}
                 className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"

@@ -7,7 +7,7 @@ export default function Login() {
   const { login, register, loginWithThirdParty, loginWithPhone, isLoading, error, clearError } = useAuthStore();
   
   const [isLogin, setIsLogin] = useState(true);
-  const [role, setRole] = useState<'student' | 'teacher'>('student');
+  const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -30,8 +30,10 @@ export default function Login() {
   const handleDemoLogin = async () => {
     if (role === 'student') {
       await login({ username: 'student1', password: '123456', role: 'student' });
-    } else {
+    } else if (role === 'teacher') {
       await login({ username: 'teacher1', password: '123456', role: 'teacher' });
+    } else {
+      await login({ username: 'parent1', password: '123456', role: 'parent' });
     }
   };
 
@@ -84,7 +86,7 @@ export default function Login() {
           <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
             <button
               onClick={() => setRole('student')}
-              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast ${
+              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
                 role === 'student'
                   ? 'bg-white text-primary-600 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
@@ -94,13 +96,23 @@ export default function Login() {
             </button>
             <button
               onClick={() => setRole('teacher')}
-              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast ${
+              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
                 role === 'teacher'
                   ? 'bg-white text-primary-600 shadow-sm'
                   : 'text-gray-500 hover:text-gray-700'
               }`}
             >
               教师登录
+            </button>
+            <button
+              onClick={() => setRole('parent')}
+              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
+                role === 'parent'
+                  ? 'bg-white text-orange-500 shadow-sm'
+                  : 'text-gray-500 hover:text-gray-700'
+              }`}
+            >
+              家长登录
             </button>
           </div>
 
@@ -176,7 +188,7 @@ export default function Login() {
             onClick={handleDemoLogin}
             className="w-full py-3 mt-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
           >
-            快速体验（{role === 'student' ? '学生' : '教师'}）
+            快速体验（{role === 'student' ? '学生' : role === 'teacher' ? '教师' : '家长'}）
           </button>
 
           <div className="relative my-6">

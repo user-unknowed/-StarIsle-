@@ -45,12 +45,14 @@ tags:
     description: 教师端功能接口（班级状态、学生管理等）
   - name: 家长端
     description: 家长端功能接口（绑定学生、查看心情等）
+  - name: 用户管理
+    description: 用户信息管理接口
   - name: 数据迁移
     description: 数据迁移和一致性校验接口
   - name: 密钥管理
     description: 加密密钥版本管理和轮换接口
-  - name: 用户管理
-    description: 用户信息管理接口
+  - name: 系统
+    description: 系统健康检查等基础接口
 
 paths:
   # ==================== 认证管理 ====================
@@ -294,6 +296,8 @@ paths:
           schema:
             type: integer
             default: 7
+            minimum: 1
+            maximum: 90
           description: 查询天数
       responses:
         '200':
@@ -315,6 +319,48 @@ paths:
                       trend:
                         type: object
 
+  /api/v1/mood/chart/{userId}:
+    get:
+      tags: [学生端]
+      summary: 获取心情图表数据
+      description: 返回最近7天的心情图表数据（柱状图）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      chart_type:
+                        type: string
+                        example: bar
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            value:
+                              type: integer
+
   /api/v1/chat/message:
     post:
       tags: [学生端]
@@ -334,9 +380,17 @@ paths:
                 message:
                   type: string
                   description: 用户消息内容
-                context:
+                  maxLength: 2000
+                messageType:
                   type: string
-                  description: 上下文（可选）
+                context:
+                  type: array
+                  items:
+                    type: object
+                  description: 上下文
+                userProfile:
+                  type: object
+                  description: 用户画像
       responses:
         '200':
           description: 对话成功
@@ -350,9 +404,14 @@ paths:
                   data:
                     type: object
                     properties:
+                      user_id:
+                        type: string
                       response:
                         type: string
                         description: AI回复
+                      response_time:
+                        type: integer
+                        description: 响应耗时(ms)
                       riskLevel:
                         type: string
                         enum: [green, yellow, orange, red]
@@ -369,6 +428,13 @@ paths:
           required: true
           schema:
             type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+          description: 返回条数
       responses:
         '200':
           description: 获取成功
@@ -382,23 +448,20 @@ paths:
                   data:
                     type: object
                     properties:
+                      user_id:
+                        type: string
+                      limit:
+                        type: integer
                       messages:
                         type: array
                         items:
                           $ref: '#/components/schemas/ChatMessage'
 
-  /api/v1/users/{id}:
+  /api/v1/chat/topics:
     get:
-      tags: [学生端, 用户管理]
-      summary: 获取用户信息
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
+      tags: [学生端]
+      summary: 获取对话话题卡片
+      description: 返回推荐的话题卡片列表，用于引导学生开启对话
       responses:
         '200':
           description: 获取成功
@@ -410,45 +473,77 @@ paths:
                   code:
                     type: integer
                   data:
-                    $ref: '#/components/schemas/User'
+                    type: object
+                    properties:
+                      topics:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            title:
+                              type: string
+                            icon:
+                              type: string
 
-  /api/v1/users/{id}:
-    put:
-      tags: [学生端, 用户管理]
-      summary: 更新用户信息
+  /api/v1/risk/detect:
+    post:
+      tags: [学生端]
+      summary: 风险检测
+      description: 对用户内容进行风险等级检测，返回风险等级、置信度和触发的关键词
       security:
         - bearerAuth: []
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: string
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required: [userId, content]
               properties:
-                nickname:
+                userId:
                   type: string
-                avatar:
+                  description: 用户ID
+                content:
                   type: string
-                signature:
+                  description: 待检测内容
+                  maxLength: 5000
+                contentType:
                   type: string
+                  description: 内容类型
       responses:
         '200':
-          description: 更新成功
+          description: 检测成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      risk_level:
+                        type: string
+                        enum: [green, yellow, orange, red]
+                      confidence:
+                        type: number
+                      triggered_keywords:
+                        type: array
+                        items:
+                          type: string
+                      need_intervention:
+                        type: boolean
 
-  /api/v1/notifications/{userId}:
+  /api/v1/risk/level/{userId}:
     get:
-      tags: [学生端]
-      summary: 获取通知列表
+      tags: [学生端, 教师端]
+      summary: 获取用户风险等级
+      description: 查询用户当前风险等级及历史记录
       security:
         - bearerAuth: []
       parameters:
@@ -463,14 +558,367 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      current_risk_level:
+                        type: string
+                        enum: [green, yellow, orange, red]
+                      history:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            date:
+                              type: string
+                              format: date
+                            level:
+                              type: string
+
+  /api/v1/risk/crisis/hotlines:
+    get:
+      tags: [学生端]
+      summary: 获取危机干预热线
+      description: 返回青少年心理危机干预热线列表
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      hotlines:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            number:
+                              type: string
+                            description:
+                              type: string
+                            hours:
+                              type: string
+
+  /api/v1/risk/crisis/report:
+    post:
+      tags: [学生端]
+      summary: 上报危机事件
+      description: 上报用户危机事件，触发干预流程
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, riskLevel]
+              properties:
+                userId:
+                  type: string
+                riskLevel:
+                  type: string
+                  enum: [green, yellow, orange, red]
+                triggerType:
+                  type: string
+      responses:
+        '200':
+          description: 上报成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      risk_level:
+                        type: string
+                      handled:
+                        type: boolean
+
+  /api/v1/assessment/questions/{type}:
+    get:
+      tags: [学生端]
+      summary: 获取测评题目
+      description: 根据测评类型返回题目列表
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 测评类型
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                  title:
+                    type: string
+                  description:
+                    type: string
+                  questions:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                        question:
+                          type: string
+                        options:
+                          type: array
+                          items:
+                            type: string
+                        weight:
+                          type: integer
+                  total_questions:
+                    type: integer
+
+  /api/v1/assessment/submit:
+    post:
+      tags: [学生端]
+      summary: 提交测评
+      description: 提交测评答案并生成结果
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, answers]
+              properties:
+                userId:
+                  type: string
+                type:
+                  type: string
+                answers:
+                  type: array
+                  items:
+                    type: integer
+      responses:
+        '200':
+          description: 提交成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user_id:
+                    type: string
+                  total_score:
+                    type: integer
+                  result_id:
+                    type: string
+
+  /api/v1/assessment/result/{id}:
+    get:
+      tags: [学生端]
+      summary: 获取测评结果
+      description: 根据结果ID获取测评结果详情
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  result_id:
+                    type: string
+                  total_score:
+                    type: integer
+                  risk_level:
+                    type: string
+                    enum: [green, yellow, orange, red]
+                  description:
+                    type: string
+                  suggestions:
+                    type: array
+                    items:
+                      type: string
+                  recommendations:
+                    type: array
+                    items:
+                      type: object
 
   /api/v1/content/meditations:
     get:
-      tags: [学生端]
+      tags: [学生端, 教师端]
       summary: 获取冥想内容列表
+      description: 返回冥想音频内容列表，可按分类筛选
       security:
         - bearerAuth: []
+      parameters:
+        - name: category
+          in: query
+          schema:
+            type: string
+            default: all
+          description: 分类（all/学习/睡眠/情绪）
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      category:
+                        type: string
+                      meditations:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                            title:
+                              type: string
+                            duration:
+                              type: integer
+                            category:
+                              type: string
+                            audio_url:
+                              type: string
+                            description:
+                              type: string
+
+  /api/v1/content/meditation/{id}:
+    get:
+      tags: [学生端, 教师端]
+      summary: 获取冥想内容详情
+      description: 根据ID返回冥想内容详情（含脚本、背景图等）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                      title:
+                        type: string
+                      duration:
+                        type: integer
+                      audio_url:
+                        type: string
+                      background_image:
+                        type: string
+                      script:
+                        type: string
+
+  /api/v1/content/breathing/{type}:
+    get:
+      tags: [学生端, 教师端]
+      summary: 获取呼吸练习
+      description: 根据类型返回呼吸练习步骤（如 4-7-8 呼吸法）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 呼吸练习类型
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      type:
+                        type: string
+                      steps:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            name:
+                              type: string
+                            duration:
+                              type: integer
+                            instruction:
+                              type: string
+                      recommended_duration:
+                        type: integer
+                      animation_url:
+                        type: string
+
+  /api/v1/notifications/{userId}:
+    get:
+      tags: [学生端]
+      summary: 获取通知列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '200':
           description: 获取成功
@@ -646,8 +1094,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
-
-  /api/v1/permissions/{userId}:
     put:
       tags: [教师端]
       summary: 更新用户权限
@@ -677,38 +1123,52 @@ paths:
                 $ref: '#/components/schemas/ApiResponse'
 
   # ==================== 家长端 ====================
-  /api/v1/parent/register:
+  /api/v1/parents/register:
     post:
       tags: [家长端]
       summary: 家长注册
+      description: 家长通过手机号注册账号
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
-              required: [phone, password]
+              required: [phone, password, nickname]
               properties:
                 phone:
                   type: string
                   description: 手机号
+                  pattern: '^1[3-9]\d{9}$'
                 password:
                   type: string
                   description: 密码
+                  minLength: 6
+                  maxLength: 20
                 nickname:
                   type: string
+                  description: 昵称
+                  maxLength: 50
       responses:
         '200':
           description: 注册成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/ParentLoginResponse'
 
-  /api/v1/parent/login:
+  /api/v1/parents/login:
     post:
       tags: [家长端]
       summary: 家长登录
+      description: 家长通过手机号密码登录
       requestBody:
         required: true
         content:
@@ -719,20 +1179,51 @@ paths:
               properties:
                 phone:
                   type: string
+                  pattern: '^1[3-9]\d{9}$'
                 password:
                   type: string
+                  minLength: 6
+                  maxLength: 20
       responses:
         '200':
           description: 登录成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    $ref: '#/components/schemas/ParentLoginResponse'
 
-  /api/v1/parent/bind:
+  /api/v1/parents/me:
+    get:
+      tags: [家长端]
+      summary: 获取当前家长信息
+      description: 根据JWT令牌返回当前登录家长的信息
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/ParentLoginResponse'
+
+  /api/v1/parents/children/bind:
     post:
       tags: [家长端]
       summary: 绑定学生
+      description: 家长绑定学生账号（支持扫码等方式）
       security:
         - bearerAuth: []
       requestBody:
@@ -741,28 +1232,64 @@ paths:
           application/json:
             schema:
               type: object
-              required: [parentId, studentId]
+              required: [studentId]
               properties:
-                parentId:
-                  type: string
                 studentId:
                   type: string
+                  description: 学生ID
+                  maxLength: 50
+                studentNickname:
+                  type: string
+                  description: 学生昵称
+                  maxLength: 50
+                bindType:
+                  type: string
+                  description: 绑定方式
+                  default: scan
       responses:
         '200':
           description: 绑定成功
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/ChildBindingResponse'
 
-  /api/v1/parent/bindings/{parentId}:
+  /api/v1/parents/children:
     get:
       tags: [家长端]
-      summary: 获取绑定列表
+      summary: 获取绑定孩子列表
+      description: 返回当前家长绑定的所有学生列表
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ChildBindingResponse'
+
+  /api/v1/parents/children/{bindingId}:
+    get:
+      tags: [家长端]
+      summary: 获取绑定详情
+      description: 根据绑定ID获取单个孩子绑定信息
       security:
         - bearerAuth: []
       parameters:
-        - name: parentId
+        - name: bindingId
           in: path
           required: true
           schema:
@@ -773,7 +1300,154 @@ paths:
           content:
             application/json:
               schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/ChildBindingResponse'
+    delete:
+      tags: [家长端]
+      summary: 解除绑定
+      description: 解除家长与学生的绑定关系
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bindingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 解除成功
+          content:
+            application/json:
+              schema:
                 $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/parents/children/{bindingId}/authorize:
+    post:
+      tags: [家长端]
+      summary: 授权绑定
+      description: 家长授权绑定记录，获得查看孩子数据的权限
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: bindingId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 授权成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/ChildBindingResponse'
+
+  /api/v1/parents/emergency/alert:
+    get:
+      tags: [家长端]
+      summary: 获取活跃预警
+      description: 返回当前家长的活跃紧急预警信息
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/EmergencyAlertResponse'
+
+  /api/v1/parents/emergency/alert/{alertId}/confirm:
+    post:
+      tags: [家长端]
+      summary: 确认预警
+      description: 家长确认收到紧急预警
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: alertId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 确认成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/EmergencyAlertResponse'
+
+  /api/v1/parents/emergency/resources:
+    get:
+      tags: [家长端]
+      summary: 获取紧急资源列表
+      description: 返回全部紧急援助资源列表
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmergencyResourceResponse'
+
+  /api/v1/parents/emergency/resources/{type}:
+    get:
+      tags: [家长端]
+      summary: 按类型获取紧急资源
+      description: 根据资源类型返回紧急援助资源列表
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: type
+          in: path
+          required: true
+          schema:
+            type: string
+          description: 资源类型
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EmergencyResourceResponse'
 
   /api/v1/parent/mood/{studentId}:
     get:
@@ -799,6 +1473,277 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/emergency/resources:
+    get:
+      tags: [教师端, 家长端]
+      summary: 获取紧急资源列表
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/emergency/alerts:
+    post:
+      tags: [家长端]
+      summary: 创建紧急告警
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [studentId, parentId, riskLevel]
+              properties:
+                studentId:
+                  type: string
+                parentId:
+                  type: string
+                riskLevel:
+                  type: string
+                  enum: [red, orange]
+                description:
+                  type: string
+      responses:
+        '200':
+          description: 创建成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  # ==================== 用户管理 ====================
+  /api/v1/users/register:
+    post:
+      tags: [用户管理]
+      summary: 用户注册
+      description: 学生或教师角色注册，成功后返回JWT令牌
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password, role]
+              properties:
+                username:
+                  type: string
+                  description: 用户名
+                  maxLength: 50
+                password:
+                  type: string
+                  description: 密码
+                  minLength: 6
+                  maxLength: 20
+                nickname:
+                  type: string
+                  description: 昵称
+                  maxLength: 50
+                avatar:
+                  type: string
+                  description: 头像URL
+                  maxLength: 200
+                ageGroup:
+                  type: string
+                  enum: [小学生, 初中生, 高中生]
+                  description: 年龄段
+                role:
+                  type: string
+                  enum: [student, teacher]
+                  description: 角色
+      responses:
+        '200':
+          description: 注册成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      username:
+                        type: string
+                      nickname:
+                        type: string
+                      role:
+                        type: string
+                      token:
+                        type: string
+
+  /api/v1/users/login:
+    post:
+      tags: [用户管理]
+      summary: 用户登录
+      description: 用户名密码登录，成功后返回JWT令牌
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [username, password]
+              properties:
+                username:
+                  type: string
+                password:
+                  type: string
+      responses:
+        '200':
+          description: 登录成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  message:
+                    type: string
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      username:
+                        type: string
+                      nickname:
+                        type: string
+                      role:
+                        type: string
+                      token:
+                        type: string
+
+  /api/v1/users/{id}:
+    get:
+      tags: [学生端, 用户管理]
+      summary: 获取用户信息
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    $ref: '#/components/schemas/User'
+    put:
+      tags: [学生端, 用户管理]
+      summary: 更新用户信息
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nickname:
+                  type: string
+                  maxLength: 50
+                avatar:
+                  type: string
+                  maxLength: 200
+      responses:
+        '200':
+          description: 更新成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+    delete:
+      tags: [用户管理]
+      summary: 删除用户
+      description: 删除指定用户账号
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 删除成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
+
+  /api/v1/users/{id}/export:
+    get:
+      tags: [用户管理]
+      summary: 导出用户数据
+      description: 导出指定用户的个人数据（JSON格式）
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 导出成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: object
+                    properties:
+                      user_id:
+                        type: string
+                      username:
+                        type: string
+                      nickname:
+                        type: string
+                      age_group:
+                        type: string
+                      role:
+                        type: string
+                      created_at:
+                        type: string
+                        format: date-time
+                      data_format:
+                        type: string
+                        example: JSON
 
   # ==================== 数据迁移 ====================
   /api/migration/execute:
@@ -925,7 +1870,14 @@ paths:
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/EncryptionKey'
 
   /api/migration/keys/current:
     get:
@@ -946,6 +1898,49 @@ paths:
                   data:
                     type: string
                     description: 当前密钥版本号
+
+  /api/migration/keys/{version}:
+    get:
+      tags: [密钥管理]
+      summary: 获取密钥信息
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 获取成功
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: integer
+                  data:
+                    type: string
+    delete:
+      tags: [密钥管理]
+      summary: 停用密钥版本
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: version
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: 停用成功
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponse'
 
   /api/migration/keys/rotate:
     post:
@@ -971,46 +1966,6 @@ paths:
       responses:
         '200':
           description: 新增成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /api/migration/keys/{version}:
-    get:
-      tags: [密钥管理]
-      summary: 获取密钥信息
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: version
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  /api/migration/keys/{version}:
-    delete:
-      tags: [密钥管理]
-      summary: 停用密钥版本
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: version
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 停用成功
           content:
             application/json:
               schema:
@@ -1055,52 +2010,29 @@ paths:
                       consistent:
                         type: boolean
 
-  # ==================== 紧急资源 ====================
-  /api/v1/emergency/resources:
+  # ==================== 系统 ====================
+  /health:
     get:
-      tags: [教师端, 家长端]
-      summary: 获取紧急资源列表
-      security:
-        - bearerAuth: []
+      tags: [系统]
+      summary: 健康检查
+      description: 返回服务健康状态、服务名与版本号
       responses:
         '200':
-          description: 获取成功
+          description: 服务正常
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
-
-  # ==================== 紧急告警 ====================
-  /api/v1/emergency/alerts:
-    post:
-      tags: [紧急告警]
-      summary: 创建紧急告警
-      security:
-        - bearerAuth: []
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [studentId, parentId, riskLevel]
-              properties:
-                studentId:
-                  type: string
-                parentId:
-                  type: string
-                riskLevel:
-                  type: string
-                  enum: [red, orange]
-                description:
-                  type: string
-      responses:
-        '200':
-          description: 创建成功
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/ApiResponse'
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: healthy
+                  service:
+                    type: string
+                    example: starisle-api
+                  version:
+                    type: string
+                    example: 1.0.0
 
 components:
   securitySchemes:
@@ -1226,3 +2158,110 @@ components:
           enum: [green, yellow, orange, red]
         alert:
           type: boolean
+
+    ParentLoginResponse:
+      type: object
+      properties:
+        userId:
+          type: string
+        nickname:
+          type: string
+        avatar:
+          type: string
+        phone:
+          type: string
+        token:
+          type: string
+          description: JWT令牌（仅登录/注册时返回）
+
+    ChildBindingResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        parentId:
+          type: string
+        studentId:
+          type: string
+        studentNickname:
+          type: string
+        studentAvatar:
+          type: string
+        bindType:
+          type: string
+        authorized:
+          type: boolean
+        authorizedAt:
+          type: string
+          format: date-time
+        latestMood:
+          type: integer
+        riskLevel:
+          type: string
+          enum: [green, yellow, orange, red]
+        lastCheckinDate:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    EmergencyAlertResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        studentId:
+          type: string
+        parentId:
+          type: string
+        riskLevel:
+          type: string
+          enum: [green, yellow, orange, red]
+        status:
+          type: string
+        triggerSource:
+          type: string
+        description:
+          type: string
+        triggeredAt:
+          type: string
+          format: date-time
+        confirmedAt:
+          type: string
+          format: date-time
+
+    EmergencyResourceResponse:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        name:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        distance:
+          type: string
+        description:
+          type: string
+        hours:
+          type: string
+
+    EncryptionKey:
+      type: object
+      properties:
+        id:
+          type: string
+        version:
+          type: string
+        isActive:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+        deactivatedAt:
+          type: string
+          format: date-time

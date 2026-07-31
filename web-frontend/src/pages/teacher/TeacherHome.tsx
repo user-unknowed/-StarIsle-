@@ -1,8 +1,18 @@
-import { useEffect } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useClassroomStore } from '../../store/classroomStore';
 import { Header } from '../../components/common/Header';
-import { BarChart3, AlertTriangle, Users, CheckCircle, TrendingUp, Eye, Download, Upload, FileSpreadsheet } from 'lucide-react';
+import { riskApi } from '../../services/api';
+import { ApiError } from '../../services/http';
+import { BarChart3, AlertTriangle, Users, CheckCircle, TrendingUp, Eye, Download, Upload, ShieldAlert, Loader2 } from 'lucide-react';
+
+interface RiskDetail {
+  level: string;
+  score?: number;
+  reason?: string;
+  history?: Array<{ date: string; level: string }>;
+  source: 'api' | 'mock';
+}
 
 const getRiskColor = (level: string | undefined) => {
   switch (level) {
@@ -35,10 +45,107 @@ export default function TeacherHome() {
   const user = useAuthStore((state) => state.user);
   const { students, stats, fetchClassStats, fetchStudents } = useClassroomStore();
 
+  // 高风险告警接入 riskApi.getLevel
+  const [riskDetails, setRiskDetails] = useState<Record<string, RiskDetail | null>>({});
+  const [riskLoadingId, setRiskLoadingId] = useState<string | null>(null);
+  const [expandedRiskId, setExpandedRiskId] = useState<string | null>(null);
+
+  const fetchRiskLevel = async (studentId: string, fallbackLevel?: string) => {
+    setRiskLoadingId(studentId);
+    try {
+      const data = await riskApi.getLevel(studentId);
+      setRiskDetails((prev) => ({
+        ...prev,
+        [studentId]: {
+          level: (data as { current_risk_level?: string; level?: string }).current_risk_level || data.level || fallbackLevel || 'green',
+          history: (data as { history?: Array<{ date: string; level: string }> }).history,
+          source: 'api',
+        },
+      }));
+    } catch (err) {
+      // 降级：使用学生列表中的风险等级
+      if (err instanceof ApiError) {
+        console.warn(`[TeacherHome] riskApi.getLevel 失败 (${err.status})，降级使用 mock`);
+      }
+      setRiskDetails((prev) => ({
+        ...prev,
+        [studentId]: {
+          level: fallbackLevel || 'green',
+          reason: '（后端不可用，展示学生列表风险等级）',
+          history: [
+            { date: '2026-07-12', level: fallbackLevel || 'green' },
+            { date: '2026-07-13', level: fallbackLevel || 'green' },
+            { date: '2026-07-14', level: fallbackLevel || 'green' },
+          ],
+          source: 'mock',
+        },
+      }));
+    } finally {
+      setRiskLoadingId(null);
+    }
+  };
+
+  const toggleRiskDetail = (studentId: string, fallbackLevel?: string) => {
+    if (expandedRiskId === studentId) {
+      setExpandedRiskId(null);
+      return;
+    }
+    setExpandedRiskId(studentId);
+    if (!riskDetails[studentId]) {
+      fetchRiskLevel(studentId, fallbackLevel);
+    }
+  };
+
   useEffect(() => {
     fetchClassStats('class1');
     fetchStudents('class1');
   }, [fetchClassStats, fetchStudents]);
+
+  const renderRiskDetail = (detail: RiskDetail | null | undefined, loading: boolean) => {
+    if (loading) {
+      return (
+        <div className="flex items-center gap-2 text-gray-500 text-sm">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          <span>加载风险详情中...</span>
+        </div>
+      );
+    }
+    if (!detail) {
+      return <p className="text-sm text-gray-500">暂无风险详情数据</p>;
+    }
+    return (
+      <div className="space-y-3">
+        <div className="flex items-center gap-2 flex-wrap">
+          <ShieldAlert className="w-4 h-4 text-gray-600" />
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRiskColor(detail.level)}`}>
+            {getRiskLabel(detail.level)}
+          </span>
+          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${detail.source === 'api' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-600'}`}>
+            {detail.source === 'api' ? 'API 数据' : '示例数据'}
+          </span>
+        </div>
+        {detail.reason && (
+          <p className="text-sm text-gray-600">{detail.reason}</p>
+        )}
+        {detail.history && detail.history.length > 0 && (
+          <div>
+            <p className="text-xs text-gray-500 mb-2">历史趋势</p>
+            <div className="flex items-end gap-1">
+              {detail.history.map((h) => (
+                <div key={h.date} className="flex flex-col items-center gap-1">
+                  <div
+                    className={`w-8 h-8 rounded-md ${getRiskColor(h.level).split(' ')[0]}`}
+                    title={`${h.date} · ${getRiskLabel(h.level)}`}
+                  />
+                  <span className="text-[10px] text-gray-400">{h.date.slice(5)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
 
   const alertStudents = students.filter(s => s.alert);
   const moodDistribution = [
@@ -163,23 +270,30 @@ export default function TeacherHome() {
             {alertStudents.length > 0 ? (
               <div className="space-y-3">
                 {alertStudents.map((student) => (
-                  <div 
-                    key={student.id}
-                    className={`flex items-center gap-4 p-4 rounded-xl border-2 ${getRiskColor(student.riskLevel)}`}
-                  >
-                    <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center text-xl">
-                      {student.nickname?.[0]}
+                  <div key={student.id} className="space-y-2">
+                    <div className={`flex items-center gap-4 p-4 rounded-xl border-2 ${getRiskColor(student.riskLevel)}`}>
+                      <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center text-xl">
+                        {student.nickname?.[0]}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-bold">{student.nickname}</p>
+                        <p className="text-sm">最新心情：{getMoodEmoji(student.latestMood)}</p>
+                      </div>
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${student.riskLevel === 'red' ? 'bg-red-200 text-red-700' : student.riskLevel === 'orange' ? 'bg-orange-200 text-orange-700' : 'bg-yellow-200 text-yellow-700'}`}>
+                        {getRiskLabel(student.riskLevel)}
+                      </span>
+                      <button
+                        onClick={() => toggleRiskDetail(student.id, student.riskLevel)}
+                        className="p-2 hover:bg-white/50 rounded-lg transition-colors"
+                      >
+                        <Eye className="w-5 h-5" />
+                      </button>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-bold">{student.nickname}</p>
-                      <p className="text-sm">最新心情：{getMoodEmoji(student.latestMood)}</p>
-                    </div>
-                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${student.riskLevel === 'red' ? 'bg-red-200 text-red-700' : student.riskLevel === 'orange' ? 'bg-orange-200 text-orange-700' : 'bg-yellow-200 text-yellow-700'}`}>
-                      {getRiskLabel(student.riskLevel)}
-                    </span>
-                    <button className="p-2 hover:bg-white/50 rounded-lg transition-colors">
-                      <Eye className="w-5 h-5" />
-                    </button>
+                    {expandedRiskId === student.id && (
+                      <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                        {renderRiskDetail(riskDetails[student.id], riskLoadingId === student.id)}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
@@ -222,38 +336,54 @@ export default function TeacherHome() {
               </thead>
               <tbody>
                 {students.map((student) => (
-                  <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
-                    <td className="py-4 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                          <span className="text-sm font-medium">{student.nickname?.[0]}</span>
+                  <Fragment key={student.id}>
+                    <tr className="border-b border-gray-100 hover:bg-gray-50">
+                      <td className="py-4 px-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium">{student.nickname?.[0]}</span>
+                          </div>
+                          <span className="font-medium">{student.nickname}</span>
                         </div>
-                        <span className="font-medium">{student.nickname}</span>
-                      </div>
-                    </td>
-                    <td className="text-center py-4 px-4 text-xl">{getMoodEmoji(student.latestMood)}</td>
-                    <td className="text-center py-4 px-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(student.riskLevel)}`}>
-                        {getRiskLabel(student.riskLevel)}
-                      </span>
-                    </td>
-                    <td className="text-center py-4 px-4">
-                      {student.alert ? (
-                        <span className="flex items-center justify-center gap-1 text-red-600">
-                          <AlertTriangle className="w-4 h-4" />
-                          <span className="text-sm">需关注</span>
+                      </td>
+                      <td className="text-center py-4 px-4 text-xl">{getMoodEmoji(student.latestMood)}</td>
+                      <td className="text-center py-4 px-4">
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(student.riskLevel)}`}>
+                          {getRiskLabel(student.riskLevel)}
                         </span>
-                      ) : (
-                        <span className="flex items-center justify-center gap-1 text-green-600">
-                          <CheckCircle className="w-4 h-4" />
-                          <span className="text-sm">正常</span>
-                        </span>
-                      )}
-                    </td>
-                    <td className="text-right py-4 px-4">
-                      <button className="text-purple-600 hover:text-purple-800 font-medium">查看详情</button>
-                    </td>
-                  </tr>
+                      </td>
+                      <td className="text-center py-4 px-4">
+                        {student.alert ? (
+                          <span className="flex items-center justify-center gap-1 text-red-600">
+                            <AlertTriangle className="w-4 h-4" />
+                            <span className="text-sm">需关注</span>
+                          </span>
+                        ) : (
+                          <span className="flex items-center justify-center gap-1 text-green-600">
+                            <CheckCircle className="w-4 h-4" />
+                            <span className="text-sm">正常</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="text-right py-4 px-4">
+                        <button
+                          onClick={() => toggleRiskDetail(student.id, student.riskLevel)}
+                          className="text-purple-600 hover:text-purple-800 font-medium"
+                        >
+                          查看详情
+                        </button>
+                      </td>
+                    </tr>
+                    {expandedRiskId === student.id && (
+                      <tr className="bg-gray-50">
+                        <td colSpan={5} className="px-4 py-4">
+                          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                            {renderRiskDetail(riskDetails[student.id], riskLoadingId === student.id)}
+                          </div>
+                        </td>
+                      </tr>
+                    )}
+                  </Fragment>
                 ))}
               </tbody>
             </table>

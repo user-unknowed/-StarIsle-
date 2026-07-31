@@ -55,6 +55,15 @@ const mockUsers: Record<string, User> = {
     createdAt: '2026-01-01T00:00:00Z',
     updatedAt: '2026-01-01T00:00:00Z',
   },
+  'parent1': {
+    id: 'parent1',
+    nickname: '王爸爸',
+    avatar: '',
+    role: 'parent',
+    signature: '陪伴是最长情的告白',
+    createdAt: '2026-01-01T00:00:00Z',
+    updatedAt: '2026-01-01T00:00:00Z',
+  },
 };
 
 export const useAuthStore = create<AuthState>()(

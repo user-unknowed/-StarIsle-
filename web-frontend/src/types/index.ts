@@ -1,8 +1,10 @@
+export type UserRole = 'student' | 'teacher' | 'parent';
+
 export interface User {
   id: string;
   nickname: string;
   avatar: string;
-  role: 'student' | 'teacher';
+  role: UserRole;
   ageGroup?: string;
   signature?: string;
   classId?: string;
@@ -95,13 +97,13 @@ export interface TopicCard {
 export interface LoginRequest {
   username: string;
   password: string;
-  role: 'student' | 'teacher';
+  role: UserRole;
 }
 
 export interface RegisterRequest {
   nickname: string;
   password: string;
-  role: 'student' | 'teacher';
+  role: UserRole;
   ageGroup?: string;
 }
 
@@ -133,4 +135,61 @@ export interface ChatResponse {
   riskLevel?: string;
   emotionTags?: string[];
   responseTimeMs: number;
+}
+
+// ==================== 家长端类型 ====================
+
+export interface ParentUser {
+  id: string;
+  username: string;
+  nickname: string;
+  phone: string;
+  createdAt: string;
+}
+
+export interface ChildBinding {
+  bindingId: string;
+  studentId: string;
+  studentNickname: string;
+  studentAvatar: string;
+  authorized: boolean;
+  createdAt: string;
+}
+
+export interface EmergencyAlert {
+  alertId: string;
+  studentId: string;
+  level: string;
+  reason: string;
+  createdAt: string;
+  confirmed: boolean;
+}
+
+export interface EmergencyResource {
+  type: string;
+  title: string;
+  content: string;
+  contact: string;
+  phone: string;
+}
+
+export interface RiskLevel {
+  userId: string;
+  level: string;
+  score: number;
+  reason: string;
+}
+
+export interface AssessmentQuestion {
+  id: string;
+  text: string;
+  options: string[];
+}
+
+export interface AssessmentResult {
+  id: string;
+  type: string;
+  score: number;
+  level: string;
+  suggestion: string;
 }

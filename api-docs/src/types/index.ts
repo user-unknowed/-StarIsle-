@@ -55,6 +55,7 @@ export interface ApiSchema {
   enum?: (string | number)[];
   items?: ApiSchema;
   nullable?: boolean;
+  default?: unknown;
 }
 
 export interface TestRequest {
@@ -71,4 +72,37 @@ export interface TestResponse {
   headers: Record<string, string>;
   body: string;
   time: number;
+  size: number;
+  url: string;
 }
+
+// 端点摘要（用于侧边栏分组列表展示）
+export interface EndpointSummary {
+  method: string;
+  path: string;
+  tag: string;
+  summary: string;
+  operationId?: string;
+  description?: string;
+  parameters?: ApiParameter[];
+  pathParams?: ApiParameter[];
+  queryParams?: ApiParameter[];
+  requestBody?: ApiRequestBody;
+  responses?: Record<string, ApiResponseDefinition>;
+}
+
+// 端点分组（按 tag 聚合）
+export interface ApiEndpointGroup {
+  groupName: string;
+  groupDescription?: string;
+  endpoints: EndpointSummary[];
+}
+
+// 选中的端点标识
+export interface SelectedEndpoint {
+  method: string;
+  path: string;
+}
+
+// 视图类型
+export type SelectedView = 'overview' | 'endpoint' | 'docs';

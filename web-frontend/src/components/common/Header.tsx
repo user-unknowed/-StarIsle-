@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, Music, User, LogOut, Menu, X, Bell, Star } from 'lucide-react';
+import { Home, MessageCircle, Music, User, LogOut, Menu, X, Bell, Star, Users, Siren } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 
 interface HeaderProps {
-  role: 'student' | 'teacher';
+  role: 'student' | 'teacher' | 'parent';
 }
 
 const studentNavItems = [
@@ -21,13 +21,48 @@ const teacherNavItems = [
   { path: '/teacher/profile', icon: User, label: '我的' },
 ];
 
+const parentNavItems = [
+  { path: '/parent', icon: Home, label: '孩子状态' },
+  { path: '/parent/chat', icon: MessageCircle, label: 'AI顾问' },
+  { path: '/parent/children', icon: Users, label: '我的孩子' },
+  { path: '/parent/emergency', icon: Siren, label: '应急中心' },
+  { path: '/parent/profile', icon: User, label: '我的' },
+];
+
+// 家长端暖色点缀：#F4A261 → #E76F51
+const accentByRole = {
+  student: {
+    logo: 'from-primary-500 to-secondary-600',
+    text: 'from-primary-600 to-secondary-600',
+    active: 'bg-gradient-to-r from-primary-500 to-secondary-600',
+    hover: 'hover:bg-primary-50 hover:text-primary-600',
+    bellHover: 'hover:bg-primary-50',
+  },
+  teacher: {
+    logo: 'from-primary-500 to-secondary-600',
+    text: 'from-primary-600 to-secondary-600',
+    active: 'bg-gradient-to-r from-primary-500 to-secondary-600',
+    hover: 'hover:bg-primary-50 hover:text-primary-600',
+    bellHover: 'hover:bg-primary-50',
+  },
+  parent: {
+    logo: 'from-[#F4A261] to-[#E76F51]',
+    text: 'from-[#F4A261] to-[#E76F51]',
+    active: 'bg-gradient-to-r from-[#F4A261] to-[#E76F51]',
+    hover: 'hover:bg-orange-50 hover:text-orange-600',
+    bellHover: 'hover:bg-orange-50',
+  },
+} as const;
+
 export function Header({ role }: HeaderProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const logout = useAuthStore((state) => state.logout);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const navItems = role === 'student' ? studentNavItems : teacherNavItems;
+  const navItems = role === 'student' ? studentNavItems : role === 'teacher' ? teacherNavItems : parentNavItems;
+  const accent = accentByRole[role];
+  const homePath = role === 'student' ? '/student' : role === 'teacher' ? '/teacher' : '/parent';
 
   const handleLogout = () => {
     logout();
@@ -38,11 +73,11 @@ export function Header({ role }: HeaderProps) {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200 shadow-sm safe-area-top">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(role === 'student' ? '/student' : '/teacher')}>
-            <div className="w-10 h-10 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-xl flex items-center justify-center shadow-lg">
+          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(homePath)}>
+            <div className={`w-10 h-10 bg-gradient-to-br ${accent.logo} rounded-xl flex items-center justify-center shadow-lg`}>
               <Star className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
+            <span className={`text-xl font-bold bg-gradient-to-r ${accent.text} bg-clip-text text-transparent`}>
               星屿
             </span>
           </div>
@@ -55,21 +90,21 @@ export function Header({ role }: HeaderProps) {
                 <button
                   key={item.path}
                   onClick={() => navigate(item.path)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-all duration-fast ${
+                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-fast ${
                     isActive
-                      ? 'bg-gradient-to-r from-primary-500 to-secondary-600 text-white shadow-md'
-                      : 'text-gray-600 hover:bg-primary-50 hover:text-primary-600'
+                      ? `${accent.active} text-white shadow-md`
+                      : `text-gray-600 ${accent.hover}`
                   }`}
                 >
                   <Icon className="w-5 h-5" />
-                  <span className="font-medium">{item.label}</span>
+                  <span className="font-medium text-sm">{item.label}</span>
                 </button>
               );
             })}
           </nav>
 
           <div className="flex items-center gap-3">
-            <button className="relative p-2 rounded-full hover:bg-primary-50 transition-colors touch-target">
+            <button className={`relative p-2 rounded-full transition-colors touch-target ${accent.bellHover}`}>
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full"></span>
             </button>
@@ -83,7 +118,7 @@ export function Header({ role }: HeaderProps) {
             </button>
 
             <button
-              className="md:hidden p-2 rounded-lg hover:bg-primary-50 touch-target"
+              className="md:hidden p-2 rounded-lg hover:bg-gray-100 touch-target"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -105,8 +140,8 @@ export function Header({ role }: HeaderProps) {
                   }}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-fast ${
                     isActive
-                      ? 'bg-gradient-to-r from-primary-500 to-secondary-600 text-white'
-                      : 'text-gray-600 hover:bg-primary-50'
+                      ? `${accent.active} text-white`
+                      : `text-gray-600 ${accent.hover}`
                   }`}
                 >
                   <Icon className="w-5 h-5" />

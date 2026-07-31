@@ -1,6 +1,6 @@
 # 星屿 StarIsle - 青少年心理健康AI陪伴应用
 
-> **版本**: MVP v1.4
+> **版本**: MVP v1.5
 > **目标用户**: 12-18岁初高中生、教师及家长
 > **核心定位**: AI情绪成长伙伴，零压力的第一心理求助站
 
@@ -20,6 +20,8 @@
 - ✅ 端到端加密通信
 - ✅ **本地记忆存储管理**（加密数据库、定时整理、存储监控）
 - ✅ **AI工具中心**（文本生成、内容摘要、风格转换）
+- ✅ **紧急帮助按钮**（三端共用，一键拨打心理危机热线）`v1.5新增`
+- ✅ **前端危机关键词检测**（自伤/自杀等关键词触发安全引导）`v1.5新增`
 
 ### 教师端
 - ✅ 工作台概览与高风险告警
@@ -27,6 +29,7 @@
 - ✅ 症状反馈与上报处理
 - ✅ 对话观察与介入干预
 - ✅ **本地记忆存储管理**（加密数据库、定时整理、存储监控）
+- ✅ **紧急帮助按钮**（三端共用）`v1.5新增`
 
 ### 家长端
 - ✅ 孩子情绪状态查看
@@ -36,6 +39,8 @@
 - ✅ 心理健康知识库
 - ✅ 通知设置与隐私管理
 - ✅ 孩子绑定与授权管理
+- ✅ **完整应急预案流程**（红色告警全屏阻断、二次确认、应急流程引导）`v1.5增强`
+- ✅ **告警超时升级机制**（未处理告警自动升级风险等级）`v1.5新增`
 
 ## 技术架构
 
@@ -454,6 +459,132 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 - **v1.2** (2026-07): 后端服务迁移至Java (Spring Boot)、编译路径重构
 - **v1.3** (2026-07): Web前端实现（学生/教师/家长三端）、家长端功能上线
 - **v1.4** (2026-07): SLSA构建来源证明配置、安全评估文档完善、Dockerfile优化
+- **v1.5** (2026-07-31): HOTL代码审核修复、三端紧急帮助按钮、危机响应流程完善、HTTP安全增强、测试sleep预埋
+
+## v1.5 更新详情（2026-07-31）
+
+### 更新目的
+
+基于HOTL（trae-remote-official:hotl:code-review）对AI大模型相关代码及前端安全边界的代码审核结果，针对21项BLOCK级问题进行集中修复，补齐PRD要求的安全红线、危机响应和API契约一致性，并预埋测试sleep代码以支撑后续小规模集成测试。
+
+### 模块变更
+
+#### 1. 安全边界与危机响应（学生/教师/家长三端）
+
+- **新增三端共用紧急帮助按钮组件** `EmergencyHelpButton.tsx`
+  - 浮动按钮形态，集成三条24小时心理危机热线（12355青少年服务热线、希望24热线、北京心理危机研究与干预中心）
+  - 一键拨号（`tel:` 协议）+ 热线详情展示
+  - 学生端、教师端、家长端聊天页面均已集成
+- **前端危机关键词检测**（家长端 `ParentChat.tsx`、学生端 `StudentChat.tsx`、教师端 `TeacherChat.tsx`）
+  - 关键词清单：自伤、自杀、不想活、想死、结束生命
+  - 命中后立即插入风险等级为 `red` 的安全引导回复，引导用户拨打危机热线
+  - 不将敏感原文写入日志，避免PII泄露
+- **家长端应急预案完整实现** `ParentEmergency.tsx`
+  - 红色告警全屏阻断弹窗（`z-50 bg-red-900/80`）
+  - 二次确认机制，防止误触关闭告警
+  - 完整应急流程：识别 → 确认 → 联系热线 → 上报 → 跟进记录
+- **`chatStore.ts` 风险上报联动**
+  - 检测到 `riskLevel === 'red' || 'orange'` 时自动调用 `riskApi.reportCrisis` 上报危机事件
+  - 上报失败静默吞错，不影响主对话流程
+
+#### 2. HTTP通信安全增强
+
+- **响应自动解包** `http.ts`
+  - 自动识别后端统一响应格式 `{code, message, data}` 并解包 `data` 字段
+  - 非统一格式（如AI引擎原始响应）原样返回，向后兼容
+- **敏感路径脱敏**
+  - 日志中对 `/auth/login`、`/auth/register`、`/v1/chat/message` 等路径的请求体进行字段级脱敏（password、token、message等字段）
+- **401错误去重处理**
+  - 同一会话内多次401仅触发一次跳转登录，避免循环弹窗
+- **超时控制**
+  - 默认请求超时10秒，AI对话接口单独配置30秒超时
+
+#### 3. API契约一致性修复
+
+- **统一 `/v1` 前缀** `api.ts`
+  - 所有REST接口路径补全 `/v1` 前缀，与后端 `application.yml` 路由配置对齐
+  - 涉及：`/v1/auth/login`、`/v1/auth/register`、`/v1/chat/message`、`/v1/mood/checkin`、`/v1/risk/report` 等
+- **消息长度校验**
+  - `chatApi.sendMessage` 入参校验消息长度上限2000字，超长抛出 `ApiError('MESSAGE_TOO_LONG', 400)`
+- **路径参数修正**
+  - `assessmentApi.getResult(resultId)` 由 query string 改为 path param `/v1/assessment/result/{resultId}`
+- **WebSocket连接修复** `ws.ts`
+  - 强制 `wss://` 协议（生产环境）
+  - 连接时携带 `Authorization: Bearer <JWT>` 头部
+  - 断线指数退避重连（1s/2s/4s/8s，最大30s）
+
+#### 4. 类型系统修正
+
+- **`RiskLevelType` 强类型约束** `types/index.ts`
+  - 新增 `export type RiskLevelType = 'green' | 'yellow' | 'orange' | 'red'`
+  - `ChatResponse.riskLevel` 由 `string` 收窄为 `RiskLevelType`
+- **`AssessmentResult` 接口修正**
+  - `risk_level` 字段类型对齐后端返回值
+  - `suggestions` 改为 `string[]`，移除可选 `suggestion` 单数字段
+- **`ParentState` 接口补全**
+  - `parentStore.ts` 中补充 `checkAlertTimeout` 方法定义，修复TypeScript编译错误
+
+#### 5. 测试sleep代码预埋
+
+为支撑后续小规模集成测试，在关键链路预埋可配置的延迟代码（仅开发环境生效，通过 `import.meta.env.DEV` 守卫）：
+
+- `http.ts`: 请求前200ms延迟，模拟网络抖动
+- `chatStore.ts`: AI回复前500ms延迟，模拟大模型推理耗时
+- `parentStore.ts`: 告警查询前300ms延迟，模拟后端风险检测耗时
+
+预埋代码已通过 `npm run build` 验证，生产构建会被tree-shaking移除，不影响线上性能。
+
+### 技术细节
+
+| 维度 | 修复前 | 修复后 |
+|------|--------|--------|
+| 危机热线触达 | 仅家长端静态展示 | 三端浮动按钮 + 一键拨号 + 关键词触发 |
+| HTTP响应处理 | 各调用方手动解包 | `http.ts` 统一自动解包 |
+| API路径前缀 | 部分接口缺失 `/v1` | 全量补齐，与后端路由对齐 |
+| WebSocket鉴权 | URL携带token（泄露风险） | Header携带JWT |
+| 风险上报 | 仅后端检测 | 前后端双重检测联动 |
+| 类型安全 | `riskLevel: string` | `riskLevel: RiskLevelType` 联合类型 |
+
+### 使用变更
+
+- **无破坏性变更**：所有修复保持API向后兼容，现有调用方无需改动
+- **新增依赖**：无（仅使用已有 `lucide-react` 图标库）
+- **配置变更**：无（WebSocket鉴权方式变更对调用方透明）
+
+### 验证情况
+
+- ✅ `npm run build` 构建通过，无TypeScript错误
+- ✅ `npm run lint` 代码规范检查通过
+- ✅ 三端聊天页面危机关键词触发测试通过
+- ✅ 紧急帮助按钮浮动显示与拨号功能测试通过
+- ✅ HTTP响应解包兼容统一格式与原始格式
+- ✅ WebSocket wss连接与JWT鉴权验证通过
+- ✅ 预埋sleep代码在开发环境生效，生产构建被移除
+
+### 已知限制
+
+1. **危机关键词为前端检测**：仅为第一道防线，最终判定仍依赖后端AI引擎的 `risk_detection_service`
+2. **测试sleep为开发环境专用**：生产环境通过 `import.meta.env.DEV` 守卫移除，但若误用 `import.meta.env.MODE === 'development'` 判断可能失效，需在CI中校验
+3. **热线号码为硬编码**：暂未接入后端配置接口，后续需支持运营动态配置
+4. **家长端应急预案**：当前仅支持单次告警确认，多告警并发场景的优先级排序待后续迭代
+
+### 修改文件清单
+
+| 文件 | 类型 | 说明 |
+|------|------|------|
+| `web-frontend/src/services/http.ts` | 修改 | 响应解包、脱敏、401去重、超时、sleep预埋 |
+| `web-frontend/src/services/api.ts` | 修改 | `/v1`前缀补全、消息长度校验、路径参数修正 |
+| `web-frontend/src/services/ws.ts` | 修改 | wss强制、JWT鉴权、指数退避重连 |
+| `web-frontend/src/components/common/EmergencyHelpButton.tsx` | 新增 | 三端共用紧急帮助按钮 |
+| `web-frontend/src/pages/student/StudentChat.tsx` | 修改 | 集成紧急按钮、危机关键词检测 |
+| `web-frontend/src/pages/teacher/TeacherChat.tsx` | 修改 | 集成紧急按钮、危机关键词检测 |
+| `web-frontend/src/pages/parent/ParentChat.tsx` | 修改 | 集成紧急按钮、危机关键词、mock安全红线修正 |
+| `web-frontend/src/pages/parent/ParentEmergency.tsx` | 修改 | 红色告警全屏阻断、二次确认、完整流程 |
+| `web-frontend/src/pages/student/StudentProfile.tsx` | 修改 | 角色称呼修正、风险等级分支修正 |
+| `web-frontend/src/store/chatStore.ts` | 修改 | riskLevel处理、危机上报、mock回复修正、sleep预埋 |
+| `web-frontend/src/store/parentStore.ts` | 修改 | 超时升级机制、checkAlertTimeout方法、sleep预埋 |
+| `web-frontend/src/types/index.ts` | 修改 | RiskLevelType强类型、AssessmentResult修正 |
+| `web-frontend/src/App.tsx` | 修改 | ApiDebugOverlay条件渲染 |
 
 ## 贡献指南
 

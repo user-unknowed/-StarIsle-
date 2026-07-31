@@ -1,7 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header } from '../../components/common/Header';
-import BubbleWrapGame from '../../components/BubbleWrapGame';
-import { Music, Play, Pause, SkipForward, SkipBack, Volume2, Waves, Sparkles, Heart, Grid3X3 } from 'lucide-react';
+import { Music, Play, Pause, SkipForward, SkipBack, Volume2, Waves, Sparkles, Heart } from 'lucide-react';
+import { contentApi } from '../../services/api';
+
+type MusicListItem = {
+  id: string;
+  title: string;
+  duration: string;
+  cover: string;
+  category: string;
+  description?: string;
+};
 
 const breathingExercises = [
   { id: '478', name: '4-7-8呼吸法', description: '吸气4秒，屏息7秒，呼气8秒', color: 'from-blue-500 to-cyan-500' },
@@ -9,7 +18,7 @@ const breathingExercises = [
   { id: 'relax', name: '放松呼吸法', description: '缓慢吸气，自然呼气，放松全身', color: 'from-purple-500 to-pink-500' },
 ];
 
-const musicList = [
+const musicList: MusicListItem[] = [
   { id: '1', title: '森林雨声', duration: '45:32', cover: '🌧️', category: '自然' },
   { id: '2', title: '海浪轻拍', duration: '38:15', cover: '🌊', category: '海洋' },
   { id: '3', title: '星空冥想', duration: '52:08', cover: '⭐', category: '冥想' },
@@ -19,7 +28,7 @@ const musicList = [
 ];
 
 export default function StudentRelax() {
-  const [activeTab, setActiveTab] = useState<'music' | 'breathing' | 'bubble'>('music');
+  const [activeTab, setActiveTab] = useState<'music' | 'breathing'>('music');
   const [currentTrack, setCurrentTrack] = useState(musicList[0]);
   const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -27,6 +36,9 @@ export default function StudentRelax() {
   const [breathingPhase, setBreathingPhase] = useState<'inhale' | 'hold' | 'exhale'>('inhale');
   const [breathingProgress, setBreathingProgress] = useState(0);
   const [isBreathing, setIsBreathing] = useState(false);
+  const [apiMusicList, setApiMusicList] = useState<MusicListItem[]>([]);
+  const [apiBreathingSteps, setApiBreathingSteps] = useState<{ name: string; duration: number; instruction: string }[] | null>(null);
+  const [contentSource, setContentSource] = useState<'api' | 'mock'>('mock');
   
   const progressInterval = useRef<any>(null);
   const breathingInterval = useRef<any>(null);
@@ -102,17 +114,68 @@ export default function StudentRelax() {
     };
   }, [isBreathing, currentExercise]);
 
+  // 接入 contentApi：获取冥想列表
+  useEffect(() => {
+    let cancelled = false;
+    contentApi
+      .getMeditations('all')
+      .then((data) => {
+        if (cancelled) return;
+        const mapped: MusicListItem[] = (data.meditations || []).map((m) => ({
+          id: m.id,
+          title: m.title,
+          duration: `${Math.floor(m.duration / 60)}:${String(m.duration % 60).padStart(2, '0')}`,
+          cover: '🎵',
+          category: m.category,
+          description: m.description,
+        }));
+        if (mapped.length) {
+          setApiMusicList(mapped);
+          setCurrentTrack(mapped[0]);
+          setContentSource('api');
+        }
+      })
+      .catch(() => {
+        // 后端不可用，保留 mock 列表
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // 接入 contentApi：获取呼吸练习步骤
+  useEffect(() => {
+    let cancelled = false;
+    contentApi
+      .getBreathing(currentExercise.id)
+      .then((data) => {
+        if (cancelled) return;
+        if (data.steps?.length) {
+          setApiBreathingSteps(data.steps);
+          setContentSource('api');
+        }
+      })
+      .catch(() => {
+        // 保留 mock
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [currentExercise]);
+
+  const displayMusicList: MusicListItem[] = apiMusicList.length > 0 ? apiMusicList : musicList;
+
   const handlePrev = () => {
-    const currentIndex = musicList.findIndex(m => m.id === currentTrack.id);
-    const newIndex = currentIndex > 0 ? currentIndex - 1 : musicList.length - 1;
-    setCurrentTrack(musicList[newIndex]);
+    const currentIndex = displayMusicList.findIndex(m => m.id === currentTrack.id);
+    const newIndex = currentIndex > 0 ? currentIndex - 1 : displayMusicList.length - 1;
+    setCurrentTrack(displayMusicList[newIndex]);
     setProgress(0);
   };
 
   const handleNext = () => {
-    const currentIndex = musicList.findIndex(m => m.id === currentTrack.id);
-    const newIndex = currentIndex < musicList.length - 1 ? currentIndex + 1 : 0;
-    setCurrentTrack(musicList[newIndex]);
+    const currentIndex = displayMusicList.findIndex(m => m.id === currentTrack.id);
+    const newIndex = currentIndex < displayMusicList.length - 1 ? currentIndex + 1 : 0;
+    setCurrentTrack(displayMusicList[newIndex]);
     setProgress(0);
   };
 
@@ -143,17 +206,6 @@ export default function StudentRelax() {
           >
             <Waves className="w-5 h-5 inline-block mr-2" />
             呼吸练习
-          </button>
-          <button
-            onClick={() => setActiveTab('bubble')}
-            className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all duration-300 ${
-              activeTab === 'bubble'
-                ? 'bg-gradient-to-r from-pink-400 to-rose-500 text-white shadow-lg'
-                : 'bg-white text-gray-600 hover:bg-gray-50'
-            }`}
-          >
-            <Grid3X3 className="w-5 h-5 inline-block mr-2" />
-            捏气泡纸
           </button>
         </div>
 
@@ -201,9 +253,14 @@ export default function StudentRelax() {
             </div>
 
             <div className="bg-white rounded-3xl p-6 shadow-lg">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">音乐列表</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-bold text-gray-800">音乐列表</h3>
+                <span className={`text-xs px-2 py-0.5 rounded-full ${contentSource === 'api' ? 'bg-green-50 text-green-600' : 'bg-gray-100 text-gray-500'}`}>
+                  {contentSource === 'api' ? 'API 数据' : '示例数据'}
+                </span>
+              </div>
               <div className="space-y-3">
-                {musicList.map((music) => (
+                {displayMusicList.map((music) => (
                   <button
                     key={music.id}
                     onClick={() => {
@@ -281,6 +338,19 @@ export default function StudentRelax() {
                     {isBreathing ? '停止' : '开始'}
                   </button>
                 </div>
+
+                {apiBreathingSteps && apiBreathingSteps.length > 0 && (
+                  <div className="w-full mt-2 p-3 bg-indigo-50 rounded-xl">
+                    <p className="text-xs text-indigo-600 font-medium mb-2">API 返回步骤（{currentExercise.name}）</p>
+                    <div className="flex flex-wrap gap-2 justify-center">
+                      {apiBreathingSteps.map((step, i) => (
+                        <span key={i} className="text-xs px-2 py-1 bg-white rounded-lg text-gray-600 border border-indigo-100">
+                          {step.name} {step.duration}s
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
 
@@ -313,10 +383,6 @@ export default function StudentRelax() {
               </div>
             </div>
           </div>
-        )}
-
-        {activeTab === 'bubble' && (
-          <BubbleWrapGame />
         )}
       </main>
     </div>

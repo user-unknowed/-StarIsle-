@@ -471,7 +471,7 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 
 #### 1. 安全边界与危机响应（学生/教师/家长三端）
 
-- **新增三端共用紧急帮助按钮组件** [`EmergencyHelpButton.tsx`](file:///c:/Users/ababa/.trae-cn/worktrees/-StarIsle-/feat-design-frontend-tools-Pj5q7p/web-frontend/src/components/common/EmergencyHelpButton.tsx)
+- **新增三端共用紧急帮助按钮组件** `EmergencyHelpButton.tsx`
   - 浮动按钮形态，集成三条24小时心理危机热线（12355青少年服务热线、希望24热线、北京心理危机研究与干预中心）
   - 一键拨号（`tel:` 协议）+ 热线详情展示
   - 学生端、教师端、家长端聊天页面均已集成
@@ -479,7 +479,7 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
   - 关键词清单：自伤、自杀、不想活、想死、结束生命
   - 命中后立即插入风险等级为 `red` 的安全引导回复，引导用户拨打危机热线
   - 不将敏感原文写入日志，避免PII泄露
-- **家长端应急预案完整实现** [`ParentEmergency.tsx`](file:///c:/Users/ababa/.trae-cn/worktrees/-StarIsle-/feat-design-frontend-tools-Pj5q7p/web-frontend/src/pages/parent/ParentEmergency.tsx)
+- **家长端应急预案完整实现** `ParentEmergency.tsx`
   - 红色告警全屏阻断弹窗（`z-50 bg-red-900/80`）
   - 二次确认机制，防止误触关闭告警
   - 完整应急流程：识别 → 确认 → 联系热线 → 上报 → 跟进记录
@@ -489,7 +489,7 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 
 #### 2. HTTP通信安全增强
 
-- **响应自动解包** [`http.ts`](file:///c:/Users/ababa/.trae-cn/worktrees/-StarIsle-/feat-design-frontend-tools-Pj5q7p/web-frontend/src/services/http.ts)
+- **响应自动解包** `http.ts`
   - 自动识别后端统一响应格式 `{code, message, data}` 并解包 `data` 字段
   - 非统一格式（如AI引擎原始响应）原样返回，向后兼容
 - **敏感路径脱敏**
@@ -501,21 +501,21 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 
 #### 3. API契约一致性修复
 
-- **统一 `/v1` 前缀** [`api.ts`](file:///c:/Users/ababa/.trae-cn/worktrees/-StarIsle-/feat-design-frontend-tools-Pj5q7p/web-frontend/src/services/api.ts)
+- **统一 `/v1` 前缀** `api.ts`
   - 所有REST接口路径补全 `/v1` 前缀，与后端 `application.yml` 路由配置对齐
   - 涉及：`/v1/auth/login`、`/v1/auth/register`、`/v1/chat/message`、`/v1/mood/checkin`、`/v1/risk/report` 等
 - **消息长度校验**
   - `chatApi.sendMessage` 入参校验消息长度上限2000字，超长抛出 `ApiError('MESSAGE_TOO_LONG', 400)`
 - **路径参数修正**
   - `assessmentApi.getResult(resultId)` 由 query string 改为 path param `/v1/assessment/result/{resultId}`
-- **WebSocket连接修复** [`ws.ts`](file:///c:/Users/ababa/.trae-cn/worktrees/-StarIsle-/feat-design-frontend-tools-Pj5q7p/web-frontend/src/services/ws.ts)
+- **WebSocket连接修复** `ws.ts`
   - 强制 `wss://` 协议（生产环境）
   - 连接时携带 `Authorization: Bearer <JWT>` 头部
   - 断线指数退避重连（1s/2s/4s/8s，最大30s）
 
 #### 4. 类型系统修正
 
-- **`RiskLevelType` 强类型约束** [`types/index.ts`](file:///c:/Users/ababa/.trae-cn/worktrees/-StarIsle-/feat-design-frontend-tools-Pj5q7p/web-frontend/src/types/index.ts)
+- **`RiskLevelType` 强类型约束** `types/index.ts`
   - 新增 `export type RiskLevelType = 'green' | 'yellow' | 'orange' | 'red'`
   - `ChatResponse.riskLevel` 由 `string` 收窄为 `RiskLevelType`
 - **`AssessmentResult` 接口修正**

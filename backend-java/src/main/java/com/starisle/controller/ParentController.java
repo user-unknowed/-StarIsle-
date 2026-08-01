@@ -120,7 +120,7 @@ public class ParentController {
                 .filter(binding -> binding.getParentId().equals(parentId))
                 .map(binding -> {
                     parentService.unbindStudent(bindingId);
-                    return ResponseEntity.ok(ApiResponse.success("解除绑定成功", null));
+                    return ResponseEntity.ok(ApiResponse.<Void>success("解除绑定成功", null));
                 })
                 .orElse(ResponseEntity.ok(ApiResponse.forbidden("无权操作该绑定记录")));
     }

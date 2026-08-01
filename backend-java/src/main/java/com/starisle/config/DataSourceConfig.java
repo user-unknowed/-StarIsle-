@@ -63,7 +63,7 @@ public class DataSourceConfig {
     }
 
     @Bean("sourceJdbcTemplate")
-    public JdbcTemplate sourceJdbcTemplate(@javax.annotation.Resource(name = "sourceDataSource") DataSource sourceDataSource) {
+    public JdbcTemplate sourceJdbcTemplate(DataSource sourceDataSource) {
         return new JdbcTemplate(sourceDataSource);
     }
 }

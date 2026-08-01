@@ -73,11 +73,13 @@ public class ChatController {
         List<ChatMessage> messages = chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId, limit);
 
         List<Map<String, Object>> history = messages.stream()
-                .map(m -> Map.of(
-                    "role", m.getRole(),
-                    "content", m.getContent(),
-                    "timestamp", m.getCreatedAt() != null ? m.getCreatedAt().toString() : ""
-                ))
+                .map(m -> {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("role", m.getRole());
+                    item.put("content", m.getContent());
+                    item.put("timestamp", m.getCreatedAt() != null ? m.getCreatedAt().toString() : "");
+                    return item;
+                })
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(ApiResponse.success(Map.of(

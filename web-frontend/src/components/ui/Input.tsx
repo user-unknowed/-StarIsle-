@@ -28,25 +28,31 @@ export const Input: React.FC<InputProps> = ({
   variant = 'default',
   className,
   type = 'text',
+  id,
   ...props
 }) => {
   const computedVariant = error ? 'error' : success ? 'success' : variant;
+  const inputId = id || (label ? `input-${label.replace(/\s+/g, '-')}` : undefined);
+  const errorId = error ? `${inputId}-error` : undefined;
 
   return (
     <div className="flex flex-col gap-1.5">
       {label && (
-        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+        <label htmlFor={inputId} className="text-sm font-medium text-gray-700 dark:text-gray-300">
           {label}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">
             {icon}
           </div>
         )}
         <input
+          id={inputId}
           type={type}
+          aria-invalid={!!error}
+          aria-describedby={errorId}
           className={twMerge(
             clsx(
               'w-full px-4 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 rounded-lg transition-all duration-fast focus:outline-none focus:ring-2',
@@ -59,13 +65,13 @@ export const Input: React.FC<InputProps> = ({
           {...props}
         />
         {iconRight && (
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400">
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400" aria-hidden="true">
             {iconRight}
           </div>
         )}
       </div>
       {error && (
-        <p className="text-sm text-danger-600">{error}</p>
+        <p id={errorId} role="alert" className="text-sm text-danger-600">{error}</p>
       )}
       {success && (
         <p className="text-sm text-success-600">{success}</p>

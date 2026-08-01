@@ -9,6 +9,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ScheduledFuture;
 
@@ -97,6 +98,7 @@ public class MaintenanceScheduler {
                 storageService.insert("app_settings", data);
             }
         } catch (Exception e) {
+            // Log error
         }
     }
 
@@ -123,6 +125,7 @@ public class MaintenanceScheduler {
                 }
             }
         } catch (Exception e) {
+            // Log error, use defaults
         }
         
         return window;
@@ -136,6 +139,7 @@ public class MaintenanceScheduler {
         try {
             performMaintenance("auto_maintenance", "自动整理：清理过期数据并压缩数据库");
         } catch (Exception e) {
+            // Log error
         }
     }
 

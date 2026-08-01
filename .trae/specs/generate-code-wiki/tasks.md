@@ -1,0 +1,43 @@
+# Tasks
+- [x] Task 1: 创建 docs/code-wiki/ 目录结构并编写 README.md 入口文档
+  - [x] SubTask 1.1: 创建 `docs/code-wiki/` 目录
+  - [x] SubTask 1.2: 编写 `README.md`，包含项目简介、文档导航、快速链接
+- [x] Task 2: 编写 architecture.md 项目整体架构文档
+  - [x] SubTask 2.1: 描述分层架构（客户端层、服务端层、数据层）
+  - [x] SubTask 2.2: 绘制 Mermaid 架构图
+  - [x] SubTask 2.3: 列出各层技术栈和版本
+- [x] Task 3: 编写 modules.md 主要模块职责文档
+  - [x] SubTask 3.1: 描述 `backend-java/` 模块职责、目录结构、技术栈
+  - [x] SubTask 3.2: 描述 `web-frontend/` 模块职责、目录结构、技术栈
+  - [x] SubTask 3.3: 描述 `后台/ai-engine/` 模块职责、目录结构、技术栈
+  - [x] SubTask 3.4: 描述 `后台/backend/` (Go API网关) 模块职责
+  - [x] SubTask 3.5: 描述 `学生端/StarIsle-student/` Flutter 模块
+  - [x] SubTask 3.6: 描述 `教师端/StarIsle-teacher/` Flutter 模块
+  - [x] SubTask 3.7: 描述 `家长端/` 和 `api-docs/` 模块
+- [x] Task 4: 编写 key-classes.md 关键类与函数说明文档
+  - [x] SubTask 4.1: 梳理 Java 后端关键类（Controller、Service、Entity、Config、Utils）
+  - [x] SubTask 4.2: 梳理 Web 前端关键组件和 Store
+  - [x] SubTask 4.3: 梳理 AI 引擎关键 Python 类和服务
+  - [x] SubTask 4.4: 梳理 Flutter 端关键 Screen 和 Service
+- [x] Task 5: 编写 dependencies.md 依赖关系文档
+  - [x] SubTask 5.1: 描述前端到后端的 API 依赖
+  - [x] SubTask 5.2: 描述后端到数据库的依赖
+  - [x] SubTask 5.3: 描述后端到 AI 引擎的依赖
+  - [x] SubTask 5.4: 描述模块间调用链路
+- [x] Task 6: 编写 running.md 项目运行方式文档
+  - [x] SubTask 6.1: 描述 Docker Compose 一键启动方式
+  - [x] SubTask 6.2: 描述各模块独立启动方式和环境要求
+  - [x] SubTask 6.3: 描述环境变量配置
+- [x] Task 7: 编写 api-reference.md API 接口速查文档
+  - [x] SubTask 7.1: 整理认证接口
+  - [x] SubTask 7.2: 整理学生端/教师端/家长端业务接口
+  - [x] SubTask 7.3: 整理 WebSocket 和 AI 引擎接口
+
+# Task Dependencies
+- Task 2 依赖 Task 1（目录创建）
+- Task 3 依赖 Task 1
+- Task 4 依赖 Task 1
+- Task 5 依赖 Task 1
+- Task 6 依赖 Task 1
+- Task 7 依赖 Task 1
+- Task 5 依赖 Task 3（模块理解）

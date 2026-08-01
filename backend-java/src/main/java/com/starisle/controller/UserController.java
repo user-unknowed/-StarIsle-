@@ -73,7 +73,7 @@ public class UserController {
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<Map<String, Object>>> registerUser(@Validated @RequestBody RegisterRequest request) {
         if (userRepository.existsByUsername(request.getUsername())) {
-            return ResponseEntity.ok(ApiResponse.badRequest("用户名已被使用"));
+            return ResponseEntity.ok(ApiResponse.<Map<String, Object>>badRequest("用户名已被使用"));
         }
 
         User user = User.builder()
@@ -89,13 +89,14 @@ public class UserController {
         user = userRepository.save(user);
         String token = jwtUtil.generateToken(user.getId(), user.getRole());
 
-        return ResponseEntity.ok(ApiResponse.created("用户注册成功", Map.of(
-            "user_id", user.getId(),
-            "username", user.getUsername(),
-            "nickname", user.getNickname(),
-            "role", user.getRole(),
-            "token", token
-        )));
+        Map<String, Object> registerData = new java.util.HashMap<>();
+        registerData.put("user_id", user.getId());
+        registerData.put("username", user.getUsername());
+        registerData.put("nickname", user.getNickname());
+        registerData.put("role", user.getRole());
+        registerData.put("token", token);
+
+        return ResponseEntity.ok(ApiResponse.created("用户注册成功", registerData));
     }
 
     @PostMapping("/login")
@@ -107,36 +108,38 @@ public class UserController {
                     user.setLastLoginAt(java.time.LocalDateTime.now());
                     user = userRepository.save(user);
                     String token = jwtUtil.generateToken(user.getId(), user.getRole());
-                    return ResponseEntity.ok(ApiResponse.success("登录成功", Map.of(
-                        "user_id", user.getId(),
-                        "username", user.getUsername(),
-                        "nickname", user.getNickname(),
-                        "role", user.getRole(),
-                        "token", token
-                    )));
+                    Map<String, Object> loginData = new java.util.HashMap<>();
+                    loginData.put("user_id", user.getId());
+                    loginData.put("username", user.getUsername());
+                    loginData.put("nickname", user.getNickname());
+                    loginData.put("role", user.getRole());
+                    loginData.put("token", token);
+                    return ResponseEntity.ok(ApiResponse.success("登录成功", loginData));
                 })
-                .orElse(ResponseEntity.ok(ApiResponse.unauthorized("用户名或密码错误")));
+                .orElse(ResponseEntity.ok(ApiResponse.<Map<String, Object>>unauthorized("用户名或密码错误")));
     }
 
     @GetMapping("/{id}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getUser(@PathVariable String id) {
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(id)) {
-            return ResponseEntity.ok(ApiResponse.forbidden("无权查看他人信息"));
+            return ResponseEntity.ok(ApiResponse.<Map<String, Object>>forbidden("无权查看他人信息"));
         }
 
         return userRepository.findById(id)
-                .map(user -> ResponseEntity.ok(ApiResponse.success(Map.of(
-                    "user_id", user.getId(),
-                    "username", user.getUsername(),
-                    "nickname", user.getNickname(),
-                    "avatar", user.getAvatar(),
-                    "age_group", user.getAgeGroup(),
-                    "role", user.getRole(),
-                    "created_at", user.getCreatedAt(),
-                    "updated_at", user.getUpdatedAt()
-                ))))
-                .orElse(ResponseEntity.ok(ApiResponse.notFound("用户不存在")));
+                .map(user -> {
+                    Map<String, Object> userData = new java.util.HashMap<>();
+                    userData.put("user_id", user.getId());
+                    userData.put("username", user.getUsername());
+                    userData.put("nickname", user.getNickname());
+                    userData.put("avatar", user.getAvatar());
+                    userData.put("age_group", user.getAgeGroup());
+                    userData.put("role", user.getRole());
+                    userData.put("created_at", user.getCreatedAt());
+                    userData.put("updated_at", user.getUpdatedAt());
+                    return ResponseEntity.ok(ApiResponse.success(userData));
+                })
+                .orElse(ResponseEntity.ok(ApiResponse.<Map<String, Object>>notFound("用户不存在")));
     }
 
     @PutMapping("/{id}")
@@ -145,7 +148,7 @@ public class UserController {
             @Validated @RequestBody UpdateRequest request) {
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(id)) {
-            return ResponseEntity.ok(ApiResponse.forbidden("无权修改他人信息"));
+            return ResponseEntity.ok(ApiResponse.<Map<String, Object>>forbidden("无权修改他人信息"));
         }
 
         return userRepository.findById(id)
@@ -157,48 +160,50 @@ public class UserController {
                         user.setAvatar(request.getAvatar());
                     }
                     user = userRepository.save(user);
-                    return ResponseEntity.ok(ApiResponse.success("用户信息更新成功", Map.of(
-                        "user_id", user.getId(),
-                        "nickname", user.getNickname(),
-                        "avatar", user.getAvatar()
-                    )));
+                    Map<String, Object> updateData = new java.util.HashMap<>();
+                    updateData.put("user_id", user.getId());
+                    updateData.put("nickname", user.getNickname());
+                    updateData.put("avatar", user.getAvatar());
+                    return ResponseEntity.ok(ApiResponse.success("用户信息更新成功", updateData));
                 })
-                .orElse(ResponseEntity.ok(ApiResponse.notFound("用户不存在")));
+                .orElse(ResponseEntity.ok(ApiResponse.<Map<String, Object>>notFound("用户不存在")));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable String id) {
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(id)) {
-            return ResponseEntity.ok(ApiResponse.forbidden("无权删除他人账号"));
+            return ResponseEntity.ok(ApiResponse.<Void>forbidden("无权删除他人账号"));
         }
 
         if (!userRepository.existsById(id)) {
-            return ResponseEntity.ok(ApiResponse.notFound("用户不存在"));
+            return ResponseEntity.ok(ApiResponse.<Void>notFound("用户不存在"));
         }
 
         userRepository.deleteById(id);
-        return ResponseEntity.ok(ApiResponse.success("账号已删除", null));
+        return ResponseEntity.ok(ApiResponse.<Void>success("账号已删除", null));
     }
 
     @GetMapping("/{id}/export")
     public ResponseEntity<ApiResponse<Map<String, Object>>> exportUserData(@PathVariable String id) {
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(id)) {
-            return ResponseEntity.ok(ApiResponse.forbidden("无权导出他人数据"));
+            return ResponseEntity.ok(ApiResponse.<Map<String, Object>>forbidden("无权导出他人数据"));
         }
 
         return userRepository.findById(id)
-                .map(user -> ResponseEntity.ok(ApiResponse.success("数据导出成功", Map.of(
-                    "user_id", user.getId(),
-                    "username", user.getUsername(),
-                    "nickname", user.getNickname(),
-                    "age_group", user.getAgeGroup(),
-                    "role", user.getRole(),
-                    "created_at", user.getCreatedAt(),
-                    "data_format", "JSON"
-                ))))
-                .orElse(ResponseEntity.ok(ApiResponse.notFound("用户不存在")));
+                .map(user -> {
+                    Map<String, Object> exportData = new java.util.HashMap<>();
+                    exportData.put("user_id", user.getId());
+                    exportData.put("username", user.getUsername());
+                    exportData.put("nickname", user.getNickname());
+                    exportData.put("age_group", user.getAgeGroup());
+                    exportData.put("role", user.getRole());
+                    exportData.put("created_at", user.getCreatedAt());
+                    exportData.put("data_format", "JSON");
+                    return ResponseEntity.ok(ApiResponse.success("数据导出成功", exportData));
+                })
+                .orElse(ResponseEntity.ok(ApiResponse.<Map<String, Object>>notFound("用户不存在")));
     }
 
     private String getCurrentUserId() {

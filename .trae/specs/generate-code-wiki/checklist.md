@@ -1,0 +1,10 @@
+- [x] docs/code-wiki/ 目录已创建
+- [x] docs/code-wiki/README.md 包含项目简介、文档导航、快速链接
+- [x] docs/code-wiki/architecture.md 包含分层架构图、技术栈、数据流
+- [x] docs/code-wiki/modules.md 包含所有主要模块的职责、目录结构和技术栈
+- [x] docs/code-wiki/key-classes.md 包含 Java/TypeScript/Python/Dart 关键类和函数说明
+- [x] docs/code-wiki/dependencies.md 包含模块间依赖关系和调用链路
+- [x] docs/code-wiki/running.md 包含 Docker Compose 和各模块独立启动方式
+- [x] docs/code-wiki/api-reference.md 包含完整的 API 接口速查表
+- [x] 所有文档使用中文编写
+- [x] 文档中的代码引用和文件路径准确无误

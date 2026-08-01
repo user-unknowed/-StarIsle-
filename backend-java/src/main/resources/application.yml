@@ -5,7 +5,7 @@ spring:
   application:
     name: starisle-backend
 
-  # H2 Database for development (no external PostgreSQL needed)
+  # Database configuration - supports H2 (dev), PostgreSQL (test), MySQL (prod)
   datasource:
     url: ${DATABASE_URL:jdbc:h2:mem:starisle;DB_CLOSE_DELAY=-1;MODE=PostgreSQL}
     username: ${DATABASE_USERNAME:sa}
@@ -14,17 +14,25 @@ spring:
 
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${DDL_AUTO:update}
+    show-sql: ${SHOW_SQL:true}
     properties:
       hibernate:
         dialect: ${HIBERNATE_DIALECT:org.hibernate.dialect.H2Dialect}
-        format_sql: true
+        format_sql: ${FORMAT_SQL:true}
+        jdbc:
+          lob:
+            non_contextual_creation: true
 
   h2:
     console:
-      enabled: true
+      enabled: ${H2_CONSOLE_ENABLED:true}
       path: /h2-console
+
+  sql:
+    init:
+      mode: ${SQL_INIT_MODE:never}
+      schema-locations: classpath:schema-mysql.sql
 
   data:
     mongodb:
@@ -56,9 +64,16 @@ starisle:
 
   encryption:
     key: ${ENCRYPTION_KEY:starisle-encryption-key-2026-very-secure}
+    master-key: ${ENCRYPTION_MASTER_KEY:starisle-master-key-2026-must-be-32-bytes}
 
   rate-limit:
     rps: ${RATE_LIMIT_RPS:100}
+
+  migration:
+    source-url: ${MIGRATION_SOURCE_URL:jdbc:h2:mem:starisle;DB_CLOSE_DELAY=-1}
+    source-username: ${MIGRATION_SOURCE_USERNAME:sa}
+    source-password: ${MIGRATION_SOURCE_PASSWORD:}
+    source-driver: ${MIGRATION_SOURCE_DRIVER:org.h2.Driver}
 
 logging:
   level:

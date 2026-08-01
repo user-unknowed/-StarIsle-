@@ -105,10 +105,12 @@ public class MoodController {
                 userId, startDate, LocalDate.now());
 
         List<Map<String, Object>> chartData = records.stream()
-                .map(r -> Map.of(
-                    "date", r.getCheckinDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")),
-                    "value", r.getMoodLevel()
-                ))
+                .map(r -> {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("date", r.getCheckinDate().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")));
+                    item.put("value", r.getMoodLevel());
+                    return item;
+                })
                 .collect(Collectors.toList());
 
         return ResponseEntity.ok(ApiResponse.success(Map.of(

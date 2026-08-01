@@ -3,6 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
 import { Header } from '../../components/common/Header';
 import { Calendar, TrendingUp, Award, Sparkles, Check } from 'lucide-react';
+import { Button } from '../../components/ui';
 
 const moodOptions = [
   { level: 1, emoji: '😔', label: '很低落', color: 'bg-red-100 text-red-600 border-red-200' },
@@ -21,6 +22,7 @@ export default function StudentHome() {
     selectedMood,
     checkinStatus,
     checkinMessage,
+    continuousDays,
     fetchMoodHistory,
     checkinMood,
     selectMood,
@@ -57,16 +59,16 @@ export default function StudentHome() {
   const dayOfWeek = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][today.getDay()];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       <Header role="student" />
       
-      <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 mb-8 text-white shadow-xl">
-          <div className="flex items-center justify-between">
+      <main className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+        <div className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-3xl p-6 sm:p-8 mb-8 text-white shadow-xl">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <p className="text-indigo-200 text-sm mb-1">{today.toLocaleDateString('zh-CN')} {dayOfWeek}</p>
-              <h1 className="text-2xl font-bold">你好，{user?.nickname}</h1>
-              <p className="text-indigo-200 mt-1">今天感觉怎么样？</p>
+              <p className="text-primary-200 text-sm mb-1">{today.toLocaleDateString('zh-CN')} {dayOfWeek}</p>
+              <h1 className="text-xl sm:text-2xl font-bold">你好，{user?.nickname}</h1>
+              <p className="text-primary-200 mt-1">今天感觉怎么样？</p>
             </div>
             <div className="w-16 h-16 bg-white/20 rounded-2xl flex items-center justify-center">
               <Sparkles className="w-8 h-8" />
@@ -74,13 +76,13 @@ export default function StudentHome() {
           </div>
         </div>
 
-        <section className="bg-white rounded-3xl p-6 mb-8 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <Calendar className="w-5 h-5 text-purple-600" />
+        <section className="bg-white rounded-3xl p-6 sm:p-8 mb-8 shadow-lg">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <Calendar className="w-5 h-5 text-primary-600" />
             今日心情
           </h2>
           
-          <div className="flex flex-wrap justify-center gap-4 mb-6">
+          <div className="flex flex-wrap justify-center gap-3 sm:gap-4 mb-6">
             {moodOptions.map((mood) => (
               <button
                 key={mood.level}
@@ -88,13 +90,13 @@ export default function StudentHome() {
                   selectMood(mood.level);
                   setShowTags(true);
                 }}
-                className={`flex flex-col items-center p-4 rounded-2xl border-2 transition-all duration-300 ${
+                className={`flex flex-col items-center p-3 sm:p-4 rounded-2xl border-2 transition-all duration-fast touch-target ${
                   selectedMood === mood.level
                     ? `${mood.color} border-current scale-110 shadow-lg`
                     : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
                 }`}
               >
-                <span className="text-4xl mb-2">{mood.emoji}</span>
+                <span className="text-3xl sm:text-4xl mb-2">{mood.emoji}</span>
                 <span className="text-sm font-medium">{mood.label}</span>
               </button>
             ))}
@@ -108,9 +110,9 @@ export default function StudentHome() {
                   <button
                     key={tag}
                     onClick={() => toggleTag(tag)}
-                    className={`px-4 py-2 rounded-full text-sm transition-all duration-300 ${
+                    className={`px-4 py-2 rounded-full text-sm transition-all duration-fast ${
                       selectedTags.includes(tag)
-                        ? 'bg-purple-600 text-white shadow-md'
+                        ? 'bg-primary-600 text-white shadow-md'
                         : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
@@ -122,28 +124,25 @@ export default function StudentHome() {
           )}
 
           {checkinStatus === 'success' && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-2 text-green-700">
+            <div className="mb-6 p-4 bg-success-50 border border-success-200 rounded-xl flex items-center gap-2 text-success-700">
               <Check className="w-5 h-5" />
               {checkinMessage}
             </div>
           )}
 
-          <button
+          <Button
             onClick={handleCheckin}
             disabled={!selectedMood || checkinStatus === 'checking'}
-            className={`w-full py-4 rounded-2xl text-white font-bold text-lg transition-all duration-300 ${
-              selectedMood && checkinStatus !== 'checking'
-                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 hover:shadow-lg hover:scale-[1.02]'
-                : 'bg-gray-300 cursor-not-allowed'
-            }`}
+            size="lg"
+            className="w-full bg-gradient-to-r from-primary-500 to-secondary-600 hover:from-primary-600 hover:to-secondary-700"
           >
             {checkinStatus === 'checking' ? '提交中...' : '记录心情'}
-          </button>
+          </Button>
         </section>
 
-        <section className="bg-white rounded-3xl p-6 mb-8 shadow-lg">
-          <h2 className="text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+        <section className="bg-white rounded-3xl p-6 sm:p-8 mb-8 shadow-lg">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-800 mb-6 flex items-center gap-2">
+            <TrendingUp className="w-5 h-5 text-primary-600" />
             心情趋势
           </h2>
           
@@ -153,7 +152,7 @@ export default function StudentHome() {
               return (
                 <div key={record.id} className="flex-1 flex flex-col items-center">
                   <div 
-                    className="w-full bg-gradient-to-t from-indigo-400 to-purple-500 rounded-t-lg transition-all duration-500"
+                    className="w-full bg-gradient-to-t from-primary-400 to-secondary-500 rounded-t-lg transition-all duration-fast"
                     style={{ height: `${height}%`, minHeight: '8px' }}
                   />
                   <span className="text-xs text-gray-500 mt-2">{record.checkinDate.split('-').slice(1).join('/')}</span>
@@ -172,7 +171,7 @@ export default function StudentHome() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">连续打卡</p>
-                <p className="text-2xl font-bold text-gray-800">5天</p>
+                <p className="text-2xl font-bold text-gray-800">{continuousDays}天</p>
               </div>
             </div>
           </div>

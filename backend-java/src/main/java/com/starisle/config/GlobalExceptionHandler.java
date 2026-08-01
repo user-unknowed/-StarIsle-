@@ -1,6 +1,8 @@
 package com.starisle.config;
 
 import com.starisle.dto.ApiResponse;
+import com.starisle.exception.EncryptionException;
+import com.starisle.exception.MigrationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -39,6 +41,35 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Void>> handleAccessDeniedException(AccessDeniedException ex) {
         return ResponseEntity.ok(ApiResponse.forbidden("无权访问"));
+    }
+
+    @ExceptionHandler(MigrationException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleMigrationException(MigrationException ex) {
+        Map<String, Object> errorDetails = new HashMap<>();
+        errorDetails.put("table", ex.getTableName());
+        errorDetails.put("recordId", ex.getRecordId());
+        errorDetails.put("operation", ex.getOperation());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.<Map<String, Object>>builder()
+                        .code(500)
+                        .message("数据迁移失败: " + ex.getMessage())
+                        .data(errorDetails)
+                        .build());
+    }
+
+    @ExceptionHandler(EncryptionException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleEncryptionException(EncryptionException ex) {
+        Map<String, Object> errorDetails = new HashMap<>();
+        errorDetails.put("keyVersion", ex.getKeyVersion());
+        errorDetails.put("operation", ex.getOperation());
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.<Map<String, Object>>builder()
+                        .code(500)
+                        .message("加密操作失败: " + ex.getMessage())
+                        .data(errorDetails)
+                        .build());
     }
 
     @ExceptionHandler(Exception.class)

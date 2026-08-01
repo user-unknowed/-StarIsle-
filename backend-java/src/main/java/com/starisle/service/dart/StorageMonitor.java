@@ -136,6 +136,7 @@ public class StorageMonitor {
             try {
                 listener.onStatusUpdate(status);
             } catch (Exception e) {
+                // Ignore listener errors
             }
         }
     }
@@ -145,6 +146,7 @@ public class StorageMonitor {
             try {
                 listener.onError(e);
             } catch (Exception ex) {
+                // Ignore listener errors
             }
         }
     }

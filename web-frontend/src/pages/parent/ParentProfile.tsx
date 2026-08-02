@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useParentStore } from '../../store/parentStore';
 import { useAuthStore } from '../../store/authStore';
 import { Header } from '../../components/common/Header';
+import { useToast } from '../../components/ui';
 import {
   User,
   Settings,
@@ -26,12 +27,15 @@ const settingsItems = [
 
 export default function ParentProfile() {
   const navigate = useNavigate();
-  const { parentProfile, isLoading, error, isUsingMockData, fetchProfile } = useParentStore();
+  const { parentProfile, children, emergencyAlerts, isLoading, error, isUsingMockData, fetchProfile, fetchChildren, fetchAlerts } = useParentStore();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
+  const updateProfile = useAuthStore((state) => state.updateProfile);
+  const toast = useToast();
 
   const [isEditing, setIsEditing] = useState(false);
   const [editedNickname, setEditedNickname] = useState(parentProfile?.nickname || user?.nickname || '');
+  const [editedSignature, setEditedSignature] = useState(user?.signature || '');
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     告警通知: true,
     邮箱通知: false,
@@ -39,13 +43,17 @@ export default function ParentProfile() {
 
   useEffect(() => {
     fetchProfile();
-  }, [fetchProfile]);
+    fetchChildren();
+    fetchAlerts();
+  }, [fetchProfile, fetchChildren, fetchAlerts]);
 
   useEffect(() => {
     if (parentProfile) setEditedNickname(parentProfile.nickname);
   }, [parentProfile]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updateProfile({ nickname: editedNickname, signature: editedSignature });
+    toast.success('资料已更新');
     setIsEditing(false);
   };
 
@@ -54,34 +62,54 @@ export default function ParentProfile() {
     navigate('/');
   };
 
-  const toggleItem = (label: string) => {
-    setToggles((prev) => ({ ...prev, [label]: !prev[label] }));
+  const toggleItem = (label: string, currentOn: boolean) => {
+    const newValue = !currentOn;
+    setToggles((prev) => ({ ...prev, [label]: newValue }));
+    toast.info(newValue ? '已开启通知' : '已关闭通知');
   };
 
   const displayName = parentProfile?.nickname || user?.nickname || '家长';
   const phone = parentProfile?.phone || '未绑定';
   const createdAt = parentProfile?.createdAt || user?.createdAt;
 
+  // 真实统计：绑定孩子数、待处理告警数、关注天数
+  const childCount = children.length;
+  const pendingAlertCount = emergencyAlerts.filter((a) => !a.confirmed).length;
+  const followDays = createdAt
+    ? Math.max(1, Math.ceil((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)))
+    : '--';
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <Header role="parent" />
 
-      <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
+      <main id="main" className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         {/* 个人信息卡片 */}
-        <div className="bg-gradient-to-r from-[#F4A261] to-[#E76F51] rounded-3xl p-6 mb-6 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-accent-400 to-accent-600 rounded-3xl p-6 mb-6 text-white shadow-xl">
           <div className="flex items-center gap-6 flex-wrap">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
               <User className="w-10 h-10" />
             </div>
             <div className="flex-1 min-w-0">
               {isEditing ? (
-                <input
-                  type="text"
-                  value={editedNickname}
-                  onChange={(e) => setEditedNickname(e.target.value)}
-                  className="bg-white/20 text-white border border-white/30 rounded-lg px-3 py-2 w-full max-w-xs"
-                  placeholder="昵称"
-                />
+                <div className="space-y-2">
+                  <input
+                    type="text"
+                    value={editedNickname}
+                    onChange={(e) => setEditedNickname(e.target.value)}
+                    className="bg-white/20 text-white border border-white/30 rounded-lg px-3 py-2 w-full max-w-xs"
+                    placeholder="昵称"
+                    aria-label="编辑昵称"
+                  />
+                  <input
+                    type="text"
+                    value={editedSignature}
+                    onChange={(e) => setEditedSignature(e.target.value)}
+                    className="bg-white/20 text-white border border-white/30 rounded-lg px-3 py-2 w-full max-w-xs"
+                    placeholder="个性签名"
+                    aria-label="编辑个性签名"
+                  />
+                </div>
               ) : (
                 <div>
                   <h2 className="text-2xl font-bold">{displayName}</h2>
@@ -89,6 +117,9 @@ export default function ParentProfile() {
                     <Phone className="w-4 h-4" />
                     {phone}
                   </p>
+                  {user?.signature && (
+                    <p className="text-orange-100 text-sm mt-1">{user.signature}</p>
+                  )}
                 </div>
               )}
               <div className="flex items-center gap-2 mt-3 flex-wrap">
@@ -102,6 +133,7 @@ export default function ParentProfile() {
             </div>
             <button
               onClick={isEditing ? handleSave : () => setIsEditing(true)}
+              aria-label={isEditing ? '保存' : '编辑'}
               className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
             >
               {isEditing ? <Check className="w-5 h-5" /> : <Edit3 className="w-5 h-5" />}
@@ -128,20 +160,20 @@ export default function ParentProfile() {
         {/* 绑定概览 */}
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-[#F4A261] to-[#E76F51] bg-clip-text text-transparent">
-              {user?.nickname ? '1' : '0'}
+            <p className="text-3xl font-bold bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
+              {childCount}
             </p>
             <p className="text-sm text-gray-500 mt-1">绑定孩子</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-[#F4A261] to-[#E76F51] bg-clip-text text-transparent">
-              0
+            <p className="text-3xl font-bold bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
+              {pendingAlertCount}
             </p>
             <p className="text-sm text-gray-500 mt-1">待处理告警</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-[#F4A261] to-[#E76F51] bg-clip-text text-transparent">
-              7
+            <p className="text-3xl font-bold bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
+              {followDays}
             </p>
             <p className="text-sm text-gray-500 mt-1">关注天数</p>
           </div>
@@ -161,7 +193,11 @@ export default function ParentProfile() {
               return (
                 <div
                   key={item.label}
-                  className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-orange-50 transition-colors"
+                  role={isToggle ? undefined : 'button'}
+                  tabIndex={isToggle ? undefined : 0}
+                  onClick={isToggle ? undefined : () => toast.info('功能开发中，敬请期待')}
+                  onKeyDown={isToggle ? undefined : (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toast.info('功能开发中，敬请期待'); } }}
+                  className={`w-full flex items-center gap-4 p-4 rounded-xl transition-colors ${isToggle ? 'hover:bg-orange-50' : 'hover:bg-orange-50 cursor-pointer'}`}
                 >
                   <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center flex-shrink-0">
                     <Icon className="w-5 h-5 text-orange-600" />
@@ -172,9 +208,12 @@ export default function ParentProfile() {
                   </div>
                   {isToggle ? (
                     <button
-                      onClick={() => toggleItem(item.label)}
+                      role="switch"
+                      aria-checked={isOn}
+                      aria-label={item.label}
+                      onClick={() => toggleItem(item.label, isOn)}
                       className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ${
-                        isOn ? 'bg-[#F4A261]' : 'bg-gray-300'
+                        isOn ? 'bg-accent-400' : 'bg-gray-300'
                       }`}
                     >
                       <span
@@ -194,6 +233,7 @@ export default function ParentProfile() {
 
         <button
           onClick={handleLogout}
+          aria-label="退出登录"
           className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
         >
           <LogOut className="w-5 h-5" />

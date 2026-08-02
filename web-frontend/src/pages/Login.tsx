@@ -84,8 +84,10 @@ export default function Login() {
             <p className="text-gray-500 mt-2">守护心灵，伴你成长</p>
           </div>
 
-          <div className="flex bg-gray-100 rounded-xl p-1 mb-6">
+          <div className="flex bg-gray-100 rounded-xl p-1 mb-6" role="tablist" aria-label="选择登录角色">
             <button
+              role="tab"
+              aria-selected={role === 'student'}
               onClick={() => setRole('student')}
               className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
                 role === 'student'
@@ -96,6 +98,8 @@ export default function Login() {
               学生登录
             </button>
             <button
+              role="tab"
+              aria-selected={role === 'teacher'}
               onClick={() => setRole('teacher')}
               className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
                 role === 'teacher'
@@ -106,6 +110,8 @@ export default function Login() {
               教师登录
             </button>
             <button
+              role="tab"
+              aria-selected={role === 'parent'}
               onClick={() => setRole('parent')}
               className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
                 role === 'parent'
@@ -136,6 +142,7 @@ export default function Login() {
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="请输入用户名"
+                autoComplete="username"
                 required
               />
             )}
@@ -147,6 +154,7 @@ export default function Login() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -156,6 +164,7 @@ export default function Login() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="请输入密码"
+              autoComplete="current-password"
               required
             />
 

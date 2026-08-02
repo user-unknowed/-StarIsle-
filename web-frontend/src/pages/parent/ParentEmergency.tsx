@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParentStore } from '../../store/parentStore';
 import { Header } from '../../components/common/Header';
-import { Button, ToastContainer, useToast } from '../../components/ui';
+import { Button, Modal, useToast } from '../../components/ui';
 import {
   Siren,
   Phone,
@@ -77,6 +77,7 @@ export default function ParentEmergency() {
   const toast = useToast();
   const [filter, setFilter] = useState<FilterType>('all');
   const [confirmingAlertId, setConfirmingAlertId] = useState<string | null>(null);
+  const [redAlertDismissed, setRedAlertDismissed] = useState(false);
 
   useEffect(() => {
     fetchAlerts();
@@ -105,58 +106,70 @@ export default function ParentEmergency() {
   const confirmedAlerts = emergencyAlerts.filter((a) => a.confirmed);
   const hasUnconfirmedRed = activeAlerts.some(a => a.level === 'red');
 
+  // 当无未确认红色告警时重置「稍后处理」状态，以便后续新告警可再次弹出
+  useEffect(() => {
+    if (!hasUnconfirmedRed) {
+      setRedAlertDismissed(false);
+    }
+  }, [hasUnconfirmedRed]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
-      {hasUnconfirmedRed && (
-        <div className="fixed inset-0 z-50 bg-red-900/80 flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="bg-gradient-to-r from-red-600 to-rose-700 p-6 text-white text-center">
-              <AlertTriangle className="w-12 h-12 mx-auto mb-3" />
-              <h2 className="text-xl font-bold">紧急告警</h2>
-              <p className="text-red-100 text-sm mt-1">检测到高风险信号，请立即确认处理</p>
+      <Modal
+        isOpen={hasUnconfirmedRed && !redAlertDismissed}
+        onClose={() => setRedAlertDismissed(true)}
+        title="紧急告警"
+        size="lg"
+      >
+        <div className="flex items-center gap-3 mb-4 text-red-600">
+          <AlertTriangle className="w-8 h-8 flex-shrink-0" />
+          <p className="text-sm">检测到高风险信号，请立即确认处理</p>
+        </div>
+        {activeAlerts.filter(a => a.level === 'red').map(alert => (
+          <div key={alert.alertId} className="mb-4">
+            <p className="text-gray-700 text-sm mb-3">{alert.reason}</p>
+            <div className="bg-red-50 rounded-xl p-4 mb-4">
+              <p className="text-xs font-medium text-red-700 mb-2">建议行动：</p>
+              <ul className="text-xs text-red-600 space-y-1">
+                <li>1. 确保孩子当前安全，不要离开孩子</li>
+                <li>2. 拨打危机热线：12355 / 400-161-9995</li>
+                <li>3. 前往最近医院急诊或心理卫生中心</li>
+                <li>4. 联系学校心理老师或班主任</li>
+              </ul>
             </div>
-            <div className="p-6">
-              {activeAlerts.filter(a => a.level === 'red').map(alert => (
-                <div key={alert.alertId} className="mb-4">
-                  <p className="text-gray-700 text-sm mb-3">{alert.reason}</p>
-                  <div className="bg-red-50 rounded-xl p-4 mb-4">
-                    <p className="text-xs font-medium text-red-700 mb-2">建议行动：</p>
-                    <ul className="text-xs text-red-600 space-y-1">
-                      <li>1. 确保孩子当前安全，不要离开孩子</li>
-                      <li>2. 拨打危机热线：12355 / 400-161-9995</li>
-                      <li>3. 前往最近医院急诊或心理卫生中心</li>
-                      <li>4. 联系学校心理老师或班主任</li>
-                    </ul>
-                  </div>
-                  <div className="flex gap-2 mb-3">
-                    <a href="tel:12355" className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium text-center hover:bg-red-600">
-                      拨打 12355
-                    </a>
-                    <a href="tel:400-161-9995" className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium text-center hover:bg-red-600">
-                      拨打希望热线
-                    </a>
-                  </div>
-                  <button
-                    onClick={() => handleConfirm(alert.alertId)}
-                    className={`w-full py-2.5 rounded-xl text-sm font-medium transition-colors ${
-                      confirmingAlertId === alert.alertId
-                        ? 'bg-red-600 text-white'
-                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                    }`}
-                  >
-                    {confirmingAlertId === alert.alertId ? '再次点击确认告警' : '确认已处理'}
-                  </button>
-                </div>
-              ))}
+            <div className="flex gap-2 mb-3">
+              <a href="tel:12355" className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium text-center hover:bg-red-600">
+                拨打 12355
+              </a>
+              <a href="tel:400-161-9995" className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-medium text-center hover:bg-red-600">
+                拨打希望热线
+              </a>
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setRedAlertDismissed(true)}
+                className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
+              >
+                稍后处理
+              </button>
+              <button
+                onClick={() => handleConfirm(alert.alertId)}
+                className={`flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors ${
+                  confirmingAlertId === alert.alertId
+                    ? 'bg-red-600 text-white'
+                    : 'bg-red-500 text-white hover:bg-red-600'
+                }`}
+              >
+                {confirmingAlertId === alert.alertId ? '再次点击确认告警' : '确认已处理'}
+              </button>
             </div>
           </div>
-        </div>
-      )}
+        ))}
+      </Modal>
       <Header role="parent" />
-      <ToastContainer toasts={toast.toasts} />
 
-      <main className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
-        <div className="bg-gradient-to-r from-[#E76F51] to-[#F4A261] rounded-3xl p-6 mb-6 text-white shadow-xl">
+      <main id="main" className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+        <div className="bg-gradient-to-r from-accent-600 to-accent-400 rounded-3xl p-6 mb-6 text-white shadow-xl">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center">
               <Siren className="w-6 h-6" />
@@ -234,7 +247,7 @@ export default function ParentEmergency() {
                       onClick={() => handleConfirm(alert.alertId)}
                       className={confirmingAlertId === alert.alertId
                         ? "bg-red-600"
-                        : "bg-gradient-to-r from-[#F4A261] to-[#E76F51]"}
+                        : "bg-gradient-to-r from-accent-400 to-accent-600"}
                     >
                       <CheckCircle className="w-4 h-4" />
                       {confirmingAlertId === alert.alertId ? '再次点击确认' : '确认告警'}
@@ -272,17 +285,19 @@ export default function ParentEmergency() {
           </h2>
 
           {/* 类型筛选 */}
-          <div className="flex gap-2 mb-4 flex-wrap">
+          <div className="flex gap-2 mb-4 flex-wrap" role="tablist" aria-label="资源类型筛选">
             {(['all', 'hotline', 'hospital', 'community'] as FilterType[]).map((t) => {
               const meta = t === 'all' ? null : resourceTypeMeta[t];
               const label = t === 'all' ? '全部' : meta?.label || t;
               return (
                 <button
                   key={t}
+                  role="tab"
+                  aria-selected={filter === t}
                   onClick={() => handleFilterChange(t)}
                   className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all duration-fast ${
                     filter === t
-                      ? 'bg-gradient-to-r from-[#F4A261] to-[#E76F51] text-white shadow-md'
+                      ? 'bg-gradient-to-r from-accent-400 to-accent-600 text-white shadow-md'
                       : 'bg-white text-gray-600 hover:bg-orange-50'
                   }`}
                 >
@@ -306,8 +321,14 @@ export default function ParentEmergency() {
                   color: 'bg-gray-100 text-gray-600',
                 };
                 const Icon = meta.icon;
+                // lat/lng 字段由其他子代理同步添加到 EmergencyResource 类型，此处用类型扩展兼容
+                const coords = resource as EmergencyResource & { lat?: number; lng?: number };
+                const navHref =
+                  coords.lat != null && coords.lng != null
+                    ? `https://uri.amap.com/marker?position=${coords.lng},${coords.lat}&name=${encodeURIComponent(resource.title)}`
+                    : `https://uri.amap.com/search?keyword=${encodeURIComponent(resource.title)}`;
                 return (
-                  <div key={idx} className="bg-white rounded-2xl p-5 shadow-lg">
+                  <div key={resource.id || idx} className="bg-white rounded-2xl p-5 shadow-lg">
                     <div className="flex items-start gap-3 mb-3">
                       <div className={`w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 ${meta.color}`}>
                         <Icon className="w-5 h-5" />
@@ -332,7 +353,7 @@ export default function ParentEmergency() {
                       </a>
                       {resource.type === 'hospital' && (
                         <a
-                          href={`https://uri.amap.com/marker?position=121.4737,31.2304&name=${encodeURIComponent(resource.title)}`}
+                          href={navHref}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"

@@ -2,8 +2,9 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
 import { Header } from '../../components/common/Header';
-import { Calendar, TrendingUp, Award, Sparkles, Check } from 'lucide-react';
+import { Calendar, TrendingUp, Award, Sparkles, Check, Loader2 } from 'lucide-react';
 import { Button } from '../../components/ui';
+import { useToast } from '../../components/ui/Toast';
 
 const moodOptions = [
   { level: 1, emoji: '😔', label: '很低落', color: 'bg-red-100 text-red-600 border-red-200' },
@@ -27,7 +28,10 @@ export default function StudentHome() {
     checkinMood,
     selectMood,
   } = useMoodStore();
-  
+  const isLoading = useMoodStore((s) => s.isLoading);
+  const error = useMoodStore((s) => s.error);
+  const toast = useToast();
+
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTags, setShowTags] = useState(false);
 
@@ -37,8 +41,14 @@ export default function StudentHome() {
     }
   }, [user, fetchMoodHistory]);
 
+  useEffect(() => {
+    if (checkinStatus === 'error') {
+      toast.error(checkinMessage || '心情打卡失败，请稍后重试');
+    }
+  }, [checkinStatus, checkinMessage, toast]);
+
   const toggleTag = (tag: string) => {
-    setSelectedTags(prev => 
+    setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
@@ -55,6 +65,21 @@ export default function StudentHome() {
     return moodOptions.find(m => m.level === level)?.emoji || '😐';
   };
 
+  // 计算本周（最近 7 天）平均心情
+  const getWeekMoodEmoji = (): string => {
+    if (moodHistory.length === 0) return '--';
+    const weekStart = new Date();
+    weekStart.setHours(0, 0, 0, 0);
+    weekStart.setDate(weekStart.getDate() - 6);
+    const weekRecords = moodHistory.filter(
+      (r) => new Date(`${r.checkinDate}T00:00:00`) >= weekStart
+    );
+    if (weekRecords.length === 0) return '--';
+    const avg = weekRecords.reduce((sum, r) => sum + r.moodLevel, 0) / weekRecords.length;
+    return getMoodEmoji(Math.round(avg));
+  };
+  const weekMoodEmoji = getWeekMoodEmoji();
+
   const today = new Date();
   const dayOfWeek = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][today.getDay()];
 
@@ -62,7 +87,7 @@ export default function StudentHome() {
     <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-secondary-50">
       <Header role="student" />
       
-      <main className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
+      <main id="main" className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         <div className="bg-gradient-to-r from-primary-600 to-secondary-600 rounded-3xl p-6 sm:p-8 mb-8 text-white shadow-xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
@@ -145,22 +170,36 @@ export default function StudentHome() {
             <TrendingUp className="w-5 h-5 text-primary-600" />
             心情趋势
           </h2>
-          
-          <div className="flex items-end justify-between h-32 gap-2">
-            {moodHistory.slice(-7).map((record, index) => {
-              const height = (record.moodLevel / 5) * 100;
-              return (
-                <div key={record.id} className="flex-1 flex flex-col items-center">
-                  <div 
-                    className="w-full bg-gradient-to-t from-primary-400 to-secondary-500 rounded-t-lg transition-all duration-fast"
-                    style={{ height: `${height}%`, minHeight: '8px' }}
-                  />
-                  <span className="text-xs text-gray-500 mt-2">{record.checkinDate.split('-').slice(1).join('/')}</span>
-                  <span className="text-lg mt-1">{getMoodEmoji(record.moodLevel)}</span>
-                </div>
-              );
-            })}
-          </div>
+
+          {isLoading ? (
+            <div className="flex items-center justify-center h-32">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+            </div>
+          ) : error ? (
+            <div className="flex items-center justify-center h-32 p-4 bg-danger-50 border border-danger-200 rounded-xl text-danger-700 text-sm">
+              {error}
+            </div>
+          ) : moodHistory.length === 0 ? (
+            <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
+              暂无心情记录，快去打卡吧
+            </div>
+          ) : (
+            <div className="flex items-end justify-between h-32 gap-2">
+              {moodHistory.slice(-7).map((record, index) => {
+                const height = (record.moodLevel / 5) * 100;
+                return (
+                  <div key={record.id} className="flex-1 flex flex-col items-center">
+                    <div
+                      className="w-full bg-gradient-to-t from-primary-400 to-secondary-500 rounded-t-lg transition-all duration-fast"
+                      style={{ height: `${height}%`, minHeight: '8px' }}
+                    />
+                    <span className="text-xs text-gray-500 mt-2">{record.checkinDate.split('-').slice(1).join('/')}</span>
+                    <span className="text-lg mt-1">{getMoodEmoji(record.moodLevel)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
         </section>
 
         <section className="grid grid-cols-2 gap-4">
@@ -183,7 +222,7 @@ export default function StudentHome() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">本周心情</p>
-                <p className="text-2xl font-bold text-gray-800">😊</p>
+                <p className="text-2xl font-bold text-gray-800">{weekMoodEmoji}</p>
               </div>
             </div>
           </div>

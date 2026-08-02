@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParentStore } from '../../store/parentStore';
 import { Header } from '../../components/common/Header';
-import { Button, Input, Modal, ToastContainer, useToast } from '../../components/ui';
+import { Button, Input, Modal, useToast } from '../../components/ui';
 import {
   Users,
   UserPlus,
@@ -63,7 +63,9 @@ export default function ParentChildren() {
   };
 
   const handleUnbind = async (bindingId: string, nickname: string) => {
+    setSubmitting(true);
     await unbindChild(bindingId);
+    setSubmitting(false);
     setConfirmUnbind(null);
     toast.success(`已解除与 ${nickname} 的绑定`);
   };
@@ -71,7 +73,6 @@ export default function ParentChildren() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <Header role="parent" />
-      <ToastContainer toasts={toast.toasts} />
 
       <main className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
         <div className="bg-gradient-to-r from-[#F4A261] to-[#E76F51] rounded-3xl p-6 mb-6 text-white shadow-xl">
@@ -87,6 +88,7 @@ export default function ParentChildren() {
             </div>
             <button
               onClick={() => setShowBindModal(true)}
+              aria-label="绑定孩子"
               className="flex items-center gap-2 px-4 py-2 bg-white text-orange-600 rounded-xl hover:bg-orange-50 transition-colors font-medium"
             >
               <UserPlus className="w-5 h-5" />
@@ -115,15 +117,15 @@ export default function ParentChildren() {
             </div>
             <h3 className="text-lg font-bold text-gray-800 mb-2">还没有绑定孩子</h3>
             <p className="text-gray-500 mb-6">绑定孩子后可查看其心情状态与告警信息</p>
-            <Button onClick={() => setShowBindModal(true)} className="bg-gradient-to-r from-[#F4A261] to-[#E76F51]">
+            <Button onClick={() => setShowBindModal(true)} aria-label="立即绑定孩子" className="bg-gradient-to-r from-[#F4A261] to-[#E76F51]">
               <UserPlus className="w-5 h-5" />
               立即绑定
             </Button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-4" role="list">
             {children.map((child) => (
-              <div key={child.bindingId} className="bg-white rounded-2xl p-5 shadow-lg">
+              <div key={child.bindingId} role="listitem" className="bg-white rounded-2xl p-5 shadow-lg">
                 <div className="flex items-center gap-4 flex-wrap">
                   <div className="w-14 h-14 bg-gradient-to-br from-orange-100 to-amber-100 rounded-full flex items-center justify-center text-xl font-bold text-orange-600">
                     {child.studentNickname?.[0] || '?'}
@@ -157,6 +159,7 @@ export default function ParentChildren() {
                     <Button
                       size="sm"
                       onClick={() => handleAuthorize(child.bindingId, child.studentNickname)}
+                      aria-label={`授权访问 ${child.studentNickname}`}
                       className="bg-gradient-to-r from-[#F4A261] to-[#E76F51]"
                     >
                       <ShieldCheck className="w-4 h-4" />
@@ -167,6 +170,7 @@ export default function ParentChildren() {
                     size="sm"
                     variant="outline"
                     onClick={() => setConfirmUnbind(child.bindingId)}
+                    aria-label={`解除与 ${child.studentNickname} 的绑定`}
                     className="text-danger-500 border-danger-300 hover:bg-danger-50"
                   >
                     <UserMinus className="w-4 h-4" />
@@ -206,6 +210,7 @@ export default function ParentChildren() {
             <Button
               onClick={handleBind}
               loading={submitting}
+              aria-label="确认绑定"
               className="w-full bg-gradient-to-r from-[#F4A261] to-[#E76F51]"
             >
               确认绑定
@@ -223,16 +228,18 @@ export default function ParentChildren() {
           <div className="space-y-4">
             <p className="text-gray-600">解除绑定后将无法查看该孩子的状态与告警，确定继续吗？</p>
             <div className="flex gap-3">
-              <Button variant="ghost" className="flex-1" onClick={() => setConfirmUnbind(null)}>
+              <Button variant="ghost" className="flex-1" onClick={() => setConfirmUnbind(null)} aria-label="取消解绑">
                 取消
               </Button>
               <Button
                 variant="danger"
                 className="flex-1"
+                loading={submitting}
                 onClick={() => {
                   const child = children.find((c) => c.bindingId === confirmUnbind);
                   if (child) handleUnbind(child.bindingId, child.studentNickname);
                 }}
+                aria-label="确认解绑"
               >
                 确认解绑
               </Button>

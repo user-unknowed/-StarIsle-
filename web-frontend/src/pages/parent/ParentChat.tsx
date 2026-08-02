@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { Header } from '../../components/common/Header';
-import { post } from '../../services/http';
 import { ApiError } from '../../services/http';
 import { Send, Sparkles, AlertCircle, AlertTriangle } from 'lucide-react';
 import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
-import { riskApi } from '../../services/api';
+import { chatApi, riskApi } from '../../services/api';
 import type { ChatMessage } from '../../types';
 import { AI_CHAT_ENABLED } from '../../config/features';
 import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
@@ -31,13 +30,6 @@ const CRISIS_HOTLINES = [
   { name: '希望24热线', number: '400-161-9995' },
   { name: '北京心理危机干预中心', number: '010-82951332' },
 ];
-
-interface ChatApiData {
-  response?: string;
-  riskLevel?: string;
-  data?: { response?: string; riskLevel?: string };
-  [key: string]: unknown;
-}
 
 export default function ParentChat() {
   if (!AI_CHAT_ENABLED) {
@@ -73,8 +65,6 @@ export default function ParentChat() {
     // 前端危机关键词检测
     const crisisKeywords = ['自伤', '自杀', '不想活', '想死', '结束生命'];
     if (crisisKeywords.some(kw => content.includes(kw))) {
-      setMessages((prev) => [...prev, userMessage]);
-      setInputValue('');
       setMessages((prev) => [...prev, {
         id: `a-${Date.now()}`,
         userId: user.id,
@@ -89,17 +79,15 @@ export default function ParentChat() {
     setIsTyping(true);
 
     try {
-      // 对接后端 /api/v1/chat/message（role=parent）
-      const data = await post<ChatApiData>('/v1/chat/message', {
+      // 对接后端 /v1/chat/message（role=parent）—— 通过 chatApi 获得长度校验
+      const data = await chatApi.sendMessage({
         userId: user.id,
         message: content,
-        messageType: 'parent',
       });
-      const reply =
-        (data && (data.response || data.data?.response)) as string | undefined;
+      const reply = data?.response;
 
       if (reply) {
-        const riskLevel = (data && (data.riskLevel || data.data?.riskLevel)) as string | undefined;
+        const riskLevel = data?.riskLevel;
         setMessages((prev) => [
           ...prev,
           {
@@ -125,7 +113,7 @@ export default function ParentChat() {
         throw new Error('响应缺少回复内容');
       }
     } catch (err) {
-      // 降级到 mock 回复
+      // 降级到 mock 回复（仅网络/服务端错误降级；4xx 如长度超限显示具体错误）
       const isNetError =
         err instanceof ApiError && (err.status === 0 || err.status >= 500);
       if (isNetError) {
@@ -143,7 +131,7 @@ export default function ParentChat() {
           },
         ]);
       } else {
-        setError('发送失败，请稍后重试');
+        setError(err instanceof ApiError ? err.message : '发送失败，请稍后重试');
       }
     } finally {
       setIsTyping(false);
@@ -165,7 +153,7 @@ export default function ParentChat() {
       <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden h-[calc(100vh-8rem)] flex flex-col">
           {/* 顶部 */}
-          <div className="bg-gradient-to-r from-[#F4A261] to-[#E76F51] p-5 text-white">
+          <div className="bg-gradient-to-r from-accent-400 to-accent-600 p-5 text-white">
             <div className="flex items-center gap-3">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
                 <Sparkles className="w-6 h-6" />
@@ -206,7 +194,7 @@ export default function ParentChat() {
                           setMessages((prev) => [...prev, {
                             id: `system-${Date.now()}`,
                             userId: user?.id || '',
-                            content: '如果您发现孩子有自伤倾向，请立即拨打危机热线：12355 / 400-161-9995 / 010-82951332。您不是一个人在面对，大星在这里陪您。',
+                            content: `如果您发现孩子有自伤倾向，请立即拨打危机热线：${CRISIS_HOTLINES.map(h => h.number).join(' / ')}。您不是一个人在面对，大星在这里陪您。`,
                             role: 'assistant',
                             timestamp: new Date().toISOString(),
                             riskLevel: 'red',
@@ -225,7 +213,7 @@ export default function ParentChat() {
               </div>
             </div>
           ) : (
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+            <div className="flex-1 overflow-y-auto p-6 space-y-4" role="log" aria-live="polite">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -243,7 +231,7 @@ export default function ParentChat() {
                     <div
                       className={`px-4 py-3 rounded-2xl ${
                         message.role === 'user'
-                          ? 'bg-gradient-to-r from-[#F4A261] to-[#E76F51] text-white rounded-br-md'
+                          ? 'bg-gradient-to-r from-accent-400 to-accent-600 text-white rounded-br-md'
                           : 'bg-gray-100 text-gray-800 rounded-bl-md'
                       }`}
                     >
@@ -268,7 +256,7 @@ export default function ParentChat() {
                         <span className="text-sm font-medium">{user?.nickname?.[0]}</span>
                       </div>
                     ) : (
-                      <div className="w-10 h-10 bg-gradient-to-br from-[#F4A261] to-[#E76F51] rounded-full flex items-center justify-center">
+                      <div className="w-10 h-10 bg-gradient-to-br from-accent-400 to-accent-600 rounded-full flex items-center justify-center">
                         <Sparkles className="w-5 h-5 text-white" />
                       </div>
                     )}
@@ -306,15 +294,17 @@ export default function ParentChat() {
                 onKeyDown={handleKeyDown}
                 placeholder="输入您想咨询的内容..."
                 rows={1}
+                aria-label="输入消息"
                 className="flex-1 px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent resize-none"
                 style={{ minHeight: '48px', maxHeight: '120px' }}
               />
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim() || isTyping}
+                aria-label="发送"
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                   inputValue.trim() && !isTyping
-                    ? 'bg-gradient-to-r from-[#F4A261] to-[#E76F51] text-white hover:shadow-lg'
+                    ? 'bg-gradient-to-r from-accent-400 to-accent-600 text-white hover:shadow-lg'
                     : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                 }`}
               >

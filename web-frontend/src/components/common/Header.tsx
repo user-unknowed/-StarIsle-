@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, MessageCircle, Music, User, LogOut, Menu, X, Bell, Star, Users, Siren } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
-import { useToast, ToastContainer } from '../ui/Toast';
+import { useToast } from '../ui/Toast';
 import { AI_CHAT_ENABLED } from '../../config/features';
 
 interface HeaderProps {
@@ -92,14 +92,19 @@ export function Header({ role }: HeaderProps) {
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-lg border-b border-gray-200 shadow-sm safe-area-top">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate(homePath)}>
+          <button
+            type="button"
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => navigate(homePath)}
+            aria-label="返回首页"
+          >
             <div className={`w-10 h-10 bg-gradient-to-br ${accent.logo} rounded-xl flex items-center justify-center shadow-lg`}>
               <Star className="w-6 h-6 text-white" />
             </div>
             <span className={`text-xl font-bold bg-gradient-to-r ${accent.text} bg-clip-text text-transparent`}>
               星屿
             </span>
-          </div>
+          </button>
 
           <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
@@ -118,6 +123,7 @@ export function Header({ role }: HeaderProps) {
                         : `text-gray-600 ${accent.hover}`
                   }`}
                   aria-disabled={isDisabled}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium text-sm">{item.label}</span>
@@ -132,7 +138,12 @@ export function Header({ role }: HeaderProps) {
           </nav>
 
           <div className="flex items-center gap-3">
-            <button className={`relative p-2 rounded-full transition-colors touch-target ${accent.bellHover}`}>
+            <button
+              type="button"
+              onClick={() => toast.info('暂无新通知')}
+              aria-label="通知"
+              className={`relative p-2 rounded-full transition-colors touch-target ${accent.bellHover}`}
+            >
               <Bell className="w-5 h-5 text-gray-600" />
               <span className="absolute top-1 right-1 w-2 h-2 bg-danger-500 rounded-full"></span>
             </button>
@@ -146,8 +157,12 @@ export function Header({ role }: HeaderProps) {
             </button>
 
             <button
+              type="button"
               className="md:hidden p-2 rounded-lg hover:bg-gray-100 touch-target"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              aria-label="菜单"
+              aria-expanded={mobileMenuOpen}
+              aria-controls="mobile-menu"
             >
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
@@ -155,7 +170,7 @@ export function Header({ role }: HeaderProps) {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden py-4 border-t border-gray-200 bg-white/95 backdrop-blur-lg">
+          <div id="mobile-menu" className="md:hidden py-4 border-t border-gray-200 bg-white/95 backdrop-blur-lg">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
@@ -172,6 +187,7 @@ export function Header({ role }: HeaderProps) {
                         : `text-gray-600 ${accent.hover}`
                   }`}
                   aria-disabled={isDisabled}
+                  aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
@@ -186,8 +202,6 @@ export function Header({ role }: HeaderProps) {
           </div>
         )}
       </div>
-
-      <ToastContainer toasts={toast.toasts} />
     </header>
   );
 }

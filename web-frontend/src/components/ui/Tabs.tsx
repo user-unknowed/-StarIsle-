@@ -25,7 +25,7 @@ export const Tabs: React.FC<TabsProps> = ({
 
   if (variant === 'card') {
     return (
-      <div className="flex gap-2 p-1 bg-gray-100 dark:bg-gray-800 rounded-xl">
+      <div className="flex gap-2 p-1 bg-gray-100 rounded-xl">
         {tabs.map((tab) => (
           <button
             key={tab.id}
@@ -35,8 +35,8 @@ export const Tabs: React.FC<TabsProps> = ({
                 baseTabClass,
                 'rounded-lg',
                 activeTab === tab.id
-                  ? 'bg-white dark:bg-gray-700 text-primary-600 dark:text-primary-400 shadow-sm'
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                  ? 'bg-white text-primary-600 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
               )
             )}
           >
@@ -61,7 +61,7 @@ export const Tabs: React.FC<TabsProps> = ({
                 'rounded-full',
                 activeTab === tab.id
                   ? 'bg-primary-500 text-white'
-                  : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
               )
             )}
           >
@@ -74,7 +74,7 @@ export const Tabs: React.FC<TabsProps> = ({
   }
 
   return (
-    <div className="flex border-b border-gray-200 dark:border-gray-700">
+    <div className="flex border-b border-gray-200">
       {tabs.map((tab) => (
         <button
           key={tab.id}
@@ -84,8 +84,8 @@ export const Tabs: React.FC<TabsProps> = ({
               baseTabClass,
               'relative',
               activeTab === tab.id
-                ? 'text-primary-600 dark:text-primary-400'
-                : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+                ? 'text-primary-600'
+                : 'text-gray-600 hover:text-gray-900'
             )
           )}
         >

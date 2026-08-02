@@ -55,7 +55,7 @@ export const Input: React.FC<InputProps> = ({
           aria-describedby={errorId}
           className={twMerge(
             clsx(
-              'w-full px-4 py-2.5 text-base bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border-2 rounded-lg transition-all duration-fast focus:outline-none focus:ring-2',
+              'w-full px-4 py-2.5 text-base bg-white text-gray-900 border-2 rounded-lg transition-all duration-fast focus:outline-none focus:ring-2',
               icon && 'pl-10',
               iconRight && 'pr-10',
               variantClasses[computedVariant],

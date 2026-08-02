@@ -4,6 +4,8 @@ import { useChatStore } from '../../store/chatStore';
 import { Header } from '../../components/common/Header';
 import { Send, Sparkles, Shield, BookOpen, AlertTriangle } from 'lucide-react';
 import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
+import { AI_CHAT_ENABLED } from '../../config/features';
+import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
 
 const professionalTopics = [
   { id: 'pt1', title: '学生情绪波动分析', category: '分析' },
@@ -14,6 +16,10 @@ const professionalTopics = [
 ];
 
 export default function TeacherChat() {
+  if (!AI_CHAT_ENABLED) {
+    return <ChatDisabledPlaceholder role="teacher" />;
+  }
+
   const user = useAuthStore((state) => state.user);
   const {
     messages,

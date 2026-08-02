@@ -80,6 +80,7 @@ export default function Login() {
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
               星屿心理健康管理系统
             </h1>
+            <p className="text-gray-400 mt-1 text-xs tracking-wider">StarIsleONweb</p>
             <p className="text-gray-500 mt-2">守护心灵，伴你成长</p>
           </div>
 

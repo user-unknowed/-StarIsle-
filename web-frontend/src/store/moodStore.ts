@@ -11,6 +11,7 @@ interface MoodState {
   isLoading: boolean;
   continuousDays: number;
   isUsingMockData: boolean;
+  error: string | null;
 
   fetchMoodHistory: (userId: string) => Promise<void>;
   checkinMood: (userId: string, moodLevel: number, tags?: string[]) => Promise<MoodCheckinResponse | null>;
@@ -42,20 +43,25 @@ export const useMoodStore = create<MoodState>((set) => ({
   isLoading: false,
   continuousDays: 0,
   isUsingMockData: false,
+  error: null,
 
   fetchMoodHistory: async (userId) => {
-    set({ isLoading: true });
+    set({ isLoading: true, error: null });
     try {
       const history = await moodApi.getHistory(userId);
-      set({ moodHistory: history, isLoading: false, isUsingMockData: false });
+      set({ moodHistory: history, isLoading: false, isUsingMockData: false, error: null });
     } catch (error) {
-      // 降级到 mock 数据
+      // 仅在网络/服务端错误时降级到 mock；4xx 等错误写入 error 字段
       if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
-        set({ moodHistory: mockMoodHistory, isLoading: false, isUsingMockData: true });
+        set({ moodHistory: mockMoodHistory, isLoading: false, isUsingMockData: true, error: null });
         return;
       }
-      // 其他错误也降级到 mock，保证 UI 可用
-      set({ moodHistory: mockMoodHistory, isLoading: false, isUsingMockData: true });
+      set({
+        moodHistory: [],
+        isLoading: false,
+        isUsingMockData: false,
+        error: error instanceof ApiError ? error.message : '获取心情历史失败，请稍后重试',
+      });
     }
   },
 

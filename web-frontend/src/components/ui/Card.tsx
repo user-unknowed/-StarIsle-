@@ -28,16 +28,16 @@ export const Card: React.FC<CardProps> = ({
     <div
       className={twMerge(
         clsx(
-          'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700',
+          'bg-white rounded-xl border border-gray-200',
           paddingClasses[padding],
-          hoverable && 'hover:shadow-lg hover:border-primary-300 dark:hover:border-primary-600 transition-all duration-fast cursor-pointer',
+          hoverable && 'hover:shadow-lg hover:border-primary-300 transition-all duration-fast cursor-pointer',
           className
         )
       )}
       {...props}
     >
       {title && (
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">
+        <h3 className="text-base font-semibold text-gray-900 mb-3">
           {title}
         </h3>
       )}

@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
+import { useClassroomStore } from '../../store/classroomStore';
 import { Header } from '../../components/common/Header';
+import { useToast } from '../../components/ui/Toast';
 import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, Shield, Users, Download, Upload } from 'lucide-react';
 
 const menuItems = [
@@ -17,31 +19,48 @@ const settingsItems = [
   { icon: Phone, label: '隐私设置', description: '管理数据隐私和权限' },
 ];
 
-const permissionItems = [
-  { name: '班级管理', description: '管理班级信息和学生名单', enabled: true },
-  { name: '学生数据查看', description: '查看学生心情数据和风险评估', enabled: true },
-  { name: '数据导入导出', description: '导入导出学生数据和报告', enabled: true },
-  { name: '风险预警管理', description: '管理风险预警和关注名单', enabled: true },
-  { name: '专业咨询', description: '使用专业心理咨询助手', enabled: true },
+const initialPermissions = [
+  { id: 'class-management', name: '班级管理', description: '管理班级信息和学生名单', enabled: true },
+  { id: 'student-data', name: '学生数据查看', description: '查看学生心情数据和风险评估', enabled: true },
+  { id: 'data-io', name: '数据导入导出', description: '导入导出学生数据和报告', enabled: true },
+  { id: 'risk-alert', name: '风险预警管理', description: '管理风险预警和关注名单', enabled: true },
+  { id: 'consult', name: '专业咨询', description: '使用专业心理咨询助手', enabled: true },
 ];
 
 export default function TeacherProfile() {
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
-  
+  const updateProfile = useAuthStore((state) => state.updateProfile);
+  const stats = useClassroomStore((state) => state.stats);
+  const toast = useToast();
+
   const [isEditing, setIsEditing] = useState(false);
   const [editedNickname, setEditedNickname] = useState(user?.nickname || '');
   const [editedSignature, setEditedSignature] = useState(user?.signature || '');
+  const [permissions, setPermissions] = useState(initialPermissions);
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updateProfile({ nickname: editedNickname, signature: editedSignature });
     setIsEditing(false);
+    toast.success('资料已更新');
   };
+
+  const togglePermission = (id: string) => {
+    setPermissions(prev => prev.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
+    toast.info('权限已更新（演示）');
+  };
+
+  const comingSoon = () => toast.info('功能开发中，敬请期待');
+
+  // totalClasses 由 classroomStore 提供（跨文件依赖，类型尚未包含则安全降级到 '--'）
+  const classCount = (stats as { totalClasses?: number } | null)?.totalClasses ?? '--';
+  const studentCount = stats?.totalStudents ?? '--';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
       <Header role="teacher" />
-      
-      <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
+
+      <main id="main" className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 mb-8 text-white shadow-xl">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
@@ -81,6 +100,7 @@ export default function TeacherProfile() {
             </div>
             <button
               onClick={isEditing ? handleSave : () => setIsEditing(true)}
+              aria-label={isEditing ? '保存' : '编辑'}
               className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
             >
               {isEditing ? <Check className="w-5 h-5" /> : <Edit3 className="w-5 h-5" />}
@@ -90,15 +110,15 @@ export default function TeacherProfile() {
 
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">3</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{classCount}</p>
             <p className="text-sm text-gray-500 mt-1">管理班级</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">128</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{studentCount}</p>
             <p className="text-sm text-gray-500 mt-1">学生总数</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">156</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">--</p>
             <p className="text-sm text-gray-500 mt-1">咨询次数</p>
           </div>
         </div>
@@ -111,6 +131,8 @@ export default function TeacherProfile() {
               return (
                 <button
                   key={item.label}
+                  onClick={comingSoon}
+                  aria-label={item.label}
                   className="flex flex-col items-center p-4 rounded-xl hover:bg-purple-50 transition-colors"
                 >
                   <div className="relative">
@@ -136,13 +158,17 @@ export default function TeacherProfile() {
             权限配置
           </h3>
           <div className="space-y-3">
-            {permissionItems.map((item) => (
-              <div key={item.name} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+            {permissions.map((item) => (
+              <div key={item.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                 <div>
                   <p className="font-medium text-gray-800">{item.name}</p>
                   <p className="text-sm text-gray-500">{item.description}</p>
                 </div>
                 <button
+                  role="switch"
+                  aria-checked={item.enabled}
+                  aria-label={`${item.name} 权限开关`}
+                  onClick={() => togglePermission(item.id)}
                   className={`w-12 h-7 rounded-full transition-colors ${
                     item.enabled ? 'bg-purple-600' : 'bg-gray-300'
                   }`}
@@ -161,7 +187,11 @@ export default function TeacherProfile() {
         <div className="bg-white rounded-3xl p-6 mb-8 shadow-lg">
           <h3 className="text-lg font-bold text-gray-800 mb-4">数据管理</h3>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors text-left">
+            <button
+              onClick={comingSoon}
+              aria-label="导入数据"
+              className="flex items-center gap-4 p-4 bg-blue-50 rounded-xl hover:bg-blue-100 transition-colors text-left"
+            >
               <div className="w-12 h-12 bg-blue-200 rounded-xl flex items-center justify-center">
                 <Upload className="w-6 h-6 text-blue-600" />
               </div>
@@ -170,7 +200,11 @@ export default function TeacherProfile() {
                 <p className="text-sm text-gray-500">支持Excel或CSV格式文件导入</p>
               </div>
             </button>
-            <button className="flex items-center gap-4 p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors text-left">
+            <button
+              onClick={comingSoon}
+              aria-label="导出报告"
+              className="flex items-center gap-4 p-4 bg-green-50 rounded-xl hover:bg-green-100 transition-colors text-left"
+            >
               <div className="w-12 h-12 bg-green-200 rounded-xl flex items-center justify-center">
                 <Download className="w-6 h-6 text-green-600" />
               </div>
@@ -190,6 +224,8 @@ export default function TeacherProfile() {
               return (
                 <button
                   key={item.label}
+                  onClick={comingSoon}
+                  aria-label={item.label}
                   className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors text-left"
                 >
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -210,6 +246,7 @@ export default function TeacherProfile() {
           onClick={() => {
             logout();
           }}
+          aria-label="退出登录"
           className="w-full py-4 bg-red-50 text-red-600 rounded-2xl font-bold hover:bg-red-100 transition-colors flex items-center justify-center gap-2"
         >
           <LogOut className="w-5 h-5" />

@@ -1,27 +1,29 @@
 import { Header } from './Header';
-import { EmergencyHelpButton } from './EmergencyHelpButton';
 import { Sparkles, Clock } from 'lucide-react';
 
 interface ChatDisabledPlaceholderProps {
   role: 'student' | 'teacher' | 'parent';
 }
 
-// 各端 AI 助手配色（与原 Chat 页面头部一致）
+// 各端 AI 助手配色（统一走 token 体系：学生/教师用 primary/secondary，家长用 accent）
 const accentByRole = {
   student: {
-    gradient: 'from-indigo-600 to-purple-600',
-    soft: 'from-indigo-100 to-purple-100',
-    iconText: 'text-purple-600',
+    gradient: 'from-primary-500 to-secondary-500',
+    soft: 'from-primary-100 to-secondary-100',
+    iconText: 'text-secondary-600',
+    bg: 'from-primary-50 via-white to-secondary-50',
   },
   teacher: {
-    gradient: 'from-indigo-600 to-purple-600',
-    soft: 'from-indigo-100 to-purple-100',
-    iconText: 'text-purple-600',
+    gradient: 'from-primary-500 to-secondary-500',
+    soft: 'from-primary-100 to-secondary-100',
+    iconText: 'text-secondary-600',
+    bg: 'from-primary-50 via-white to-secondary-50',
   },
   parent: {
-    gradient: 'from-[#F4A261] to-[#E76F51]',
-    soft: 'from-orange-100 to-red-100',
-    iconText: 'text-orange-600',
+    gradient: 'from-accent-400 to-accent-600',
+    soft: 'from-accent-100 to-accent-200',
+    iconText: 'text-accent-600',
+    bg: 'from-accent-50 via-white to-accent-50',
   },
 } as const;
 
@@ -36,19 +38,18 @@ const assistantNameByRole = {
  * AI 对话功能被屏蔽时的占位页面。
  *
  * 在功能开关 VITE_AI_CHAT_ENABLED !== 'true' 时由三端 Chat 页面渲染，
- * 防止用户通过 URL 直接访问聊天页。仍保留 Header 与紧急帮助按钮，
- * 保证布局一致与危机帮助通道可用。
+ * 防止用户通过 URL 直接访问聊天页。仍保留 Header。
+ * 紧急帮助按钮已由 App.tsx 全局渲染，此处不再重复挂载。
  */
 export function ChatDisabledPlaceholder({ role }: ChatDisabledPlaceholderProps) {
   const accent = accentByRole[role];
   const assistantName = assistantNameByRole[role];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
+    <div className={`min-h-screen bg-gradient-to-br ${accent.bg}`}>
       <Header role={role} />
-      <EmergencyHelpButton />
 
-      <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
+      <main id="main" className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-white rounded-3xl shadow-xl overflow-hidden">
           {/* 顶部渐变条（与原 Chat 页面头部风格一致） */}
           <div className={`bg-gradient-to-r ${accent.gradient} p-5 text-white`}>

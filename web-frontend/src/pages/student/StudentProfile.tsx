@@ -5,6 +5,7 @@ import { Header } from '../../components/common/Header';
 import { Modal, Button } from '../../components/ui';
 import { assessmentApi } from '../../services/api';
 import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, ClipboardList, Loader2 } from 'lucide-react';
+import { useToast } from '../../components/ui/Toast';
 
 const menuItems = [
   { icon: Bell, label: '通知中心', badge: 3 },
@@ -22,8 +23,11 @@ const settingsItems = [
 
 export default function StudentProfile() {
   const user = useAuthStore((state) => state.user);
-  const moodHistory = useMoodStore((state) => state.moodHistory);
+  const updateProfile = useAuthStore((state) => state.updateProfile);
   const logout = useAuthStore((state) => state.logout);
+  const moodHistory = useMoodStore((state) => state.moodHistory);
+  const continuousDays = useMoodStore((state) => state.continuousDays);
+  const toast = useToast();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editedNickname, setEditedNickname] = useState(user?.nickname || '');
@@ -129,8 +133,10 @@ export default function StudentProfile() {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    await updateProfile({ nickname: editedNickname, signature: editedSignature });
     setIsEditing(false);
+    toast.success('资料已更新');
   };
 
   const totalCheckins = moodHistory.length;
@@ -142,7 +148,7 @@ export default function StudentProfile() {
     <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
       <Header role="student" />
       
-      <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
+      <main id="main" className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
         <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-3xl p-6 mb-8 text-white shadow-xl">
           <div className="flex items-center gap-6">
             <div className="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center">
@@ -179,6 +185,7 @@ export default function StudentProfile() {
             </div>
             <button
               onClick={isEditing ? handleSave : () => setIsEditing(true)}
+              aria-label="编辑"
               className="p-3 bg-white/20 rounded-full hover:bg-white/30 transition-colors"
             >
               {isEditing ? <Check className="w-5 h-5" /> : <Edit3 className="w-5 h-5" />}
@@ -188,15 +195,15 @@ export default function StudentProfile() {
 
         <div className="grid grid-cols-3 gap-4 mb-8">
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{totalCheckins}</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{moodHistory.length === 0 ? '--' : totalCheckins}</p>
             <p className="text-sm text-gray-500 mt-1">总打卡次数</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{averageMood}</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{moodHistory.length === 0 ? '--' : averageMood}</p>
             <p className="text-sm text-gray-500 mt-1">平均心情</p>
           </div>
           <div className="bg-white rounded-2xl p-5 shadow-lg text-center">
-            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">5</p>
+            <p className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">{moodHistory.length === 0 ? '--' : continuousDays}</p>
             <p className="text-sm text-gray-500 mt-1">连续打卡</p>
           </div>
         </div>
@@ -209,6 +216,8 @@ export default function StudentProfile() {
               return (
                 <button
                   key={item.label}
+                  onClick={() => toast.info('功能开发中，敬请期待')}
+                  aria-label={item.label}
                   className="flex flex-col items-center p-4 rounded-xl hover:bg-purple-50 transition-colors"
                 >
                   <div className="relative">
@@ -256,6 +265,8 @@ export default function StudentProfile() {
               return (
                 <button
                   key={item.label}
+                  onClick={() => toast.info('功能开发中，敬请期待')}
+                  aria-label={item.label}
                   className="w-full flex items-center gap-4 p-4 rounded-xl hover:bg-gray-50 transition-colors text-left"
                 >
                   <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
@@ -314,6 +325,8 @@ export default function StudentProfile() {
                         {q.options.map((opt, oi) => (
                           <button
                             key={oi}
+                            role="radio"
+                            aria-checked={assessmentAnswers[q.id] === oi}
                             onClick={() => setAssessmentAnswers((prev) => ({ ...prev, [q.id]: oi }))}
                             className={`w-full text-left px-4 py-2.5 rounded-xl border-2 transition-all duration-fast ${
                               assessmentAnswers[q.id] === oi

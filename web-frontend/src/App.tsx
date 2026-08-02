@@ -1,6 +1,8 @@
 import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuthStore } from './store/authStore';
 import { ApiDebugOverlay } from './components/dev/ApiDebugOverlay';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
+import { EmergencyHelpButton } from './components/common/EmergencyHelpButton';
 import Login from './pages/Login';
 import StudentHome from './pages/student/StudentHome';
 import StudentChat from './pages/student/StudentChat';
@@ -40,7 +42,12 @@ function ProtectedRoute({
     return <Navigate to={user ? homePathByRole[user.role] : '/'} />;
   }
 
-  return <>{children}</>;
+  return (
+    <>
+      {children}
+      <EmergencyHelpButton />
+    </>
+  );
 }
 
 export default function App() {
@@ -49,7 +56,14 @@ export default function App() {
 
   return (
     <Router>
-      <Routes>
+      <a
+        href="#main"
+        className="sr-only focus:not-sr-only focus:absolute focus:top-2 focus:left-2 focus:z-[100] focus:px-4 focus:py-2 focus:bg-white focus:rounded-lg focus:shadow-lg"
+      >
+        跳到主内容
+      </a>
+      <ErrorBoundary>
+        <Routes>
         <Route
           path="/"
           element={isLoggedIn ? <Navigate to={homePath} /> : <Login />}
@@ -163,7 +177,8 @@ export default function App() {
         />
 
         <Route path="*" element={<Navigate to="/" />} />
-      </Routes>
+        </Routes>
+      </ErrorBoundary>
 
       {import.meta.env.DEV && <ApiDebugOverlay />}
     </Router>

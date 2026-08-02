@@ -4,6 +4,9 @@ import { chatApi } from '../services/api';
 import { riskApi } from '../services/api';
 import { ApiError } from '../services/http';
 
+// 危机关键词：命中时 mock 回复需附带 riskLevel: 'red'
+const crisisKeywords = ['自杀', '不想活', '想死', '结束生命', '轻生'];
+
 interface ChatState {
   messages: ChatMessage[];
   topics: TopicCard[];
@@ -101,23 +104,43 @@ export const useChatStore = create<ChatState>((set) => ({
       const testAiDelay = typeof localStorage !== 'undefined' && localStorage.getItem('__test_ai_delay');
       await new Promise(resolve => setTimeout(resolve, testAiDelay ? parseInt(testAiDelay) : 1500));
 
-      const responses = [
-        '小星听到了呀～听起来你今天有点低落呢。',
-        '抱抱～小星在这里陪着你呢。',
-        '小星懂你呀～有时候确实有点难呢。',
-        '谢谢你愿意和小星分享这些呀。你很勇敢呢～',
-        '小星觉得你已经做得很好啦。慢慢来，不着急呢～',
-      ];
+      // 危机关键词检测：命中时返回危机干预回复并标记 riskLevel: 'red'
+      const hitCrisis = crisisKeywords.some((kw) => content.includes(kw));
 
-      const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+      let mockResponse: string;
+      let riskLevel: string | undefined;
+
+      if (hitCrisis) {
+        mockResponse =
+          '小星听到你这么说很担心你。你的感受很重要，请一定保护好自己。如果你愿意，可以拨打 24 小时心理援助热线 400-161-9995，或者和身边信任的人说一说。小星一直在这里陪你。';
+        riskLevel = 'red';
+
+        try {
+          await riskApi.reportCrisis({ userId, riskLevel: 'red', triggerType: 'chat' });
+        } catch {
+          // 上报失败不影响主流程
+        }
+      } else {
+        const responses = [
+          '小星听到了呀～听起来你今天有点低落呢。',
+          '抱抱～小星在这里陪着你呢。',
+          '小星懂你呀～有时候确实有点难呢。',
+          '谢谢你愿意和小星分享这些呀。你很勇敢呢～',
+          '小星觉得你已经做得很好啦。慢慢来，不着急呢～',
+        ];
+        mockResponse = responses[Math.floor(Math.random() * responses.length)];
+        // 随机为部分回复附加低风险标记，保持风险检测链路可用
+        riskLevel = Math.random() < 0.3 ? 'green' : undefined;
+      }
 
       set((state) => ({
         messages: [...state.messages, {
           id: `msg-${Date.now()}`,
           userId,
-          content: randomResponse,
+          content: mockResponse,
           role: 'assistant',
           timestamp: new Date().toISOString(),
+          riskLevel,
         }],
         isTyping: false,
         isUsingMockData: true,

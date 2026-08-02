@@ -85,6 +85,7 @@ const mockAlerts: EmergencyAlert[] = [
 
 const mockResources: EmergencyResource[] = [
   {
+    id: 'res_1',
     type: 'hotline',
     title: '12355 青少年服务热线',
     content: '全国青少年心理咨询服务热线，提供 24 小时心理疏导',
@@ -92,6 +93,7 @@ const mockResources: EmergencyResource[] = [
     phone: '12355',
   },
   {
+    id: 'res_2',
     type: 'hotline',
     title: '希望24热线',
     content: '全国心理危机干预热线，专业志愿者 24 小时值守',
@@ -99,6 +101,7 @@ const mockResources: EmergencyResource[] = [
     phone: '400-161-9995',
   },
   {
+    id: 'res_3',
     type: 'hospital',
     title: '市精神卫生中心',
     content: '提供专业心理评估与诊疗服务，可预约青少年门诊',
@@ -106,6 +109,7 @@ const mockResources: EmergencyResource[] = [
     phone: '021-12345678',
   },
   {
+    id: 'res_4',
     type: 'community',
     title: '社区心理服务站',
     content: '就近提供免费心理咨询服务，支持线下预约',
@@ -113,6 +117,7 @@ const mockResources: EmergencyResource[] = [
     phone: '021-87654321',
   },
   {
+    id: 'res_5',
     type: 'community',
     title: '学校心理老师',
     content: '学校专业心理辅导老师，可预约面对面咨询',
@@ -120,6 +125,7 @@ const mockResources: EmergencyResource[] = [
     phone: '请通过班主任联系',
   },
   {
+    id: 'res_6',
     type: 'community',
     title: '班主任',
     content: '孩子的班主任，了解孩子在校情况的第一联系人',
@@ -224,7 +230,8 @@ export const useParentStore = create<ParentState>((set, get) => ({
         set((state) => ({
           children: [...state.children, mockBinding],
           isLoading: false,
-          isUsingMockData: true,
+          // 仅当之前没有任何真实孩子时才标记为 mock，避免覆盖已有真实绑定
+          isUsingMockData: state.children.length === 0 ? true : state.isUsingMockData,
         }));
         return mockBinding;
       }

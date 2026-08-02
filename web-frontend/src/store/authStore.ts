@@ -30,6 +30,7 @@ interface AuthState {
   loginWithThirdParty: (provider: LoginMethod, userInfo: ThirdPartyUserInfo) => Promise<void>;
   loginWithPhone: (phone: string, code: string) => Promise<void>;
   setLoginMethod: (method: LoginMethod | null) => void;
+  updateProfile: (data: { nickname?: string; signature?: string }) => Promise<void>;
 }
 
 // Mock 数据（降级使用）
@@ -68,7 +69,7 @@ const mockUsers: Record<string, User> = {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       token: null,
       isLoggedIn: false,
@@ -265,6 +266,22 @@ export const useAuthStore = create<AuthState>()(
 
       setLoginMethod: (method) => {
         set({ loginMethod: method });
+      },
+
+      updateProfile: async (data) => {
+        const currentUser = get().user;
+        if (!currentUser) return;
+
+        // authApi 暂未提供更新接口，直接更新本地 user state（已通过 persist 持久化）。
+        // 若后续接入真实 API，可在此处 try/catch，失败时标记 isUsingMockData。
+        set({
+          user: {
+            ...currentUser,
+            ...(data.nickname !== undefined ? { nickname: data.nickname } : null),
+            ...(data.signature !== undefined ? { signature: data.signature } : null),
+            updatedAt: new Date().toISOString(),
+          },
+        });
       },
     }),
     {

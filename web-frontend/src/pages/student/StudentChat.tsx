@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
 import { Header } from '../../components/common/Header';
-import { Send, MessageCircle, Sparkles, AlertTriangle } from 'lucide-react';
+import { Send, Sparkles, AlertTriangle, Loader2 } from 'lucide-react';
 import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
 import { AI_CHAT_ENABLED } from '../../config/features';
 import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
@@ -18,17 +18,26 @@ export default function StudentChat() {
     topics,
     isTyping,
     inputValue,
+    isUsingMockData,
     fetchMessages,
     sendMessage,
     selectTopic,
     setInputValue,
   } = useChatStore();
-  
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   useEffect(() => {
     if (user) {
-      fetchMessages(user.id);
+      let cancelled = false;
+      setIsLoadingMessages(true);
+      fetchMessages(user.id).finally(() => {
+        if (!cancelled) setIsLoadingMessages(false);
+      });
+      return () => {
+        cancelled = true;
+      };
     }
   }, [user, fetchMessages]);
 
@@ -68,14 +77,24 @@ export default function StudentChat() {
             </div>
           </div>
 
-          {messages.length === 0 && (
+          {isUsingMockData && (
+            <div className="bg-warning-50 border-b border-warning-200 px-4 py-2 text-sm text-warning-700 text-center">后端未连接，当前为示例回复</div>
+          )}
+
+          {isLoadingMessages && (
+            <div className="flex-1 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+            </div>
+          )}
+
+          {!isLoadingMessages && messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center p-8">
               <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-6">
                 <Sparkles className="w-12 h-12 text-purple-600" />
               </div>
               <h3 className="text-xl font-bold text-gray-800 mb-2">你好呀！我是小星</h3>
               <p className="text-gray-500 text-center mb-8">有什么想聊的吗？我在这里听你说。</p>
-              
+
               <div className="w-full max-w-md">
                 <p className="text-sm text-gray-600 mb-3">试试这些话题：</p>
                 <div className="grid grid-cols-2 gap-3">
@@ -83,6 +102,7 @@ export default function StudentChat() {
                     <button
                       key={topic.id}
                       onClick={() => selectTopic(topic)}
+                      aria-label={topic.title}
                       className="text-left p-3 bg-gray-50 hover:bg-purple-50 rounded-xl transition-colors border border-gray-100"
                     >
                       <span className="text-xs text-purple-500 mb-1 block">{topic.category}</span>
@@ -94,8 +114,8 @@ export default function StudentChat() {
             </div>
           )}
 
-          {messages.length > 0 && (
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          {!isLoadingMessages && messages.length > 0 && (
+            <div className="flex-1 overflow-y-auto p-6 space-y-4" role="log" aria-live="polite">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -167,12 +187,14 @@ export default function StudentChat() {
                   onKeyDown={handleKeyDown}
                   placeholder="输入你想说的话..."
                   rows={1}
+                  aria-label="输入消息"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                 />
               </div>
               <button
                 onClick={handleSend}
+                aria-label="发送"
                 disabled={!inputValue.trim()}
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                   inputValue.trim()

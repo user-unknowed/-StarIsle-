@@ -8,10 +8,10 @@ import {
   AlertTriangle,
   Sparkles,
   Siren,
-  LifeBuoy,
   ChevronDown,
   CheckCircle,
   Activity,
+  Users,
 } from 'lucide-react';
 
 const moodEmojis: Record<number, string> = {
@@ -96,9 +96,9 @@ export default function ParentHome() {
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <Header role="parent" />
 
-      <main className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto">
+      <main id="main" className="pt-20 pb-8 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto">
         {/* 顶部孩子情绪状态卡片 */}
-        <div className="bg-gradient-to-r from-[#F4A261] to-[#E76F51] rounded-3xl p-6 sm:p-8 mb-6 text-white shadow-xl">
+        <div className="bg-gradient-to-r from-accent-400 to-accent-600 rounded-3xl p-6 sm:p-8 mb-6 text-white shadow-xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex-1 w-full">
               <div className="flex items-center gap-2 mb-2">
@@ -224,7 +224,7 @@ export default function ParentHome() {
                 return (
                   <div key={record.id} className="flex-1 flex flex-col items-center min-w-0">
                     <div
-                      className="w-full bg-gradient-to-t from-[#F4A261] to-[#F9C784] rounded-t-lg transition-all duration-fast"
+                      className="w-full bg-gradient-to-t from-accent-400 to-accent-300 rounded-t-lg transition-all duration-fast"
                       style={{ height: `${height}%`, minHeight: '8px' }}
                     />
                     <span className="text-xs text-gray-500 mt-2 truncate">
@@ -248,8 +248,8 @@ export default function ParentHome() {
               <Siren className="w-6 h-6 text-red-600" />
             </div>
             <h3 className="font-bold text-gray-800 mb-1">紧急告警</h3>
-            <p className="text-sm text-gray-500">
-              {activeAlert ? `${activeAlert.reason.slice(0, 12)}...` : '暂无告警，点击查看'}
+            <p className="text-sm text-gray-500 truncate" title={activeAlert?.reason}>
+              {activeAlert ? activeAlert.reason : '暂无告警，点击查看'}
             </p>
             {activeAlert && (
               <span className="inline-block mt-2 px-2 py-0.5 bg-red-50 text-red-600 text-xs rounded-full">
@@ -270,14 +270,14 @@ export default function ParentHome() {
           </button>
 
           <button
-            onClick={() => navigate('/parent/emergency')}
+            onClick={() => navigate('/parent/children')}
             className="bg-white rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all text-left group"
           >
             <div className="w-12 h-12 bg-amber-100 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-              <LifeBuoy className="w-6 h-6 text-amber-600" />
+              <Users className="w-6 h-6 text-amber-600" />
             </div>
-            <h3 className="font-bold text-gray-800 mb-1">应急资源</h3>
-            <p className="text-sm text-gray-500">热线 · 医院 · 社区支持</p>
+            <h3 className="font-bold text-gray-800 mb-1">我的孩子</h3>
+            <p className="text-sm text-gray-500">管理绑定与数据授权</p>
           </button>
         </div>
       </main>

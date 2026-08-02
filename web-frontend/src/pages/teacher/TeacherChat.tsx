@@ -1,8 +1,8 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
 import { Header } from '../../components/common/Header';
-import { Send, Sparkles, Shield, BookOpen, AlertTriangle } from 'lucide-react';
+import { Send, Shield, AlertTriangle, Loader2 } from 'lucide-react';
 import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
 import { AI_CHAT_ENABLED } from '../../config/features';
 import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
@@ -30,12 +30,15 @@ export default function TeacherChat() {
     selectTopic,
     setInputValue,
   } = useChatStore();
-  
+  const isUsingMockData = useChatStore((s) => s.isUsingMockData);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
   useEffect(() => {
     if (user) {
-      fetchMessages(user.id);
+      setIsLoadingMessages(true);
+      fetchMessages(user.id).finally(() => setIsLoadingMessages(false));
     }
   }, [user, fetchMessages]);
 
@@ -75,89 +78,112 @@ export default function TeacherChat() {
             </div>
           </div>
 
-          {messages.length === 0 && (
-            <div className="flex-1 flex flex-col items-center justify-center p-8">
-              <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-6">
-                <Shield className="w-12 h-12 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-bold text-gray-800 mb-2">你好，{user?.nickname}</h3>
-              <p className="text-gray-500 text-center mb-8">作为专业心理咨询助手，我可以帮助您分析学生的心理状态，提供专业的辅导建议。</p>
-              
-              <div className="w-full max-w-md">
-                <p className="text-sm text-gray-600 mb-3">试试这些专业话题：</p>
-                <div className="grid grid-cols-2 gap-3">
-                  {professionalTopics.map((topic) => (
-                    <button
-                      key={topic.id}
-                      onClick={() => selectTopic({ id: topic.id, title: topic.title, category: topic.category })}
-                      className="text-left p-3 bg-gray-50 hover:bg-purple-50 rounded-xl transition-colors border border-gray-100"
-                    >
-                      <span className="text-xs text-purple-500 mb-1 block">{topic.category}</span>
-                      <span className="text-sm text-gray-700 font-medium">{topic.title}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
+          {isUsingMockData && (
+            <div className="bg-warning-50 border-b border-warning-200 px-4 py-2 text-sm text-warning-700 text-center">
+              后端未连接，当前为示例回复
             </div>
           )}
 
-          {messages.length > 0 && (
-            <div className="flex-1 overflow-y-auto p-6 space-y-4">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div className={`max-w-[80%] ${message.role === 'user' ? 'order-2' : 'order-1'}`}>
-                    <div className="flex items-center gap-2 mb-1">
-                      {message.role === 'assistant' && (
-                        <span className="text-xs text-gray-500 flex items-center gap-1">
-                          <Shield className="w-3 h-3" />
-                          专业助手
-                        </span>
-                      )}
-                      {message.role === 'user' && (
-                        <span className="text-xs text-gray-500">{user?.nickname}</span>
-                      )}
-                    </div>
-                    <div
-                      className={`px-4 py-3 rounded-2xl ${
-                        message.role === 'user'
-                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                      }`}
-                    >
-                      <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                    </div>
+          {isLoadingMessages ? (
+            <div className="flex-1 flex items-center justify-center">
+              <Loader2 className="w-8 h-8 text-purple-500 animate-spin" />
+            </div>
+          ) : (
+            <>
+              {messages.length === 0 && (
+                <div className="flex-1 flex flex-col items-center justify-center p-8">
+                  <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-full flex items-center justify-center mb-6">
+                    <Shield className="w-12 h-12 text-purple-600" />
                   </div>
-                  <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${message.role === 'user' ? 'order-1 ml-2' : 'order-2 mr-2'}`}>
-                    {message.role === 'user' ? (
-                      <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
-                        <span className="text-sm font-medium">{user?.nickname?.[0]}</span>
-                      </div>
-                    ) : (
-                      <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
-                        <Shield className="w-5 h-5 text-white" />
-                      </div>
-                    )}
-                  </div>
-                </div>
-              ))}
-              
-              {isTyping && (
-                <div className="flex justify-start">
-                  <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-md">
-                    <div className="flex items-center gap-1">
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
-                      <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                  <h3 className="text-xl font-bold text-gray-800 mb-2">你好，{user?.nickname}</h3>
+                  <p className="text-gray-500 text-center mb-8">作为专业心理咨询助手，我可以帮助您分析学生的心理状态，提供专业的辅导建议。</p>
+
+                  <div className="w-full max-w-md">
+                    <p className="text-sm text-gray-600 mb-3">试试这些专业话题：</p>
+                    <div className="grid grid-cols-2 gap-3">
+                      {professionalTopics.map((topic) => (
+                        <button
+                          key={topic.id}
+                          onClick={() => selectTopic({ id: topic.id, title: topic.title, category: topic.category })}
+                          aria-label={topic.title}
+                          className="text-left p-3 bg-gray-50 hover:bg-purple-50 rounded-xl transition-colors border border-gray-100"
+                        >
+                          <span className="text-xs text-purple-500 mb-1 block">{topic.category}</span>
+                          <span className="text-sm text-gray-700 font-medium">{topic.title}</span>
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
               )}
-              
-              <div ref={messagesEndRef} />
-            </div>
+
+              {messages.length > 0 && (
+                <div className="flex-1 overflow-y-auto p-6 space-y-4" role="log" aria-live="polite">
+                  {messages.map((message) => (
+                    <div
+                      key={message.id}
+                      className={`flex ${message.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div className={`max-w-[80%] ${message.role === 'user' ? 'order-2' : 'order-1'}`}>
+                        <div className="flex items-center gap-2 mb-1">
+                          {message.role === 'assistant' && (
+                            <span className="text-xs text-gray-500 flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              专业助手
+                            </span>
+                          )}
+                          {message.role === 'user' && (
+                            <span className="text-xs text-gray-500">{user?.nickname}</span>
+                          )}
+                        </div>
+                        <div
+                          className={`px-4 py-3 rounded-2xl ${
+                            message.role === 'user'
+                              ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-md'
+                              : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                          }`}
+                        >
+                          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                          {message.role === 'assistant' && (message.riskLevel === 'red' || message.riskLevel === 'orange') && (
+                            <div className={`mt-2 p-2 rounded-xl flex items-center gap-2 ${message.riskLevel === 'red' ? 'bg-red-50 border border-red-200' : 'bg-orange-50 border border-orange-200'}`}>
+                              <AlertTriangle className="w-4 h-4 flex-shrink-0 text-red-500" />
+                              <p className="text-xs text-red-600 font-medium">
+                                检测到风险信号，请点击右下角紧急帮助按钮获取支持
+                              </p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      <div className={`w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center ${message.role === 'user' ? 'order-1 ml-2' : 'order-2 mr-2'}`}>
+                        {message.role === 'user' ? (
+                          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center">
+                            <span className="text-sm font-medium">{user?.nickname?.[0]}</span>
+                          </div>
+                        ) : (
+                          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-white" />
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+
+                  {isTyping && (
+                    <div className="flex justify-start">
+                      <div className="bg-gray-100 px-4 py-3 rounded-2xl rounded-bl-md">
+                        <div className="flex items-center gap-1">
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></span>
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></span>
+                          <span className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }}></span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  <div ref={messagesEndRef} />
+                </div>
+              )}
+            </>
           )}
 
           <div className="p-4 border-t border-gray-100">
@@ -169,6 +195,7 @@ export default function TeacherChat() {
                   onKeyDown={handleKeyDown}
                   placeholder="输入您的问题，获取专业的心理咨询建议..."
                   rows={1}
+                  aria-label="输入消息"
                   className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-2xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
                   style={{ minHeight: '48px', maxHeight: '120px' }}
                 />
@@ -176,6 +203,7 @@ export default function TeacherChat() {
               <button
                 onClick={handleSend}
                 disabled={!inputValue.trim()}
+                aria-label="发送"
                 className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
                   inputValue.trim()
                     ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg'

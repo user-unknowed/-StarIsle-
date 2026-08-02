@@ -166,6 +166,7 @@ export interface EmergencyAlert {
 }
 
 export interface EmergencyResource {
+  id: string;
   type: string;
   title: string;
   content: string;

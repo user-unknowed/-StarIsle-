@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { Header } from '../../components/common/Header';
-import { Music, Play, Pause, SkipForward, SkipBack, Volume2, Waves, Sparkles, Heart } from 'lucide-react';
+import { Music, Play, Pause, SkipForward, SkipBack, Waves, Sparkles, Heart, Loader2 } from 'lucide-react';
 import { contentApi } from '../../services/api';
+import { useToast } from '../../components/ui/Toast';
 
 type MusicListItem = {
   id: string;
@@ -10,6 +11,7 @@ type MusicListItem = {
   cover: string;
   category: string;
   description?: string;
+  url?: string;
 };
 
 const breathingExercises = [
@@ -28,6 +30,7 @@ const musicList: MusicListItem[] = [
 ];
 
 export default function StudentRelax() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'music' | 'breathing'>('music');
   const [currentTrack, setCurrentTrack] = useState(musicList[0]);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -39,12 +42,15 @@ export default function StudentRelax() {
   const [apiMusicList, setApiMusicList] = useState<MusicListItem[]>([]);
   const [apiBreathingSteps, setApiBreathingSteps] = useState<{ name: string; duration: number; instruction: string }[] | null>(null);
   const [contentSource, setContentSource] = useState<'api' | 'mock'>('mock');
-  
+  const [isLoading, setIsLoading] = useState(true);
+
+  const audioRef = useRef<HTMLAudioElement>(null);
   const progressInterval = useRef<any>(null);
   const breathingInterval = useRef<any>(null);
 
+  // 无音频 URL 时，保留基于 interval 的进度作为演示回退
   useEffect(() => {
-    if (isPlaying) {
+    if (isPlaying && !currentTrack.url) {
       progressInterval.current = window.setInterval(() => {
         setProgress(prev => {
           if (prev >= 100) {
@@ -59,13 +65,30 @@ export default function StudentRelax() {
         clearInterval(progressInterval.current);
       }
     }
-    
+
     return () => {
       if (progressInterval.current) {
         clearInterval(progressInterval.current);
       }
     };
-  }, [isPlaying]);
+  }, [isPlaying, currentTrack]);
+
+  // 有音频 URL 时，通过 <audio> 元素驱动播放/暂停
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || !currentTrack.url) return;
+    if (isPlaying) {
+      audio.play().catch(() => {});
+    } else {
+      audio.pause();
+    }
+  }, [isPlaying, currentTrack]);
+
+  const handleTimeUpdate = () => {
+    const audio = audioRef.current;
+    if (!audio || !audio.duration || Number.isNaN(audio.duration)) return;
+    setProgress((audio.currentTime / audio.duration) * 100);
+  };
 
   useEffect(() => {
     if (isBreathing) {
@@ -117,6 +140,7 @@ export default function StudentRelax() {
   // 接入 contentApi：获取冥想列表
   useEffect(() => {
     let cancelled = false;
+    setIsLoading(true);
     contentApi
       .getMeditations('all')
       .then((data) => {
@@ -128,6 +152,7 @@ export default function StudentRelax() {
           cover: '🎵',
           category: m.category,
           description: m.description,
+          url: m.audio_url,
         }));
         if (mapped.length) {
           setApiMusicList(mapped);
@@ -135,8 +160,11 @@ export default function StudentRelax() {
           setContentSource('api');
         }
       })
-      .catch(() => {
-        // 后端不可用，保留 mock 列表
+      .catch((err) => {
+        console.error('contentApi failed:', err);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
       });
     return () => {
       cancelled = true;
@@ -155,8 +183,8 @@ export default function StudentRelax() {
           setContentSource('api');
         }
       })
-      .catch(() => {
-        // 保留 mock
+      .catch((err) => {
+        console.error('contentApi failed:', err);
       });
     return () => {
       cancelled = true;
@@ -165,18 +193,32 @@ export default function StudentRelax() {
 
   const displayMusicList: MusicListItem[] = apiMusicList.length > 0 ? apiMusicList : musicList;
 
+  const switchTrack = (track: MusicListItem) => {
+    setCurrentTrack(track);
+    setProgress(0);
+    if (!track.url) {
+      setIsPlaying(false);
+    }
+  };
+
   const handlePrev = () => {
     const currentIndex = displayMusicList.findIndex(m => m.id === currentTrack.id);
     const newIndex = currentIndex > 0 ? currentIndex - 1 : displayMusicList.length - 1;
-    setCurrentTrack(displayMusicList[newIndex]);
-    setProgress(0);
+    switchTrack(displayMusicList[newIndex]);
   };
 
   const handleNext = () => {
     const currentIndex = displayMusicList.findIndex(m => m.id === currentTrack.id);
     const newIndex = currentIndex < displayMusicList.length - 1 ? currentIndex + 1 : 0;
-    setCurrentTrack(displayMusicList[newIndex]);
-    setProgress(0);
+    switchTrack(displayMusicList[newIndex]);
+  };
+
+  const handlePlayClick = () => {
+    if (!currentTrack.url) {
+      toast.info('演示版本暂无音频');
+      return;
+    }
+    setIsPlaying(!isPlaying);
   };
 
   return (
@@ -184,9 +226,11 @@ export default function StudentRelax() {
       <Header role="student" />
       
       <main className="pt-20 pb-8 px-4 max-w-4xl mx-auto">
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-4 mb-8" role="tablist">
           <button
             onClick={() => setActiveTab('music')}
+            role="tab"
+            aria-selected={activeTab === 'music'}
             className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all duration-300 ${
               activeTab === 'music'
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
@@ -198,6 +242,8 @@ export default function StudentRelax() {
           </button>
           <button
             onClick={() => setActiveTab('breathing')}
+            role="tab"
+            aria-selected={activeTab === 'breathing'}
             className={`flex-1 py-4 rounded-2xl font-bold text-lg transition-all duration-300 ${
               activeTab === 'breathing'
                 ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
@@ -209,44 +255,66 @@ export default function StudentRelax() {
           </button>
         </div>
 
+        <div role="tabpanel">
         {activeTab === 'music' && (
           <div className="space-y-6">
+            <audio ref={audioRef} src={currentTrack.url} onTimeUpdate={handleTimeUpdate} onEnded={handleNext} />
             <div className="bg-white rounded-3xl p-6 shadow-lg">
               <div className="flex items-center gap-6 mb-6">
                 <div className="w-24 h-24 bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl flex items-center justify-center text-5xl">
                   {currentTrack.cover}
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-purple-600 font-medium mb-1">{currentTrack.category}</p>
+                  <div className="flex items-center gap-2 mb-1">
+                    <p className="text-sm text-purple-600 font-medium">{currentTrack.category}</p>
+                    {!currentTrack.url && (
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-warning-50 text-warning-700 border border-warning-200">演示模式</span>
+                    )}
+                  </div>
                   <h3 className="text-xl font-bold text-gray-800">{currentTrack.title}</h3>
                   <p className="text-sm text-gray-500 mt-1">{currentTrack.duration}</p>
                 </div>
               </div>
-              
+
               <div className="mb-4">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
+                <div
+                  className="h-2 bg-gray-200 rounded-full overflow-hidden"
+                  role="progressbar"
+                  aria-valuenow={Math.round(progress)}
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                >
+                  <div
                     className="h-full bg-gradient-to-r from-indigo-500 to-purple-600 transition-all duration-300"
                     style={{ width: `${progress}%` }}
                   />
                 </div>
               </div>
-              
+
               <div className="flex items-center justify-center gap-6">
-                <button onClick={handlePrev} className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                <button
+                  onClick={handlePrev}
+                  aria-label="上一首"
+                  className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
                   <SkipBack className="w-5 h-5" />
                 </button>
-                <button 
-                  onClick={() => setIsPlaying(!isPlaying)}
+                <button
+                  onClick={handlePlayClick}
+                  aria-label={isPlaying ? '暂停' : '播放'}
                   className={`w-16 h-16 rounded-full flex items-center justify-center transition-all duration-300 ${
-                    isPlaying 
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' 
+                    isPlaying
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
                       : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg'
                   }`}
                 >
                   {isPlaying ? <Pause className="w-8 h-8" /> : <Play className="w-8 h-8" />}
                 </button>
-                <button onClick={handleNext} className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors">
+                <button
+                  onClick={handleNext}
+                  aria-label="下一首"
+                  className="w-12 h-12 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center transition-colors"
+                >
                   <SkipForward className="w-5 h-5" />
                 </button>
               </div>
@@ -259,14 +327,16 @@ export default function StudentRelax() {
                   {contentSource === 'api' ? 'API 数据' : '示例数据'}
                 </span>
               </div>
+              {isLoading ? (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+                </div>
+              ) : (
               <div className="space-y-3">
                 {displayMusicList.map((music) => (
                   <button
                     key={music.id}
-                    onClick={() => {
-                      setCurrentTrack(music);
-                      setProgress(0);
-                    }}
+                    onClick={() => switchTrack(music)}
                     className={`w-full flex items-center gap-4 p-4 rounded-xl transition-all duration-300 ${
                       currentTrack.id === music.id
                         ? 'bg-purple-50 border border-purple-200'
@@ -291,6 +361,7 @@ export default function StudentRelax() {
                   </button>
                 ))}
               </div>
+              )}
             </div>
           </div>
         )}
@@ -384,6 +455,7 @@ export default function StudentRelax() {
             </div>
           </div>
         )}
+        </div>
       </main>
     </div>
   );

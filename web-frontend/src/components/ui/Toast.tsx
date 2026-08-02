@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
+import { create } from 'zustand';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
@@ -12,8 +13,14 @@ export interface ToastProps {
   duration?: number;
 }
 
-interface ToastContainerProps {
+interface ToastState {
   toasts: ToastProps[];
+  addToast: (type: ToastType, message: string, duration?: number) => string;
+  removeToast: (id: string) => void;
+}
+
+interface ToastContainerProps {
+  toasts?: ToastProps[];
 }
 
 const typeClasses: Record<ToastType, string> = {
@@ -45,6 +52,21 @@ const iconMap: Record<ToastType, React.ReactNode> = {
     </svg>
   ),
 };
+
+// 全局 Toast store：所有页面共享同一个 toast 队列
+export const useToastStore = create<ToastState>()((set) => ({
+  toasts: [],
+  addToast: (type, message, duration) => {
+    const id = `toast-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    set((state) => ({
+      toasts: [...state.toasts, { id, type, message, duration, onClose: useToastStore.getState().removeToast }],
+    }));
+    return id;
+  },
+  removeToast: (id) => {
+    set((state) => ({ toasts: state.toasts.filter((toast) => toast.id !== id) }));
+  },
+}));
 
 const ToastItem: React.FC<ToastProps> = ({ id, type, message, onClose, duration = 3000 }) => {
   const [isVisible, setIsVisible] = useState(false);
@@ -80,6 +102,7 @@ const ToastItem: React.FC<ToastProps> = ({ id, type, message, onClose, duration 
       <span className="flex-1 text-sm font-medium">{message}</span>
       <button
         onClick={handleClose}
+        aria-label="关闭"
         className="p-1 hover:bg-white/20 rounded transition-colors"
       >
         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,27 +113,40 @@ const ToastItem: React.FC<ToastProps> = ({ id, type, message, onClose, duration 
   );
 };
 
+/**
+ * 全局 Toast 容器。自包含：从 useToastStore 读取 toasts，无需传 props。
+ * 保留可选 toasts prop 以兼容尚未迁移的旧调用方。
+ */
 export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts }) => {
+  const storeToasts = useToastStore((s) => s.toasts);
+  const list = toasts ?? storeToasts;
+
   return (
-    <div className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
-      {toasts.map((toast) => (
+    <div
+      role="region"
+      aria-live="polite"
+      className="fixed top-4 right-4 z-50 flex flex-col gap-2 max-w-sm"
+    >
+      {list.map((toast) => (
         <ToastItem key={toast.id} {...toast} />
       ))}
     </div>
   );
 };
 
+/**
+ * Toast hook。保持原有返回形状以兼容调用方：
+ * const toast = useToast(); toast.info('msg');
+ */
 export const useToast = () => {
-  const [toasts, setToasts] = useState<ToastProps[]>([]);
+  const toasts = useToastStore((s) => s.toasts);
 
   const addToast = useCallback((type: ToastType, message: string, duration?: number) => {
-    const id = `toast-${Date.now()}`;
-    setToasts((prev) => [...prev, { id, type, message, onClose: removeToast, duration }]);
-    return id;
+    return useToastStore.getState().addToast(type, message, duration);
   }, []);
 
   const removeToast = useCallback((id: string) => {
-    setToasts((prev) => prev.filter((toast) => toast.id !== id));
+    useToastStore.getState().removeToast(id);
   }, []);
 
   const success = useCallback((message: string, duration?: number) => addToast('success', message, duration), [addToast]);

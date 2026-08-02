@@ -1,0 +1,68 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'web-frontend/**'
+      - '.github/workflows/deploy-pages.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间仅允许一个部署任务运行
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build StarIsleONweb
+    runs-on: ubuntu-latest
+    env:
+      # 屏蔽 AI 对话功能（Pages 演示版本）
+      VITE_AI_CHAT_ENABLED: 'false'
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './web-frontend/package-lock.json'
+
+      - name: Install dependencies
+        working-directory: ./web-frontend
+        run: npm ci
+
+      - name: Build frontend
+        working-directory: ./web-frontend
+        # 方案 B：保留仓库名 StarIsle，使用 vite.config.ts 默认 base: './'（相对路径）
+        # HashRouter + 相对路径适配 GitHub Pages 子路径 https://<user>.github.io/StarIsle/
+        run: npm run build
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./web-frontend/dist
+
+  deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

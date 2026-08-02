@@ -7,6 +7,8 @@ import { Send, Sparkles, AlertCircle, AlertTriangle } from 'lucide-react';
 import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
 import { riskApi } from '../../services/api';
 import type { ChatMessage } from '../../types';
+import { AI_CHAT_ENABLED } from '../../config/features';
+import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
 
 const parentTopics = [
   { id: 't1', title: '孩子不愿意跟我说话怎么办', category: '沟通' },
@@ -38,6 +40,9 @@ interface ChatApiData {
 }
 
 export default function ParentChat() {
+  if (!AI_CHAT_ENABLED) {
+    return <ChatDisabledPlaceholder role="parent" />;
+  }
   const user = useAuthStore((state) => state.user);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState('');

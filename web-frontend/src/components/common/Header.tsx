@@ -2,28 +2,37 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home, MessageCircle, Music, User, LogOut, Menu, X, Bell, Star, Users, Siren } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
+import { useToast, ToastContainer } from '../ui/Toast';
+import { AI_CHAT_ENABLED } from '../../config/features';
 
 interface HeaderProps {
   role: 'student' | 'teacher' | 'parent';
 }
 
-const studentNavItems = [
+interface NavItem {
+  path: string;
+  icon: typeof Home;
+  label: string;
+  disabled?: boolean;
+}
+
+const studentNavItems: NavItem[] = [
   { path: '/student', icon: Home, label: '今日心情' },
-  { path: '/student/chat', icon: MessageCircle, label: '聊一聊' },
+  { path: '/student/chat', icon: MessageCircle, label: '聊一聊', disabled: !AI_CHAT_ENABLED },
   { path: '/student/relax', icon: Music, label: '放松一下' },
   { path: '/student/profile', icon: User, label: '我的' },
 ];
 
-const teacherNavItems = [
+const teacherNavItems: NavItem[] = [
   { path: '/teacher', icon: Home, label: '班级状态' },
-  { path: '/teacher/chat', icon: MessageCircle, label: '想聊聊天' },
+  { path: '/teacher/chat', icon: MessageCircle, label: '想聊聊天', disabled: !AI_CHAT_ENABLED },
   { path: '/teacher/relax', icon: Music, label: '放松一下' },
   { path: '/teacher/profile', icon: User, label: '我的' },
 ];
 
-const parentNavItems = [
+const parentNavItems: NavItem[] = [
   { path: '/parent', icon: Home, label: '孩子状态' },
-  { path: '/parent/chat', icon: MessageCircle, label: 'AI顾问' },
+  { path: '/parent/chat', icon: MessageCircle, label: 'AI顾问', disabled: !AI_CHAT_ENABLED },
   { path: '/parent/children', icon: Users, label: '我的孩子' },
   { path: '/parent/emergency', icon: Siren, label: '应急中心' },
   { path: '/parent/profile', icon: User, label: '我的' },
@@ -59,6 +68,7 @@ export function Header({ role }: HeaderProps) {
   const location = useLocation();
   const logout = useAuthStore((state) => state.logout);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const toast = useToast();
 
   const navItems = role === 'student' ? studentNavItems : role === 'teacher' ? teacherNavItems : parentNavItems;
   const accent = accentByRole[role];
@@ -67,6 +77,15 @@ export function Header({ role }: HeaderProps) {
   const handleLogout = () => {
     logout();
     navigate('/');
+  };
+
+  const handleNavClick = (item: NavItem) => {
+    if (item.disabled) {
+      toast.info('AI 对话功能暂未开放，敬请期待');
+      return;
+    }
+    navigate(item.path);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -86,18 +105,27 @@ export function Header({ role }: HeaderProps) {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
+              const isDisabled = !!item.disabled;
               return (
                 <button
                   key={item.path}
-                  onClick={() => navigate(item.path)}
-                  className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-fast ${
-                    isActive
-                      ? `${accent.active} text-white shadow-md`
-                      : `text-gray-600 ${accent.hover}`
+                  onClick={() => handleNavClick(item)}
+                  className={`relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-fast ${
+                    isDisabled
+                      ? 'text-gray-400 opacity-60 cursor-not-allowed'
+                      : isActive
+                        ? `${accent.active} text-white shadow-md`
+                        : `text-gray-600 ${accent.hover}`
                   }`}
+                  aria-disabled={isDisabled}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium text-sm">{item.label}</span>
+                  {isDisabled && (
+                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-200 text-gray-500 leading-none">
+                      即将上线
+                    </span>
+                  )}
                 </button>
               );
             })}
@@ -131,27 +159,35 @@ export function Header({ role }: HeaderProps) {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
+              const isDisabled = !!item.disabled;
               return (
                 <button
                   key={item.path}
-                  onClick={() => {
-                    navigate(item.path);
-                    setMobileMenuOpen(false);
-                  }}
+                  onClick={() => handleNavClick(item)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-fast ${
-                    isActive
-                      ? `${accent.active} text-white`
-                      : `text-gray-600 ${accent.hover}`
+                    isDisabled
+                      ? 'text-gray-400 opacity-60 cursor-not-allowed'
+                      : isActive
+                        ? `${accent.active} text-white`
+                        : `text-gray-600 ${accent.hover}`
                   }`}
+                  aria-disabled={isDisabled}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
+                  {isDisabled && (
+                    <span className="ml-auto px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-200 text-gray-500 leading-none">
+                      即将上线
+                    </span>
+                  )}
                 </button>
               );
             })}
           </div>
         )}
       </div>
+
+      <ToastContainer toasts={toast.toasts} />
     </header>
   );
 }

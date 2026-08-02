@@ -4,8 +4,14 @@ import { useChatStore } from '../../store/chatStore';
 import { Header } from '../../components/common/Header';
 import { Send, MessageCircle, Sparkles, AlertTriangle } from 'lucide-react';
 import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton';
+import { AI_CHAT_ENABLED } from '../../config/features';
+import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
 
 export default function StudentChat() {
+  if (!AI_CHAT_ENABLED) {
+    return <ChatDisabledPlaceholder role="student" />;
+  }
+
   const user = useAuthStore((state) => state.user);
   const {
     messages,

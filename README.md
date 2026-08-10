@@ -462,6 +462,7 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 - **v1.5** (2026-07-31): HOTL代码审核修复、三端紧急帮助按钮、危机响应流程完善、HTTP安全增强、测试sleep预埋
 - **v1.6** (2026-08-07): 移动端完整测试、风险检测关键词扩充、持续时间规则增强、语义分析器阈值优化
 - **v1.7-v1.9** (2026-08-09): 风险检测精准度优化至100%、积极词降级规则、社交孤立降级规则、AES密钥默认值修复、API全量回归测试通过
+- **v1.9.0** (2026-08-10): PR #7 合并至 main、版本 tag v1.9.0 发布、CodeQL 6/6 pass、临时分支清理
 
 ## v1.5 更新详情（2026-07-31）
 
@@ -772,6 +773,18 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 | `.trae/documents/api_test_results.json` | 新增 | 24 项 API 回归测试结果 |
 | `.trae/documents/case_validation_results.json` | 新增 | 25 条风险检测用例验证结果 |
 | `README.md` | 修改 | 新增 v1.7-v1.9 版本章节 |
+
+### 发布记录（2026-08-10）
+
+- **PR #7**：[https://github.com/user-unknowed/-StarIsle-/pull/7](https://github.com/user-unknowed/-StarIsle-/pull/7)
+- **合并方式**：Merge commit（保留完整提交历史）
+- **合并提交 SHA**：`2d54849eda0fbbba04f36bcf49f3e5287057f3b5`
+- **合并时间**：2026-08-10 05:25:22 UTC
+- **合并人**：user-unknowed
+- **CI 状态**：CodeQL 6/6 pass（actions/go/java-kotlin/javascript-typescript/python/CodeQL 全部 SUCCESS）
+- **临时分支清理**：`codex/v1.9-risk-detection-optimization` 已删除
+- **版本 tag**：`v1.9.0`，tag object sha=`16d76bf775ba619e0966a6082e0af68e0effd5e5`
+- **Tag URL**：[https://github.com/user-unknowed/-StarIsle-/releases/tag/v1.9.0](https://github.com/user-unknowed/-StarIsle-/releases/tag/v1.9.0)
 
 ## 贡献指南
 

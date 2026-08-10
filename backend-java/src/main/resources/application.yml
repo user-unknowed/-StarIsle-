@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: ${SERVER_PORT:8081}
 
 spring:
   application:
@@ -63,8 +63,8 @@ starisle:
     url: ${AI_SERVICE_URL:http://localhost:8000}
 
   encryption:
-    key: ${ENCRYPTION_KEY:starisle-encryption-key-2026-very-secure}
-    master-key: ${ENCRYPTION_MASTER_KEY:starisle-master-key-2026-must-be-32-bytes}
+    key: ${ENCRYPTION_KEY:starisle2026securekey32byteslong}
+    master-key: ${ENCRYPTION_MASTER_KEY:starmaster2026securekey32byteslo}
 
   rate-limit:
     rps: ${RATE_LIMIT_RPS:100}

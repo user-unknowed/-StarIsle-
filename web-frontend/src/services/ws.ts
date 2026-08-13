@@ -5,7 +5,25 @@
 
 import { getToken } from './http';
 
-const WS_BASE_URL = import.meta.env.VITE_WS_URL || 'ws://localhost:8080/ws';
+/**
+ * 构造 WebSocket 基础 URL
+ * - 若 VITE_WS_URL 是绝对 ws/wss URL，直接使用
+ * - 若是相对路径（如 /ws），基于 window.location 动态构造，适配任意访问地址
+ * - 默认回退到 ws://localhost:8080/ws
+ */
+function buildWsBaseUrl(): string {
+  const configured = import.meta.env.VITE_WS_URL;
+  if (configured && /^wss?:\/\//.test(configured)) {
+    return configured;
+  }
+  if (typeof window !== 'undefined' && configured && configured.startsWith('/')) {
+    const proto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+    return `${proto}//${window.location.host}${configured}`;
+  }
+  return 'ws://localhost:8080/ws';
+}
+
+const WS_BASE_URL = buildWsBaseUrl();
 
 type MessageHandler = (data: unknown) => void;
 type StatusHandler = (status: 'connecting' | 'connected' | 'disconnected' | 'error') => void;

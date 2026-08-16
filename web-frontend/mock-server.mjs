@@ -817,7 +817,8 @@ async function handleRequest(req, res) {
       sendJson(res, result, 200, 'success');
       return;
     } catch (err) {
-      sendJson(res, { error: String(err && err.message || err) }, 200, 'success');
+      console.error('[MOCK] Route handler error:', err && err.stack ? err.stack : err);
+      sendJson(res, { error: 'Internal server error' }, 200, 'success');
       return;
     }
   }

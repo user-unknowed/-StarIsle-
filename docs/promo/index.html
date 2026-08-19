@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>星屿 StarIsle · 你的情绪星球，永远亮着灯</title>
+<meta name="description" content="星屿 StarIsle — 为 12-18 岁初高中生打造的青少年心理健康 AI 陪伴应用。三端联动（学生 / 教师 / 家长）、CBT 框架 AI 对话、危机响应、端到端加密。已通过 24/24 API 测试与 25/25 风险检测用例验证。">
+<meta name="theme-color" content="#6B7BFF">
+<style>
+:root {
+  --c-primary: #6B7BFF;
+  --c-primary-deep: #4F46E5;
+  --c-secondary: #A78BFA;
+  --c-accent: #F4A261;
+  --c-accent-warm: #E76F51;
+  --c-green: #10B981;
+  --c-yellow: #FACC15;
+  --c-orange: #FB923C;
+  --c-red: #EF4444;
+  --c-bg-base: #FAFAF9;
+  --c-bg-warm: #F5F3FF;
+  --c-bg-deep: #1E1B4B;
+  --c-bg-deeper: #0F0C2D;
+  --c-surface: #FFFFFF;
+  --c-surface-glass: rgba(255, 255, 255, 0.72);
+  --c-text: #1F2937;
+  --c-text-muted: #6B7280;
+  --c-text-soft: #9CA3AF;
+  --c-text-inverse: #F9FAFB;
+  --c-text-inverse-muted: rgba(249, 250, 251, 0.72);
+  --c-border: rgba(107, 123, 255, 0.14);
+  --c-border-strong: rgba(107, 123, 255, 0.28);
+  --c-border-dark: rgba(255, 255, 255, 0.08);
+  --shadow-sm: 0 2px 8px rgba(31, 41, 55, 0.04);
+  --shadow-md: 0 8px 30px rgba(107, 123, 255, 0.08);
+  --shadow-lg: 0 20px 60px rgba(107, 123, 255, 0.14);
+  --shadow-glow: 0 0 40px rgba(167, 139, 250, 0.32);
+  --shadow-warm-glow: 0 0 60px rgba(244, 162, 97, 0.32);
+  --r-sm: 8px;
+  --r-md: 14px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --font-display: 'Cormorant Garamond', 'Source Han Serif SC', 'Noto Serif SC', 'Songti SC', 'STSong', Georgia, 'Times New Roman', serif;
+  --font-body: 'Avenir Next', 'Avenir', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', Corbel, sans-serif;
+  --font-mono: 'JetBrains Mono', 'SF Mono', 'Cascadia Code', Consolas, monospace;
+  --max-width: 1240px;
+  --nav-h: 72px;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; scroll-padding-top: var(--nav-h); }
+body {
+  font-family: var(--font-body); font-size: 16px; line-height: 1.65;
+  color: var(--c-text); background: var(--c-bg-base); overflow-x: hidden;
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+}
+body::before {
+  content: ''; position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 15% 10%, rgba(167, 139, 250, 0.18), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 20%, rgba(244, 162, 97, 0.10), transparent 60%),
+    radial-gradient(ellipse 70% 60% at 50% 90%, rgba(107, 123, 255, 0.08), transparent 60%);
+  pointer-events: none; z-index: -2;
+}
+body::after {
+  content: ''; position: fixed; inset: 0;
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 0.5 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/></svg>");
+  opacity: 0.04; pointer-events: none; z-index: -1; mix-blend-mode: multiply;
+}
+.starfield {
+  position: fixed; inset: 0; pointer-events: none; z-index: -1; opacity: 0.5;
+  background-image:
+    radial-gradient(1px 1px at 12% 18%, rgba(255,255,255,0.9), transparent 50%),
+    radial-gradient(1px 1px at 28% 42%, rgba(255,255,255,0.6), transparent 50%),
+    radial-gradient(1.5px 1.5px at 47% 12%, rgba(255,255,255,0.7), transparent 50%),
+    radial-gradient(1px 1px at 62% 28%, rgba(255,255,255,0.5), transparent 50%),
+    radial-gradient(1px 1px at 78% 8%, rgba(255,255,255,0.8), transparent 50%),
+    radial-gradient(1.5px 1.5px at 88% 38%, rgba(255,255,255,0.6), transparent 50%),
+    radial-gradient(1px 1px at 35% 62%, rgba(255,255,255,0.4), transparent 50%),
+    radial-gradient(1px 1px at 70% 70%, rgba(255,255,255,0.5), transparent 50%);
+  background-size: 100% 100%;
+  animation: twinkle 8s ease-in-out infinite alternate;
+}
+@keyframes twinkle { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
+a { color: inherit; text-decoration: none; }
+h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height: 1.15; letter-spacing: -0.01em; }
+.display-xl { font-size: clamp(48px, 7vw, 88px); font-weight: 500; line-height: 1.05; letter-spacing: -0.02em; }
+.display-lg { font-size: clamp(36px, 4.5vw, 56px); }
+.display-md { font-size: clamp(28px, 3.2vw, 40px); }
+.eyebrow {
+  font-family: var(--font-body); font-size: 12px; font-weight: 600; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--c-primary-deep);
+  display: inline-flex; align-items: center; gap: 10px;
+}
+.eyebrow::before { content: ''; width: 24px; height: 1px; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); }
+.lead { font-size: clamp(17px, 1.4vw, 20px); line-height: 1.7; color: var(--c-text-muted); max-width: 64ch; }
+.mono { font-family: var(--font-mono); }
+.container { max-width: var(--max-width); margin: 0 auto; padding: 0 32px; }
+.section { padding: clamp(72px, 10vw, 128px) 0; position: relative; }
+.section--dark {
+  background:
+    radial-gradient(ellipse 60% 80% at 30% 20%, rgba(167, 139, 250, 0.18), transparent 60%),
+    radial-gradient(ellipse 50% 60% at 80% 80%, rgba(244, 162, 97, 0.08), transparent 60%),
+    linear-gradient(180deg, var(--c-bg-deep) 0%, var(--c-bg-deeper) 100%);
+  color: var(--c-text-inverse);
+}
+.section--dark .eyebrow { color: var(--c-secondary); }
+.section--dark .lead { color: var(--c-text-inverse-muted); }
+.section-head { display: flex; flex-direction: column; gap: 16px; margin-bottom: 56px; max-width: 760px; }
+.section-head--center { margin-inline: auto; align-items: center; text-align: center; }
+.nav {
+  position: fixed; top: 0; left: 0; right: 0; height: var(--nav-h); z-index: 100;
+  display: flex; align-items: center;
+  transition: backdrop-filter 0.3s, background 0.3s, border-color 0.3s;
+  border-bottom: 1px solid transparent;
+}
+.nav--scrolled {
+  background: rgba(250, 250, 249, 0.78);
+  backdrop-filter: saturate(180%) blur(20px);
+  -webkit-backdrop-filter: saturate(180%) blur(20px);
+  border-bottom-color: var(--c-border);
+}
+.nav-inner { width: 100%; max-width: var(--max-width); margin: 0 auto; padding: 0 32px; display: flex; align-items: center; justify-content: space-between; gap: 24px; }
+.brand { display: flex; align-items: center; gap: 12px; font-family: var(--font-display); font-size: 22px; font-weight: 600; letter-spacing: -0.01em; }
+.brand-mark { width: 32px; height: 32px; flex-shrink: 0; }
+.brand-name { display: flex; flex-direction: column; line-height: 1.1; }
+.brand-name small { font-family: var(--font-body); font-size: 10px; font-weight: 500; letter-spacing: 0.22em; text-transform: uppercase; color: var(--c-text-muted); }
+.nav-links { display: flex; align-items: center; gap: 4px; }
+.nav-links a { padding: 8px 14px; font-size: 14px; font-weight: 500; color: var(--c-text-muted); border-radius: var(--r-pill); transition: color 0.2s, background 0.2s; }
+.nav-links a:hover { color: var(--c-primary-deep); background: rgba(107, 123, 255, 0.08); }
+.nav-cta { padding: 10px 20px; background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%); color: white !important; font-weight: 600 !important; box-shadow: 0 4px 14px rgba(107, 123, 255, 0.32); }
+.nav-cta:hover { background: linear-gradient(135deg, var(--c-primary-deep) 0%, var(--c-primary) 100%) !important; }
+.nav-cta--accent { background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-warm) 100%); box-shadow: 0 4px 14px rgba(244, 162, 97, 0.40); }
+.nav-cta--accent:hover { background: linear-gradient(135deg, var(--c-accent-warm) 0%, var(--c-accent) 100%) !important; }
+.nav-burger { display: none; width: 40px; height: 40px; border: 1px solid var(--c-border); background: var(--c-surface); border-radius: var(--r-sm); cursor: pointer; align-items: center; justify-content: center; }
+.nav-burger svg { width: 18px; height: 18px; }
+.btn { display: inline-flex; align-items: center; gap: 10px; padding: 14px 26px; font-family: var(--font-body); font-size: 15px; font-weight: 600; border-radius: var(--r-pill); border: none; cursor: pointer; transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s; text-decoration: none; }
+.btn svg { width: 16px; height: 16px; }
+.btn--primary { background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%); color: white; box-shadow: 0 8px 24px rgba(107, 123, 255, 0.32); }
+.btn--primary:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(107, 123, 255, 0.42); }
+.btn--accent { background: linear-gradient(135deg, var(--c-accent) 0%, var(--c-accent-warm) 100%); color: white; box-shadow: 0 8px 24px rgba(244, 162, 97, 0.40); }
+.btn--accent:hover { transform: translateY(-2px); box-shadow: 0 12px 32px rgba(244, 162, 97, 0.52); }
+.btn--ghost { background: var(--c-surface-glass); color: var(--c-text); border: 1px solid var(--c-border-strong); backdrop-filter: blur(10px); }
+.btn--ghost:hover { background: var(--c-surface); transform: translateY(-2px); border-color: var(--c-primary); }
+.section--dark .btn--ghost { background: rgba(255, 255, 255, 0.06); color: var(--c-text-inverse); border-color: var(--c-border-dark); }
+.section--dark .btn--ghost:hover { background: rgba(255, 255, 255, 0.12); border-color: var(--c-secondary); }
+.hero { position: relative; min-height: 100vh; display: flex; align-items: center; padding: calc(var(--nav-h) + 64px) 0 80px; overflow: hidden; }
+.hero-bg-orb {
+  position: absolute; width: clamp(380px, 50vw, 620px); height: clamp(380px, 50vw, 620px);
+  right: -8%; top: 12%; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #C7D2FE 0%, #818CF8 25%, #6B7BFF 45%, #4F46E5 65%, #312E81 85%, #1E1B4B 100%);
+  box-shadow: inset -30px -30px 80px rgba(15, 12, 45, 0.6), inset 20px 20px 60px rgba(199, 210, 254, 0.4), 0 0 120px rgba(107, 123, 255, 0.4), 0 0 240px rgba(167, 139, 250, 0.24);
+  filter: blur(2px); opacity: 0.92;
+  animation: float-orb 12s ease-in-out infinite alternate; pointer-events: none;
+}
+.hero-bg-orb::after { content: ''; position: absolute; inset: -8%; border-radius: 50%; background: radial-gradient(circle, transparent 48%, rgba(244, 162, 97, 0.16) 52%, transparent 58%); filter: blur(8px); }
+@keyframes float-orb { 0% { transform: translate(0, 0) rotate(0deg); } 100% { transform: translate(-20px, 30px) rotate(8deg); } }
+.hero-inner { position: relative; z-index: 1; display: grid; grid-template-columns: 1.4fr 1fr; gap: 64px; align-items: center; width: 100%; }
+.hero-content { max-width: 640px; }
+.hero-eyebrow { margin-bottom: 24px; }
+.hero h1 { margin-bottom: 24px; background: linear-gradient(135deg, #1E1B4B 0%, #4F46E5 50%, #6B7BFF 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hero h1 em { font-style: italic; background: linear-gradient(135deg, #E76F51 0%, #F4A261 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-slogan { font-family: var(--font-display); font-style: italic; font-size: clamp(20px, 2.2vw, 26px); color: var(--c-primary-deep); margin-bottom: 20px; display: flex; align-items: center; gap: 14px; }
+.hero-slogan::before, .hero-slogan::after { content: ''; height: 1px; flex: 0 0 28px; background: linear-gradient(90deg, transparent, var(--c-secondary), transparent); }
+.hero-lead { margin-bottom: 36px; }
+.hero-cta-row { display: flex; flex-wrap: wrap; gap: 14px; margin-bottom: 48px; }
+.hero-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; padding-top: 36px; border-top: 1px solid var(--c-border); }
+.metric-tile { display: flex; flex-direction: column; gap: 4px; }
+.metric-tile .v { font-family: var(--font-display); font-size: clamp(28px, 3vw, 40px); font-weight: 600; background: linear-gradient(135deg, var(--c-primary) 0%, var(--c-secondary) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; line-height: 1; }
+.metric-tile .v small { font-size: 0.55em; font-weight: 500; color: var(--c-text-muted); -webkit-text-fill-color: var(--c-text-muted); }
+.metric-tile .l { font-size: 12px; color: var(--c-text-muted); letter-spacing: 0.04em; }
+.hero-visual { position: relative; height: clamp(360px, 42vw, 520px); display: flex; align-items: center; justify-content: center; }
+.hero-visual svg { width: 100%; height: 100%; }
+.card { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); padding: 28px; box-shadow: var(--shadow-sm); transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s; position: relative; overflow: hidden; }
+.card:hover { transform: translateY(-4px); box-shadow: var(--shadow-md); border-color: var(--c-border-strong); }
+.card-icon { width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); background: linear-gradient(135deg, rgba(107, 123, 255, 0.12), rgba(167, 139, 250, 0.12)); color: var(--c-primary-deep); margin-bottom: 18px; }
+.card-icon svg { width: 22px; height: 22px; }
+.card h3 { font-size: 22px; margin-bottom: 10px; }
+.card p { color: var(--c-text-muted); font-size: 15px; line-height: 1.65; }
+.card-tag { position: absolute; top: 18px; right: 18px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; color: var(--c-text-soft); }
+.product-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.user-card { position: relative; padding: 32px 28px 28px; }
+.user-card::before { content: ''; position: absolute; top: 0; left: 28px; right: 28px; height: 3px; background: linear-gradient(90deg, var(--c-primary), var(--c-accent)); border-radius: 0 0 3px 3px; }
+.user-card .age { font-family: var(--font-mono); font-size: 11px; color: var(--c-accent-warm); letter-spacing: 0.1em; margin-bottom: 8px; }
+.user-card ul { list-style: none; margin-top: 16px; display: flex; flex-direction: column; gap: 8px; }
+.user-card li { font-size: 14px; color: var(--c-text-muted); padding-left: 18px; position: relative; }
+.user-card li::before { content: ''; position: absolute; left: 0; top: 9px; width: 6px; height: 6px; border-radius: 50%; background: var(--c-primary); opacity: 0.6; }
+.ends-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+.end-card { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+.end-card-head { padding: 24px 28px; background: linear-gradient(135deg, rgba(107, 123, 255, 0.08), rgba(167, 139, 250, 0.04)); border-bottom: 1px solid var(--c-border); display: flex; align-items: center; gap: 14px; }
+.end-card-head .end-icon { width: 40px; height: 40px; border-radius: var(--r-sm); background: linear-gradient(135deg, var(--c-primary), var(--c-secondary)); color: white; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.end-card-head .end-icon svg { width: 20px; height: 20px; }
+.end-card-head h3 { font-size: 19px; margin: 0; }
+.end-card-head small { display: block; font-size: 11px; color: var(--c-text-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+.end-card-body { padding: 20px 28px 28px; flex: 1; }
+.end-card-body ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+.end-card-body li { font-size: 14px; color: var(--c-text); display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; }
+.end-card-body li svg { width: 16px; height: 16px; color: var(--c-green); flex-shrink: 0; margin-top: 3px; }
+.end-card-body li.is-new { align-items: center; }
+.end-card-body li.is-new .badge { font-size: 9px; font-family: var(--font-mono); letter-spacing: 0.1em; padding: 2px 6px; border-radius: var(--r-sm); background: rgba(244, 162, 97, 0.16); color: var(--c-accent-warm); margin-left: 4px; }
+.arch-diagram { background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-xl); padding: 40px; margin-top: 40px; box-shadow: var(--shadow-md); position: relative; }
+.arch-layer { display: grid; gap: 12px; margin-bottom: 16px; }
+.arch-layer:last-child { margin-bottom: 0; }
+.arch-layer-label { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--c-text-soft); margin-bottom: 4px; }
+.arch-layer--client { grid-template-columns: repeat(3, 1fr); }
+.arch-layer--gateway { grid-template-columns: 1fr; }
+.arch-layer--service { grid-template-columns: 1fr 1fr; }
+.arch-layer--data { grid-template-columns: repeat(4, 1fr); }
+.arch-node { background: linear-gradient(135deg, rgba(107, 123, 255, 0.06), rgba(167, 139, 250, 0.04)); border: 1px solid var(--c-border); border-radius: var(--r-md); padding: 14px 18px; text-align: center; font-size: 13px; transition: transform 0.2s, box-shadow 0.2s; }
+.arch-node:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); border-color: var(--c-primary); }
+.arch-node strong { display: block; color: var(--c-text); font-weight: 600; margin-bottom: 2px; }
+.arch-node span { font-size: 11px; color: var(--c-text-muted); font-family: var(--font-mono); }
+.arch-node--accent { background: linear-gradient(135deg, rgba(244, 162, 97, 0.10), rgba(231, 111, 81, 0.06)); border-color: rgba(244, 162, 97, 0.32); }
+.arch-node--accent strong { color: var(--c-accent-warm); }
+.arch-arrow { text-align: center; color: var(--c-text-soft); font-size: 18px; margin: 4px 0; }
+.tech-stack { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 32px; }
+.tech-badge { display: inline-flex; align-items: center; gap: 6px; padding: 6px 12px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-pill); font-size: 12px; color: var(--c-text); font-weight: 500; transition: all 0.2s; }
+.tech-badge:hover { border-color: var(--c-primary); background: rgba(107, 123, 255, 0.06); transform: translateY(-1px); }
+.tech-badge .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--c-primary); }
+.tech-badge--warm .dot { background: var(--c-accent); }
+.tech-badge--data .dot { background: var(--c-green); }
+.safety-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 40px; }
+.safety-card { padding: 22px 22px 20px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-md); display: flex; gap: 14px; align-items: flex-start; transition: all 0.2s; }
+.safety-card:hover { border-color: var(--c-primary); box-shadow: var(--shadow-sm); transform: translateY(-2px); }
+.safety-card .s-icon { width: 36px; height: 36px; flex-shrink: 0; border-radius: var(--r-sm); background: linear-gradient(135deg, rgba(16, 185, 129, 0.14), rgba(16, 185, 129, 0.06)); color: var(--c-green); display: flex; align-items: center; justify-content: center; }
+.safety-card .s-icon svg { width: 18px; height: 18px; }
+.safety-card .s-text { flex: 1; }
+.safety-card h4 { font-family: var(--font-body); font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+.safety-card p { font-size: 12px; color: var(--c-text-muted); line-height: 1.55; }
+.testing-grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 64px; }
+.testing-tile { padding: 28px 24px; background: rgba(255, 255, 255, 0.04); border: 1px solid var(--c-border-dark); border-radius: var(--r-lg); text-align: left; position: relative; overflow: hidden; }
+.testing-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, var(--c-primary), var(--c-secondary), var(--c-accent)); }
+.testing-tile .v { font-family: var(--font-display); font-size: clamp(40px, 4vw, 56px); font-weight: 600; line-height: 1; background: linear-gradient(135deg, #C7D2FE 0%, #A78BFA 50%, #F4A261 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin-bottom: 8px; display: flex; align-items: baseline; gap: 4px; }
+.testing-tile .v small { font-size: 0.4em; font-weight: 500; color: var(--c-text-inverse-muted); -webkit-text-fill-color: var(--c-text-inverse-muted); }
+.testing-tile .l { font-size: 13px; color: var(--c-text-inverse-muted); font-weight: 500; letter-spacing: 0.02em; }
+.testing-tile .sub { font-family: var(--font-mono); font-size: 10px; color: rgba(249, 250, 251, 0.5); letter-spacing: 0.1em; margin-top: 6px; }
+.risk-chart { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--c-border-dark); border-radius: var(--r-lg); padding: 32px; margin-bottom: 48px; }
+.risk-chart-head { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
+.risk-chart-head h4 { font-family: var(--font-display); font-size: 22px; color: var(--c-text-inverse); }
+.risk-chart-head .note { font-family: var(--font-mono); font-size: 11px; color: rgba(16, 185, 129, 0.9); letter-spacing: 0.06em; }
+.risk-bars { display: flex; flex-direction: column; gap: 14px; }
+.risk-bar { display: grid; grid-template-columns: 80px 1fr 40px; gap: 16px; align-items: center; }
+.risk-bar .label { font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; }
+.risk-bar .label .dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 8px; vertical-align: middle; }
+.risk-bar.green .label .dot { background: var(--c-green); }
+.risk-bar.yellow .label .dot { background: var(--c-yellow); }
+.risk-bar.orange .label .dot { background: var(--c-orange); }
+.risk-bar.red .label .dot { background: var(--c-red); }
+.risk-bar .track { height: 14px; background: rgba(255, 255, 255, 0.06); border-radius: var(--r-pill); overflow: hidden; position: relative; }
+.risk-bar .fill { height: 100%; width: 0; border-radius: var(--r-pill); transition: width 1.4s cubic-bezier(0.16, 1, 0.3, 1); }
+.risk-bar.green .fill { background: linear-gradient(90deg, var(--c-green), #34D399); box-shadow: 0 0 16px rgba(16, 185, 129, 0.5); }
+.risk-bar.yellow .fill { background: linear-gradient(90deg, var(--c-yellow), #FDE047); box-shadow: 0 0 16px rgba(250, 204, 21, 0.5); }
+.risk-bar.orange .fill { background: linear-gradient(90deg, var(--c-orange), #FDBA74); box-shadow: 0 0 16px rgba(251, 146, 60, 0.5); }
+.risk-bar.red .fill { background: linear-gradient(90deg, var(--c-red), #FCA5A5); box-shadow: 0 0 16px rgba(239, 68, 68, 0.5); }
+.risk-bar .count { font-family: var(--font-display); font-size: 22px; font-weight: 600; color: var(--c-text-inverse); text-align: right; }
+.case-section { margin-bottom: 48px; }
+.case-section-head { display: flex; align-items: baseline; gap: 16px; margin-bottom: 24px; }
+.case-section-head h4 { font-family: var(--font-display); font-size: 22px; color: var(--c-text-inverse); }
+.case-section-head .hint { font-size: 13px; color: var(--c-text-inverse-muted); }
+.case-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+.case-card { padding: 22px 24px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--c-border-dark); border-left: 3px solid var(--c-text-soft); border-radius: var(--r-md); display: flex; flex-direction: column; gap: 12px; transition: all 0.2s; }
+.case-card:hover { background: rgba(255, 255, 255, 0.06); transform: translateY(-2px); }
+.case-card.red { border-left-color: var(--c-red); }
+.case-card.orange { border-left-color: var(--c-orange); }
+.case-card.yellow { border-left-color: var(--c-yellow); }
+.case-card.green { border-left-color: var(--c-green); }
+.case-card-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.case-card .id { font-family: var(--font-mono); font-size: 11px; color: var(--c-text-inverse-muted); letter-spacing: 0.08em; }
+.case-card .type { font-family: var(--font-body); font-size: 14px; font-weight: 600; color: var(--c-text-inverse); }
+.case-card .level { font-family: var(--font-mono); font-size: 10px; font-weight: 700; letter-spacing: 0.12em; padding: 3px 10px; border-radius: var(--r-pill); text-transform: uppercase; }
+.case-card.red .level { background: rgba(239, 68, 68, 0.16); color: #FCA5A5; }
+.case-card.orange .level { background: rgba(251, 146, 60, 0.16); color: #FDBA74; }
+.case-card.yellow .level { background: rgba(250, 204, 21, 0.16); color: #FDE047; }
+.case-card.green .level { background: rgba(16, 185, 129, 0.16); color: #6EE7B7; }
+.case-card .resp { font-size: 13px; color: var(--c-text-inverse-muted); line-height: 1.6; }
+.case-card .resp strong { color: var(--c-text-inverse); font-weight: 600; }
+.optimize-timeline { background: rgba(255, 255, 255, 0.03); border: 1px solid var(--c-border-dark); border-radius: var(--r-lg); padding: 32px; margin-bottom: 32px; }
+.optimize-timeline h4 { font-family: var(--font-display); font-size: 22px; color: var(--c-text-inverse); margin-bottom: 24px; }
+.optimize-steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; position: relative; }
+.optimize-steps::before { content: ''; position: absolute; top: 12px; left: 8%; right: 8%; height: 1px; background: linear-gradient(90deg, var(--c-red), var(--c-orange), var(--c-yellow), var(--c-green)); }
+.optimize-step { text-align: center; position: relative; padding: 0 8px; }
+.optimize-step .pt { width: 24px; height: 24px; border-radius: 50%; background: var(--c-bg-deeper); border: 2px solid; margin: 0 auto 16px; position: relative; z-index: 1; }
+.optimize-step.s1 .pt { border-color: var(--c-red); }
+.optimize-step.s2 .pt { border-color: var(--c-orange); }
+.optimize-step.s3 .pt { border-color: var(--c-yellow); }
+.optimize-step.s4 .pt { border-color: var(--c-green); }
+.optimize-step .ver { font-family: var(--font-mono); font-size: 12px; color: var(--c-secondary); letter-spacing: 0.06em; margin-bottom: 4px; }
+.optimize-step .acc { font-family: var(--font-display); font-size: 24px; font-weight: 600; color: var(--c-text-inverse); line-height: 1; margin-bottom: 6px; }
+.optimize-step .desc { font-size: 12px; color: var(--c-text-inverse-muted); line-height: 1.5; }
+.testing-footnote { font-size: 12px; color: rgba(249, 250, 251, 0.5); font-style: italic; text-align: center; padding: 16px 24px; border-top: 1px solid var(--c-border-dark); margin-top: 24px; }
+.version-timeline { margin-top: 48px; position: relative; padding-left: 32px; }
+.version-timeline::before { content: ''; position: absolute; left: 7px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(180deg, var(--c-primary), var(--c-secondary), var(--c-accent)); border-radius: 1px; }
+.version-item { position: relative; margin-bottom: 28px; padding-left: 28px; }
+.version-item::before { content: ''; position: absolute; left: -32px; top: 8px; width: 16px; height: 16px; border-radius: 50%; background: var(--c-surface); border: 3px solid var(--c-primary); box-shadow: 0 0 0 4px rgba(107, 123, 255, 0.16); }
+.version-item.major::before { border-color: var(--c-accent); box-shadow: 0 0 0 4px rgba(244, 162, 97, 0.16); }
+.version-item .ver-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+.version-item .ver-num { font-family: var(--font-mono); font-size: 13px; font-weight: 700; color: var(--c-primary-deep); letter-spacing: 0.04em; }
+.version-item.major .ver-num { color: var(--c-accent-warm); }
+.version-item .ver-date { font-size: 12px; color: var(--c-text-soft); }
+.version-item h4 { font-family: var(--font-body); font-size: 16px; font-weight: 600; margin: 0; }
+.version-item p { font-size: 13px; color: var(--c-text-muted); line-height: 1.6; margin-top: 4px; }
+.contact { text-align: center; padding: clamp(80px, 12vw, 140px) 0 100px; position: relative; overflow: hidden; }
+.contact::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(167, 139, 250, 0.18), transparent 70%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(244, 162, 97, 0.10), transparent 70%); z-index: -1; }
+.contact-slogan { font-family: var(--font-display); font-style: italic; font-size: clamp(28px, 4vw, 44px); font-weight: 500; background: linear-gradient(135deg, var(--c-primary-deep) 0%, var(--c-secondary) 50%, var(--c-accent) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 24px 0 32px; line-height: 1.3; }
+.contact-cta { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 56px; }
+.contact-meta { display: flex; justify-content: center; gap: 40px; flex-wrap: wrap; font-size: 13px; color: var(--c-text-muted); margin-bottom: 32px; }
+.contact-meta a { display: inline-flex; align-items: center; gap: 8px; color: var(--c-primary-deep); font-weight: 500; transition: color 0.2s; }
+.contact-meta a:hover { color: var(--c-accent-warm); }
+.contact-meta svg { width: 14px; height: 14px; }
+.contact-copy { font-size: 12px; color: var(--c-text-soft); padding-top: 24px; border-top: 1px solid var(--c-border); max-width: 480px; margin: 0 auto; }
+.back-to-top { position: fixed; bottom: 28px; right: 28px; width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, var(--c-primary), var(--c-secondary)); color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 8px 24px rgba(107, 123, 255, 0.4); opacity: 0; visibility: hidden; transform: translateY(20px); transition: opacity 0.3s, transform 0.3s, visibility 0.3s; z-index: 90; }
+.back-to-top.show { opacity: 1; visibility: visible; transform: translateY(0); }
+.back-to-top:hover { transform: translateY(-3px); box-shadow: 0 12px 32px rgba(107, 123, 255, 0.5); }
+.back-to-top svg { width: 18px; height: 18px; }
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
+.reveal.is-in { opacity: 1; transform: translateY(0); }
+.reveal[data-delay="1"] { transition-delay: 0.08s; }
+.reveal[data-delay="2"] { transition-delay: 0.16s; }
+.reveal[data-delay="3"] { transition-delay: 0.24s; }
+.reveal[data-delay="4"] { transition-delay: 0.32s; }
+@media (max-width: 1024px) {
+  .hero-inner { grid-template-columns: 1fr; gap: 48px; }
+  .hero-visual { display: none; }
+  .testing-grid-4 { grid-template-columns: repeat(2, 1fr); }
+  .case-grid { grid-template-columns: 1fr; }
+  .optimize-steps { grid-template-columns: repeat(2, 1fr); gap: 24px 0; }
+  .optimize-steps::before { display: none; }
+  .safety-grid { grid-template-columns: repeat(2, 1fr); }
+  .arch-layer--data { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 768px) {
+  .container { padding: 0 20px; }
+  .nav-inner { padding: 0 20px; }
+  .nav-links { display: none; }
+  .nav-burger { display: flex; }
+  .hero { padding-top: calc(var(--nav-h) + 40px); }
+  .hero-metrics { grid-template-columns: 1fr; gap: 12px; }
+  .product-grid, .ends-grid { grid-template-columns: 1fr; }
+  .arch-diagram { padding: 24px 20px; }
+  .arch-layer--client, .arch-layer--service, .arch-layer--data { grid-template-columns: 1fr; }
+  .testing-grid-4 { grid-template-columns: 1fr; }
+  .risk-chart, .optimize-timeline { padding: 24px 20px; }
+  .risk-bar { grid-template-columns: 70px 1fr 36px; gap: 10px; }
+  .safety-grid { grid-template-columns: 1fr; }
+  .optimize-steps { grid-template-columns: 1fr; gap: 20px; }
+  .section { padding: 64px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+  .reveal { opacity: 1; transform: none; }
+  .starfield { animation: none; }
+  .hero-bg-orb { animation: none; }
+}
+</style>
+</head>
+<body>
+<div class="starfield" aria-hidden="true"></div>
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a href="#hero" class="brand" aria-label="星屿 StarIsle 首页">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#6B7BFF"/>
+            <stop offset="100%" stop-color="#A78BFA"/>
+          </linearGradient>
+        </defs>
+        <circle cx="16" cy="16" r="14" fill="url(#bg)" opacity="0.18"/>
+        <path d="M16 4 L18.4 13.6 L28 16 L18.4 18.4 L16 28 L13.6 18.4 L4 16 L13.6 13.6 Z" fill="url(#bg)"/>
+        <circle cx="24" cy="9" r="1.4" fill="#F4A261"/>
+      </svg>
+      <span class="brand-name">星屿 StarIsle<small>Emotion Planet</small></span>
+    </a>
+    <div class="nav-links">
+      <a href="#product">产品定位</a>
+      <a href="#three-ends">三端功能</a>
+      <a href="#architecture">技术架构</a>
+      <a href="#security">安全合规</a>
+      <a href="#testing">测试结果</a>
+      <a href="#versions">版本演进</a>
+      <a href="#testing" class="nav-cta nav-cta--accent">试用体验</a>
+      <a href="https://github.com/user-unknowed/-StarIsle-" class="nav-cta" target="_blank" rel="noopener">访问 GitHub</a>
+    </div>
+    <button class="nav-burger" aria-label="展开菜单" id="burger">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+    </button>
+  </div>
+</nav>
+<main>
+<section id="hero" class="hero">
+  <div class="hero-bg-orb" aria-hidden="true"></div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-content">
+        <div class="eyebrow hero-eyebrow reveal">青少年心理健康 AI 陪伴应用 · MVP v1.9</div>
+        <h1 class="display-xl reveal" data-delay="1">你的<em>情绪星球</em><br>永远亮着灯</h1>
+        <div class="hero-slogan reveal" data-delay="2">零压力的第一心理求助站</div>
+        <p class="lead hero-lead reveal" data-delay="3">为 12-18 岁初高中生打造的 AI 情绪成长伙伴。极简心情打卡 + 24/7 AI 对话 + 三端联动（学生 / 教师 / 家长）+ 危机响应，让每一份情绪都被温柔接住。</p>
+        <div class="hero-cta-row reveal" data-delay="4">
+          <a href="#testing" class="btn btn--accent">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+            试用体验 · 查看测试结果
+          </a>
+          <a href="https://github.com/user-unknowed/-StarIsle-" class="btn btn--primary" target="_blank" rel="noopener">
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.345.72-4.065-.9-4.335-1.725-.15-.375-.795-1.725-1.359-2.07-.465-.249-1.125-.866-.015-.879 1.044-.015 1.785.96 2.029 1.359 1.185 2.024 3.075 1.455 3.825 1.104.12-.856.465-1.455.846-1.788-2.985-.335-6.12-1.492-6.12-6.626 0-1.463.523-2.661 1.382-3.602-.137-.345-.6-1.704.137-3.55 0 0 1.13-.36 3.712 1.365 1.077-.3 2.222-.405 3.367-.405s2.29.105 3.367.405c2.582-1.74 3.712-1.365 3.712-1.365.737 1.846.272 3.205.135 3.55.858.94 1.382 2.13 1.382 3.6 0 5.145-3.15 6.293-6.135 6.623.487.42.92 1.242.92 2.498 0 1.803-.016 3.252-.016 3.702 0 .32.218.696.832.575C20.568 21.796 24 17.296 24 12c0-6.63-5.37-12-12-12z"/></svg>
+            访问 GitHub 仓库
+          </a>
+        </div>
+        <div class="hero-metrics reveal" data-delay="4">
+          <div class="metric-tile"><div class="v" data-count="24">24<small>/24</small></div><div class="l">API 测试通过</div></div>
+          <div class="metric-tile"><div class="v" data-count="100">100<small>%</small></div><div class="l">风险检测准确率</div></div>
+          <div class="metric-tile"><div class="v">4<small> 档</small></div><div class="l">风险等级覆盖</div></div>
+        </div>
+      </div>
+      <div class="hero-visual" aria-hidden="true">
+        <svg viewBox="0 0 400 400" fill="none">
+          <defs>
+            <radialGradient id="planet" cx="0.35" cy="0.35">
+              <stop offset="0%" stop-color="#E0E7FF"/><stop offset="25%" stop-color="#A78BFA"/><stop offset="50%" stop-color="#6B7BFF"/><stop offset="80%" stop-color="#4F46E5"/><stop offset="100%" stop-color="#1E1B4B"/>
+            </radialGradient>
+            <radialGradient id="glow" cx="0.5" cy="0.5">
+              <stop offset="0%" stop-color="#F4A261" stop-opacity="0.4"/><stop offset="100%" stop-color="#F4A261" stop-opacity="0"/>
+            </radialGradient>
+            <linearGradient id="ring" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#A78BFA" stop-opacity="0.6"/><stop offset="100%" stop-color="#F4A261" stop-opacity="0.6"/>
+            </linearGradient>
+          </defs>
+          <circle cx="200" cy="200" r="180" fill="url(#glow)"/>
+          <circle cx="200" cy="200" r="120" fill="url(#planet)"/>
+          <ellipse cx="170" cy="180" rx="40" ry="20" fill="#A78BFA" opacity="0.3"/>
+          <ellipse cx="220" cy="230" rx="30" ry="14" fill="#4F46E5" opacity="0.4"/>
+          <ellipse cx="200" cy="160" rx="20" ry="8" fill="#E0E7FF" opacity="0.4"/>
+          <ellipse cx="200" cy="200" rx="180" ry="50" stroke="url(#ring)" stroke-width="1.5" fill="none" transform="rotate(-25 200 200)"/>
+          <ellipse cx="200" cy="200" rx="160" ry="40" stroke="url(#ring)" stroke-width="1" fill="none" transform="rotate(15 200 200)" opacity="0.6"/>
+          <circle cx="340" cy="140" r="6" fill="#F4A261"/>
+          <circle cx="80" cy="280" r="4" fill="#A78BFA"/>
+          <circle cx="320" cy="280" r="3" fill="#6B7BFF"/>
+          <g fill="white" opacity="0.8">
+            <circle cx="60" cy="60" r="1.5"/><circle cx="350" cy="80" r="2"/><circle cx="100" cy="350" r="1"/><circle cx="370" cy="350" r="1.5"/><circle cx="40" cy="200" r="1"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="product" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">产品定位</div>
+      <h2 class="display-lg">为青春期的每一次情绪波动，<br>留一盏不熄灭的灯</h2>
+      <p class="lead">星屿 StarIsle 不是另一个冷冰冰的工具，而是一个完整的三端协同体系——学生有伴、教师有眼、家长有路。AI 仅作为第一道支持，专业心理援助始终触手可及。</p>
+    </div>
+    <div class="product-grid">
+      <article class="card user-card reveal" data-delay="1">
+        <div class="age">12 — 18 岁 · 学生端</div>
+        <h3>情绪的第一聆听者</h3>
+        <p>匿名注册，AI 星宝以 CBT 框架对话，5 档心情打卡，情绪测评 PHQ-9 映射。零压力、无评判。</p>
+        <ul><li>匿名注册与隐私保护</li><li>AI 星宝 24/7 在线对话</li><li>极简心情打卡 + 趋势回顾</li><li>冥想放松与紧急帮助</li></ul>
+      </article>
+      <article class="card user-card reveal" data-delay="2">
+        <div class="age">学校心理教师 · 教师端</div>
+        <h3>班级心理守护工作台</h3>
+        <p>工作台概览高风险告警，学生情绪趋势可视化，对话观察与介入干预，专业 AI 咨询辅助决策。</p>
+        <ul><li>高风险学生告警</li><li>班级情绪趋势图表</li><li>症状反馈与上报处理</li><li>对话观察与介入干预</li></ul>
+      </article>
+      <article class="card user-card reveal" data-delay="3">
+        <div class="age">家长 · 家长端</div>
+        <h3>家校共育的桥梁</h3>
+        <p>孩子情绪状态查看（7/30/90 天），AI 心理顾问「大星」对话，完整应急预案与告警超时升级。</p>
+        <ul><li>孩子情绪趋势分析</li><li>AI 心理顾问（大星）</li><li>完整应急预案流程</li><li>告警超时升级机制</li></ul>
+      </article>
+    </div>
+  </div>
+</section>
+<section id="three-ends" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">三端功能矩阵</div>
+      <h2 class="display-lg">一个体系，三个视角</h2>
+      <p class="lead">学生、教师、家长三端各司其职，通过统一后端实时协同。所有功能已在 MVP v1.9 中验证。</p>
+    </div>
+    <div class="ends-grid">
+      <article class="card end-card reveal" data-delay="1">
+        <div class="end-card-head">
+          <div class="end-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M22 10L12 5 2 10l10 5 10-5z"/><path d="M6 12v5c0 1 4 3 6 3s6-2 6-3v-5"/></svg></div>
+          <div><h3>学生端</h3><small>Student</small></div>
+        </div>
+        <div class="end-card-body">
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>匿名注册与隐私保护</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>极简心情打卡（5 档表情）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 星宝对话（CBT 框架）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>情绪探索测评（PHQ-9 映射）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>冥想放松音频</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>风险检测与危机响应</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>端到端加密通信</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>本地记忆存储管理</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 工具中心</li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>紧急帮助按钮<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>前端危机关键词检测<span class="badge">v1.5</span></li>
+          </ul>
+        </div>
+      </article>
+      <article class="card end-card reveal" data-delay="2">
+        <div class="end-card-head">
+          <div class="end-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M3 3h18v18H3z"/><path d="M3 9h18M9 21V9"/></svg></div>
+          <div><h3>教师端</h3><small>Teacher</small></div>
+        </div>
+        <div class="end-card-body">
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>工作台概览与高风险告警</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>学生列表与情绪趋势查看</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>症状反馈与上报处理</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>对话观察与介入干预</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>本地记忆存储管理</li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>紧急帮助按钮<span class="badge">v1.5</span></li>
+          </ul>
+        </div>
+      </article>
+      <article class="card end-card reveal" data-delay="3">
+        <div class="end-card-head">
+          <div class="end-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg></div>
+          <div><h3>家长端</h3><small>Parent</small></div>
+        </div>
+        <div class="end-card-body">
+          <ul>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>孩子情绪状态查看</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 心理顾问（大星）对话</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>情绪趋势分析（7/30/90 天）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>应急预案与预警管理</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>心理健康知识库</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>通知设置与隐私管理</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>孩子绑定与授权管理</li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>完整应急预案流程<span class="badge">v1.5+</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>告警超时升级机制<span class="badge">v1.5</span></li>
+          </ul>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+<section id="architecture" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">技术架构</div>
+      <h2 class="display-lg">分层而治，端到端加密</h2>
+      <p class="lead">客户端、API 网关、服务层、数据层四层架构。每一层都有独立的安全边界与可观测性，符合 SLSA Build Track Level 2 构建来源证明。</p>
+    </div>
+    <div class="arch-diagram reveal">
+      <div class="arch-layer">
+        <div class="arch-layer-label">客户端层 · Client</div>
+        <div class="arch-layer arch-layer--client">
+          <div class="arch-node"><strong>学生端</strong><span>Flutter · Riverpod</span></div>
+          <div class="arch-node"><strong>教师端</strong><span>Flutter · Riverpod</span></div>
+          <div class="arch-node"><strong>Web 前端</strong><span>React 18 · Vite</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">服务端层 · Server</div>
+        <div class="arch-layer arch-layer--gateway">
+          <div class="arch-node arch-node--accent"><strong>API Gateway</strong><span>Go 1.21 · Gin · 统一入口与路由</span></div>
+        </div>
+        <div class="arch-layer arch-layer--service" style="margin-top:12px">
+          <div class="arch-node"><strong>Backend Java</strong><span>Spring Boot 3.2 · 核心业务</span></div>
+          <div class="arch-node"><strong>AI Engine</strong><span>Python · FastAPI · LLM 推理</span></div>
+        </div>
+      </div>
+      <div class="arch-arrow">↓</div>
+      <div class="arch-layer">
+        <div class="arch-layer-label">数据层 · Data</div>
+        <div class="arch-layer arch-layer--data">
+          <div class="arch-node"><strong>PostgreSQL</strong><span>关系型</span></div>
+          <div class="arch-node"><strong>MongoDB</strong><span>非结构化</span></div>
+          <div class="arch-node"><strong>Redis</strong><span>缓存</span></div>
+          <div class="arch-node"><strong>Kafka</strong><span>异步消息</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="tech-stack reveal">
+      <span class="tech-badge"><span class="dot"></span>React 18 + TypeScript</span>
+      <span class="tech-badge"><span class="dot"></span>Vite 6.3</span>
+      <span class="tech-badge"><span class="dot"></span>Zustand 5</span>
+      <span class="tech-badge"><span class="dot"></span>React Router 7</span>
+      <span class="tech-badge tech-badge--warm"><span class="dot"></span>TailwindCSS 3.4</span>
+      <span class="tech-badge tech-badge--warm"><span class="dot"></span>Flutter 3.x</span>
+      <span class="tech-badge tech-badge--warm"><span class="dot"></span>SQLCipher 加密存储</span>
+      <span class="tech-badge"><span class="dot"></span>Spring Boot 3.2</span>
+      <span class="tech-badge"><span class="dot"></span>Java 21</span>
+      <span class="tech-badge"><span class="dot"></span>Go 1.21 · Gin 1.9</span>
+      <span class="tech-badge"><span class="dot"></span>Python · FastAPI 0.108</span>
+      <span class="tech-badge"><span class="dot"></span>Transformers 4.36</span>
+      <span class="tech-badge"><span class="dot"></span>PyTorch 2.1</span>
+      <span class="tech-badge"><span class="dot"></span>LangChain 0.1</span>
+      <span class="tech-badge tech-badge--data"><span class="dot"></span>PostgreSQL 14</span>
+      <span class="tech-badge tech-badge--data"><span class="dot"></span>MongoDB 6.0</span>
+      <span class="tech-badge tech-badge--data"><span class="dot"></span>Redis 7.0</span>
+      <span class="tech-badge tech-badge--data"><span class="dot"></span>Kafka</span>
+    </div>
+  </div>
+</section>
+<section id="security" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">安全与合规</div>
+      <h2 class="display-lg">青少年数据，<br>用最严苛的标准守护</h2>
+      <p class="lead">从传输到存储、从构建到运营，每一层都遵循国家与行业最高标准。SLSA 构建来源证明 + MITRE ATT&CK 评估双重背书。</p>
+    </div>
+    <div class="safety-grid">
+      <div class="safety-card reveal" data-delay="1">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z"/></svg></div>
+        <div class="s-text"><h4>HTTPS / TLS 1.3</h4><p>全程加密传输，符合最新协议标准</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="1">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="10" rx="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></div>
+        <div class="s-text"><h4>AES-256-GCM 端到端加密</h4><p>对话内容端到端加密，无中间方可见</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="2">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/><path d="M3 12c0 1.66 4 3 9 3s9-1.34 9-3"/></svg></div>
+        <div class="s-text"><h4>SQLCipher 本地加密</h4><p>移动端本地数据加密存储</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="2">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/></svg></div>
+        <div class="s-text"><h4>数据最小化采集</h4><p>仅采集必要数据，用户可一键删除</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="3">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 12l2 2 4-4M12 2L4 6v6c0 5 3.5 9.5 8 10 4.5-.5 8-5 8-10V6l-8-4z"/></svg></div>
+        <div class="s-text"><h4>SLSA Build Track L2</h4><p>构建来源证明，软件供应链安全</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="3">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3h18v18H3z"/><path d="M9 9h6v6H9z"/></svg></div>
+        <div class="s-text"><h4>MITRE ATT&CK 评估</h4><p>对照攻击矩阵完成安全评估</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="4">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M2 12h20"/><circle cx="12" cy="12" r="9"/></svg></div>
+        <div class="s-text"><h4>未成年人网络保护条例</h4><p>合规遵循，青少年专项保护</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="4">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8M4 20l8-8 8 8"/></svg></div>
+        <div class="s-text"><h4>个人信息保护法</h4><p>符合 PIPL 个人信息处理规范</p></div>
+      </div>
+      <div class="safety-card reveal" data-delay="4">
+        <div class="s-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7v10l10 5 10-5V7L12 2z"/><path d="M2 7l10 5 10-5M12 22V12"/></svg></div>
+        <div class="s-text"><h4>等保三级认证准备</h4><p>已具备等保三级合规基线</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+<section id="testing" class="section section--dark">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">验证与测试结果</div>
+      <h2 class="display-lg">用数据说话，<br>每一项指标都可复现</h2>
+      <p class="lead">所有测试结果均经匿名化处理：隐去真实姓名、用户标识与电话号码，仅展示类别与档位。原始测试用例已归档，可在 GitHub 仓库查阅。</p>
+    </div>
+    <div class="testing-grid-4 reveal">
+      <div class="testing-tile"><div class="v" data-count="24">24<small>/24</small></div><div class="l">API 测试通过</div><div class="sub">AI 引擎 11 · 后端 10 · 集成 3</div></div>
+      <div class="testing-tile"><div class="v" data-count="100">100<small>%</small></div><div class="l">风险检测准确率</div><div class="sub">25 / 25 用例全部正确</div></div>
+      <div class="testing-tile"><div class="v">80→100</div><div class="l">三轮优化提升</div><div class="sub">v1.6 → v1.9 持续迭代</div></div>
+      <div class="testing-tile"><div class="v">7<small> 类</small></div><div class="l">案例类型覆盖</div><div class="sub">重度抑郁 / 焦虑 / 强迫症 / 多重 / 督导 / 个案 / 日常</div></div>
+    </div>
+    <div class="risk-chart reveal">
+      <div class="risk-chart-head">
+        <h4>4 档风险等级分布</h4>
+        <div class="note">期望值 = 实际值 · 零偏差</div>
+      </div>
+      <div class="risk-bars">
+        <div class="risk-bar green"><div class="label"><span class="dot"></span>Green</div><div class="track"><div class="fill" data-fill="16"></div></div><div class="count">4</div></div>
+        <div class="risk-bar yellow"><div class="label"><span class="dot"></span>Yellow</div><div class="track"><div class="fill" data-fill="16"></div></div><div class="count">4</div></div>
+        <div class="risk-bar orange"><div class="label"><span class="dot"></span>Orange</div><div class="track"><div class="fill" data-fill="44"></div></div><div class="count">11</div></div>
+        <div class="risk-bar red"><div class="label"><span class="dot"></span>Red</div><div class="track"><div class="fill" data-fill="24"></div></div><div class="count">6</div></div>
+      </div>
+    </div>
+    <div class="case-section">
+      <div class="case-section-head reveal">
+        <h4>典型案例 · 系统响应</h4>
+        <div class="hint">仅展示 4 张典型，原始 25 条用例已归档，未展示任何用户原文</div>
+      </div>
+      <div class="case-grid">
+        <article class="case-card red reveal" data-delay="1">
+          <div class="case-card-head"><div><div class="id">C-Red-01</div><div class="type">重度抑郁类</div></div><div class="level">Red</div></div>
+          <div class="resp"><strong>系统响应：</strong>高危信号触发，AI 即时切换至危机响应话术，引导用户至 24h 心理援助热线，并联动后端上报危机事件。</div>
+        </article>
+        <article class="case-card orange reveal" data-delay="2">
+          <div class="case-card-head"><div><div class="id">C-Orange-01</div><div class="type">抑郁 + 焦虑类</div></div><div class="level">Orange</div></div>
+          <div class="resp"><strong>系统响应：</strong>关键词检出（抑郁/失眠等），触发 CBT 安抚话术，引导用户拆解压力源，后端记录情绪趋势。</div>
+        </article>
+        <article class="case-card yellow reveal" data-delay="3">
+          <div class="case-card-head"><div><div class="id">C-Yellow-01</div><div class="type">社交孤立求助类</div></div><div class="level">Yellow</div></div>
+          <div class="resp"><strong>系统响应：</strong>求助意图识别 + 积极词检测（"想好起来"等），引导对话深化，建议建立支持系统。</div>
+        </article>
+        <article class="case-card green reveal" data-delay="4">
+          <div class="case-card-head"><div><div class="id">C-Green-01</div><div class="type">日常情绪类</div></div><div class="level">Green</div></div>
+          <div class="resp"><strong>系统响应：</strong>情绪表达识别为日常闲聊，正常对话继续，无关键词命中，无风险上报。</div>
+        </article>
+      </div>
+    </div>
+    <div class="optimize-timeline reveal">
+      <h4>三轮优化演进 · 准确率 80% → 100%</h4>
+      <div class="optimize-steps">
+        <div class="optimize-step s1"><div class="pt"></div><div class="ver">v1.6 · 起点</div><div class="acc">80%</div><div class="desc">20/25 用例正确<br>5 条偏差已识别</div></div>
+        <div class="optimize-step s2"><div class="pt"></div><div class="ver">v1.7 · 关键词分层</div><div class="acc">重构</div><div class="desc">高危关键词重新分层<br>求助意图检测精确化</div></div>
+        <div class="optimize-step s3"><div class="pt"></div><div class="ver">v1.8 · 积极词降级</div><div class="acc">优化</div><div class="desc">积极词触发降级<br>持续时间误匹配修复</div></div>
+        <div class="optimize-step s4"><div class="pt"></div><div class="ver">v1.9 · 终点</div><div class="acc">100%</div><div class="desc">25/25 全部正确<br>CodeQL 6/6 pass</div></div>
+      </div>
+    </div>
+    <div class="supp-metrics reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px">
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">11→28</div><div class="l">高危关键词扩充</div><div class="sub">v1.6 · +17 个新词</div></div>
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">+393 <small>词</small></div><div class="l">词向量词汇表</div><div class="sub">+23.3% · Word2Vec 训练</div></div>
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">11<small>/15</small></div><div class="l">数据集文件处理</div><div class="sub">心理咨询笔记 .docx</div></div>
+    </div>
+    <div class="testing-footnote">训练语料源自本地脱敏心理咨询笔记 + 心理学经典文献，无联网数据写入训练语料 · 最近一次回归测试：2026 年 8 月</div>
+  </div>
+</section>
+<section id="versions" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">版本演进</div>
+      <h2 class="display-lg">从 MVP 到 100% 准确率</h2>
+      <p class="lead">9 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率。</p>
+    </div>
+    <div class="version-timeline">
+      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.0 MVP</span><span class="ver-date">2026-06</span></div><h4>核心功能验证</h4><p>学生端 / 教师端基础功能上线，AI 对话与心情打卡核心闭环验证通过。</p></div>
+      <div class="version-item reveal"><div class="ver-head"><span class="ver-num">v1.1</span><span class="ver-date">2026-07</span></div><h4>本地记忆存储管理</h4><p>加密本地数据库、定时整理、存储监控，AI 服务集成完善。</p></div>
+      <div class="version-item reveal"><div class="ver-head"><span class="ver-num">v1.2</span><span class="ver-date">2026-07</span></div><h4>后端服务迁移至 Java</h4><p>Spring Boot 3.2 重构，编译路径重构，H2 内存数据库支持。</p></div>
+      <div class="version-item reveal"><div class="ver-head"><span class="ver-num">v1.3</span><span class="ver-date">2026-07</span></div><h4>Web 前端三端实现</h4><p>学生 / 教师 / 家长三端 Web 上线，家长端功能完整实现。</p></div>
+      <div class="version-item reveal"><div class="ver-head"><span class="ver-num">v1.4</span><span class="ver-date">2026-07</span></div><h4>SLSA 构建来源证明</h4><p>三个 GitHub Actions 工作流配置完成，安全评估文档完善。</p></div>
+      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.5</span><span class="ver-date">2026-07-31</span></div><h4>HOTL 代码审核修复 + 危机响应</h4><p>21 项 BLOCK 级问题集中修复。三端紧急帮助按钮、前端危机关键词检测、家长端完整应急预案、HTTP 安全增强。</p></div>
+      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.6</span><span class="ver-date">2026-08-07</span></div><h4>移动端完整测试 + 关键词扩充</h4><p>iPhone SE / 12 Pro / Galaxy S20 三视口测试通过。高危关键词 11 → 28 个（+17），持续时间规则增强。</p></div>
+      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.7 — v1.9</span><span class="ver-date">2026-08-09</span></div><h4>风险检测精准度优化至 100%</h4><p>三轮优化：关键词分层重构、积极词降级规则、社交孤立降级规则。准确率 80% → 100%（25/25 全部正确）。</p></div>
+      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.9.0</span><span class="ver-date">2026-08-10</span></div><h4>主干合并 · 版本发布</h4><p>主干分支合并，CI 全绿，CodeQL 6/6 pass，版本 tag v1.9.0 发布。</p></div>
+    </div>
+  </div>
+</section>
+<section id="contact" class="contact">
+  <div class="container">
+    <div class="reveal">
+      <div class="eyebrow" style="justify-content:center;display:inline-flex">联系与协作</div>
+      <p class="contact-slogan">你的情绪星球，<br>永远亮着灯。</p>
+      <div class="contact-cta">
+        <a href="#testing" class="btn btn--accent">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+          试用体验 · 查看测试结果
+        </a>
+        <a href="https://github.com/user-unknowed/-StarIsle-" class="btn btn--primary" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.345.72-4.065-.9-4.335-1.725-.15-.375-.795-1.725-1.359-2.07-.465-.249-1.125-.866-.015-.879 1.044-.015 1.785.96 2.029 1.359 1.185 2.024 3.075 1.455 3.825 1.104.12-.856.465-1.455.846-1.788-2.985-.335-6.12-1.492-6.12-6.626 0-1.463.523-2.661 1.382-3.602-.137-.345-.6-1.704.137-3.55 0 0 1.13-.36 3.712 1.365 1.077-.3 2.222-.405 3.367-.405s2.29.105 3.367.405c2.582-1.74 3.712-1.365 3.712-1.365.737 1.846.272 3.205.135 3.55.858.94 1.382 2.13 1.382 3.6 0 5.145-3.15 6.293-6.135 6.623.487.42.92 1.242.92 2.498 0 1.803-.016 3.252-.016 3.702 0 .32.218.696.832.575C20.568 21.796 24 17.296 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          访问 GitHub
+        </a>
+        <a href="mailto:starisle@example.com" class="btn btn--ghost">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 4h16v16H4z"/><path d="M4 4l8 8 8-8"/></svg>
+          邮件联系
+        </a>
+      </div>
+      <div class="contact-meta">
+        <a href="https://github.com/user-unknowed/-StarIsle-" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.345.72-4.065-.9-4.335-1.725-.15-.375-.795-1.725-1.359-2.07-.465-.249-1.125-.866-.015-.879 1.044-.015 1.785.96 2.029 1.359 1.185 2.024 3.075 1.455 3.825 1.104.12-.856.465-1.455.846-1.788-2.985-.335-6.12-1.492-6.12-6.626 0-1.463.523-2.661 1.382-3.602-.137-.345-.6-1.704.137-3.55 0 0 1.13-.36 3.712 1.365 1.077-.3 2.222-.405 3.367-.405s2.29.105 3.367.405c2.582-1.74 3.712-1.365 3.712-1.365.737 1.846.272 3.205.135 3.55.858.94 1.382 2.13 1.382 3.6 0 5.145-3.15 6.293-6.135 6.623.487.42.92 1.242.92 2.498 0 1.803-.016 3.252-.016 3.702 0 .32.218.696.832.575C20.568 21.796 24 17.296 24 12c0-6.63-5.37-12-12-12z"/></svg>
+          github.com/user-unknowed/-StarIsle-
+        </a>
+        <span>MIT License</span>
+        <span>MVP v1.9.0</span>
+      </div>
+      <div class="contact-copy">© 2026 StarIsle 团队. All rights reserved.<br>面向青少年心理健康领域，所有代码和文档均受知识产权保护。</div>
+    </div>
+  </div>
+</section>
+</main>
+<button class="back-to-top" id="backToTop" aria-label="返回顶部">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" aria-hidden="true"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+</button>
+<script>
+(function(){
+  'use strict';
+  const nav = document.getElementById('nav');
+  const backToTop = document.getElementById('backToTop');
+  let ticking = false;
+  function onScroll() {
+    if (!ticking) {
+      window.requestAnimationFrame(function() {
+        const y = window.scrollY;
+        if (y > 20) nav.classList.add('nav--scrolled'); else nav.classList.remove('nav--scrolled');
+        if (y > 600) backToTop.classList.add('show'); else backToTop.classList.remove('show');
+        ticking = false;
+      });
+      ticking = true;
+    }
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  backToTop.addEventListener('click', function() { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+  const burger = document.getElementById('burger');
+  if (burger) {
+    burger.addEventListener('click', function() {
+      const links = document.querySelector('.nav-links');
+      if (!links) return;
+      const isExpanded = links.style.display === 'flex';
+      if (isExpanded) { links.style.display = ''; }
+      else {
+        links.style.display = 'flex';
+        links.style.position = 'absolute';
+        links.style.top = 'var(--nav-h)';
+        links.style.left = '0';
+        links.style.right = '0';
+        links.style.flexDirection = 'column';
+        links.style.background = 'rgba(250, 250, 249, 0.96)';
+        links.style.backdropFilter = 'blur(20px)';
+        links.style.padding = '16px 20px';
+        links.style.borderBottom = '1px solid var(--c-border)';
+        links.style.gap = '4px';
+      }
+    });
+  }
+  const reveals = document.querySelectorAll('.reveal');
+  const counters = document.querySelectorAll('[data-count]');
+  const fills = document.querySelectorAll('[data-fill]');
+  function animateCount(el) {
+    const target = parseInt(el.dataset.count, 10);
+    if (isNaN(target)) return;
+    const duration = 1600;
+    const start = performance.now();
+    const smallHtml = el.querySelector('small') ? el.querySelector('small').outerHTML : '';
+    function tick(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const current = Math.round(target * eased);
+      el.innerHTML = current + smallHtml;
+      if (progress < 1) { requestAnimationFrame(tick); }
+      else { el.innerHTML = target + smallHtml; }
+    }
+    requestAnimationFrame(tick);
+  }
+  function animateFill(el) {
+    const target = parseFloat(el.dataset.fill);
+    if (isNaN(target)) return;
+    requestAnimationFrame(function() { el.style.width = target + '%'; });
+  }
+  const io = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('is-in');
+        const innerCounters = entry.target.querySelectorAll('[data-count]');
+        innerCounters.forEach(animateCount);
+        if (entry.target.dataset && entry.target.dataset.count) { animateCount(entry.target); }
+        const innerFills = entry.target.querySelectorAll('[data-fill]');
+        innerFills.forEach(animateFill);
+        io.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.18, rootMargin: '0px 0px -40px 0px' });
+  reveals.forEach(function(el) { io.observe(el); });
+  counters.forEach(function(el) { io.observe(el); });
+  fills.forEach(function(el) { io.observe(el); });
+})();
+</script>
+</body>
+</html>

@@ -6,6 +6,7 @@ on:
       - main
     paths:
       - 'docs/promo/**'
+      - 'web-frontend/**'
       - '.github/workflows/deploy-promo.yml'
   workflow_dispatch:
 
@@ -14,14 +15,14 @@ permissions:
   pages: write
   id-token: write
 
-# 同一时间仅允许一个宣传页部署任务运行
+# 同一时间仅允许一个部署任务运行
 concurrency:
   group: promo-pages
   cancel-in-progress: true
 
 jobs:
   deploy:
-    name: Deploy Promo to GitHub Pages
+    name: Deploy Promo + Web App to GitHub Pages
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -29,6 +30,26 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: 'web-frontend/package-lock.json'
+
+      - name: Install web-frontend dependencies
+        working-directory: ./web-frontend
+        run: npm ci
+
+      - name: Build web-frontend
+        working-directory: ./web-frontend
+        run: npm run build
+
+      - name: Merge web-frontend into promo/app
+        run: |
+          mkdir -p ./docs/promo/app
+          cp -r ./web-frontend/dist/* ./docs/promo/app/
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

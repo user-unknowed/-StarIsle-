@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useAuthStore, LoginMethod } from '../store/authStore';
-import { Star, User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Phone, Apple } from 'lucide-react';
+import { Star, User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Phone, Apple, Sparkles, ChevronLeft } from 'lucide-react';
 import { Button, Input, Modal } from '../components/ui';
 
 export default function Login() {
   const { login, register, loginWithThirdParty, loginWithPhone, isLoading, error, clearError } = useAuthStore();
-  
+
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
   const [username, setUsername] = useState('');
@@ -69,58 +69,83 @@ export default function Login() {
     }
   };
 
+  const roleConfig = {
+    student: { label: '学生', accentText: 'text-primary-600', accentRing: 'ring-primary-500' },
+    teacher: { label: '教师', accentText: 'text-primary-600', accentRing: 'ring-primary-500' },
+    parent: { label: '家长', accentText: 'text-accent-500', accentRing: 'ring-accent-500' },
+  } as const;
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary-500 via-secondary-500 to-pink-500 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
-        <div className="bg-white/95 backdrop-blur-lg rounded-3xl shadow-2xl p-8">
+    <div className="min-h-screen relative flex items-center justify-center p-4 overflow-hidden">
+      {/* 品牌渐变背景 */}
+      <div className="absolute inset-0 bg-gradient-to-br from-primary-600 via-primary-500 to-secondary-600" />
+      {/* 装饰光晕 */}
+      <div
+        className="absolute -top-20 -right-20 w-96 h-96 rounded-full opacity-30 blur-3xl"
+        style={{ background: 'radial-gradient(circle, #A78BFA 0%, transparent 70%)' }}
+      />
+      <div
+        className="absolute -bottom-32 -left-20 w-96 h-96 rounded-full opacity-20 blur-3xl"
+        style={{ background: 'radial-gradient(circle, #F4A261 0%, transparent 70%)' }}
+      />
+      {/* 星点装饰 */}
+      <div className="absolute inset-0 opacity-40 pointer-events-none" style={{
+        backgroundImage: `radial-gradient(1px 1px at 15% 20%, white, transparent 50%),
+          radial-gradient(1px 1px at 35% 45%, white, transparent 50%),
+          radial-gradient(1.5px 1.5px at 55% 15%, white, transparent 50%),
+          radial-gradient(1px 1px at 75% 30%, white, transparent 50%),
+          radial-gradient(1px 1px at 85% 55%, white, transparent 50%),
+          radial-gradient(1px 1px at 25% 70%, white, transparent 50%),
+          radial-gradient(1.5px 1.5px at 65% 80%, white, transparent 50%)`,
+      }} />
+
+      <div className="relative w-full max-w-md z-10">
+        {/* 返回宣传页 */}
+        <a
+          href="../../"
+          className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-sm mb-4 transition-colors"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          返回宣传页
+        </a>
+
+        <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl p-8 border border-white/20">
+          {/* 品牌标识 */}
           <div className="text-center mb-8">
-            <div className="w-16 h-16 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-              <Star className="w-8 h-8 text-white" />
+            <div className="relative w-16 h-16 mx-auto mb-4">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary-500 to-secondary-600 rounded-2xl shadow-lg flex items-center justify-center">
+                <Star className="w-8 h-8 text-white" />
+              </div>
+              <div className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-br from-accent-400 to-accent-500 rounded-full flex items-center justify-center shadow-md">
+                <Sparkles className="w-3 h-3 text-white" />
+              </div>
             </div>
             <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-secondary-600 bg-clip-text text-transparent">
-              星屿心理健康管理系统
+              星屿 StarIsle
             </h1>
-            <p className="text-gray-400 mt-1 text-xs tracking-wider">StarIsleONweb</p>
-            <p className="text-gray-500 mt-2">守护心灵，伴你成长</p>
+            <p className="text-gray-400 mt-1 text-xs tracking-[0.2em] uppercase">Emotion Planet</p>
+            <p className="text-gray-500 mt-2 text-sm">你的情绪星球，永远亮着灯</p>
           </div>
 
+          {/* 角色选择 */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-6" role="tablist" aria-label="选择登录角色">
-            <button
-              role="tab"
-              aria-selected={role === 'student'}
-              onClick={() => setRole('student')}
-              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
-                role === 'student'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              学生登录
-            </button>
-            <button
-              role="tab"
-              aria-selected={role === 'teacher'}
-              onClick={() => setRole('teacher')}
-              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
-                role === 'teacher'
-                  ? 'bg-white text-primary-600 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              教师登录
-            </button>
-            <button
-              role="tab"
-              aria-selected={role === 'parent'}
-              onClick={() => setRole('parent')}
-              className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
-                role === 'parent'
-                  ? 'bg-white text-orange-500 shadow-sm'
-                  : 'text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              家长登录
-            </button>
+            {(['student', 'teacher', 'parent'] as const).map((r) => (
+              <button
+                key={r}
+                role="tab"
+                aria-selected={role === r}
+                onClick={() => setRole(r)}
+                className={`flex-1 py-2 rounded-lg font-medium transition-all duration-fast text-sm ${
+                  role === r
+                    ? r === 'parent'
+                      ? 'bg-white text-accent-500 shadow-sm'
+                      : 'bg-white text-primary-600 shadow-sm'
+                    : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                {roleConfig[r].label}登录
+              </button>
+            ))}
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-5">
@@ -196,9 +221,10 @@ export default function Login() {
 
           <button
             onClick={handleDemoLogin}
-            className="w-full py-3 mt-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+            className="w-full py-3 mt-4 bg-gradient-to-r from-accent-50 to-accent-100 text-accent-600 font-semibold rounded-xl hover:from-accent-100 hover:to-accent-200 transition-all border border-accent-200"
           >
-            快速体验（{role === 'student' ? '学生' : role === 'teacher' ? '教师' : '家长'}）
+            <Sparkles className="w-4 h-4 inline mr-1.5" />
+            快速体验（{roleConfig[role].label}）
           </button>
 
           <div className="relative my-6">

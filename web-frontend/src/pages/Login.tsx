@@ -102,7 +102,7 @@ export default function Login() {
       <div className="relative w-full max-w-md z-10">
         {/* 返回宣传页 */}
         <a
-          href="../../"
+          href="../"
           className="inline-flex items-center gap-1.5 text-white/70 hover:text-white text-sm mb-4 transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />

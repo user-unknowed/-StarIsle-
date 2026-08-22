@@ -67,6 +67,24 @@ const mockUsers: Record<string, User> = {
   },
 };
 
+// 判断是否应走 mock 降级：
+// ① 断网（status=0） ② 后端不存在（404/405，常见于纯静态托管） ③ 服务端异常（≥500）
+function shouldUseMockFallback(err: unknown): boolean {
+  if (!(err instanceof ApiError)) return false;
+  return err.status === 0
+    || err.status === 404
+    || err.status === 405
+    || err.status >= 500;
+}
+
+// 判断当前是否应跳过网络请求、直接走 mock（无真实后端时）
+function shouldShortCircuitToMock(): boolean {
+  // 仅当未配置真实 API base 或明确标记为静态部署时短路
+  const apiBase = import.meta.env.VITE_API_BASE_URL;
+  if (!apiBase || apiBase === 'false' || apiBase === '') return true;
+  return import.meta.env.VITE_USE_MOCK === 'true';
+}
+
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -81,6 +99,22 @@ export const useAuthStore = create<AuthState>()(
       login: async (credentials) => {
         set({ isLoading: true, error: null });
 
+        // 🟢 演示账号短路：无真实后端时直接走 mock，避免 405/网络抖动
+        if (shouldShortCircuitToMock()
+            && (credentials.username === 'student1' || credentials.username === 'teacher1' || credentials.username === 'parent1')
+            && mockUsers[credentials.username]?.role === credentials.role) {
+          const mockUser = mockUsers[credentials.username];
+          set({
+            user: mockUser,
+            token: 'mock-jwt-token',
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: 'credentials',
+            isUsingMockData: true,
+          });
+          return;
+        }
+
         try {
           const response = await authApi.login(credentials);
           set({
@@ -93,7 +127,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           // 降级到 mock 数据
-          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+          if (shouldUseMockFallback(error)) {
             const mockUser = mockUsers[credentials.username];
             if (mockUser && mockUser.role === credentials.role) {
               set({
@@ -129,7 +163,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           // 降级到 mock 数据
-          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+          if (shouldUseMockFallback(error)) {
             const newUser: User = {
               id: `user-${Date.now()}`,
               nickname: data.nickname,
@@ -160,6 +194,29 @@ export const useAuthStore = create<AuthState>()(
       loginWithThirdParty: async (provider, userInfo) => {
         set({ isLoading: true, error: null });
 
+        // 🟢 无真实后端时直接走 mock
+        if (shouldShortCircuitToMock()) {
+          const newUser: User = {
+            id: `user-${userInfo.openId}`,
+            nickname: userInfo.nickname || '用户',
+            avatar: userInfo.avatar || '',
+            role: 'student',
+            ageGroup: '',
+            signature: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          set({
+            user: newUser,
+            token: 'mock-jwt-token',
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: provider,
+            isUsingMockData: true,
+          });
+          return;
+        }
+
         try {
           const response = await authApi.loginWithThirdParty(
             userInfo.provider,
@@ -177,7 +234,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           // 降级到 mock 数据
-          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+          if (shouldUseMockFallback(error)) {
             const newUser: User = {
               id: `user-${userInfo.openId}`,
               nickname: userInfo.nickname || '用户',
@@ -208,6 +265,29 @@ export const useAuthStore = create<AuthState>()(
       loginWithPhone: async (phone, code) => {
         set({ isLoading: true, error: null });
 
+        // 🟢 无真实后端时直接走 mock
+        if (shouldShortCircuitToMock()) {
+          const newUser: User = {
+            id: `user-${phone}`,
+            nickname: phone,
+            avatar: '',
+            role: 'student',
+            ageGroup: '',
+            signature: '',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+          };
+          set({
+            user: newUser,
+            token: 'mock-jwt-token',
+            isLoggedIn: true,
+            isLoading: false,
+            loginMethod: 'phone',
+            isUsingMockData: true,
+          });
+          return;
+        }
+
         try {
           const response = await authApi.loginWithPhone(phone, code);
           set({
@@ -220,7 +300,7 @@ export const useAuthStore = create<AuthState>()(
           });
         } catch (error) {
           // 降级到 mock 数据
-          if (error instanceof ApiError && (error.status === 0 || error.status >= 500)) {
+          if (shouldUseMockFallback(error)) {
             const newUser: User = {
               id: `user-${phone}`,
               nickname: phone,

@@ -224,7 +224,7 @@ export default function Login() {
             className="w-full py-3 mt-4 bg-gradient-to-r from-accent-50 to-accent-100 text-accent-600 font-semibold rounded-xl hover:from-accent-100 hover:to-accent-200 transition-all border border-accent-200"
           >
             <Sparkles className="w-4 h-4 inline mr-1.5" />
-            快速体验（{roleConfig[role].label}）
+            快速体验·{roleConfig[role].label}模式
           </button>
 
           <div className="relative my-6">
@@ -239,6 +239,7 @@ export default function Login() {
           <div className="grid grid-cols-4 gap-3">
             <button
               onClick={() => handleThirdPartyLogin('wechat')}
+              aria-label="使用微信登录"
               className="flex flex-col items-center gap-1.5 p-3 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors"
             >
               <MessageCircle className="w-6 h-6" />
@@ -246,13 +247,15 @@ export default function Login() {
             </button>
             <button
               onClick={() => handleThirdPartyLogin('qq')}
+              aria-label="使用 QQ 登录"
               className="flex flex-col items-center gap-1.5 p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
             >
-              <span className="text-lg font-bold">QQ</span>
+              <span className="text-lg font-bold leading-none">QQ</span>
               <span className="text-xs font-medium">QQ登录</span>
             </button>
             <button
               onClick={() => handleThirdPartyLogin('apple')}
+              aria-label="使用 Apple 登录"
               className="flex flex-col items-center gap-1.5 p-3 bg-gray-50 text-gray-700 rounded-xl hover:bg-gray-100 transition-colors"
             >
               <Apple className="w-6 h-6" />
@@ -260,6 +263,7 @@ export default function Login() {
             </button>
             <button
               onClick={() => setShowPhoneModal(true)}
+              aria-label="使用手机号登录"
               className="flex flex-col items-center gap-1.5 p-3 bg-primary-50 text-primary-600 rounded-xl hover:bg-primary-100 transition-colors"
             >
               <Phone className="w-6 h-6" />

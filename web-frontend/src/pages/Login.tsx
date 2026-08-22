@@ -251,7 +251,7 @@ export default function Login() {
               className="flex flex-col items-center gap-1.5 p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 transition-colors"
             >
               <span className="text-lg font-bold leading-none">QQ</span>
-              <span className="text-xs font-medium">QQ登录</span>
+              <span className="text-xs font-medium">QQ</span>
             </button>
             <button
               onClick={() => handleThirdPartyLogin('apple')}

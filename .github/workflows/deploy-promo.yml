@@ -6,7 +6,6 @@ on:
       - main
     paths:
       - 'docs/promo/**'
-      - 'web-frontend/**'
       - '.github/workflows/deploy-promo.yml'
   workflow_dispatch:
 
@@ -25,7 +24,7 @@ env:
 
 jobs:
   deploy:
-    name: Deploy Promo + Web App to GitHub Pages
+    name: Deploy Promo Page to GitHub Pages
     runs-on: ubuntu-latest
     environment:
       name: github-pages
@@ -34,41 +33,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: 'web-frontend/package-lock.json'
-
-      - name: Install web-frontend dependencies
-        working-directory: ./web-frontend
-        run: npm ci
-
-      - name: Build web-frontend
-        working-directory: ./web-frontend
-        run: npm run build
-
-      - name: Assemble Pages artifact (promo@root + app@/app)
+      - name: Verify promo page title
         run: |
-          # 🟢 使用一个完全干净的 staging 目录，避免任何污染
-          rm -rf ./pages-staging
-          mkdir -p ./pages-staging
-
-          # 1) 拷贝宣传页到 staging 根（promo 位于 /）
-          cp -rT ./docs/promo ./pages-staging
-
-          # 2) 拷贝 Web 应用到 staging/app（Web 位于 /app/）
-          mkdir -p ./pages-staging/app
-          cp -rT ./web-frontend/dist ./pages-staging/app
-
-          # 3) 🔍 打印目录结构，让 Actions 日志可追溯
-          echo "=== pages-staging/ 最终结构 (前 3 层) ==="
-          find ./pages-staging -maxdepth 3 | sort
-          echo "=== pages-staging/index.html 标题检查 ==="
-          grep -oE '<title>[^<]*</title>' ./pages-staging/index.html || true
-          echo "=== pages-staging/app/index.html 标题检查 ==="
-          grep -oE '<title>[^<]*</title>' ./pages-staging/app/index.html || true
+          echo "=== docs/promo/index.html 标题检查 ==="
+          grep -oE '<title>[^<]*</title>' ./docs/promo/index.html || { echo "❌ 未找到 title 标签"; exit 1; }
+          grep -q "$PROMO_TITLE_MUST_CONTAIN" ./docs/promo/index.html && echo "✅ 标题包含预期关键词" || echo "⚠️ 标题未包含预期关键词"
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
@@ -76,7 +45,7 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ./pages-staging
+          path: ./docs/promo
 
       - name: Deploy to GitHub Pages
         id: deployment

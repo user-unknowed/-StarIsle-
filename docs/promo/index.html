@@ -378,7 +378,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <a href="#security">安全合规</a>
       <a href="#testing">测试结果</a>
       <a href="#versions">版本演进</a>
-      <a href="app/" class="nav-cta nav-cta--accent">试用体验</a>
+      <a href="http://localhost:8080" class="nav-cta nav-cta--accent" id="trial-btn-nav">试用体验</a>
       <a href="https://github.com/user-unknowed/-StarIsle-" class="nav-cta" target="_blank" rel="noopener">访问 GitHub</a>
     </div>
     <button class="nav-burger" aria-label="展开菜单" id="burger">
@@ -397,9 +397,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         <div class="hero-slogan reveal" data-delay="2">零压力的第一心理求助站</div>
         <p class="lead hero-lead reveal" data-delay="3">为 12-18 岁初高中生打造的 AI 情绪成长伙伴。极简心情打卡 + 24/7 AI 对话 + 三端联动（学生 / 教师 / 家长）+ 危机响应，让每一份情绪都被温柔接住。</p>
         <div class="hero-cta-row reveal" data-delay="4">
-          <a href="app/" class="btn btn--accent">
+          <a href="http://localhost:8080" class="btn btn--accent" id="trial-btn-hero">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-            试用体验 · 进入 Web 端
+            试用体验 · 本地 Docker 启动
           </a>
           <a href="https://github.com/user-unknowed/-StarIsle-" class="btn btn--primary" target="_blank" rel="noopener">
             <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.345.72-4.065-.9-4.335-1.725-.15-.375-.795-1.725-1.359-2.07-.465-.249-1.125-.866-.015-.879 1.044-.015 1.785.96 2.029 1.359 1.185 2.024 3.075 1.455 3.825 1.104.12-.856.465-1.455.846-1.788-2.985-.335-6.12-1.492-6.12-6.626 0-1.463.523-2.661 1.382-3.602-.137-.345-.6-1.704.137-3.55 0 0 1.13-.36 3.712 1.365 1.077-.3 2.222-.405 3.367-.405s2.29.105 3.367.405c2.582-1.74 3.712-1.365 3.712-1.365.737 1.846.272 3.205.135 3.55.858.94 1.382 2.13 1.382 3.6 0 5.145-3.15 6.293-6.135 6.623.487.42.92 1.242.92 2.498 0 1.803-.016 3.252-.016 3.702 0 .32.218.696.832.575C20.568 21.796 24 17.296 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -738,9 +738,9 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <div class="eyebrow" style="justify-content:center;display:inline-flex">联系与协作</div>
       <p class="contact-slogan">你的情绪星球，<br>永远亮着灯。</p>
       <div class="contact-cta">
-        <a href="app/" class="btn btn--accent">
+        <a href="http://localhost:8080" class="btn btn--accent" id="trial-btn-contact">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
-          试用体验 · 进入 Web 端
+          试用体验 · 本地 Docker 启动
         </a>
         <a href="https://github.com/user-unknowed/-StarIsle-" class="btn btn--primary" target="_blank" rel="noopener">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.345.72-4.065-.9-4.335-1.725-.15-.375-.795-1.725-1.359-2.07-.465-.249-1.125-.866-.015-.879 1.044-.015 1.785.96 2.029 1.359 1.185 2.024 3.075 1.455 3.825 1.104.12-.856.465-1.455.846-1.788-2.985-.335-6.12-1.492-6.12-6.626 0-1.463.523-2.661 1.382-3.602-.137-.345-.6-1.704.137-3.55 0 0 1.13-.36 3.712 1.365 1.077-.3 2.222-.405 3.367-.405s2.29.105 3.367.405c2.582-1.74 3.712-1.365 3.712-1.365.737 1.846.272 3.205.135 3.55.858.94 1.382 2.13 1.382 3.6 0 5.145-3.15 6.293-6.135 6.623.487.42.92 1.242.92 2.498 0 1.803-.016 3.252-.016 3.702 0 .32.218.696.832.575C20.568 21.796 24 17.296 24 12c0-6.63-5.37-12-12-12z"/></svg>
@@ -849,6 +849,106 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   reveals.forEach(function(el) { io.observe(el); });
   counters.forEach(function(el) { io.observe(el); });
   fills.forEach(function(el) { io.observe(el); });
+})();
+
+/* ============ 试用体验按钮智能跳转 ============ */
+(function () {
+  var LOCAL_APP = 'http://localhost:8080';
+  var DOCKER_HINT_HTML =
+    '<div style="position:fixed;inset:0;background:rgba(15,23,42,.62);backdrop-filter:blur(4px);display:flex;' +
+    'align-items:center;justify-content:center;z-index:99999;padding:24px;" id="st-no-local">' +
+      '<div style="background:#fff;border-radius:20px;max-width:460px;width:100%;padding:28px 28px 24px;' +
+      'box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:system-ui,-apple-system,BlinkMacSystemFont,' +
+      '\'PingFang SC\',\'Hiragino Sans GB\',\'Microsoft YaHei\',sans-serif;">' +
+        '<h3 style="margin:0 0 8px;font-size:20px;color:#1E1B4B;">本地 Web 端尚未启动 🐳</h3>' +
+        '<p style="margin:0 0 18px;line-height:1.7;color:#334155;font-size:14px;">' +
+          '我们已将软件 Web 端构建为 Docker 镜像（随 GitHub Actions 自动发布），' +
+          '执行下面任一条命令即可在本机 <strong style="color:#4F46E5;">localhost:8080</strong> 访问系统。' +
+        '</p>' +
+        '<pre id="st-copy-target" style="background:#0F172A;color:#E0E7FF;padding:12px 14px;border-radius:12px;' +
+        'font-size:12.5px;line-height:1.6;white-space:pre-wrap;word-break:break-all;margin:0 0 16px;' +
+        'overflow-x:auto;">docker pull ghcr.io/user-unknowed/-starisle--web-frontend:latest\n' +
+        'docker run -d --name starisle-web -p 8080:80 \\\n  ghcr.io/user-unknowed/-starisle--web-frontend:latest\n\n' +
+        '# 或直接使用 npm 本地运行：\n# cd web-frontend\n# npm ci && npm run dev</pre>' +
+        '<div style="display:flex;gap:10px;flex-wrap:wrap;">' +
+          '<button id="st-copy" style="background:linear-gradient(135deg,#4F46E5 0%,#6B7BFF 100%);' +
+          'color:#fff;border:0;padding:10px 16px;border-radius:10px;cursor:pointer;font-weight:600;font-size:14px;">一键复制命令</button>' +
+          '<a id="st-repo" href="https://github.com/user-unknowed/-StarIsle-/pkgs/container/-starisle--web-frontend"' +
+          ' target="_blank" rel="noopener" style="background:#F1F5F9;color:#334155;padding:10px 16px;border-radius:10px;' +
+          'text-decoration:none;font-weight:600;font-size:14px;">查看镜像包</a>' +
+          '<button id="st-close" style="margin-left:auto;background:transparent;color:#64748B;border:0;' +
+          'padding:10px 12px;cursor:pointer;font-size:14px;">稍后再说</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+
+  function showDockerHint() {
+    if (document.getElementById('st-no-local')) return;
+    var wrap = document.createElement('div');
+    wrap.innerHTML = DOCKER_HINT_HTML;
+    var el = wrap.firstChild;
+    document.body.appendChild(el);
+    el.addEventListener('click', function (e) {
+      if (e.target.id === 'st-close' || e.target === el) { el.remove(); }
+      if (e.target.id === 'st-copy') {
+        var code = document.getElementById('st-copy-target');
+        var txt = code ? code.innerText : '';
+        var ok = function () {
+          var b = document.getElementById('st-copy');
+          if (b) {
+            var orig = b.innerText;
+            b.innerText = '已复制 ✓';
+            setTimeout(function () { b.innerText = orig; }, 1800);
+          }
+        };
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(txt).then(ok, function () {
+            try {
+              var ta = document.createElement('textarea');
+              ta.value = txt; document.body.appendChild(ta);
+              ta.select(); document.execCommand('copy');
+              document.body.removeChild(ta); ok();
+            } catch (_) { /* ignore */ }
+          });
+        }
+      }
+    });
+    // ESC 关闭
+    var escHandler = function escHandler(ev) {
+      if (ev.key === 'Escape') { el.remove(); document.removeEventListener('keydown', escHandler); }
+    };
+    document.addEventListener('keydown', escHandler);
+  }
+
+  function probeLocalThenGo(ev) {
+    // 用 <img> 发一次跨域请求（不会触发 CORS 报错），超时即视为未启动
+    ev.preventDefault();
+    var timeoutId;
+    var done = false;
+    function decide(ok) {
+      if (done) return;
+      done = true;
+      clearTimeout(timeoutId);
+      if (ok) { window.location.href = LOCAL_APP; }
+      else { showDockerHint(); }
+    }
+    var img = new Image();
+    img.onload = function () { decide(true); };
+    img.onerror = function () {
+      // 能触发 onerror 说明端口有响应（只是返回非图片），视为本地已启动
+      decide(true);
+    };
+    img.src = LOCAL_APP + '/favicon.svg?_=' + Date.now();
+    timeoutId = setTimeout(function () { decide(false); }, 1500);
+  }
+
+  document.addEventListener('DOMContentLoaded', function () {
+    var ids = ['trial-btn-nav', 'trial-btn-hero', 'trial-btn-contact'];
+    ids.forEach(function (id) {
+      var btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', probeLocalThenGo);
+    });
+  });
 })();
 </script>
 </body>

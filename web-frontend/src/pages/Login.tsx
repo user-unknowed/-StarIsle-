@@ -2,23 +2,62 @@ import { useState } from 'react';
 import { useAuthStore, LoginMethod } from '../store/authStore';
 import { Star, User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Phone, Apple } from 'lucide-react';
 import { Button, Input, Modal } from '../components/ui';
+import { useToast } from '../components/ui/Toast';
 
 export default function Login() {
   const { login, register, loginWithThirdParty, loginWithPhone, isLoading, error, clearError } = useAuthStore();
-  
+  const toast = useToast();
+
   const [isLogin, setIsLogin] = useState(true);
   const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [usernameError, setUsernameError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [demoLoading, setDemoLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showPhoneModal, setShowPhoneModal] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [phoneError, setPhoneError] = useState('');
   const [smsCode, setSmsCode] = useState('');
   const [codeCountdown, setCodeCountdown] = useState(0);
+
+  // 表单实时校验
+  const validateUsername = (val: string) => {
+    if (!val.trim()) return '请输入用户名';
+    if (val.trim().length < 2) return '用户名至少 2 个字符';
+    return '';
+  };
+
+  const validatePassword = (val: string) => {
+    if (!val) return '请输入密码';
+    if (val.length < 6) return '密码至少 6 位';
+    return '';
+  };
+
+  // 密码强度：弱/中/强
+  const getPasswordStrength = (val: string): { label: string; color: string } | null => {
+    if (!val || val.length < 6) return null;
+    let score = 0;
+    if (val.length >= 8) score++;
+    if (/[A-Z]/.test(val)) score++;
+    if (/[0-9]/.test(val)) score++;
+    if (/[^A-Za-z0-9]/.test(val)) score++;
+    if (score <= 1) return { label: '弱', color: 'text-red-500 bg-red-100' };
+    if (score <= 2) return { label: '中', color: 'text-yellow-600 bg-yellow-100' };
+    return { label: '强', color: 'text-green-600 bg-green-100' };
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
+
+    // 提交前校验
+    const uErr = validateUsername(username);
+    const pErr = validatePassword(password);
+    setUsernameError(uErr);
+    setPasswordError(pErr);
+    if (uErr || pErr) return;
 
     if (isLogin) {
       await login({ username, password, role });
@@ -28,12 +67,20 @@ export default function Login() {
   };
 
   const handleDemoLogin = async () => {
-    if (role === 'student') {
-      await login({ username: 'student1', password: '123456', role: 'student' });
-    } else if (role === 'teacher') {
-      await login({ username: 'teacher1', password: '123456', role: 'teacher' });
-    } else {
-      await login({ username: 'parent1', password: '123456', role: 'parent' });
+    setDemoLoading(true);
+    try {
+      if (role === 'student') {
+        await login({ username: 'student1', password: '123456', role: 'student' });
+      } else if (role === 'teacher') {
+        await login({ username: 'teacher1', password: '123456', role: 'teacher' });
+      } else {
+        await login({ username: 'parent1', password: '123456', role: 'parent' });
+      }
+      toast.success('欢迎体验 StarIsle 星屿心理健康平台');
+    } catch {
+      toast.error('体验入口暂时不可用，请稍后重试');
+    } finally {
+      setDemoLoading(false);
     }
   };
 
@@ -125,48 +172,81 @@ export default function Login() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             {!isLogin && (
-              <Input
-                label="昵称"
-                icon={<User className="w-5 h-5" />}
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="请输入昵称"
-                required
-              />
+              <div>
+                <Input
+                  label="昵称"
+                  icon={<User className="w-5 h-5" />}
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setUsernameError(validateUsername(e.target.value));
+                  }}
+                  placeholder="请输入昵称"
+                  required
+                />
+                {usernameError && (
+                  <p className="mt-1 ml-1 text-xs text-danger-600">{usernameError}</p>
+                )}
+              </div>
             )}
 
             {isLogin && (
-              <Input
-                label="用户名"
-                icon={<User className="w-5 h-5" />}
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                placeholder="请输入用户名"
-                autoComplete="username"
-                required
-              />
+              <div>
+                <Input
+                  label="用户名"
+                  icon={<User className="w-5 h-5" />}
+                  value={username}
+                  onChange={(e) => {
+                    setUsername(e.target.value);
+                    setUsernameError(validateUsername(e.target.value));
+                  }}
+                  placeholder="请输入用户名"
+                  autoComplete="username"
+                  required
+                />
+                {usernameError && (
+                  <p className="mt-1 ml-1 text-xs text-danger-600">{usernameError}</p>
+                )}
+              </div>
             )}
 
-            <Input
-              label="密码"
-              icon={<Lock className="w-5 h-5" />}
-              iconRight={
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  aria-label={showPassword ? '隐藏密码' : '显示密码'}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                </button>
-              }
-              type={showPassword ? 'text' : 'password'}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="请输入密码"
-              autoComplete="current-password"
-              required
-            />
+            <div>
+              <Input
+                label="密码"
+                icon={<Lock className="w-5 h-5" />}
+                iconRight={
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    aria-label={showPassword ? '隐藏密码' : '显示密码'}
+                    className="text-gray-400 hover:text-gray-600"
+                  >
+                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                  </button>
+                }
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  setPasswordError(validatePassword(e.target.value));
+                }}
+                placeholder="请输入密码"
+                autoComplete="current-password"
+                required
+              />
+              {passwordError ? (
+                <p className="mt-1 ml-1 text-xs text-danger-600">{passwordError}</p>
+              ) : (
+                !isLogin && password && getPasswordStrength(password) && (
+                  <div className="mt-1 ml-1 flex items-center gap-1.5">
+                    <span className="text-xs text-gray-400">密码强度：</span>
+                    <span className={`text-xs px-1.5 py-0.5 rounded ${getPasswordStrength(password)!.color}`}>
+                      {getPasswordStrength(password)!.label}
+                    </span>
+                  </div>
+                )
+              )}
+            </div>
 
             {error && (
               <div className="p-3 bg-danger-50 border border-danger-200 rounded-xl text-danger-600 text-sm">
@@ -196,9 +276,23 @@ export default function Login() {
 
           <button
             onClick={handleDemoLogin}
-            className="w-full py-3 mt-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors"
+            disabled={demoLoading}
+            className="w-full py-3 mt-4 bg-gray-100 text-gray-700 font-medium rounded-xl hover:bg-gray-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
-            快速体验（{role === 'student' ? '学生' : role === 'teacher' ? '教师' : '家长'}）
+            {demoLoading ? (
+              <>
+                <svg className="animate-spin h-5 w-5 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                正在进入...
+              </>
+            ) : (
+              <>
+                试用体验（{role === 'student' ? '学生' : role === 'teacher' ? '教师' : '家长'}）
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
 
           <div className="relative my-6">
@@ -263,14 +357,23 @@ export default function Login() {
         size="md"
       >
         <div className="space-y-4">
-          <Input
-            label="手机号"
-            icon={<Phone className="w-5 h-5" />}
-            type="tel"
-            value={phoneNumber}
-            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, '').slice(0, 11))}
-            placeholder="请输入手机号"
-          />
+          <div>
+            <Input
+              label="手机号"
+              icon={<Phone className="w-5 h-5" />}
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => {
+                const val = e.target.value.replace(/\D/g, '').slice(0, 11);
+                setPhoneNumber(val);
+                setPhoneError(val.length === 11 && !/^1[3-9]\d{9}$/.test(val) ? '请输入正确的手机号' : '');
+              }}
+              placeholder="请输入手机号"
+            />
+            {phoneError && (
+              <p className="mt-1 ml-1 text-xs text-danger-600">{phoneError}</p>
+            )}
+          </div>
           <div className="flex gap-3">
             <Input
               label="验证码"

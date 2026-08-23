@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore';
 import { ApiDebugOverlay } from './components/dev/ApiDebugOverlay';
 import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { EmergencyHelpButton } from './components/common/EmergencyHelpButton';
+import { RouteProgress } from './components/common/RouteProgress';
 import Login from './pages/Login';
 import StudentHome from './pages/student/StudentHome';
 import StudentChat from './pages/student/StudentChat';

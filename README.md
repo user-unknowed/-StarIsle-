@@ -1,6 +1,6 @@
 # 星屿 StarIsle - 青少年心理健康AI陪伴应用
 
-> **版本**: MVP v1.5
+> **版本**: MVP v2.0
 > **目标用户**: 12-18岁初高中生、教师及家长
 > **核心定位**: AI情绪成长伙伴，零压力的第一心理求助站
 
@@ -463,6 +463,7 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 - **v1.6** (2026-08-07): 移动端完整测试、风险检测关键词扩充、持续时间规则增强、语义分析器阈值优化
 - **v1.7-v1.9** (2026-08-09): 风险检测精准度优化至100%、积极词降级规则、社交孤立降级规则、AES密钥默认值修复、API全量回归测试通过
 - **v1.9.0** (2026-08-10): PR #7 合并至 main、版本 tag v1.9.0 发布、CodeQL 6/6 pass、临时分支清理
+- **v2.0** (2026-08-28): 交互体验全面升级——试用体验入口改造、骨架屏加载、空状态引导、表单实时校验、路由进度条、操作反馈增强
 
 ## v1.5 更新详情（2026-07-31）
 
@@ -785,6 +786,101 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 - **临时分支清理**：`codex/v1.9-risk-detection-optimization` 已删除
 - **版本 tag**：`v1.9.0`，tag object sha=`16d76bf775ba619e0966a6082e0af68e0effd5e5`
 - **Tag URL**：[https://github.com/user-unknowed/-StarIsle-/releases/tag/v1.9.0](https://github.com/user-unknowed/-StarIsle-/releases/tag/v1.9.0)
+
+## v2.0 更新详情（2026-08-28）
+
+### 更新目的
+
+对 Web 端进行全面交互体验升级，将登录页"快速体验"按钮改造为一键进入应用内部的"试用体验"入口，并围绕加载态、空状态、表单校验、路由反馈四大交互缺口进行系统性补齐，消除布局跳动与无反馈等待，提升三端（学生/教师/家长）的使用流畅度与专业感。
+
+### 模块变更
+
+#### 1. "试用体验"按钮入口改造
+
+- **登录页按钮重做** `Login.tsx`
+  - 按钮文案从"快速体验"改为"试用体验"，附带右箭头图标
+  - 点击后进入 loading 态（spinner 动画 + "正在进入..." 文案 + 禁用防重复点击）
+  - 登录成功弹出 `toast.success('欢迎体验 StarIsle 星屿心理健康平台')` 并自动路由至角色首页
+  - 失败时 toast 错误提示并恢复按钮可点击
+  - 一键使用 demo 账号（student1/teacher1/parent1）登录，**直接进入软件内部部署的 Web 端界面**
+
+#### 2. 骨架屏加载组件（消除布局跳动）
+
+- **新增通用骨架屏组件** `components/ui/Skeleton.tsx`
+  - `SkeletonLine`（文本行）、`SkeletonCard`（卡片块）、`SkeletonAvatar`（圆形头像）
+  - `SkeletonMoodList`（心情记录列表）、`SkeletonStudentList`（学生网格）、`SkeletonChat`（聊天气泡）
+  - 带 shimmer 动画，形状匹配最终布局
+- **应用页面**：
+  - `StudentHome.tsx`：心情趋势图加载时显示 7 根骨架柱
+  - `TeacherHome.tsx`：4 个统计卡片加载时显示骨架
+  - `ParentHome.tsx`：情绪趋势图加载骨架
+  - `ParentChildren.tsx`：孩子列表加载骨架（头像+文本行）
+
+#### 3. 空状态引导组件
+
+- **新增通用空状态组件** `components/ui/EmptyState.tsx`
+  - emoji 插画 + 标题 + 描述文案 + 可选行动按钮（CTA）
+  - 应用场景：
+    - 学生端无心情记录 → 🌈 "还没有心情记录" + "立即打卡"平滑滚动
+    - 家长端未绑定孩子 → 👨‍👩‍👧 "还未绑定孩子" + "去绑定"跳转
+    - 家长端无心情记录 → 📭 "暂无心情记录"
+    - 教师端搜索无结果 → 🔍 "未找到匹配的学生"（显示搜索关键词）
+
+#### 4. 登录表单实时校验
+
+- **输入实时校验** `Login.tsx`
+  - 用户名非空 + 至少 2 字符，密码至少 6 位
+  - 输入框下方内联红色错误提示，替代原仅顶部 error 条
+  - 注册模式下显示密码强度分级标签（弱/中/强，红/黄/绿）
+  - 手机号登录模态框增加 11 位格式校验（`/^1[3-9]\d{9}$/`）
+
+#### 5. 路由切换进度条
+
+- **新增路由进度条组件** `components/common/RouteProgress.tsx`
+  - 固定页面顶部 2px 进度条，`useLocation` 监听路由变化
+  - 切换时进度从 0→80% 模拟增长，加载完成跳 100% 后淡出
+  - 纯 CSS 动画 + React state，零第三方依赖
+  - `App.tsx` 全局挂载
+
+#### 6. 操作反馈增强
+
+- **心情打卡成功反馈** `StudentHome.tsx`
+  - 成功 `toast.success('打卡成功')` + 趋势图 ring 高亮 1.5 秒动效
+- **发送消息思考状态**（聊天页已有"小星正在思考…"三点打字指示器，无需重复修改）
+
+### 技术细节
+
+| 维度 | 升级前 | 升级后 |
+|------|--------|--------|
+| 加载态 | 纯 spinner（布局跳动） | 骨架屏（匹配最终布局） |
+| 空数据 | 灰色文字"暂无记录" | emoji 插画 + 标题 + CTA 引导 |
+| 表单校验 | 提交时才校验 | 输入实时校验 + 内联错误 |
+| 路由切换 | 无反馈 | 顶部进度条 |
+| 体验入口 | demo 登录无 loading | loading + toast + 防重复点击 |
+| 密码强度 | 无提示 | 弱/中/强分级标签 |
+
+### 验证情况
+
+- ✅ TypeScript 类型检查通过（改动文件无错误）
+- ✅ Vite 生产构建成功（1684 模块，5.13s）
+- ✅ Mock 服务器 + Vite Dev 服务器运行正常
+- ✅ 首页 HTTP 200、API 健康检查与登录接口正常
+- ✅ 三端试用体验按钮一键进入应用
+
+### 修改文件清单
+
+| 文件 | 类型 | 说明 |
+|------|------|------|
+| `web-frontend/src/components/ui/Skeleton.tsx` | 新增 | 通用骨架屏组件（6 个子组件） |
+| `web-frontend/src/components/ui/EmptyState.tsx` | 新增 | 通用空状态组件 |
+| `web-frontend/src/components/common/RouteProgress.tsx` | 新增 | 路由切换进度条 |
+| `web-frontend/src/components/ui/index.ts` | 修改 | 导出新组件 |
+| `web-frontend/src/pages/Login.tsx` | 修改 | 试用体验按钮 + 表单校验 + 密码强度 + 手机号校验 |
+| `web-frontend/src/App.tsx` | 修改 | 挂载 RouteProgress |
+| `web-frontend/src/pages/student/StudentHome.tsx` | 修改 | 骨架屏 + 空状态 + 打卡反馈 |
+| `web-frontend/src/pages/teacher/TeacherHome.tsx` | 修改 | 统计卡片骨架 + 搜索空状态 |
+| `web-frontend/src/pages/parent/ParentHome.tsx` | 修改 | 趋势图骨架 + 空状态 |
+| `web-frontend/src/pages/parent/ParentChildren.tsx` | 修改 | 孩子列表骨架 |
 
 ## 贡献指南
 

@@ -1,6 +1,6 @@
 # 星屿 StarIsle - Web前端
 
-> **版本**: v1.0
+> **版本**: v2.0
 > **框架**: React 18 + TypeScript + Vite
 > **核心定位**: 星屿青少年心理健康应用的Web前端实现
 
@@ -86,6 +86,14 @@ src/
 ```
 
 ## 快速开始
+
+### 试用体验（一键进入）
+
+登录页提供"试用体验"按钮，点击后自动使用 demo 账号登录，一键进入对应角色的 Web 端界面：
+
+- **学生端试用**：选择"学生"角色 → 点击"试用体验（学生）"
+- **教师端试用**：选择"教师"角色 → 点击"试用体验（教师）"
+- **家长端试用**：选择"家长"角色 → 点击"试用体验（家长）"
 
 ### 环境要求
 - Node.js >= 18.0.0
@@ -199,6 +207,37 @@ npm run check
 - docs: 文档更新
 - refactor: 代码重构
 - style: 样式调整
+
+## 交互体验组件（v2.0 新增）
+
+### 骨架屏 Skeleton
+
+`components/ui/Skeleton.tsx` — 加载态占位组件，消除布局跳动：
+
+| 组件 | 用途 |
+|------|------|
+| `SkeletonLine` | 单行文本占位 |
+| `SkeletonCard` | 卡片块占位 |
+| `SkeletonAvatar` | 圆形头像占位 |
+| `SkeletonMoodList` | 心情记录列表骨架 |
+| `SkeletonStudentList` | 学生网格骨架 |
+| `SkeletonChat` | 聊天气泡骨架 |
+
+### 空状态 EmptyState
+
+`components/ui/EmptyState.tsx` — 无数据时的引导组件：
+
+```tsx
+<EmptyState emoji="🌈" title="还没有心情记录" description="..." actionText="立即打卡" onAction={...} />
+```
+
+### 路由进度条 RouteProgress
+
+`components/common/RouteProgress.tsx` — 顶部 2px 进度条，路由切换时反馈加载状态。已在 `App.tsx` 全局挂载，零配置生效。
+
+### 表单实时校验
+
+登录页支持用户名/密码实时校验、密码强度分级（弱/中/强）、手机号格式校验，错误内联显示。
 
 ## 常见问题
 

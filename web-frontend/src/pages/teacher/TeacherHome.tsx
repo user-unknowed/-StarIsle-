@@ -6,6 +6,7 @@ import { riskApi } from '../../services/api';
 import { ApiError } from '../../services/http';
 import { BarChart3, AlertTriangle, Users, CheckCircle, TrendingUp, Eye, Download, Upload, ShieldAlert, Loader2 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
+import { SkeletonLine, SkeletonAvatar, EmptyState } from '../../components/ui';
 
 interface RiskDetail {
   level: string;
@@ -44,7 +45,7 @@ const getMoodEmoji = (level: number | undefined) => {
 
 export default function TeacherHome() {
   const user = useAuthStore((state) => state.user);
-  const { students, stats, fetchClassStats, fetchStudents } = useClassroomStore();
+  const { students, stats, isLoading, fetchClassStats, fetchStudents } = useClassroomStore();
   const toast = useToast();
 
   // 高风险告警接入 riskApi.getLevel
@@ -193,6 +194,20 @@ export default function TeacherHome() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+          {isLoading ? (
+            [0, 1, 2, 3].map((i) => (
+              <div key={i} className="bg-white rounded-2xl p-5 shadow-lg">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-2">
+                    <SkeletonLine width="w-16" className="h-3" />
+                    <SkeletonLine width="w-12" className="h-7" />
+                  </div>
+                  <SkeletonAvatar size="h-12 w-12" />
+                </div>
+              </div>
+            ))
+          ) : (
+          <>
           <div className="bg-white rounded-2xl p-5 shadow-lg">
             <div className="flex items-center justify-between">
               <div>
@@ -240,6 +255,8 @@ export default function TeacherHome() {
               </div>
             </div>
           </div>
+          </>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
@@ -351,7 +368,17 @@ export default function TeacherHome() {
                 </tr>
               </thead>
               <tbody>
-                {filteredStudents.map((student) => (
+                {filteredStudents.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="py-8">
+                      <EmptyState
+                        emoji="🔍"
+                        title="未找到匹配的学生"
+                        description={searchQuery ? `没有与"${searchQuery}"相关的学生，试试其他关键词` : '暂无学生数据'}
+                      />
+                    </td>
+                  </tr>
+                ) : filteredStudents.map((student) => (
                   <Fragment key={student.id}>
                     <tr className="border-b border-gray-100 hover:bg-gray-50">
                       <td className="py-4 px-4">

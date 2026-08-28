@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
 import { Header } from '../../components/common/Header';
-import { Calendar, TrendingUp, Award, Sparkles, Check, Loader2 } from 'lucide-react';
-import { Button } from '../../components/ui';
+import { Calendar, TrendingUp, Award, Sparkles, Check } from 'lucide-react';
+import { Button, SkeletonLine, EmptyState } from '../../components/ui';
 import { useToast } from '../../components/ui/Toast';
 
 const moodOptions = [
@@ -34,6 +34,7 @@ export default function StudentHome() {
 
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [showTags, setShowTags] = useState(false);
+  const [highlightChart, setHighlightChart] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -44,6 +45,11 @@ export default function StudentHome() {
   useEffect(() => {
     if (checkinStatus === 'error') {
       toast.error(checkinMessage || '心情打卡失败，请稍后重试');
+    } else if (checkinStatus === 'success') {
+      toast.success(checkinMessage || '心情打卡成功');
+      setHighlightChart(true);
+      const t = setTimeout(() => setHighlightChart(false), 1500);
+      return () => clearTimeout(t);
     }
   }, [checkinStatus, checkinMessage, toast]);
 
@@ -172,19 +178,29 @@ export default function StudentHome() {
           </h2>
 
           {isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="w-8 h-8 animate-spin text-primary-500" />
+            <div className="h-32 flex items-end justify-between gap-2 px-2">
+              {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                  <SkeletonLine width="w-full" className="h-16 sm:h-20" />
+                  <SkeletonLine width="w-8" className="h-2" />
+                  <div className="w-5 h-5 rounded-full bg-gray-200 animate-pulse" />
+                </div>
+              ))}
             </div>
           ) : error ? (
             <div className="flex items-center justify-center h-32 p-4 bg-danger-50 border border-danger-200 rounded-xl text-danger-700 text-sm">
               {error}
             </div>
           ) : moodHistory.length === 0 ? (
-            <div className="flex items-center justify-center h-32 text-gray-400 text-sm">
-              暂无心情记录，快去打卡吧
-            </div>
+            <EmptyState
+              emoji="🌈"
+              title="还没有心情记录"
+              description="记录今天的心情，开启你的心灵成长之旅"
+              actionText="立即打卡"
+              onAction={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            />
           ) : (
-            <div className="flex items-end justify-between h-32 gap-2">
+            <div className={`flex items-end justify-between h-32 gap-2 transition-all duration-500 ${highlightChart ? 'ring-2 ring-primary-300 ring-offset-2 rounded-xl p-2' : ''}`}>
               {moodHistory.slice(-7).map((record, index) => {
                 const height = (record.moodLevel / 5) * 100;
                 return (

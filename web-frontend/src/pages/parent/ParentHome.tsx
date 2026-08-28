@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParentStore } from '../../store/parentStore';
 import { Header } from '../../components/common/Header';
+import { SkeletonLine, EmptyState } from '../../components/ui';
 import {
   TrendingUp,
   Award,
@@ -9,7 +10,6 @@ import {
   Sparkles,
   Siren,
   ChevronDown,
-  CheckCircle,
   Activity,
   Users,
 } from 'lucide-react';
@@ -211,12 +211,30 @@ export default function ParentHome() {
           </div>
 
           {isLoading ? (
-            <div className="h-40 flex items-center justify-center text-gray-400">加载中...</div>
-          ) : childMood.length === 0 ? (
-            <div className="h-40 flex flex-col items-center justify-center text-gray-400">
-              <CheckCircle className="w-10 h-10 mb-2 text-gray-300" />
-              <p>暂无心情记录</p>
+            <div className="h-40 flex items-end justify-between gap-2 px-2">
+              {[0, 1, 2, 3, 4, 5, 6].map((i) => (
+                <div key={i} className="flex-1 flex flex-col items-center gap-2">
+                  <SkeletonLine width="w-full" className="h-24 sm:h-28" />
+                  <SkeletonLine width="w-8" className="h-2" />
+                </div>
+              ))}
             </div>
+          ) : childMood.length === 0 ? (
+            selectedChild ? (
+              <EmptyState
+                emoji="📭"
+                title="暂无心情记录"
+                description="孩子还没有打卡心情记录，稍后再来查看吧"
+              />
+            ) : (
+              <EmptyState
+                emoji="👨‍👩‍👧"
+                title="还未绑定孩子"
+                description="绑定孩子后即可查看其心情趋势与风险状态"
+                actionText="去绑定"
+                onAction={() => navigate('/parent/children')}
+              />
+            )
           ) : (
             <div className="flex items-end justify-between h-40 gap-2">
               {childMood.slice(-Math.min(range, childMood.length)).map((record) => {

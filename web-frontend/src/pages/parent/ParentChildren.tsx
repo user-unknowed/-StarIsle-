@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParentStore } from '../../store/parentStore';
 import { Header } from '../../components/common/Header';
-import { Button, Input, Modal, useToast } from '../../components/ui';
+import { Button, Input, Modal, useToast, SkeletonAvatar, SkeletonLine } from '../../components/ui';
 import {
   Users,
   UserPlus,
@@ -107,8 +107,17 @@ export default function ParentChildren() {
         )}
 
         {isLoading && children.length === 0 ? (
-          <div className="bg-white rounded-3xl p-12 shadow-lg text-center text-gray-400">
-            加载中...
+          <div className="bg-white rounded-3xl p-6 shadow-lg space-y-4">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="flex items-center gap-4 p-3">
+                <SkeletonAvatar size="h-14 w-14" />
+                <div className="flex-1 space-y-2">
+                  <SkeletonLine width="w-24" />
+                  <SkeletonLine width="w-40" className="h-3" />
+                  <SkeletonLine width="w-32" className="h-3" />
+                </div>
+              </div>
+            ))}
           </div>
         ) : children.length === 0 ? (
           <div className="bg-white rounded-3xl p-12 shadow-lg text-center">

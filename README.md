@@ -110,6 +110,7 @@
 | `server-services/backend/` | Go Gin | API网关（请求路由、负载均衡、统一认证入口） |
 | `server-services/ai-engine/` | Python FastAPI | AI对话引擎（情绪分析、风险检测、语义分析） |
 | `web-frontend/` | React TypeScript | Web端多角色应用（学生/教师/家长） |
+| `web-frontend/mock-server.mjs` | Node.js HTTP | Mock API 服务器（v2.0 新增，无后端即可体验完整功能） |
 | `student-app/` | Flutter | 学生端原生移动应用 |
 | `teacher-app/` | Flutter | 教师端原生移动应用 |
 
@@ -306,6 +307,27 @@ docker-compose up -d
 
 ### Web前端开发
 
+#### 方式一：Mock 服务器模式（v2.0 推荐，无需真实后端）
+
+v2.0 内置独立 Mock 服务器（`mock-server.mjs`），覆盖认证、心情、AI 对话、班级管理、知识库、家长端等全部 API 模块，无需启动 Java/Go/Python 后端即可体验完整功能。
+
+```bash
+cd web-frontend
+npm install
+
+# 终端 1：启动 Mock 服务器（端口 3001）
+node mock-server.mjs
+
+# 终端 2：启动 Vite 开发服务器（端口 5173）
+npm run dev
+```
+
+访问 http://localhost:5173 ，点击登录页"试用体验"按钮即可一键进入。
+
+#### 方式二：连接真实后端
+
+若已启动 Java 后端（端口 8080），将 `web-frontend/.env` 中 `VITE_API_BASE_URL` 改为后端地址即可：
+
 ```bash
 cd web-frontend
 npm install
@@ -313,6 +335,19 @@ npm run dev
 ```
 
 访问 http://localhost:5173 查看应用
+
+#### Vite 代理与相对路径部署（v2.0）
+
+v2.0 将 API 与 WebSocket 地址从绝对路径改为相对路径，适配任意部署环境：
+
+| 配置项 | v1.x（绝对路径） | v2.0（相对路径） |
+|--------|------------------|------------------|
+| `VITE_API_BASE_URL` | `http://localhost:8080/api` | `/api` |
+| `VITE_WS_URL` | `ws://localhost:8080/ws` | `/ws` |
+
+- **Vite 开发代理**：`vite.config.ts` 配置了 `/api` → `localhost:3001` 和 `/ws` → `localhost:3001` 的代理，开发时自动转发请求至 Mock 服务器。
+- **WebSocket 动态构造**：`src/services/ws.ts` 的 `buildWsBaseUrl()` 函数根据 `window.location` 动态拼接 `ws/wss` 协议，支持 HTTPS 部署。
+- **生产部署**：构建产物使用相对路径，可直接托管在任意子路径下，由 Nginx/反向代理统一转发 `/api` 和 `/ws`。
 
 ### Java后端服务启动
 

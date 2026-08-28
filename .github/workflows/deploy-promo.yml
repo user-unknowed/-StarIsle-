@@ -1,0 +1,52 @@
+name: Deploy Promo Page
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docs/promo/**'
+      - '.github/workflows/deploy-promo.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 同一时间仅允许一个部署任务运行
+concurrency:
+  group: promo-pages
+  cancel-in-progress: true
+
+env:
+  PROMO_TITLE_MUST_CONTAIN: "你的情绪星球"   # 用于后续日志自检
+
+jobs:
+  deploy:
+    name: Deploy Promo Page to GitHub Pages
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify promo page title
+        run: |
+          echo "=== docs/promo/index.html 标题检查 ==="
+          grep -oE '<title>[^<]*</title>' ./docs/promo/index.html || { echo "❌ 未找到 title 标签"; exit 1; }
+          grep -q "$PROMO_TITLE_MUST_CONTAIN" ./docs/promo/index.html && echo "✅ 标题包含预期关键词" || echo "⚠️ 标题未包含预期关键词"
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/promo
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

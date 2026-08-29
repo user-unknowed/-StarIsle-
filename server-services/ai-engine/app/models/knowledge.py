@@ -19,6 +19,8 @@ class KnowledgeDocument(BaseModel):
     content: str = Field(..., description="知识核心内容/技术方法")
     techniques: List[str] = Field(default_factory=list, description="相关咨询技术列表")
     applicable_issues: List[str] = Field(default_factory=list, description="适用心理问题类型")
+    source_repo_id: Optional[str] = Field(None,
+        description="来源GitHub fork仓库 owner/repo，M2b注入知识专用")
     created_at: Optional[datetime] = None
     updated_at: Optional[datetime] = None
 

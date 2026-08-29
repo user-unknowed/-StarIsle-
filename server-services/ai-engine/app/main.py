@@ -4,6 +4,10 @@ from pydantic import BaseModel
 from typing import List, Optional
 import os
 from dotenv import load_dotenv
+import importlib
+import pkgutil
+from app.skills.base_skill import BaseSkill
+from app.skills.skill_router import SkillRouter
 from app.services.chat_service import ChatService
 from app.services.risk_detection_service import RiskDetectionService
 from app.services.emotion_analysis_service import EmotionAnalysisService
@@ -12,6 +16,24 @@ from contextlib import asynccontextmanager
 
 # 加载环境变量
 load_dotenv()
+
+
+def _autodiscover_skills():
+    import app.skills as spkg
+    found: List[BaseSkill] = []
+    for _finder, name, _ispkg in pkgutil.iter_modules(spkg.__path__):
+        if not (name.endswith("_adapter") or name.endswith("_skill")): continue
+        try: mod = importlib.import_module(f"app.skills.{name}")
+        except Exception as e: print(f"[AI-Engine] 跳过 {name}: {e}"); continue
+        for attr in dir(mod):
+            obj = getattr(mod, attr)
+            if (isinstance(obj, type) and issubclass(obj, BaseSkill)
+                    and obj is not BaseSkill and not getattr(obj, "__abstractmethods__", None)):
+                try: found.append(obj())
+                except Exception as e: print(f"[AI-Engine] 实例化 {attr} 失败: {e}")
+    print(f"[AI-Engine] 技能自动发现: {len(found)} 个 -> {[s.name for s in found]}")
+    return found
+
 
 # 初始化服务
 chat_service = ChatService()
@@ -36,6 +58,10 @@ async def lifespan(app: FastAPI):
     
     stats = await knowledge_service.get_stats()
     print(f"[AI-Engine] 知识库模式: {stats.get('mode')}, 文档数: {stats.get('total_documents')}")
+    skills = _autodiscover_skills()
+    if skills and hasattr(chat_service, "set_skills"):
+        chat_service.set_skills(skills)
+        print(f"[AI-Engine] 已注入 {len(skills)} 个 Fork Skills: {[s.name for s in skills]}")
     print("[AI-Engine] AI引擎启动完成，RAG增强已就绪")
     
     yield
@@ -297,6 +323,12 @@ async def get_knowledge_categories():
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/skills/status")
+async def skills_status():
+    if hasattr(chat_service, "skill_router"):
+        return {"skills": chat_service.skill_router.status()}
+    return {"skills": [], "error": "SkillRouter 未初始化"}
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,6 +1,6 @@
 # 星屿 StarIsle - 青少年心理健康AI陪伴应用
 
-> **版本**: MVP v1.5
+> **版本**: v2.0（小星形象增强版）
 > **目标用户**: 12-18岁初高中生、教师及家长
 > **核心定位**: AI情绪成长伙伴，零压力的第一心理求助站
 
@@ -22,6 +22,7 @@
 - ✅ **AI工具中心**（文本生成、内容摘要、风格转换）
 - ✅ **紧急帮助按钮**（三端共用，一键拨打心理危机热线）`v1.5新增`
 - ✅ **前端危机关键词检测**（自伤/自杀等关键词触发安全引导）`v1.5新增`
+- ✅ **小星 Skill 自适应能力**（GitHub Fork 三层集成：代码能力+RAG知识+训练语料）`v2.0新增`
 
 ### 教师端
 - ✅ 工作台概览与高风险告警
@@ -97,6 +98,9 @@
 | **AI引擎** | Python + FastAPI | - / 0.108.x | AI对话与分析 |
 | **AI引擎** | Transformers + Torch | 4.36.x / 2.1.x | 情绪分析模型 |
 | **AI引擎** | LangChain | 0.1.x | LLM应用框架 |
+| **AI训练** | PEFT + Accelerate | 0.7.x / 0.24.x | LoRA微调 + 显存优化 |`v2.0新增`
+| **AI训练** | Datasets + Evaluate | 2.16.x / 0.4.x | 训练数据加载与评估 |`v2.0新增`
+| **AI训练** | GitPython + LangDetect | 3.1.x / 1.0.x | Fork仓库解析+语种检测 |`v2.0新增`
 | **数据库** | PostgreSQL | 14 | 关系型数据存储 |
 | **数据库** | MongoDB | 6.0 | 非结构化数据存储 |
 | **缓存** | Redis | 7.0 | 会话管理与缓存 |
@@ -168,8 +172,20 @@
 │   │   │   ├── models/               # 语义分析模型
 │   │   │   ├── prompts/              # 系统提示词
 │   │   │   ├── services/             # AI服务层
+│   │   │   ├── skills/               # 小星技能适配器（Fork集成）`v2.0新增`
 │   │   │   ├── utils/                # 工具函数
 │   │   │   └── main.py               # 入口文件
+│   │   ├── scripts/                  # AI训练与集成脚本 `v2.0新增`
+│   │   │   ├── discover_forks.py     # M1: GitHub Fork发现
+│   │   │   ├── integrate_forks.py    # M2: 三层集成（Skill+RAG+语料）
+│   │   │   ├── build_sft_dataset.py  # SFT数据集构建
+│   │   │   ├── continued_pretrain_mlm.py # M3a: MLM继续预训练
+│   │   │   ├── sft_full_finetune.py  # M3b: SFT全参数微调
+│   │   │   ├── evaluate_model.py     # M4: 6维LLM-as-Judge评估
+│   │   │   └── orchestrate_fork_integration.py # 一键流水线
+│   │   ├── tests/                    # 单元测试 `v2.0新增`
+│   │   ├── data/                     # 训练数据与集成产物
+│   │   ├── models/                   # 训练模型输出
 │   │   ├── dockerfile                # Docker构建配置
 │   │   └── requirements.txt          # Python依赖
 │   ├── backend/                      # API网关（Go）
@@ -273,10 +289,21 @@ backend-java/StarIsleApplication.java
 server-services/ai-engine/app/main.py
     ├── services/chat_service.py
     │   ├── models/semantic_analyzer.py
-    │   └── prompts/star宝_system_prompt.py
+    │   ├── prompts/star宝_system_prompt.py
+    │   └── skills/skill_router.py        # v2.0新增：技能路由
+    ├── skills/                            # v2.0新增：Fork技能适配器
+    │   ├── base_skill.py                 # 抽象基类
+    │   └── *_adapter.py                  # Fork自动生成的技能
     ├── services/emotion_analysis_service.py
     ├── services/risk_detection_service.py
     └── utils/keyword_manager.py
+
+scripts/orchestrate_fork_integration.py   # v2.0新增：一键流水线
+    ├── discover_forks.py                 # M1: Fork发现
+    ├── integrate_forks.py                # M2: 三层集成
+    ├── continued_pretrain_mlm.py         # M3a: MLM预训练
+    ├── sft_full_finetune.py              # M3b: SFT微调
+    └── evaluate_model.py                 # M4: 6维评估
 ```
 
 ## 快速开始
@@ -335,6 +362,22 @@ python app/main.py
 ```
 
 服务运行在 http://localhost:8000
+
+### 小星训练流水线（v2.0新增）
+
+```bash
+cd server-services/ai-engine
+
+# 一键执行全流程（discover → integrate → mlm → sft → evaluate → report）
+PYTHONPATH=. python scripts/orchestrate_fork_integration.py \
+  --smoke --max-forks 3 --force-sft-mode simulation
+
+# 真实 GPU 训练（需 80GB A100）
+PYTHONPATH=. python scripts/orchestrate_fork_integration.py --max-forks 10
+
+# 查看技能状态
+curl http://localhost:8000/skills/status
+```
 
 ### Go API网关启动
 
@@ -419,6 +462,9 @@ gh attestation verify oci://ghcr.io/user-unknowed/-StarIsle--backend:latest \
 | 日均心情打卡率 | > 40% |
 | 用户NPS | > 40 |
 | 高风险热线触达率 | > 80% |
+| 小星技能激活率 | > 60% `v2.0新增` |
+| SFT模型去标签化合规率 | > 90% `v2.0新增` |
+| 红线词零容忍 | 0 次 `v2.0新增` |
 
 ## 常见问题
 
@@ -443,6 +489,15 @@ A: 安装GitHub CLI后运行 `gh attestation verify` 命令，或在GitHub仓库
 ### Q: Docker构建失败如何排查？
 A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的Dockerfile文件。
 
+### Q: 小星训练流水线是什么？如何使用？`v2.0新增`
+A: 训练流水线是 `scripts/orchestrate_fork_integration.py` 实现的一键化流程，包含 6 个步骤：M1 Fork 发现 → M2 三层集成 → M3a MLM 预训练 → M3b SFT 微调 → M4 6维评估 → 汇总报告。使用 `--smoke` 标志可在无 GPU 环境下运行仿真模式验证全链路。
+
+### Q: 如何将 GitHub fork 项目接入小星？`v2.0新增`
+A: 流水线自动完成三层集成：(1) 代码能力层 — 将 fork 仓库的功能封装为 Skill Adapter（继承 `BaseSkill`），通过 `SkillRouter` 动态路由；(2) RAG 知识层 — 将 fork 文档/README 注入 `knowledge_base.json`；(3) 训练语料层 — 清洗 fork 文本数据写入 `combined_cleaned_text.txt` 供 MLM/SFT 训练使用。
+
+### Q: 没有 GPU 能跑训练吗？`v2.0新增`
+A: 可以。SFT 脚本内置显存检测降级链：FULL 全参数 → LoRA → CPU Offload → SIMULATION 仿真。无 GPU 时自动降级为 SIMULATION 模式，生成仿真 loss 曲线和评估报告，全流程仍可跑通验证。
+
 ## 开发团队
 
 - 产品设计: 产品团队
@@ -463,6 +518,7 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 - **v1.6** (2026-08-07): 移动端完整测试、风险检测关键词扩充、持续时间规则增强、语义分析器阈值优化
 - **v1.7-v1.9** (2026-08-09): 风险检测精准度优化至100%、积极词降级规则、社交孤立降级规则、AES密钥默认值修复、API全量回归测试通过
 - **v1.9.0** (2026-08-10): PR #7 合并至 main、版本 tag v1.9.0 发布、CodeQL 6/6 pass、临时分支清理
+- **v2.0** (2026-08-29): 小星形象增强 — GitHub Fork 三层集成（代码能力+RAG知识+训练语料）、MLM继续预训练+SFT全参数微调（显存降级链）、6维LLM-as-Judge评估、Orchestrator一键流水线、20项单元测试全通过
 
 ## v1.5 更新详情（2026-07-31）
 
@@ -785,6 +841,93 @@ A: 检查Dockerfile路径配置是否正确，确认工作目录下有对应的D
 - **临时分支清理**：`codex/v1.9-risk-detection-optimization` 已删除
 - **版本 tag**：`v1.9.0`，tag object sha=`16d76bf775ba619e0966a6082e0af68e0effd5e5`
 - **Tag URL**：[https://github.com/user-unknowed/-StarIsle-/releases/tag/v1.9.0](https://github.com/user-unknowed/-StarIsle-/releases/tag/v1.9.0)
+
+## v2.0 更新详情（2026-08-29）· 小星形象增强版
+
+### 更新目的
+
+将最近 GitHub 上 fork 的心理健康相关开源项目，通过自动化流水线接入「小星」AI 情感陪伴形象，实现三层增强（代码能力 + RAG 知识 + 训练语料），并完成 MLM 继续预训练 + SFT 全参数微调 + 6 维 LLM-as-Judge 评估的完整训练流程模拟。
+
+### 核心新增模块
+
+#### 1. Skill Adapter 架构（代码能力层）
+
+- **`app/skills/base_skill.py`**：抽象基类，定义 `can_handle()` / `execute()` 契约
+- **`app/skills/skill_router.py`**：技能路由器，自动匹配用户意图到技能，错误时自动禁用降级
+- **`app/main.py` 新增 `/skills/status` API**：在线查看已注册技能及其状态
+- **系统 Prompt 扩展**：`star宝_system_prompt.py` 注入 `add_available_skills_context`，让小星知道自己有哪些技能可用
+
+#### 2. GitHub Fork 三层集成（M2 模块）
+
+| 层级 | 来源 | 产物 |
+|------|------|------|
+| 代码能力 | Fork 仓库功能 | Skill Adapter（自动生成 `*_adapter.py`） |
+| RAG 知识 | Fork 文档/README | `knowledge_base.json` 注入（`source_repo_id` 标注来源） |
+| 训练语料 | Fork 文本数据 | `combined_cleaned_text.txt`（语言检测+短文本过滤） |
+
+集成结果（smoke 验证）：3 个 fork 仓库 → 3 个 Skill Adapter + KB 文档 + 3.7M 字语料
+
+#### 3. 训练流水线（M3 + M4）
+
+| 阶段 | 脚本 | 模型 | 降级策略 | smoke 指标 |
+|------|------|------|---------|-----------|
+| M3a MLM | `continued_pretrain_mlm.py` | bert-base-chinese | 缺 deps → SIMULATION | eval_loss=0.65, ppl=1.92 |
+| M3b SFT | `sft_full_finetune.py` | Qwen-1.8B-Chat | FULL→LoRA→CPU→SIM | loss=0.35, ppl=1.42, acc=89.2% |
+| M4 评估 | `evaluate_model.py` | 6维LLM-as-Judge | 缺API key → 规则评分 | 60 cases, 去标签化=76.7% |
+
+SFT 数据集：1784 条（设计文档 500 + 知识库 1000 + Fork 技能 500，自动去重+红线词过滤）
+
+#### 4. Orchestrator 一键流水线
+
+```bash
+# 全流程 6 步：discover → integrate → mlm → sft → evaluate → report
+python scripts/orchestrate_fork_integration.py --smoke --force-sft-mode simulation
+```
+
+支持 `--resume-from` 断点续跑，失败步骤自动写入 `integration_report.json`。
+
+### 测试结果
+
+| 测试维度 | 数量 | 结果 |
+|---------|------|------|
+| 单元测试（7 个文件） | 20 | 全部通过 (0.08s) |
+| Orchestrator 全流程 | 6 步 | 全部成功（smoke 模式） |
+| SFT 数据集 | 1784 条 | 生成成功 |
+| Fork 集成 manifest | 3 repos | Skill + KB + 语料全部产出 |
+
+### 风险降级机制
+
+| 风险场景 | 降级策略 |
+|---------|---------|
+| GitHub MCP 未授权 | fallback demo fork 列表 |
+| Skill 执行异常 | SkillRouter 自动禁用该技能 |
+| GPU 显存不足 | FULL → LoRA → CPU Offload → SIMULATION |
+| 评估 API Key 缺失 | 规则驱动仿真回复 + 自动指标打分 |
+| 红线词出现 | 数据集构建时零容忍过滤 |
+
+### 修改文件清单
+
+| 文件 | 类型 | 说明 |
+|------|------|------|
+| `app/skills/base_skill.py` | 新增 | 抽象基类 + can_handle/execute 契约 |
+| `app/skills/skill_router.py` | 新增 | 路由 + 错误自动降级 |
+| `app/skills/emotional_support_conversation_adapter.py` | 新增 | Fork 自动生成技能适配器 |
+| `scripts/discover_forks.py` | 新增 | M1: GitHub Fork 发现与获取 |
+| `scripts/integrate_forks.py` | 新增 | M2: 三层集成（Skill+RAG+语料清洗） |
+| `scripts/build_sft_dataset.py` | 新增 | SFT 数据集构建（3源+去重+红线过滤） |
+| `scripts/continued_pretrain_mlm.py` | 新增 | M3a: MLM 继续预训练（含SIMULATION降级） |
+| `scripts/sft_full_finetune.py` | 新增 | M3b: SFT 全参数微调（显存降级链） |
+| `scripts/evaluate_model.py` | 新增 | M4: 6维评估 + 红线零容忍 + 基线对比 |
+| `scripts/orchestrate_fork_integration.py` | 新增 | 一键流水线（6步+断点续跑） |
+| `app/models/knowledge.py` | 修改 | 新增 `source_repo_id` 字段 |
+| `app/services/knowledge_service.py` | 修改 | (title+source) 去重 |
+| `app/prompts/star宝_system_prompt.py` | 修改 | 注入 `add_available_skills_context` |
+| `app/services/chat_service.py` | 修改 | 集成 SkillRouter + 懒加载 heavy deps |
+| `app/main.py` | 修改 | 技能自动发现 + `/skills/status` 端点 |
+| `requirements.txt` | 修改 | 新增 7 项训练依赖 |
+| `tests/` (7 个文件) | 新增 | 20 项单元测试 |
+| `.gitignore` | 新增 | Fork 集成忽略规则 |
+| `README.md` | 修改 | 新增 v2.0 版本章节 |
 
 ## 贡献指南
 

@@ -1,0 +1,9 @@
+# ========== AI Engine Fork Integration ==========
+server-services/ai-engine/data/forked_repos/*
+!server-services/ai-engine/data/forked_repos/.gitkeep
+server-services/ai-engine/data/sft_dataset_xiaoxing.jsonl
+server-services/ai-engine/models/pretrained_mental_health_v2/
+server-services/ai-engine/models/sft_xiaoxing_v1/
+server-services/ai-engine/integration_report.json
+server-services/ai-engine/models/sft_xiaoxing_simulation/
+server-services/ai-engine/models/pretrained_mlm_simulation/

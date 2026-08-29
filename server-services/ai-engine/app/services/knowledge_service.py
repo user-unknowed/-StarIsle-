@@ -437,10 +437,22 @@ class KnowledgeService:
         """
         从JSON文件导入知识
         """
+        import logging as _lg
+        log = _lg.getLogger("knowledge_service.import_json")
         try:
             with open(json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
+            # ---- 新增去重 begin ----
+            seen = set(); deduped = []
+            for item in data:
+                k = (item.get("title"), item.get("source"))
+                if k in seen: continue
+                seen.add(k); deduped.append(item)
+            log.info("Knowledge dedup %d -> %d (by title+source)", len(data), len(deduped))
+            data = deduped
+            # ---- 新增去重 end ----
+
             docs = []
             for item in data:
                 doc = KnowledgeDocument(
@@ -451,7 +463,8 @@ class KnowledgeService:
                     tags=item.get("tags", []),
                     content=item.get("content", ""),
                     techniques=item.get("techniques", []),
-                    applicable_issues=item.get("applicable_issues", [])
+                    applicable_issues=item.get("applicable_issues", []),
+                    source_repo_id=item.get("source_repo_id"),
                 )
                 docs.append(doc)
             

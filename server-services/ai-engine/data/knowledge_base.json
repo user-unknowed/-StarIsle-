@@ -2,7 +2,7 @@
   {
     "title": "精神分析治疗的核心技术",
     "source": "精神分析治疗 实践指导",
-    "author": "Nancy McWilliams",
+    "author": "Nancy [NAME]",
     "category": "精神分析",
     "tags": [
       "精神分析",
@@ -58,7 +58,7 @@
   {
     "title": "叙事疗法的核心理念",
     "source": "叙事疗法",
-    "author": "Martin Payne",
+    "author": "[NAME]",
     "category": "叙事疗法",
     "tags": [
       "叙事疗法",
@@ -170,7 +170,7 @@
   },
   {
     "title": "心理危机干预的核心技术",
-    "source": "登天的感觉：我在哈佛大学做心理咨询",
+    "source": "登天的感觉：[INSTITUTION]做心理咨询",
     "author": "岳晓东",
     "category": "危机干预",
     "tags": [
@@ -208,7 +208,7 @@
       "自我认同",
       "学业压力"
     ],
-    "content": "青少年心理辅导需要结合青少年的心理发展特点，采用灵活多样的方法。青少年期的核心发展任务包括：1)自我认同的建立-探索'我是谁'的问题；2)同伴关系的深化-同伴影响增大；3)自主性的发展-与家庭的分离-个体化过程；4)性意识的觉醒与整合；5)价值观的形成。辅导策略包括：1)建立信任关系-尊重青少年的自主性和隐私；2)使用创造性技术-如绘画、沙盘、角色扮演等非语言技术；3)关注发展性问题-不只是治疗问题，更注重发展潜能；4)整合家庭和学校资源。",
+    "content": "青少年心理辅导需要结合青少年的心理发展特点，采用灵活多样的方法。青少年期的核心发展任务包括：1)自我认同的建立-探索'我是谁'的问题；2)同伴关系的深化-同伴影响增大；3)自主性的发展-与家庭的分离-个体化过程；4)性意识的觉醒与整合；5)价值观的形成。辅导策略包括：1)建立信任关系-尊重青少年的自主性和隐私；2)使用创造性技术-如绘画、沙盘、角色扮演等非语言技术；3)关注发展性问题-不只是治疗问题，更注重发展潜能；4)[INSTITUTION]资源。",
     "techniques": [
       "发展性辅导",
       "非语言技术",
@@ -263,7 +263,7 @@
       "内在冲突",
       "潜意识动机"
     ],
-    "content": "动力取向心理治疗关注人格结构和内在心理动力学，分为支持取向和洞见取向两种模式。支持取向动力治疗：1)目标是维持和增强来访者的现有功能水平；2)技术包括支持、鼓励、建议、环境调整；3)适用于自我功能较弱、急性应激状态的来访者。洞见取向动力治疗：1)目标是帮助来访者获得关于其潜意识动机和冲突的洞见；2)技术包括澄清、面质、解释；3)适用于自我功能完整、有改变动机的来访者。两者可以在同一治疗中根据来访者状态灵活切换。评估维度包括：自我力量、客体关系、驱力结构、自我理想和超我。",
+    "content": "动力取向心理治疗关注人格结构和内在心理动力学，分为支持取向和洞见取向两种模式。支持取向动力治疗：1)目标是维持和增强来访者的现有功能水平；2)技术包括支持、鼓励、建议、环境调整；3)适用于自我功能较弱、急性应激状态的来访者。洞见取向动力治疗：1)目标是帮助来访者获得关于其潜意识动机和冲突的洞见；2)技术包括澄清、面质、[NAME]；3)适用于自我功能完整、有改变动机的来访者。两者可以在同一治疗中根据来访者状态灵活切换。评估维度包括：自我力量、客体关系、驱力结构、自我理想和超我。",
     "techniques": [
       "支持性技术",
       "澄清",
@@ -336,7 +336,7 @@
   },
   {
     "title": "家庭系统治疗",
-    "source": "督导与反思 心理咨询案例集 成人篇",
+    "source": "督导与反思 心理咨询案例集 [NAME]",
     "author": "叶斌",
     "category": "家庭治疗",
     "tags": [
@@ -453,7 +453,7 @@
   {
     "title": "创伤知情护理与疗法",
     "source": "精神分析案例解析",
-    "author": "Nancy McWilliams",
+    "author": "Nancy [NAME]",
     "category": "创伤治疗",
     "tags": [
       "创伤知情",
@@ -578,7 +578,7 @@
       "危机干预",
       "转介"
     ],
-    "content": "青少年自杀风险评估是心理咨询中至关重要的环节。评估内容包括：1)自杀意念的存在和频率；2)自杀计划的具体性和致命性；3)既往自杀尝试的历史；4)保护因素的存在（家人、朋友、兴趣爱好等）；5)当前压力水平和应对资源。干预措施分层：1)低风险-定期随访，加强支持，增加保护因素；2)中风险-制定安全计划，限制获取伤害工具，增加支持系统的参与；3)高风险-立即联系紧急服务（120），通知家长，考虑住院治疗。安全计划应包括：识别警告信号、列出应对策略、指定可联系的人、移除伤害工具、联系专业机构。热线：12355青少年热线，400-161-9995希望热线。",
+    "content": "青少年自杀风险评估是心理咨询中至关重要的环节。评估内容包括：1)自杀意念的存在和频率；2)自杀计划的具体性和致命性；3)既往自杀尝试的历史；4)保护因素的存在（[NAME]、朋友、兴趣爱好等）；5)当前压力水平和应对资源。干预措施分层：1)低风险-定期随访，加强支持，增加保护因素；2)中风险-制定安全计划，限制获取伤害工具，增加支持系统的参与；3)高风险-立即联系紧急服务（120），通知家长，考虑住院治疗。安全计划应包括：识别警告信号、列出应对策略、指定可联系的人、移除伤害工具、[INSTITUTION]。热线：12355青少年热线，400-161-9995希望热线。",
     "techniques": [
       "风险分层评估",
       "安全计划制定",
@@ -607,7 +607,7 @@
       "投射",
       "治疗性游戏"
     ],
-    "content": "游戏治疗是利用游戏作为治疗媒介的心理治疗方法，特别适用于3-12岁的儿童。理论基础：1)精神分析取向-游戏是儿童表达和处理无意识冲突的方式；2)人本主义取向-游戏为儿童提供无条件接纳的环境；3)认知行为取向-通过游戏学习新的行为和认知。治疗形式：1)自由游戏治疗-让儿童自由选择游戏材料；2)指导性游戏治疗-治疗师引导特定主题的游戏；3)游戏评估-通过游戏了解儿童的心理状态。常用游戏材料：玩偶、沙盘、绘画材料、积木、水和沙。治疗师角色：温暖的领导者、安全的容器、积极的榜样。",
+    "content": "游戏治疗是利用游戏作为治疗媒介的心理治疗方法，特别适用于3-12岁的儿童。理论基础：1)精神分析取向-游戏是儿童表达和处理无意识冲突的方式；2)人本主义取向-游戏为儿童提供无条件接纳的环境；3)认知行为取向-通过游戏学习新的行为和认知。治疗形式：1)自由游戏治疗-让儿童自由选择游戏材料；2)指导性游戏治疗-治疗师引导特定主题的游戏；3)游戏评估-通过游戏了解儿童的心理状态。常用游戏材料：玩偶、沙盘、绘画材料、积木、[NAME]。治疗师角色：温暖的领导者、安全的容器、积极的榜样。",
     "techniques": [
       "自由游戏",
       "玩偶游戏",
@@ -626,7 +626,7 @@
   },
   {
     "title": "积极心理学与心理干预",
-    "source": "登天的感觉：我在哈佛大学做心理咨询",
+    "source": "登天的感觉：[INSTITUTION]做心理咨询",
     "author": "岳晓东",
     "category": "积极心理学",
     "tags": [
@@ -656,7 +656,7 @@
   {
     "title": "依恋理论与依恋修复",
     "source": "动力取向精神医学 临床应用与实务",
-    "author": "Glen O. Gabbard",
+    "author": "[NAME]",
     "category": "依恋理论",
     "tags": [
       "依恋",
@@ -693,7 +693,7 @@
       "心理干预",
       "替代行为"
     ],
-    "content": "青少年网络/游戏成瘾是当前常见的心理健康问题，需要综合干预。成瘾的心理机制：1)逃避现实压力-网络提供暂时的情绪缓解；2)虚拟成就感-在游戏中获得现实中缺乏的成功体验；3)社交满足-满足同伴交往需求；4)多巴胺奖赏-游戏中的奖赏机制激活多巴胺系统。干预策略：1)评估成瘾程度和功能影响；2)了解成瘾的心理功能-成瘾满足了什么需求；3)动机式访谈-增强改变动机；4)行为激活-帮助找到现实中的替代满足；5)家庭治疗-改善家庭关系和沟通；6)时间管理技能-建立健康的使用习惯；7)学校和社区支持。",
+    "content": "青少年网络/游戏成瘾是当前常见的心理健康问题，需要综合干预。成瘾的心理机制：1)逃避现实压力-网络提供暂时的情绪缓解；2)虚拟成就感-在游戏中获得现实中缺乏的成功体验；3)社交满足-满足同伴交往需求；4)多巴胺奖赏-游戏中的奖赏机制激活多巴胺系统。干预策略：1)评估成瘾程度和功能影响；2)了解成瘾的心理功能-成瘾满足了什么需求；3)动机式访谈-增强改变动机；4)行为激活-帮助找到现实中的替代满足；5)家庭治疗-改善家庭关系和沟通；6)时间管理技能-建立健康的使用习惯；7)[INSTITUTION]支持。",
     "techniques": [
       "功能评估",
       "动机访谈",
@@ -782,7 +782,7 @@
       "主诉探索",
       "治疗计划"
     ],
-    "content": "初次会谈是心理咨询的关键环节，决定了后续治疗的基础。初次会谈的目标：1)建立治疗关系-营造安全、信任的氛围；2)了解来访者-收集背景信息，了解主诉；3)评估问题-初步评估问题性质和严重程度；4)设定目标-与来访者共同探讨治疗目标；5)制定计划-初步的治疗方案。会谈结构：1)开场白-欢迎和介绍，说明保密原则；2)主诉探索-通过开放式提问了解来访者的困扰；3)历史收集-了解问题发生发展过程；4)背景信息-个人史、家庭史、学校史；5)结束会谈-总结、确认下次安排、给予希望。注意事项：以来访者为中心，避免过多提问，关注情感反应。",
+    "content": "初次会谈是心理咨询的关键环节，决定了后续治疗的基础。初次会谈的目标：1)建立治疗关系-营造安全、信任的氛围；2)了解来访者-收集背景信息，了解主诉；3)评估问题-初步评估问题性质和严重程度；4)设定目标-与来访者共同探讨治疗目标；5)制定计划-初步的治疗方案。会谈结构：1)开场白-欢迎和介绍，说明保密原则；2)主诉探索-通过开放式提问了解来访者的困扰；3)历史收集-了解问题发生发展过程；4)背景信息-个人史、[NAME]、学校史；5)结束会谈-总结、确认下次安排、给予希望。注意事项：以来访者为中心，避免过多提问，关注情感反应。",
     "techniques": [
       "开放式提问",
       "积极倾听",
@@ -807,7 +807,7 @@
       "Python",
       "fork-integration"
     ],
-    "content": "# Emotional-Support-Conversation\n### *Copyright © 2021 CoAI Group, Tsinghua University.All rights reserved.Data and codes are for academic research use only.*\n\n## 2024-05-14\n### Added\n- To support future research, we release `FailedESConv.json`, 196 negative samples of emotional support conversations that were primarily dropped when we were collecting ESConv.",
+    "content": "# Emotional-Support-Conversation\n### *Copyright © 2021 CoAI Group, [INSTITUTION].All rights reserved.Data and codes are for academic research use only.*\n\n## 2024-05-14\n### Added\n- To support future research, we release `FailedESConv.json`, 196 negative samples of emotional support conversations that were primarily dropped when we were collecting ESConv.",
     "techniques": [],
     "applicable_issues": [],
     "source_repo_id": "thu-coai/Emotional-Support-Conversation",
@@ -824,7 +824,7 @@
       "Python",
       "fork-integration"
     ],
-    "content": "- Our rule to determine an effectively negative sample: (# of turn > 2 AND # of speaker > 1)  AND ((post-conversation survey was done AND (negative emotion intensity does not decrease OR empathy score <=2 OR relevance score <=2 )) OR (the support-seeker did not finish the post-conversation survey AND the support-seeker's last feedback score <= 2) )\n\n\nData and codes for the ACL 2021 paper: [**Towards Emotional Support Dialog Systems**](https://arxiv.org/abs/2106.",
+    "content": "- Our rule to determine an effectively negative sample: (# of turn > 2 AND # of speaker > 1)  AND ((post-conversation survey was done AND (negative emotion intensity does not decrease OR empathy score <=2 OR relevance score <=2 )) OR (the support-seeker did not finish the post-conversation survey AND the support-seeker's last feedback score <= 2) )\n\n\nData and codes for the [LOCATION] paper: [**[NAME] [NAME] Systems**]([URL]",
     "techniques": [],
     "applicable_issues": [],
     "source_repo_id": "thu-coai/Emotional-Support-Conversation",
@@ -841,7 +841,7 @@
       "Python",
       "fork-integration"
     ],
-    "content": "01144)\n\nIf you use our codes or your research is related to our paper, please kindly cite our paper:\n\n```bib\n@inproceedings{liu-etal-2021-towards,\n  title={Towards Emotional Support Dialog Systems},\n  author={Liu, Siyang  and \n    Zheng, Chujie  and \n    Demasi, Orianna  and \n    Sabour, Sahand  and \n    Li, Yu  and \n    Yu, Zhou  and \n    Jiang, Yong  and \n    Huang, Minlie},\n  booktitle={ACL},\n  year={2021}\n}\n```\n\n## Data\n\nThe corpus file is `ESConv.json`.",
+    "content": "01144)\n\nIf you use our codes or your research is related to our paper, please kindly cite our paper:\n\n```bib\n@inproceedings{liu-etal-2021-towards,\n  title={[NAME] [NAME] Systems},\n  author={Liu, Siyang  and \n    Zheng, Chujie  and \n    Demasi, Orianna  and \n    Sabour, Sahand  and \n    Li, Yu  and \n    Yu, Zhou  and \n    Jiang, Yong  and \n    Huang, Minlie},\n  booktitle={ACL},\n  year={2021}\n}\n```\n\n## Data\n\nThe corpus file is `ESConv.json`.",
     "techniques": [],
     "applicable_issues": [],
     "source_repo_id": "thu-coai/Emotional-Support-Conversation",
@@ -875,7 +875,7 @@
       "Python",
       "fork-integration"
     ],
-    "content": "### Statistics\n#### Problem Category\n\n| Problem Category | ongoing depression | breakup with partner | job crisis | problems with friends | academic pressure | procras-<br>tination* | alcohol abuse* | issues with parent* | sleep problems* |  appearance anxiety* | school bullying* | issues with children* |\n| :-------- | :---------- | :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- | :---------- | :---------- | \n| Number| 351 | 239 | 280 | 179 | 156 |  13 | 12 | 18 | 28 | 12 | 2 | 10 |\n\n\n\\* denotes the new topics added during the second collection.",
+    "content": "### Statistics\n#### [NAME]\n\n| [NAME] | ongoing depression | breakup with partner | job crisis | problems with friends | academic pressure | procras-<br>tination* | alcohol abuse* | issues with parent* | sleep problems* |  appearance anxiety* | school bullying* | issues with children* |\n| :-------- | :---------- | :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- |  :---------- | :---------- | :---------- | \n| Number| 351 | 239 | 280 | 179 | 156 |  13 | 12 | 18 | 28 | 12 | 2 | 10 |\n\n\n\\* denotes the new topics added during the second collection.",
     "techniques": [],
     "applicable_issues": [],
     "source_repo_id": "thu-coai/Emotional-Support-Conversation",
@@ -892,7 +892,7 @@
       "Python",
       "fork-integration"
     ],
-    "content": "We hope new data supports the future research in transferring the ability of models from old topics to new ones.<font size=1>\n\n#### Strategy Category \n| Strategy Category| Number   |\n| :--------------  | :------- |\n| Questions | 3801(20.7%)|\n| Self-disclosure | 1713(9.3%) |\n| Affirmation and Reassurance | 2827(15.4%) |\n| Providing Suggestions | 2954(16.1%) |\n| Other | 3661(18.3%) / 3341(18.2%) |\n| Reflection of feelings |  1436(7.8%) | \n| Information | 1215(6.6%) | \n| Restatement or Paraphrasing | 1089(5.",
+    "content": "We hope new data supports the future research in transferring the ability of models from old topics to new ones.<font size=1>\n\n#### [NAME] \n| [NAME]| Number   |\n| :--------------  | :------- |\n| Questions | 3801(20.7%)|\n| Self-disclosure | 1713(9.3%) |\n| Affirmation and Reassurance | 2827(15.4%) |\n| [NAME] | 2954(16.1%) |\n| Other | 3661(18.3%) / 3341(18.2%) |\n| Reflection of feelings |  1436(7.8%) | \n| Information | 1215(6.6%) | \n| Restatement or Paraphrasing | 1089(5.",
     "techniques": [],
     "applicable_issues": [],
     "source_repo_id": "thu-coai/Emotional-Support-Conversation",
@@ -909,7 +909,7 @@
       "Python",
       "fork-integration"
     ],
-    "content": "9%) |\n\n</font>\n\n\n## Model Implementation\n\nWe provide two versions of model implementation:\n\n- `codes` is the version that we used in the original experiments\n- `codes_zcj` is the version reproduced by  [@chujiezheng](https://github.com/chujiezheng)\n\n\n\n",
+    "content": "9%) |\n\n</font>\n\n\n## [NAME]\n\nWe provide two versions of model implementation:\n\n- `codes` is the version that we used in the original experiments\n- `codes_zcj` is the version reproduced by  [@chujiezheng]([URL]\n\n\n\n",
     "techniques": [],
     "applicable_issues": [],
     "source_repo_id": "thu-coai/Emotional-Support-Conversation",

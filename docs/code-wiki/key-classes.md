@@ -155,6 +155,11 @@
     - `/teacher/chat` -> 教师对话
     - `/teacher/relax` -> 教师放松
     - `/teacher/profile` -> 教师个人中心
+    - `/parent` -> 家长首页（Dashboard）
+    - `/parent/chat` -> 家长 AI 对话
+    - `/parent/children` -> 家长孩子绑定管理
+    - `/parent/emergency` -> 家长应急预案中心
+    - `/parent/profile` -> 家长个人中心
 
 #### `main.tsx`
 - **路径**: `web-frontend/src/main.tsx`
@@ -222,11 +227,13 @@
 
 | 组件 | 路径 | 职责 |
 |------|------|------|
-| `ParentHome` | `pages/parent/ParentHome.tsx` | 孩子情绪概览、打卡日历、AI 建议 |
+| `ParentHome` | `pages/parent/ParentHome.tsx` | 孩子情绪概览 + 内嵌 MoodDetail（7/30/90 天趋势）+ AI 建议 + 打卡日历 |
 | `ParentChat` | `pages/parent/ParentChat.tsx` | 与大星 AI 对话 |
-| `MoodDetail` | `pages/parent/MoodDetail.tsx` | 情绪趋势详情（7/30/90 天） |
-| `EmergencyDetail` | `pages/parent/EmergencyDetail.tsx` | 预警详情与处理 |
-| `ParentProfile` | `pages/parent/ParentProfile.tsx` | 孩子绑定、知识库、设置 |
+| `ParentChildren` | `pages/parent/ParentChildren.tsx` | 绑定新孩子 / 管理绑定列表 |
+| `ParentEmergency` | `pages/parent/ParentEmergency.tsx` | 应急预案中心 + 内嵌 EmergencyDetail（红色告警详情与处理流程） |
+| `ParentProfile` | `pages/parent/ParentProfile.tsx` | 孩子绑定、知识库查看、设置 |
+
+> 说明：早期版本的独立文件 `MoodDetail.tsx` 与 `EmergencyDetail.tsx` 现内嵌为 ParentHome / ParentEmergency 内的子 Section，不再单独作为一级路由页面导出。
 
 ### 2.4 通用组件
 
@@ -263,34 +270,71 @@
   - `POST /emotion/analyze`: 情绪分析
   - `GET /topics`: 话题卡片
   - `WebSocket /ws/chat/{user_id}`: 实时对话
+  - `POST /knowledge/search` `v2.0增强`: RAG 知识检索（支持 source_repo_id 过滤）
+  - `GET /knowledge/stats` `v2.0增强`: 知识库条目/来源统计
+  - `POST /knowledge/import` `v2.0增强`: 注入新知识（带 source_repo_id + (title,repo_id) 去重）
+  - `GET /skills/status` `v2.0新增`: 小星 Skill 健康状态（available/disabled_by_error 统计 + 每个 skill 详情）
 
 ### 3.2 服务层
 
 #### `ChatService`
 - **路径**: `server-services/ai-engine/app/services/chat_service.py`
-- **职责**: AI 对话生成核心
+- **职责**: AI 对话生成核心（已集成 Skill 路由能力，v2.0增强）
 - **关键函数**:
   - `generate_response(user_id, message, context, user_profile)`: 生成回复
     - 调用 `Star宝SystemPrompt.generate_prompt()` 构建 CBT 系统提示
     - 保留最近 10 轮上下文
+    - 先通过 `SkillRouter.route()` 动态匹配 Skill（命中时附加 Skill 结果）
     - 根据 `USE_LOCAL_MODEL` 环境变量选择本地模型或 DeepSeek API
-    - 降级策略：异常时返回安全提示语
+    - 降级策略：异常时返回安全提示语，Skill 异常时禁用 Skill 不影响主对话
   - `_generate_api(messages)`: 调用 DeepSeek API（max_tokens=200, temperature=0.7）
   - `_generate_local(messages)`: 本地 Transformer 模型推理（HuggingFace）
 
 #### `RiskDetectionService`
 - **路径**: `server-services/ai-engine/app/services/risk_detection_service.py`
-- **职责**: 双层风险检测
+- **职责**: 多层级风险检测（v1.9 100% 准确率）
 - **关键函数**:
-  - `detect_risk(user_id, content)`: 综合检测
-    - L1 `_detect_keywords()`: 实时关键词匹配（高风险 red / 中风险 orange）
+  - `detect_risk(user_id, content, history)`: 综合检测
+    - L1 `_detect_keywords()`: 28 类关键词匹配（高风险 red / 中风险 orange / 低风险 yellow）
+    - L1.5 `_duration_rule()`: 同一分类在窗口内重复次数加权升级（v1.5新增）
+    - L1.6 `_mood_history_rule()`: 结合用户心情历史负向斜率升级（v1.6新增）
     - L2 `_detect_semantic()`: 语义分析模型意图识别
-    - `_calculate_final_risk()`: 取 L1/L2 最高等级
+    - `_downgrade_positive_word_rule()`: 搭配积极关键词（谢谢/好一点等）降级
+    - `_downgrade_social_isolated_rule()`: 孤立短语降黄
+    - `_calculate_final_risk()`: 取最高等级（四层降级链）
   - `get_detection_details(content)`: 返回关键词命中列表、语义意图、置信度
 
 #### `EmotionAnalysisService`
 - **路径**: `server-services/ai-engine/app/services/emotion_analysis_service.py`
 - **职责**: 情绪标签提取
+
+#### `KnowledgeService` `v2.0增强`
+- **路径**: `server-services/ai-engine/app/services/knowledge_service.py`
+- **职责**: RAG 知识库服务（26 本心理学书籍 + Fork 文档统一注入）
+- **关键函数**:
+  - `search(query, top_k, source_repo_id_filter)`: 语义检索
+  - `import_entries([{title,content,source_repo_id,metadata}])`: 导入条目（`(title, source_repo_id)` 二元组去重）
+  - `stats()`: 分来源数量统计
+
+### 3.2b Skill 架构层 `v2.0新增`
+
+#### `BaseSkill`
+- **路径**: `server-services/ai-engine/app/skills/base_skill.py`
+- **职责**: 所有 Fork Skill Adapter 的抽象基类（统一签名 + 统一错误处理）
+- **关键契约方法**: `can_handle(intent)`, `execute(params) -> str`, `get_metadata()`
+- **错误处理**: 执行累计 N 次异常后自动进入 `disabled_by_error` 状态，不阻塞主对话
+
+#### `SkillRouter`
+- **路径**: `server-services/ai-engine/app/skills/skill_router.py`
+- **职责**: 动态注册、路由、健康状态维护
+- **关键函数**:
+  - `register(skill_instance)`: 启动时装载所有 Adapter
+  - `route(intent, params)`: 按 can_handle 匹配度选择 Skill，失败返回 None
+  - `get_status()`: 返回所有 Skill 的状态（对应 GET /skills/status）
+
+#### `EmotionalSupportConversationSkill`（示例 Adapter）
+- **路径**: `server-services/ai-engine/app/skills/emotional_support_conversation_adapter.py`
+- **职责**: 封装情感支持对话能力的 Fork Skill Adapter；其他 Adapter 同目录（sentiment_analysis_mental_health_adapter.py, bert_mental_health_adapter.py）
 
 ### 3.3 模型与提示词
 

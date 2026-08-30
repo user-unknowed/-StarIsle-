@@ -138,10 +138,10 @@ web-frontend/
 │   │   │   ├── TeacherProfile.tsx
 │   │   │   └── TeacherRelax.tsx
 │   │   ├── parent/          # 家长端页面（v1.3新增）
-│   │   │   ├── ParentDashboard.tsx   # 孩子情绪卡片概览
+│   │   │   ├── ParentHome.tsx        # 孩子情绪卡片概览 Dashboard
 │   │   │   ├── ParentChat.tsx        # AI 心理顾问对话
 │   │   │   ├── ParentChildren.tsx    # 绑定/管理孩子
-│   │   │   ├── ParentEmergency.tsx   # 应急预案中心
+│   │   │   ├── ParentEmergency.tsx   # 应急预案中心（详情/MoodDetail 子组件内嵌）
 │   │   │   └── ParentProfile.tsx     # 家长个人中心
 │   │   ├── Home.tsx         # 欢迎页
 │   │   └── Login.tsx        # 登录页
@@ -209,9 +209,11 @@ server-services/ai-engine/
 │   │   ├── risk_detection_service.py # 风险检测服务（多层级规则引擎）
 │   │   └── knowledge_service.py `v2.0增强` # RAG 知识库(26本心理学书籍+Fork文档注入,带source_repo_id)
 │   ├── skills/ `v2.0新增`            # 小星技能适配器（BaseSkill/SkillRouter/各 Adapter）
-│   │   ├── base.py                   # BaseSkill 抽象基类
-│   │   ├── registry.py               # SkillRouter 动态路由
-│   │   └── adapters/                 # 多个 Fork 仓库 Skill Adapter
+│   │   ├── base_skill.py             # BaseSkill 抽象基类
+│   │   ├── skill_router.py           # SkillRouter 动态路由（原 registry.py 命名重构）
+│   │   ├── emotional_support_conversation_adapter.py  # 情感支持对话 Skill
+│   │   ├── sentiment_analysis_mental_health_adapter.py # 情绪分析 Skill
+│   │   └── bert_mental_health_adapter.py  # BERT 心理健康 Skill
 │   ├── utils/
 │   │   ├── encryption.py             # 加密工具
 │   │   └── keyword_manager.py        # 关键词管理（28分类，可热加载）
@@ -228,13 +230,23 @@ server-services/ai-engine/
 │   ├── pretrain_english.py
 │   ├── pretrain_model.py
 │   ├── pretrain_word2vec.py
-│   ├── discover_fork_repos.py        # M1 自动发现 GitHub Fork
-│   ├── integrate_fork_knowledge.py   # M2 Skill+RAG+语料三层集成
-│   ├── train_mlm_continue.py         # M3a MLM 继续预训练(BERT)
-│   ├── train_sft_finetune.py         # M3b SFT 全参/LoRA/CPU/SIM 显存降级链
-│   ├── evaluate_model_quality.py     # M4 6维 LLM-as-Judge 评估
+│   ├── anonymize_pii.py               # PII 匿名化
+│   ├── import_knowledge.py            # RAG 批量导入
+│   ├── build_sft_dataset.py           # SFT 数据构建
+│   ├── discover_forks.py              # M1 自动发现 GitHub Fork（原 discover_fork_repos.py 命名）
+│   ├── integrate_forks.py             # M2 Skill+RAG+语料三层集成（原 integrate_fork_knowledge.py 命名）
+│   ├── continued_pretrain_mlm.py      # M3a MLM 继续预训练(BERT)
+│   ├── sft_full_finetune.py           # M3b SFT 全参/LoRA/CPU/SIM 显存降级链
+│   ├── evaluate_model.py              # M4 6维 LLM-as-Judge 评估
 │   └── orchestrate_fork_integration.py  # 6步 Orchestrator 入口(--smoke)
-├── tests/ `v2.0新增`                 # 20 项单元测试（py --all 全通过）
+├── tests/ `v2.0新增`                 # 8 文件（7 test_*.py + __init__，另含 pytest.ini，20项单元测试）
+│   ├── test_base_skill.py
+│   ├── test_skill_router.py
+│   ├── test_discover_forks.py
+│   ├── test_integrate_forks.py
+│   ├── test_build_sft_dataset.py
+│   ├── test_gpu_downgrade.py         # 验证 FULL→LoRA→CPU→SIM 四级自动降级
+│   └── test_evaluate_safety.py
 ├── dockerfile
 └── requirements.txt
 ```
@@ -404,17 +416,18 @@ teacher-app/StarIsle-teacher/
 
 ### 目录结构
 
+> 注意：家长端页面的代码主体位于 `web-frontend/src/pages/parent/`（5 个一级页面），本目录 `parent-app/` 存放家长端独立 PRD 文档，组件仅作归档引用。
+> 当前 src 中仅保留 5 个一级页面；**MoodDetail（情绪趋势详情）与 EmergencyDetail（预警详情）现已内嵌为 ParentHome.tsx / ParentEmergency.tsx 的子组件/Section，不再作为独立文件存在**。
+
 ```
 parent-app/
-├── src/
-│   ├── pages/parent/
-│   │   ├── EmergencyDetail.tsx      # 预警详情
-│   │   ├── MoodDetail.tsx           # 情绪趋势详情
-│   │   ├── ParentChat.tsx           # AI 对话
-│   │   ├── ParentHome.tsx           # 首页
-│   │   └── ParentProfile.tsx        # 个人中心
-│   └── store/
-│       └── parentStore.ts           # 家长端状态管理
+├── src/ (归档)
+│   └── pages/parent/ 页面实现请查阅 web-frontend/src/pages/parent/
+│       ├── ParentHome.tsx           # 首页（内嵌 MoodDetail Section）
+│       ├── ParentEmergency.tsx      # 应急预案中心（内嵌 EmergencyDetail Section）
+│       ├── ParentChildren.tsx       # 绑定管理
+│       ├── ParentChat.tsx           # AI 对话
+│       └── ParentProfile.tsx        # 个人中心
 └── 星屿-StarIsle-家长端APP-PRD.md
 ```
 

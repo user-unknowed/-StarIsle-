@@ -211,16 +211,16 @@ python scripts/orchestrate_fork_integration.py --smoke --force-sft-mode simulati
 python scripts/orchestrate_fork_integration.py --fork-paths /path/to/my/fork_list.yml
 
 # 单步跑：只做 MLM 继续预训练
-python scripts/train_mlm_continue.py --input data/combined_cleaned_text.txt --output-dir runs/mlm_v1
+python scripts/continued_pretrain_mlm.py --input data/combined_cleaned_text.txt --output-dir runs/mlm_v1
 
 # 单步跑：SFT 微调（指定 mode 或自动检测）
-python scripts/train_sft_finetune.py --dataset data/sft_dataset.jsonl --mode auto
+python scripts/sft_full_finetune.py --dataset data/sft_dataset.jsonl --mode auto
 
 # 单步跑：6 维评估（LLM-as-Judge，需要 MODEL_API_KEY）
-python scripts/evaluate_model_quality.py --model runs/sft_last --judge-provider deepseek
+python scripts/evaluate_model.py --model runs/sft_last --judge-provider deepseek
 
-# 运行 20 项单元测试，验证 Skill / RAG / 训练脚手架：
-python -m unittest discover tests -v
+# 运行 20 项单元测试，验证 Skill / RAG / 训练脚手架（pytest）：
+cd tests && pytest -v  # 或 python -m pytest -v
 ```
 
 **产物**: 训练完成后目录中生成 `integration_report.json`（Fork 统计、训练 loss、6 维打分、Skill 注册清单）。

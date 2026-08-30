@@ -227,11 +227,13 @@
 
 | 组件 | 路径 | 职责 |
 |------|------|------|
-| `ParentHome` | `pages/parent/ParentHome.tsx` | 孩子情绪概览、打卡日历、AI 建议 |
+| `ParentHome` | `pages/parent/ParentHome.tsx` | 孩子情绪概览 + 内嵌 MoodDetail（7/30/90 天趋势）+ AI 建议 + 打卡日历 |
 | `ParentChat` | `pages/parent/ParentChat.tsx` | 与大星 AI 对话 |
-| `MoodDetail` | `pages/parent/MoodDetail.tsx` | 情绪趋势详情（7/30/90 天） |
-| `EmergencyDetail` | `pages/parent/EmergencyDetail.tsx` | 预警详情与处理 |
-| `ParentProfile` | `pages/parent/ParentProfile.tsx` | 孩子绑定、知识库、设置 |
+| `ParentChildren` | `pages/parent/ParentChildren.tsx` | 绑定新孩子 / 管理绑定列表 |
+| `ParentEmergency` | `pages/parent/ParentEmergency.tsx` | 应急预案中心 + 内嵌 EmergencyDetail（红色告警详情与处理流程） |
+| `ParentProfile` | `pages/parent/ParentProfile.tsx` | 孩子绑定、知识库查看、设置 |
+
+> 说明：早期版本的独立文件 `MoodDetail.tsx` 与 `EmergencyDetail.tsx` 现内嵌为 ParentHome / ParentEmergency 内的子 Section，不再单独作为一级路由页面导出。
 
 ### 2.4 通用组件
 
@@ -317,22 +319,22 @@
 ### 3.2b Skill 架构层 `v2.0新增`
 
 #### `BaseSkill`
-- **路径**: `server-services/ai-engine/app/skills/base.py`
+- **路径**: `server-services/ai-engine/app/skills/base_skill.py`
 - **职责**: 所有 Fork Skill Adapter 的抽象基类（统一签名 + 统一错误处理）
 - **关键契约方法**: `can_handle(intent)`, `execute(params) -> str`, `get_metadata()`
 - **错误处理**: 执行累计 N 次异常后自动进入 `disabled_by_error` 状态，不阻塞主对话
 
 #### `SkillRouter`
-- **路径**: `server-services/ai-engine/app/skills/registry.py`
+- **路径**: `server-services/ai-engine/app/skills/skill_router.py`
 - **职责**: 动态注册、路由、健康状态维护
 - **关键函数**:
   - `register(skill_instance)`: 启动时装载所有 Adapter
   - `route(intent, params)`: 按 can_handle 匹配度选择 Skill，失败返回 None
   - `get_status()`: 返回所有 Skill 的状态（对应 GET /skills/status）
 
-#### `ForkSkillAdapter`（示例）
-- **路径**: `server-services/ai-engine/app/skills/adapters/*.py`
-- **职责**: 每个 Fork 仓库对应一个 Adapter，封装该仓库的代码能力
+#### `EmotionalSupportConversationSkill`（示例 Adapter）
+- **路径**: `server-services/ai-engine/app/skills/emotional_support_conversation_adapter.py`
+- **职责**: 封装情感支持对话能力的 Fork Skill Adapter；其他 Adapter 同目录（sentiment_analysis_mental_health_adapter.py, bert_mental_health_adapter.py）
 
 ### 3.3 模型与提示词
 

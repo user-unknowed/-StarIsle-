@@ -342,12 +342,12 @@ cp ../.env.template .env
 # MONGO_PASSWORD=your_mongo_password
 # REDIS_PASSWORD=your_redis_password
 # JWT_SECRET=your_jwt_secret
-# ENCRYPTION_KEY=your_encryption_key
-# ENCRYPTION_MASTER_KEY=your_32_bytes_master_key
+# ENCRYPTION_KEY=starisle2026securekey32byteslong        # 精确 32 字节，AES-256-GCM
+# ENCRYPTION_MASTER_KEY=starmaster2026securekey32byteslo  # 精确 32 字节，AES-256-GCM
 # MODEL_API_KEY=your_deepseek_api_key
 
 # 3. 一键启动所有服务
-docker-compose up -d
+docker-compose up -d --build
 
 # 4. 查看服务状态
 docker-compose ps

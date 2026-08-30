@@ -326,7 +326,7 @@ scripts/orchestrate_fork_integration.py   # v2.0新增：一键流水线
 
 ```bash
 cd server-services/deployment
-cp .env.template .env
+cp ../.env.template .env
 # 编辑 .env 文件，配置数据库密码等环境变量
 docker-compose up -d
 ```

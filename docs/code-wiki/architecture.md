@@ -83,17 +83,22 @@ flowchart TB
 - **技术**: Python 3.10 + FastAPI 0.108.x
 - **职责**:
   - 基于 CBT 框架的 AI 对话生成
-  - 实时情绪分析（L1 关键词 + L2 语义分析）
+  - 实时情绪分析（L1 关键词 28 类 + L1.5 持续时间 + L1.6 心情历史 + L2 语义分析，v1.9 准确率 100%）
   - 风险等级判定（green/yellow/orange/red）
   - 话题引导卡片生成
   - 支持 DeepSeek API 或本地模型推理
+  - **Skill 动态路由 + 错误降级**（`v2.0新增`：SkillRouter + BaseSkill + 多个 Adapter，错误自动禁用技能）
+  - **GitHub Fork 三层集成**（`v2.0新增`：代码能力 Skill Adapter + RAG knowledge_base.json 注入 + 语料 combined_cleaned_text.txt 清洗）
+  - **训练流水线**（`v2.0新增`：可选 Orchestrator 6 步 discover→integrate→mlm→sft→evaluate→report，支持 --smoke 仿真无 GPU 运行）
 
 ### 4. 数据层
 
 | 数据库 | 用途 | 关键数据 |
 |--------|------|---------|
-| PostgreSQL 14 | 关系型数据存储 | 用户、心情记录、班级、预警、通知 |
-| MongoDB 6.0 | 非结构化数据存储 | 聊天消息、对话上下文 |
+| PostgreSQL 14 | 关系型数据存储（测试环境） | 用户、心情记录、班级、预警、通知 |
+| MySQL 8.x | 关系型数据存储（Docker Compose 默认生产） | 同上 |
+| H2 内存 | 关系型数据存储（本地开发默认） | 同上，重启清空 |
+| MongoDB 6.0 | 非结构化数据存储 | 聊天消息、对话上下文、知识库 |
 | Redis 7.0 | 缓存与会话 | 会话状态、热点数据、速率限制计数 |
 
 ## 数据流向
@@ -199,3 +204,8 @@ flowchart TB
 | PostgreSQL | 稳定的关系型数据库，支持复杂查询和 JSON 字段 |
 | MongoDB | 灵活存储聊天消息等非结构化数据 |
 | Redis | 会话缓存、热点数据、分布式锁 |
+| PEFT（LoRA）`v2.0新增` | 大模型微调显存占用降低 90%+，适合单机 A100 |
+| Accelerate `v2.0新增` | 分布式训练/混合精度/CPU Offload，统一显存降级链 |
+| Datasets `v2.0新增` | HuggingFace 统一训练数据格式，支持多源拼接与去重 |
+| LangDetect `v2.0新增` | Fork 语料清洗时语种检测过滤，避免中文模型训练英文噪音 |
+| GitPython `v2.0新增` | GitHub Fork 仓库克隆与元数据提取，集成 RAG/Skill/SFT |

@@ -24,8 +24,8 @@
 ```bash
 cd server-services/deployment
 
-# 1. 复制环境变量模板
-cp .env.template .env
+# 1. 复制环境变量模板（模板位于 server-services/ 根目录，不在 deployment/）
+cp ../.env.template .env
 
 # 2. 编辑 .env 文件，配置以下必填项
 # MYSQL_PASSWORD=your_mysql_password
@@ -33,12 +33,12 @@ cp .env.template .env
 # MONGO_PASSWORD=your_mongo_password
 # REDIS_PASSWORD=your_redis_password
 # JWT_SECRET=your_jwt_secret
-# ENCRYPTION_KEY=your_encryption_key
-# ENCRYPTION_MASTER_KEY=your_32_bytes_master_key
+# ENCRYPTION_KEY=starisle2026securekey32byteslong        # 必须为精确 32 字节
+# ENCRYPTION_MASTER_KEY=starmaster2026securekey32byteslo  # 必须为精确 32 字节
 # MODEL_API_KEY=your_deepseek_api_key
 
 # 3. 一键启动所有服务
-docker-compose up -d
+docker-compose up -d --build
 
 # 4. 查看服务状态
 docker-compose ps
@@ -196,6 +196,35 @@ export MODEL_NAME=deepseek-ai/deepseek-chat
 python app/main.py
 ```
 
+#### 小星训练流水线 `v2.0新增`（可选）
+
+**场景**: 需要将任意 GitHub Fork 仓库的代码能力/RAG知识/训练语料三层接入小星形象。`scripts/orchestrate_fork_integration.py` 为一键入口。
+
+```bash
+cd server-services/ai-engine
+
+# (推荐) Smoke 仿真模式 — 不依赖 GPU，验证6步流水线全部贯通：
+# M1 Fork发现 → M2 三层集成 → M3a MLM → M3b SFT(SIM) → M4 6维评估 → 汇总报告
+python scripts/orchestrate_fork_integration.py --smoke --force-sft-mode simulation
+
+# 有 GPU 的完整训练模式（显存降级链 FULL→LoRA→CPU Offload→SIM 自动选择）
+python scripts/orchestrate_fork_integration.py --fork-paths /path/to/my/fork_list.yml
+
+# 单步跑：只做 MLM 继续预训练
+python scripts/train_mlm_continue.py --input data/combined_cleaned_text.txt --output-dir runs/mlm_v1
+
+# 单步跑：SFT 微调（指定 mode 或自动检测）
+python scripts/train_sft_finetune.py --dataset data/sft_dataset.jsonl --mode auto
+
+# 单步跑：6 维评估（LLM-as-Judge，需要 MODEL_API_KEY）
+python scripts/evaluate_model_quality.py --model runs/sft_last --judge-provider deepseek
+
+# 运行 20 项单元测试，验证 Skill / RAG / 训练脚手架：
+python -m unittest discover tests -v
+```
+
+**产物**: 训练完成后目录中生成 `integration_report.json`（Fork 统计、训练 loss、6 维打分、Skill 注册清单）。
+
 ### 4. Go API 网关 (`server-services/backend/`)
 
 ```bash
@@ -337,7 +366,7 @@ pip list | grep fastapi
 ### Docker Compose 启动失败
 
 ```bash
-# 检查 .env 是否配置
+# 检查 .env 是否配置（注意：.env.template 不在 deployment/ 内，需从 server-services/ 复制）
 cat .env
 
 # 检查端口占用
@@ -346,10 +375,36 @@ docker-compose ps
 # 查看具体服务日志
 docker-compose logs mysql
 docker-compose logs backend-java
+docker-compose logs ai-engine
 
 # 重建镜像
 docker-compose up -d --build
 ```
+
+### Java 后端抛出 AES InvalidKeyException
+
+这是因为 `ENCRYPTION_KEY` / `ENCRYPTION_MASTER_KEY` 长度不是 32 字节。
+```yaml
+# application.yml 中必须为 32 字节的字符串：
+ENCRYPTION_KEY=starisle2026securekey32byteslong        # 32字节
+ENCRYPTION_MASTER_KEY=starmaster2026securekey32byteslo  # 32字节
+```
+
+### 训练流水线失败 / 无 GPU 能跑吗？
+
+SFT 脚本内置显存检测自动降级：`FULL→LoRA→CPU Offload→SIMULATION`。无 GPU 时使用：
+```bash
+cd server-services/ai-engine
+python scripts/orchestrate_fork_integration.py --smoke --force-sft-mode simulation
+```
+会生成仿真 loss 曲线与 `integration_report.json`，保证链路完整可验证。
+
+### Skill 状态异常（discover 失败后技能被禁用）
+
+```bash
+curl http://localhost:8000/skills/status
+```
+查看每个 adapter 的 error_count 与 status。累计错误达到阈值的 Skill 会进入 `disabled_by_error`。重新启动 ai-engine 或手动刷新注册表可恢复。
 
 ### Flutter 运行失败
 

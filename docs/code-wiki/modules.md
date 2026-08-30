@@ -99,9 +99,9 @@ backend-java/
 ## 2. web-frontend（Web 前端）
 
 ### 职责
-- 学生端 Web 页面：心情打卡、AI 对话、冥想放松、个人中心
-- 教师端 Web 页面：班级状态、学生列表、AI 对话、个人中心
-- 家长端 Web 页面：孩子情绪查看、AI 顾问对话、情绪趋势、应急预案
+- 学生端 Web 页面：心情打卡、AI 对话、冥想放松、个人中心、紧急帮助按钮（v1.5）
+- 教师端 Web 页面：班级状态、学生列表、AI 对话、个人中心、紧急帮助按钮（v1.5）
+- 家长端 Web 页面：孩子情绪查看、AI 顾问对话、情绪趋势、**应急预案（v1.5全屏阻断弹窗 + 二次确认 + 超时升级）**
 - 支持响应式布局，适配桌面端和移动端浏览器
 - 通过 Capacitor 可打包为 Android/iOS 原生应用
 
@@ -137,13 +137,22 @@ web-frontend/
 │   │   │   ├── TeacherHome.tsx
 │   │   │   ├── TeacherProfile.tsx
 │   │   │   └── TeacherRelax.tsx
+│   │   ├── parent/          # 家长端页面（v1.3新增）
+│   │   │   ├── ParentDashboard.tsx   # 孩子情绪卡片概览
+│   │   │   ├── ParentChat.tsx        # AI 心理顾问对话
+│   │   │   ├── ParentChildren.tsx    # 绑定/管理孩子
+│   │   │   ├── ParentEmergency.tsx   # 应急预案中心
+│   │   │   └── ParentProfile.tsx     # 家长个人中心
 │   │   ├── Home.tsx         # 欢迎页
 │   │   └── Login.tsx        # 登录页
 │   ├── store/               # Zustand 状态管理
 │   │   ├── authStore.ts     # 认证状态（登录/注册/角色）
 │   │   ├── chatStore.ts     # 聊天状态
 │   │   ├── classroomStore.ts # 班级状态
-│   │   └── moodStore.ts     # 情绪状态
+│   │   ├── moodStore.ts     # 情绪状态
+│   │   └── parentStore.ts   # 家长端状态（v1.3新增）
+│   ├── components/common/   # 公共组件
+│   │   └── EmergencyHelpButton.tsx `v1.5新增` # 三端共用浮动紧急帮助按钮
 │   ├── types/               # TypeScript 类型定义
 │   │   └── index.ts
 │   ├── App.tsx              # 根组件与路由配置
@@ -177,10 +186,13 @@ web-frontend/
 
 ### 职责
 - 基于 CBT（认知行为疗法）框架的青少年心理咨询对话生成
-- 实时风险检测：L1 关键词匹配 + L2 语义分析模型
+- 实时风险检测：L1 关键词 28 类匹配 + L1.5 持续时间规则 + L1.6 心情历史结合 + L2 语义分析模型（v1.9 准确率 100%）
 - 情绪标签识别与趋势分析
 - 支持 DeepSeek API 调用和本地 Transformer 模型推理
 - 话题引导卡片生成
+- **Skill 架构（v2.0新增）**：BaseSkill/SkillRouter 动态路由，错误自动降级禁用
+- **GitHub Fork 三层集成（v2.0新增）**：Skill Adapter 代码层、RAG knowledge_base.json 知识层、语料 combined_cleaned_text.txt 训练层
+- **训练流水线（v2.0新增）**：M1 Fork 发现 → M2 集成 → M3a MLM → M3b SFT → M4 6维 LLM-as-Judge 评估 → 汇总报告（Orchestrator 一键）
 
 ### 目录结构
 
@@ -194,20 +206,35 @@ server-services/ai-engine/
 │   ├── services/
 │   │   ├── chat_service.py           # AI 对话服务核心
 │   │   ├── emotion_analysis_service.py # 情绪分析服务
-│   │   └── risk_detection_service.py # 风险检测服务
+│   │   ├── risk_detection_service.py # 风险检测服务（多层级规则引擎）
+│   │   └── knowledge_service.py `v2.0增强` # RAG 知识库(26本心理学书籍+Fork文档注入,带source_repo_id)
+│   ├── skills/ `v2.0新增`            # 小星技能适配器（BaseSkill/SkillRouter/各 Adapter）
+│   │   ├── base.py                   # BaseSkill 抽象基类
+│   │   ├── registry.py               # SkillRouter 动态路由
+│   │   └── adapters/                 # 多个 Fork 仓库 Skill Adapter
 │   ├── utils/
 │   │   ├── encryption.py             # 加密工具
-│   │   └── keyword_manager.py        # 关键词管理
-│   └── main.py                       # FastAPI 入口
+│   │   └── keyword_manager.py        # 关键词管理（28分类，可热加载）
+│   └── main.py                       # FastAPI 入口（含 GET /skills/status）
 ├── data/                             # 训练/清洗数据
+│   ├── knowledge_base.json           # RAG 知识条目(含 source_repo_id 字段)
+│   ├── combined_cleaned_text.txt     # 清洗后的 MLM/SFT 训练语料(含 fork)
+│   └── sft_dataset.jsonl             # 指令微调数据
 ├── models/                           # 预训练 Word2Vec 模型
 │   ├── pretrained_english/
 │   └── pretrained_word2vec/
-├── scripts/                          # 数据处理脚本
+├── scripts/ `v2.0增强`               # 数据处理 + 训练流水线（14+ 脚本）
 │   ├── extract_pdf_content.py
 │   ├── pretrain_english.py
 │   ├── pretrain_model.py
-│   └── pretrain_word2vec.py
+│   ├── pretrain_word2vec.py
+│   ├── discover_fork_repos.py        # M1 自动发现 GitHub Fork
+│   ├── integrate_fork_knowledge.py   # M2 Skill+RAG+语料三层集成
+│   ├── train_mlm_continue.py         # M3a MLM 继续预训练(BERT)
+│   ├── train_sft_finetune.py         # M3b SFT 全参/LoRA/CPU/SIM 显存降级链
+│   ├── evaluate_model_quality.py     # M4 6维 LLM-as-Judge 评估
+│   └── orchestrate_fork_integration.py  # 6步 Orchestrator 入口(--smoke)
+├── tests/ `v2.0新增`                 # 20 项单元测试（py --all 全通过）
 ├── dockerfile
 └── requirements.txt
 ```
@@ -223,6 +250,12 @@ server-services/ai-engine/
 | openai | 1.6.1 | DeepSeek/OpenAI API |
 | langchain | 0.1.0 | LLM 应用框架 |
 | scikit-learn | 1.3.2 | 机器学习工具 |
+| peft | 0.7.1 `v2.0新增` | LoRA 低秩微调 |
+| accelerate | 0.25.0 `v2.0新增` | 分布式训练 + 显存降级链 |
+| datasets | 2.15.0 `v2.0新增` | 训练数据处理（拼接/去重） |
+| evaluate | 0.4.1 `v2.0新增` | 评估指标计算 |
+| GitPython | 3.1.40 `v2.0新增` | Fork 仓库克隆与元数据 |
+| langdetect | 1.0.9 `v2.0新增` | Fork 语料语种检测/过滤 |
 
 ---
 

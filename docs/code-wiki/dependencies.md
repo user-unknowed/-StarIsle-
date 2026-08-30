@@ -201,7 +201,8 @@ sequenceDiagram
 2. mongodb    (端口 27017)
 3. redis      (端口 6379)
 4. backend-java (端口 8080，依赖 mysql/mongodb/redis)
-5. ai-engine   (端口 8000，依赖 redis/mongodb)
+5. ai-engine   (端口 8000，依赖 redis/mongodb，启动时读取 knowledge_base.json 初始化 KnowledgeService，装载 SkillRouter Adapter)
+6. web-frontend (端口 5173 / 80，依赖 backend-java + ai-engine 的反向代理)
 ```
 
 ### CI/CD 构建依赖
@@ -266,6 +267,21 @@ sequenceDiagram
 | pymongo | 4.6.1 | MongoDB |
 | redis | 5.0.1 | Redis |
 | kafka-python | 2.0.2 | 消息队列 |
+| peft | 0.7.1 `v2.0新增` | LoRA 低秩微调适配器 |
+| accelerate | 0.25.0 `v2.0新增` | 混合精度/CPU Offload/分布式训练（显存降级链 FULL→LoRA→CPU→SIM） |
+| datasets | 2.15.0 `v2.0新增` | MLM/SFT 训练数据构建与去重 |
+| evaluate | 0.4.1 `v2.0新增` | 自动评估指标计算 |
+| GitPython | 3.1.40 `v2.0新增` | GitHub Fork 仓库克隆与元数据 |
+| langdetect | 1.0.9 `v2.0新增` | Fork 语料语种检测（过滤非中文噪音） |
+
+### Python (ai-engine) 外部服务依赖 `v2.0增强`
+
+| 外部服务 | 协议 | 用途 | 缺失时降级 |
+|---------|------|------|----------|
+| MongoDB | 27017 | RAG knowledge_base.json 持久化 + 聊天消息 | 使用内存缓存，重启清空 |
+| Redis | 6379 | 热点上下文/速率限制 | 跳过缓存（性能下降） |
+| GitHub API | HTTPS | M1 Fork 发现（discover_fork_repos.py） | 使用本地 fork_paths.yml 清单 |
+| LLM-as-Judge Provider（可复用 DeepSeek/OpenAI API） | HTTPS | M4 6 维评估 | 无则无法完成评估分数，SIM 模式可生成仿真分数 |
 
 ### Go (server-services/backend)
 

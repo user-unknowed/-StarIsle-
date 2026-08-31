@@ -1,3 +1,8 @@
+/// @file workbench_screen.dart
+/// @description 教师端工作台页面，聚合身份卡片、今日概览统计、高风险告警、快捷操作、
+///              待办事项与班级情绪概览，按教师角色区分统计口径与可见操作。
+/// @module teacher-app/screens/workbench
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -7,9 +12,19 @@ import '../theme/teacher_theme.dart';
 import 'students_screen.dart';
 import 'chat_screen.dart';
 
+/// 教师工作台页面 Widget。
+///
+/// 继承自 [ConsumerWidget]，监听 [currentTeacherProvider]、[alertsProvider]、[todosProvider]、
+/// [reportsProvider] 与 [emotionalOverviewProvider]，渲染工作台各模块。
 class WorkbenchScreen extends ConsumerWidget {
+  /// 构造函数。
   const WorkbenchScreen({super.key});
 
+  /// 构建页面主体。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [ref]：Riverpod [WidgetRef]，用于读取各类业务 Provider。
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final teacher = ref.watch(currentTeacherProvider);
@@ -18,9 +33,11 @@ class WorkbenchScreen extends ConsumerWidget {
     final reports = ref.watch(reportsProvider);
     final emotionalOverview = ref.watch(emotionalOverviewProvider);
 
+    // 仅展示红/橙高风险告警
     final highRiskAlerts = alerts.where((a) => a.riskLevel == RiskLevel.red || a.riskLevel == RiskLevel.orange).toList();
+    // 仅展示未完成待办
     final pendingTodos = todos.where((t) => !t.isCompleted).toList();
-    
+
     final teacherRole = teacher.role;
     final reportCount = reports.where((r) => r.reporterId == teacher.id).length;
     final processedCount = reports.where((r) => r.reporterId == teacher.id && r.status == ReportStatus.processed).length;
@@ -29,6 +46,7 @@ class WorkbenchScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('工作台'),
         actions: [
+          // 通知入口（占位）
           IconButton(
             icon: const Icon(Icons.bell),
             onPressed: () {},
@@ -40,16 +58,22 @@ class WorkbenchScreen extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // 教师身份卡片
             _buildIdentityCard(context, teacher),
             const SizedBox(height: 20),
+            // 今日概览统计
             _buildOverviewCard(context, teacherRole, reportCount, processedCount, highRiskAlerts.length, pendingTodos.length),
             const SizedBox(height: 20),
+            // 高风险告警（存在时展示）
             if (highRiskAlerts.isNotEmpty) _buildAlertsSection(context, highRiskAlerts, ref),
             const SizedBox(height: 20),
+            // 快捷操作入口
             _buildQuickActions(context, teacherRole),
             const SizedBox(height: 20),
+            // 待办事项列表
             _buildTodoList(context, pendingTodos, ref),
             const SizedBox(height: 20),
+            // 班级情绪概览
             _buildEmotionalOverview(context, emotionalOverview),
             const SizedBox(height: 20),
           ],
@@ -58,6 +82,11 @@ class WorkbenchScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建教师身份卡片，含头像、姓名、角色与负责班级。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [teacher]：当前教师数据。
   Widget _buildIdentityCard(BuildContext context, Teacher teacher) {
     return Container(
       decoration: BoxDecoration(
@@ -174,6 +203,14 @@ class WorkbenchScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个统计指标卡片。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [title]：指标标题；
+  /// - [value]：指标值文本；
+  /// - [icon]：指标图标；
+  /// - [color]：主题色。
   Widget _buildStatCard(BuildContext context, String title, String value, IconData icon, Color color) {
     return Container(
       decoration: BoxDecoration(
@@ -220,6 +257,12 @@ class WorkbenchScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个高风险告警卡片，展示学生、班级、触发原因与时间。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [alert]：告警数据；
+  /// - [ref]：Riverpod [WidgetRef]。
   Widget _buildAlertCard(BuildContext context, Alert alert, WidgetRef ref) {
     return Card(
       color: alert.riskLevel == RiskLevel.red ? const Color(0xFFFFEBEE) : const Color(0xFFFFF8E1),
@@ -316,6 +359,11 @@ class WorkbenchScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个快捷操作卡片。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [action]：快捷操作数据。
   Widget _buildQuickActionCard(BuildContext context, QuickAction action) {
     return InkWell(
       onTap: action.onTap,
@@ -377,6 +425,12 @@ class WorkbenchScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个待办条目，含复选框、标题、描述与截止时间。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [todo]：待办数据；
+  /// - [ref]：Riverpod [WidgetRef]，用于调用 [todosProvider] 切换完成。
   Widget _buildTodoItem(BuildContext context, TodoItem todo, WidgetRef ref) {
     return Card(
       margin: const EdgeInsets.only(bottom: 8),
@@ -438,6 +492,11 @@ class WorkbenchScreen extends ConsumerWidget {
     }
   }
 
+  /// 构建班级情绪概览卡片，含平均心情、总人数、高风险人数与情绪分布条。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [overview]：班级情绪概览数据。
   Widget _buildEmotionalOverview(BuildContext context, EmotionalOverview overview) {
     return Card(
       child: Padding(
@@ -560,11 +619,19 @@ class WorkbenchScreen extends ConsumerWidget {
   }
 }
 
+/// 快捷操作数据模型。
+///
+/// 描述工作台快捷入口的标签、图标、主题色与点击回调。
 class QuickAction {
+  /// 入口标签。
   final String label;
+  /// 入口图标。
   final IconData icon;
+  /// 主题色。
   final Color color;
+  /// 点击回调。
   final VoidCallback onTap;
 
+  /// 构造快捷操作项。
   QuickAction(this.label, this.icon, this.color, this.onTap);
 }

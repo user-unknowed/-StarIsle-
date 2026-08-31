@@ -1,15 +1,18 @@
-"""PII 脱敏模块 · v2.0
-对训练素材执行全程模糊化处理，覆盖 5 类敏感字段：
-  1. 人名（真实姓名/用户名）  → [NAME]
-  2. 联系方式（手机/座机/邮箱/微信QQ号） → [PHONE] / [EMAIL] / [CONTACT]
-  3. 证件/编号（身份证/ORCID/DOI/伦理批件/病例号） → [ID] / [ORCID] / [DOI] / [ETHICS_ID] / [CASE_ID]
-  4. 机构/地点（医院/学校/大学/公司/城市/国家/地址） → [INSTITUTION] / [LOCATION]
-  5. URL（非 DOI 链接） → [URL]
+"""
+anonymize_pii.py - PII 个人敏感信息脱敏脚本（v2.0）
 
+所属模块：ai-engine/scripts
+功能简述：
+    对训练素材执行全程模糊化处理，覆盖 5 类敏感字段：
+      1. 人名（真实姓名/用户名）  → [NAME]
+      2. 联系方式（手机/座机/邮箱/微信QQ号） → [PHONE] / [EMAIL] / [CONTACT]
+      3. 证件/编号（身份证/ORCID/DOI/伦理批件/病例号） → [ID] / [ORCID] / [DOI] / [ETHICS_ID] / [CASE_ID]
+      4. 机构/地点（医院/学校/大学/公司/城市/国家/地址） → [INSTITUTION] / [LOCATION]
+      5. URL（非 DOI 链接） → [URL]
 用法：
-  python scripts/anonymize_pii.py            # 脱敏 data/ 下全部素材
-  python scripts/anonymize_pii.py --scan      # 仅扫描不修改，输出 PII 命中统计
-  python scripts/anonymize_pii.py --file <p>   # 脱敏单个文件
+    python scripts/anonymize_pii.py            # 脱敏 data/ 下全部素材
+    python scripts/anonymize_pii.py --scan      # 仅扫描不修改，输出 PII 命中统计
+    python scripts/anonymize_pii.py --file <p>   # 脱敏单个文件
 """
 from __future__ import annotations
 import argparse, json, logging, re, shutil, sys
@@ -165,6 +168,11 @@ RE_KNOWN_SURNAMES = re.compile(
 
 @dataclass
 class MaskStats:
+    """
+    脱敏统计计数器
+
+    记录各类 PII 字段的脱敏命中次数，用于汇总输出与日志统计。
+    """
     phone: int = 0
     email: int = 0
     qq: int = 0
@@ -182,12 +190,14 @@ class MaskStats:
     name_en: int = 0
     name_cn: int = 0
     def total(self) -> int:
+        """返回所有字段命中次数的总和。"""
         return sum(getattr(self, f) for f in self.__dataclass_fields__)
     def to_dict(self) -> Dict[str, int]:
+        """将各字段命中次数导出为字典。"""
         return {f: getattr(self, f) for f in self.__dataclass_fields__}
 
 def _mask(text: str, st: MaskStats) -> str:
-    """按从具体到一般的顺序应用脱敏规则。"""
+    """按从具体到一般的顺序应用脱敏规则，将命中 PII 替换为占位标签。"""
     # 1. DOI（先于 URL，避免 URL 吞掉 DOI）
     text, n = RE_DOI.subn("[DOI]", text); st.doi += n
     # 2. ORCID（先于 ID card，模式更具体）
@@ -256,7 +266,7 @@ def _mask(text: str, st: MaskStats) -> str:
     return text
 
 def _mask_value(v: Any, st: MaskStats) -> Any:
-    """递归脱敏 JSON 结构。"""
+    """递归脱敏 JSON 结构：对字符串调用 _mask，对 list/dict 递归处理。"""
     if isinstance(v, str):
         return _mask(v, st)
     if isinstance(v, list):
@@ -266,7 +276,7 @@ def _mask_value(v: Any, st: MaskStats) -> Any:
     return v
 
 def anonymize_file(path: Path, scan_only: bool = False) -> MaskStats:
-    """脱敏单个文件。scan_only=True 时仅统计不写入。"""
+    """脱敏单个文件，按扩展名分发处理；scan_only=True 时仅统计不写入，写前自动备份原文件。"""
     st = MaskStats()
     if not path.exists():
         log.warning("文件不存在: %s", path); return st
@@ -315,6 +325,7 @@ def anonymize_file(path: Path, scan_only: bool = False) -> MaskStats:
     return st
 
 def main():
+    """命令行入口：解析参数，遍历目标文件执行脱敏或扫描，并输出汇总统计。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("--scan", action="store_true", help="仅扫描统计，不修改文件")
     ap.add_argument("--file", type=Path, help="脱敏单个文件")

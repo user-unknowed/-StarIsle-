@@ -12,35 +12,73 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * AI 服务
+ * 提供文章生成、内容摘要、风格转换与主题分析等 AI 能力，
+ * 支持智谱 AI 与 Silicon Flow 双平台切换及失败自动回退。
+ */
 @Service
 public class AIService {
+    /** 智谱 AI 基础地址 */
     private static final String ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4";
+    /** Silicon Flow 基础地址 */
     private static final String SILICON_FLOW_BASE_URL = "https://api.siliconflow.cn/v1";
-    
+
+    /** API 密钥 */
     private String apiKey;
+    /** 当前 AI 平台，默认智谱 */
     private String currentProvider = "zhipu";
-    
+
+    /** HTTP 客户端，用于发起 API 请求 */
     private final HttpClient httpClient = HttpClient.newHttpClient();
+    /** JSON 序列化与解析工具 */
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    /** 默认构造方法 */
     public AIService() {}
 
+    /**
+     * 构造方法
+     *
+     * @param apiKey API 密钥
+     */
     public AIService(String apiKey) {
         this.apiKey = apiKey;
     }
 
+    /**
+     * 设置 API 密钥
+     *
+     * @param key API 密钥
+     */
     public void setApiKey(String key) {
         this.apiKey = key;
     }
 
+    /**
+     * 切换 AI 平台
+     *
+     * @param provider 平台标识：zhipu 或 siliconflow
+     */
     public void switchProvider(String provider) {
         this.currentProvider = provider;
     }
 
+    /**
+     * 生成文章
+     * 根据主题、风格、字数与附加要求构造提示词并调用 AI 平台生成文章。
+     *
+     * @param topic               文章主题
+     * @param style               风格标识，null 默认 professional
+     * @param wordCount           目标字数，null 默认 800
+     * @param additionalRequirements 附加要求，可为空
+     * @return 生成的文章内容
+     * @throws Exception 当 API 调用失败时抛出
+     */
     public String generateArticle(String topic, String style, Integer wordCount, String additionalRequirements) throws Exception {
         String effectiveStyle = style != null ? style : "professional";
         int effectiveWordCount = wordCount != null ? wordCount : 800;
-        
+
         String systemPrompt = buildSystemPrompt("article_writer");
         StringBuilder userPrompt = new StringBuilder();
         userPrompt.append("请根据以下主题撰写一篇").append(effectiveWordCount).append("字左右的文章：\n\n");
@@ -54,10 +92,20 @@ public class AIService {
         return callAPI(systemPrompt, userPrompt.toString());
     }
 
+    /**
+     * 内容摘要
+     * 根据摘要长度与类型对原文进行摘要。
+     *
+     * @param content        原文内容
+     * @param summaryLength 摘要字数，null 默认 200
+     * @param summaryType   摘要类型，academic 为学术性，其余为一般性
+     * @return 生成的摘要内容
+     * @throws Exception 当 API 调用失败时抛出
+     */
     public String summarizeContent(String content, Integer summaryLength, String summaryType) throws Exception {
         int effectiveSummaryLength = summaryLength != null ? summaryLength : 200;
         String effectiveSummaryType = summaryType != null ? summaryType : "general";
-        
+
         String systemPrompt = buildSystemPrompt("summarizer");
         StringBuilder userPrompt = new StringBuilder();
         userPrompt.append("请对以下内容进行").append(effectiveSummaryType.equals("academic") ? "学术性" : "一般性");
@@ -68,6 +116,15 @@ public class AIService {
         return callAPI(systemPrompt, userPrompt.toString());
     }
 
+    /**
+     * 风格转换
+     * 将原文转换为指定风格，保持内容不变仅改变表达方式。
+     *
+     * @param content     原文内容
+     * @param targetStyle 目标风格标识
+     * @return 转换风格后的内容
+     * @throws Exception 当 API 调用失败时抛出
+     */
     public String convertStyle(String content, String targetStyle) throws Exception {
         String systemPrompt = buildSystemPrompt("style_converter");
         StringBuilder userPrompt = new StringBuilder();
@@ -79,6 +136,17 @@ public class AIService {
         return callAPI(systemPrompt, userPrompt.toString());
     }
 
+    /**
+     * 主题分析
+     * 根据开关对内容进行情感分析、关键词提取与改进建议。
+     *
+     * @param content             待分析内容
+     * @param includeSentiment    是否包含情感分析
+     * @param includeKeywords     是否包含关键词提取
+     * @param includeSuggestions  是否包含改进建议
+     * @return 结构化的分析结果
+     * @throws Exception 当 API 调用失败时抛出
+     */
     public String analyzeTopic(String content, boolean includeSentiment, boolean includeKeywords, boolean includeSuggestions) throws Exception {
         String systemPrompt = buildSystemPrompt("topic_analyzer");
         StringBuilder userPrompt = new StringBuilder();
@@ -99,6 +167,13 @@ public class AIService {
         return callAPI(systemPrompt, userPrompt.toString());
     }
 
+    /**
+     * 构建系统提示词
+     * 根据角色返回对应的系统提示词，未匹配时默认使用文章撰稿人角色。
+     *
+     * @param role 角色标识
+     * @return 系统提示词文本
+     */
     private String buildSystemPrompt(String role) {
         Map<String, String> rolePrompts = Map.of(
             "article_writer", """
@@ -199,6 +274,12 @@ public class AIService {
         return rolePrompts.getOrDefault(role, rolePrompts.get("article_writer"));
     }
 
+    /**
+     * 获取风格描述
+     *
+     * @param style 风格标识
+     * @return 风格中文描述，未匹配返回专业风格描述
+     */
     private String getStyleDescription(String style) {
         Map<String, String> descriptions = Map.of(
             "professional", "专业严谨，适合学术或正式场合",
@@ -212,6 +293,15 @@ public class AIService {
         return descriptions.getOrDefault(style, descriptions.get("professional"));
     }
 
+    /**
+     * 调用 AI 平台 API
+     * 根据当前平台调用对应接口，智谱失败时自动回退至 Silicon Flow。
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt    用户提示词
+     * @return AI 返回的内容
+     * @throws Exception 当密钥未配置或两个平台均失败时抛出
+     */
     private String callAPI(String systemPrompt, String userPrompt) throws Exception {
         if (apiKey == null || apiKey.isEmpty()) {
             throw new IllegalStateException("API密钥未配置，请先设置API Key");
@@ -232,13 +322,21 @@ public class AIService {
         }
     }
 
+    /**
+     * 调用智谱 AI 接口
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt    用户提示词
+     * @return 智谱 AI 返回的内容
+     * @throws Exception 当请求或解析失败时抛出
+     */
     private String callZhipuAPI(String systemPrompt, String userPrompt) throws Exception {
         String url = ZHIPU_BASE_URL + "/chat/completions";
-        
+
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         messages.add(Map.of("role", "user", "content", userPrompt));
-        
+
         Map<String, Object> body = Map.of(
             "model", "glm-4-flash",
             "messages", messages,
@@ -247,7 +345,7 @@ public class AIService {
         );
 
         String jsonBody = objectMapper.writeValueAsString(body);
-        
+
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Content-Type", "application/json")
@@ -266,13 +364,21 @@ public class AIService {
         }
     }
 
+    /**
+     * 调用 Silicon Flow 接口
+     *
+     * @param systemPrompt 系统提示词
+     * @param userPrompt    用户提示词
+     * @return Silicon Flow 返回的内容
+     * @throws Exception 当请求或解析失败时抛出
+     */
     private String callSiliconFlowAPI(String systemPrompt, String userPrompt) throws Exception {
         String url = SILICON_FLOW_BASE_URL + "/chat/completions";
-        
+
         List<Map<String, String>> messages = new ArrayList<>();
         messages.add(Map.of("role", "system", "content", systemPrompt));
         messages.add(Map.of("role", "user", "content", userPrompt));
-        
+
         Map<String, Object> body = Map.of(
             "model", "Qwen/Qwen2-7B-Instruct",
             "messages", messages,
@@ -281,7 +387,7 @@ public class AIService {
         );
 
         String jsonBody = objectMapper.writeValueAsString(body);
-        
+
         HttpRequest request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Content-Type", "application/json")

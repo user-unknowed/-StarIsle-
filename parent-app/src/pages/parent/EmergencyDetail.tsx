@@ -1,29 +1,56 @@
+/**
+ * @file EmergencyDetail.tsx
+ * @description 家长端红色预警详情页，展示紧急情况行动建议、心理援助热线、最近医院、
+ *              学校联系人及 72 小时跟进倒计时，支持家长确认预警回执。
+ * @module parent-app/pages/parent/EmergencyDetail
+ */
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParentStore } from '../../store/parentStore';
 import { ArrowLeft, AlertTriangle, Phone, MapPin, Clock, Check, User, Heart } from 'lucide-react';
 
+/**
+ * 预警详情页面组件。
+ *
+ * 从 [useParentStore] 读取紧急资源并按类型分组展示，提供 72 小时倒计时与
+ * 「我已了解并开始行动」确认回执，确认后切换为已确认状态卡片。
+ *
+ * @returns 预警详情页 JSX。
+ */
 export default function EmergencyDetail() {
   const navigate = useNavigate();
   const { emergencyResources, fetchEmergencyResources, confirmEmergencyAlert } = useParentStore();
+  // 是否已确认预警
   const [isConfirmed, setIsConfirmed] = useState(false);
+  // 72 小时跟进倒计时（秒）
   const [countdown, setCountdown] = useState(72 * 60 * 60);
 
+  // 初始化拉取紧急资源并启动倒计时定时器
   useEffect(() => {
     fetchEmergencyResources();
-    
+
     const timer = setInterval(() => {
       setCountdown(prev => Math.max(0, prev - 1));
     }, 1000);
-    
+
     return () => clearInterval(timer);
   }, [fetchEmergencyResources]);
 
+  /**
+   * 确认预警，调用 store 提交回执并切换为已确认状态。
+   */
   const handleConfirm = async () => {
     await confirmEmergencyAlert('alert1');
     setIsConfirmed(true);
   };
 
+  /**
+   * 将倒计时秒数格式化为 HH:MM:SS 字符串。
+   *
+   * @param seconds - 剩余秒数。
+   * @returns 格式化后的倒计时字符串。
+   */
   const formatCountdown = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
@@ -31,6 +58,7 @@ export default function EmergencyDetail() {
     return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
+  // 按类型分组：热线、医院、学校联系人
   const hotlines = emergencyResources.filter(r => r.type === 'hotline');
   const hospitals = emergencyResources.filter(r => r.type === 'hospital');
   const teachers = emergencyResources.filter(r => r.type === 'teacher');

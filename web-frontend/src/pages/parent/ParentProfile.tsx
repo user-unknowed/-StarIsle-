@@ -1,3 +1,8 @@
+/**
+ * @file ParentProfile.tsx
+ * @description 家长端个人资料页：展示/编辑个人信息、绑定概览、通知与隐私设置、退出登录
+ * @module web-frontend/pages/parent
+ */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParentStore } from '../../store/parentStore';
@@ -18,6 +23,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+// 设置项配置：图标、标题、描述、是否默认开启
 const settingsItems = [
   { icon: Bell, label: '告警通知', description: '接收孩子紧急告警推送', defaultOn: true },
   { icon: Mail, label: '邮箱通知', description: '每周接收孩子状态报告' },
@@ -25,56 +31,82 @@ const settingsItems = [
   { icon: Globe, label: '语言设置', description: '简体中文' },
 ];
 
+/**
+ * 家长端个人资料组件
+ * @returns JSX 元素
+ */
 export default function ParentProfile() {
   const navigate = useNavigate();
+  // 家长 store：个人资料、孩子列表、告警及加载状态
   const { parentProfile, children, emergencyAlerts, isLoading, error, isUsingMockData, fetchProfile, fetchChildren, fetchAlerts } = useParentStore();
+  // 鉴权 store：当前用户、退出登录、更新资料
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const updateProfile = useAuthStore((state) => state.updateProfile);
   const toast = useToast();
 
+  // 是否处于资料编辑态
   const [isEditing, setIsEditing] = useState(false);
+  // 编辑中的昵称与签名
   const [editedNickname, setEditedNickname] = useState(parentProfile?.nickname || user?.nickname || '');
   const [editedSignature, setEditedSignature] = useState(user?.signature || '');
+  // 通知开关状态（按标题为键）
   const [toggles, setToggles] = useState<Record<string, boolean>>({
     告警通知: true,
     邮箱通知: false,
   });
 
+  // 进入页面拉取资料、孩子列表与告警
   useEffect(() => {
     fetchProfile();
     fetchChildren();
     fetchAlerts();
   }, [fetchProfile, fetchChildren, fetchAlerts]);
 
+  // 资料变化时同步昵称到编辑框
   useEffect(() => {
     if (parentProfile) setEditedNickname(parentProfile.nickname);
   }, [parentProfile]);
 
+  /**
+   * 保存资料：调用鉴权 store 更新昵称与签名
+   */
   const handleSave = async () => {
     await updateProfile({ nickname: editedNickname, signature: editedSignature });
     toast.success('资料已更新');
     setIsEditing(false);
   };
 
+  /**
+   * 退出登录并跳转首页
+   */
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  /**
+   * 切换某个通知开关
+   * @param label - 设置项标题
+   * @param currentOn - 当前是否开启
+   */
   const toggleItem = (label: string, currentOn: boolean) => {
     const newValue = !currentOn;
     setToggles((prev) => ({ ...prev, [label]: newValue }));
     toast.info(newValue ? '已开启通知' : '已关闭通知');
   };
 
+  // 展示用昵称：优先取家长资料，再取用户信息，兜底「家长」
   const displayName = parentProfile?.nickname || user?.nickname || '家长';
+  // 展示用电话
   const phone = parentProfile?.phone || '未绑定';
+  // 注册时间
   const createdAt = parentProfile?.createdAt || user?.createdAt;
 
   // 真实统计：绑定孩子数、待处理告警数、关注天数
   const childCount = children.length;
   const pendingAlertCount = emergencyAlerts.filter((a) => !a.confirmed).length;
+  // 关注天数 = 当前时间 - 注册时间，至少为 1
   const followDays = createdAt
     ? Math.max(1, Math.ceil((Date.now() - new Date(createdAt).getTime()) / (1000 * 60 * 60 * 24)))
     : '--';

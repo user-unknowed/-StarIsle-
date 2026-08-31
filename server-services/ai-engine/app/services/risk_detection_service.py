@@ -1,3 +1,16 @@
+"""
+risk_detection_service.py - 风险检测服务（L1 关键词 + L1.5 持续时间 + L2 语义）
+
+所属模块：ai-engine/app/services
+功能简述：
+    对用户内容进行分层风险检测：L1 关键词实时命中判定、
+    L1.5 持续时间表达与情绪低落组合判定、L2 语义意图分析，
+    综合三层结果取最高风险等级，并提供积极词降级与社交孤立降级。
+依赖关系：
+    - app.utils.keyword_manager：关键词管理
+    - app.models.semantic_analyzer：L2 语义分析器
+    - os/re：通用工具与正则
+"""
 import re
 from typing import Dict, List
 from app.utils.keyword_manager import KeywordManager
@@ -7,9 +20,18 @@ import os
 class RiskDetectionService:
     """
     风险检测服务 - L1关键词 + L2语义分析
+    
+    通过关键词、持续时间、语义三层检测综合判定风险等级，
+    并对求助意愿、积极词等场景做降级处理，降低误报率。
     """
     
     def __init__(self):
+        """
+        初始化风险检测服务，装载关键词库与语义分析器。
+
+        关键词库按 v1.6/v1.7/v1.8 迭代更新，区分高/中风险、
+        持续时间与情绪低落词组，用于分层判定。
+        """
         self.keyword_manager = KeywordManager()
         self.semantic_analyzer = SemanticAnalyzer()
 
@@ -51,10 +73,14 @@ class RiskDetectionService:
     
     async def detect_risk(self, user_id: str, content: str) -> str:
         """
-        综合风险检测
+        综合风险检测。
+
+        Args:
+            user_id: 用户ID
+            content: 待检测的文本内容
 
         Returns:
-            风险等级: "green" / "yellow" / "orange" / "red"
+            str: 风险等级（green / yellow / orange / red）
         """
         # L1: 关键词检测（实时）
         keyword_risk = await self._detect_keywords(content)
@@ -72,7 +98,13 @@ class RiskDetectionService:
     
     async def _detect_keywords(self, content: str) -> Dict:
         """
-        L1关键词检测
+        L1关键词检测。
+
+        Args:
+            content: 待检测的文本内容
+
+        Returns:
+            Dict: 包含 level 与命中 keywords 的检测结果
         """
         detected_high = []
         detected_medium = []
@@ -87,7 +119,7 @@ class RiskDetectionService:
             if keyword in content:
                 detected_medium.append(keyword)
         
-        # 判断关键词风险等级
+        # 判断关键词风险等级：高风险命中即红色，否则中风险橙色，否则绿色
         if detected_high:
             return {"level": "red", "keywords": detected_high}
         elif detected_medium:
@@ -97,7 +129,13 @@ class RiskDetectionService:
     
     async def _detect_semantic(self, content: str) -> Dict:
         """
-        L2语义分析
+        L2语义分析。
+
+        Args:
+            content: 待检测的文本内容
+
+        Returns:
+            Dict: 包含 level、confidence、intent 的语义检测结果；异常时降级为绿色
         """
         try:
             # 使用语义分析模型
@@ -110,7 +148,7 @@ class RiskDetectionService:
             }
 
         except Exception as e:
-            # 降级策略：返回低风险
+            # 降级策略：返回低风险，避免语义分析异常阻塞主流程
             return {"level": "green", "confidence": 0.5}
 
     async def _detect_duration(self, content: str) -> Dict:
@@ -121,10 +159,18 @@ class RiskDetectionService:
         - 持续时间表达词 + 情绪低落词 → orange
         - 仅持续时间表达词 → yellow
         - 无持续时间表达 → green
+
+        Args:
+            content: 待检测的文本内容
+
+        Returns:
+            Dict: 包含 level 与 reason 的持续时间检测结果
         """
+        # 同时检测持续时间表达与情绪低落关键词
         has_duration = any(indicator in content for indicator in self.duration_indicators)
         has_low_mood = any(keyword in content for keyword in self.low_mood_keywords)
 
+        # 持续时间叠加情绪低落，升级为橙色
         if has_duration and has_low_mood:
             return {"level": "orange", "reason": "duration_low_mood"}
         elif has_duration:
@@ -134,13 +180,22 @@ class RiskDetectionService:
 
     def _calculate_final_risk(self, keyword_risk: Dict, duration_risk: Dict, semantic_risk: Dict, content: str = "") -> str:
         """
-        综合计算最终风险等级
+        综合计算最终风险等级。
 
         规则：
         - L1检测到高风险关键词 → 立即返回红色
         - v1.8: 中等关键词(orange) + 积极词 → 降为 yellow
                 （有改善意愿/求助动机时风险可控，修复 case_017）
         - L1 + L1.5 + L2 综合判断，取最高风险等级
+
+        Args:
+            keyword_risk: L1 关键词检测结果
+            duration_risk: L1.5 持续时间检测结果
+            semantic_risk: L2 语义检测结果
+            content: 原文，用于积极词等降级判定
+
+        Returns:
+            str: 最终风险等级（green / yellow / orange / red）
         """
         # L1关键词检测到高风险，立即返回红色
         if keyword_risk["level"] == "red":
@@ -166,14 +221,14 @@ class RiskDetectionService:
         if has_only_social:
             return "yellow"
 
-        # 综合L1、L1.5、L2结果
+        # 综合L1、L1.5、L2结果：取最高风险等级
         risk_levels = ["green", "yellow", "orange", "red"]
 
         keyword_level = keyword_risk["level"]
         duration_level = duration_risk["level"]
         semantic_level = semantic_risk.get("level", "green")
 
-        # 取最高风险等级
+        # 取最高风险等级：将各级别转为索引后取最大值
         keyword_index = risk_levels.index(keyword_level)
         duration_index = risk_levels.index(duration_level)
         semantic_index = risk_levels.index(semantic_level)
@@ -184,8 +239,15 @@ class RiskDetectionService:
     
     async def get_detection_details(self, content: str) -> Dict:
         """
-        获取检测详情
+        获取检测详情。
+
+        Args:
+            content: 待检测的文本内容
+
+        Returns:
+            Dict: 包含命中关键词、语义意图与置信度的详情
         """
+        # 重新执行关键词与语义检测，用于返回明细
         keyword_result = await self._detect_keywords(content)
         semantic_result = await self._detect_semantic(content)
         

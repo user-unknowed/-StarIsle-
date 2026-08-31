@@ -1,3 +1,8 @@
+/**
+ * @file ParentChildren.tsx
+ * @description 家长端孩子管理页，支持绑定/解绑孩子、查看授权状态与绑定信息
+ * @module web-frontend/pages/parent
+ */
 import { useEffect, useState } from 'react';
 import { useParentStore } from '../../store/parentStore';
 import { Header } from '../../components/common/Header';
@@ -12,7 +17,12 @@ import {
   AlertCircle,
 } from 'lucide-react';
 
+/**
+ * 家长端孩子管理组件
+ * @returns JSX 元素
+ */
 export default function ParentChildren() {
+  // 从家长 store 取出孩子列表、加载/错误/mock 状态及绑定/授权/解绑 action
   const {
     children,
     isLoading,
@@ -24,17 +34,26 @@ export default function ParentChildren() {
     unbindChild,
   } = useParentStore();
 
+  // 全局 toast
   const toast = useToast();
+  // 是否显示绑定弹窗
   const [showBindModal, setShowBindModal] = useState(false);
+  // 绑定弹窗：学生ID 与昵称
   const [bindStudentId, setBindStudentId] = useState('');
   const [bindNickname, setBindNickname] = useState('');
+  // 提交中（绑定/解绑）
   const [submitting, setSubmitting] = useState(false);
+  // 当前等待二次确认解绑的孩子 bindingId
   const [confirmUnbind, setConfirmUnbind] = useState<string | null>(null);
 
+  // 进入页面拉取孩子列表
   useEffect(() => {
     fetchChildren();
   }, [fetchChildren]);
 
+  /**
+   * 提交绑定：校验学生ID后调用 store，成功则关闭弹窗并清空表单
+   */
   const handleBind = async () => {
     if (!bindStudentId.trim()) {
       toast.warning('请输入孩子ID');
@@ -48,6 +67,7 @@ export default function ParentChildren() {
     });
     setSubmitting(false);
     if (result) {
+      // 绑定成功：提示并关闭弹窗、清空输入
       toast.success(`已绑定 ${result.studentNickname}（${isUsingMockData ? '示例' : 'API 返回'}）`);
       setShowBindModal(false);
       setBindStudentId('');
@@ -57,11 +77,21 @@ export default function ParentChildren() {
     }
   };
 
+  /**
+   * 授权访问某个孩子的数据
+   * @param bindingId - 绑定关系 ID
+   * @param nickname - 孩子昵称（用于 toast 文案）
+   */
   const handleAuthorize = async (bindingId: string, nickname: string) => {
     await authorizeChild(bindingId);
     toast.success(`已授权 ${nickname} 的数据访问`);
   };
 
+  /**
+   * 解除与某个孩子的绑定
+   * @param bindingId - 绑定关系 ID
+   * @param nickname - 孩子昵称（用于 toast 文案）
+   */
   const handleUnbind = async (bindingId: string, nickname: string) => {
     setSubmitting(true);
     await unbindChild(bindingId);

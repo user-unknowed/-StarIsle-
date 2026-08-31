@@ -1,9 +1,22 @@
+/**
+ * @file ParentHome.tsx
+ * @description 家长端首页，展示当前孩子概览、情绪概览与趋势、打卡日历、AI 关怀建议、
+ *              快捷入口与推荐阅读，未授权时引导家长与孩子沟通开启权限。
+ * @module parent-app/pages/parent/ParentHome
+ */
+
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useParentStore } from '../../store/parentStore';
 import { Heart, MessageCircle, BookOpen, TrendingUp, AlertTriangle, Clock, ChevronRight, User, Sparkles } from 'lucide-react';
 
+/**
+ * 根据风险等级返回对应的圆点背景色 Tailwind 类名。
+ *
+ * @param level - 风险等级字符串。
+ * @returns 对应颜色的 Tailwind 类名。
+ */
 const getRiskColor = (level: string | undefined) => {
   switch (level) {
     case 'red': return 'bg-red-500';
@@ -13,6 +26,12 @@ const getRiskColor = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据风险等级返回对应的中文标签。
+ *
+ * @param level - 风险等级字符串。
+ * @returns 对应的中文标签。
+ */
 const getRiskLabel = (level: string | undefined) => {
   switch (level) {
     case 'red': return '紧急';
@@ -22,6 +41,12 @@ const getRiskLabel = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据风险等级返回对应的卡片背景与边框 Tailwind 类名。
+ *
+ * @param level - 风险等级字符串。
+ * @returns 对应的 Tailwind 类名。
+ */
 const getRiskBgColor = (level: string | undefined) => {
   switch (level) {
     case 'red': return 'bg-red-50 border-red-200';
@@ -30,6 +55,12 @@ const getRiskBgColor = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据风险等级返回对应的文本颜色 Tailwind 类名。
+ *
+ * @param level - 风险等级字符串。
+ * @returns 对应的 Tailwind 类名。
+ */
 const getRiskTextColor = (level: string | undefined) => {
   switch (level) {
     case 'red': return 'text-red-600';
@@ -38,6 +69,12 @@ const getRiskTextColor = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据心情等级返回对应的 Emoji。
+ *
+ * @param level - 心情等级（1-5），未定义时返回问号。
+ * @returns 对应心情的 Emoji 字符串。
+ */
 const getMoodEmoji = (level: number | undefined) => {
   if (!level) return '❓';
   if (level <= 1) return '😔';
@@ -47,6 +84,12 @@ const getMoodEmoji = (level: number | undefined) => {
   return '😄';
 };
 
+/**
+ * 根据心情等级返回对应的中文标签。
+ *
+ * @param level - 心情等级（1-5），未定义时返回「未知」。
+ * @returns 对应的中文标签。
+ */
 const getMoodLabel = (level: number | undefined) => {
   if (!level) return '未知';
   if (level <= 1) return '很糟';
@@ -56,27 +99,37 @@ const getMoodLabel = (level: number | undefined) => {
   return '很开心';
 };
 
+/**
+ * 家长首页组件。
+ *
+ * 从 [useAuthStore] 获取当前用户，从 [useParentStore] 获取孩子列表、情绪趋势、
+ * 摘要与知识文章，渲染孩子概览、情绪概览、打卡日历、AI 建议与快捷入口。
+ *
+ * @returns 首页 JSX。
+ */
 export default function ParentHome() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
-  const { 
-    children, 
-    currentChildId, 
-    moodTrend, 
-    moodSummary, 
+  const {
+    children,
+    currentChildId,
+    moodTrend,
+    moodSummary,
     knowledgeArticles,
-    fetchChildren, 
-    fetchMoodTrend, 
-    fetchMoodSummary, 
-    isLoading 
+    fetchChildren,
+    fetchMoodTrend,
+    fetchMoodSummary,
+    isLoading
   } = useParentStore();
 
+  // 登录后拉取孩子列表
   useEffect(() => {
     if (user?.id) {
       fetchChildren(user.id);
     }
   }, [user?.id, fetchChildren]);
 
+  // 当前孩子变化时拉取近 7 天情绪趋势与摘要
   useEffect(() => {
     const currentChild = children.find(c => c.id === currentChildId);
     if (currentChild) {
@@ -87,6 +140,11 @@ export default function ParentHome() {
 
   const currentChild = children.find(c => c.id === currentChildId);
 
+  /**
+   * 生成最近 14 天的打卡日历数据，关联打卡状态。
+   *
+   * @returns 日历天数数据数组。
+   */
   const generateCalendarDays = () => {
     const days = [];
     const today = new Date();
@@ -100,6 +158,7 @@ export default function ParentHome() {
     return days;
   };
 
+  // 趋势图纵轴归一化所需的最大/最小心情值
   const maxMood = Math.max(...moodTrend.map(m => m.moodLevel));
   const minMood = Math.min(...moodTrend.map(m => m.moodLevel));
   const moodRange = maxMood - minMood || 1;

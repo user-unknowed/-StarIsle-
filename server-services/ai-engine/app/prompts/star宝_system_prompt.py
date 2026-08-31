@@ -1,9 +1,23 @@
+"""
+star宝_system_prompt.py - 小星（星宝）System Prompt 生成器
+
+所属模块：ai-engine/app/prompts
+功能简述：
+    根据用户画像动态生成小星 AI 伙伴的 System Prompt，包含人设、
+    说话风格、对话原则、安全红线与 CBT 框架；同时提供危机干预模式
+    专用 Prompt 与技能上下文拼接工具。
+依赖关系：
+    - typing：提供 Any、Dict、List、Optional 类型注解
+    - 调用方：对话服务在构造模型输入前调用本模块
+"""
 from typing import Any, Dict, List, Optional
 
 class Star宝SystemPrompt:
     """
     小星（星宝）的System Prompt生成器
-    基于《星屿-小星虚拟形象设计文档》§9.1
+
+    依据《星屿-小星虚拟形象设计文档》§9.1，生成对话所需的 System Prompt，
+    支持按用户画像个性化调整，以及切换至危机干预模式。
     """
     
     def generate_prompt(self, user_profile: dict = {}) -> str:
@@ -11,11 +25,12 @@ class Star宝SystemPrompt:
         生成System Prompt
         
         Args:
-            user_profile: 用户画像信息
+            user_profile: 用户画像信息（年龄段、昵称等）
         
         Returns:
-            System Prompt文本
+            str: System Prompt文本，包含人设与个性化段落
         """
+        # 基础 Prompt：定义小星人设、说话风格、对话原则、安全红线与 CBT 框架
         base_prompt = """
 你是「小星」，一个来自情绪星球的萌系小精灵。你是「星屿」APP 的 AI 情绪伙伴，陪伴 12-18 岁的初高中生。
 
@@ -62,11 +77,12 @@ class Star宝SystemPrompt:
 3. 建立替代思维（"换一个角度看的话..."）
 """
         
-        # 根据用户画像调整Prompt
+        # 根据用户画像调整Prompt：注入年龄段与昵称等个性化字段
         if user_profile:
             age_group = user_profile.get("age_group", "高中生")
             nickname = user_profile.get("nickname", "同学")
             
+            # 个性化段落：按年龄段调整表达方式并使用用户昵称
             personalized_section = f"""
 
 ## 用户信息
@@ -84,7 +100,10 @@ class Star宝SystemPrompt:
     
     def generate_crisis_prompt(self) -> str:
         """
-        生成危机干预模式Prompt
+        生成危机干预模式Prompt。
+
+        Returns:
+            str: 危机干预模式专用 Prompt，强制暂停卖萌并引导求助热线
         """
         return """
 【危机干预模式】
@@ -114,7 +133,21 @@ class Star宝SystemPrompt:
     def add_available_skills_context(self, available_skills_description: str,
                                       skill_predict: str,
                                       skill_results: str) -> str:
+        """
+        将可用技能描述、技能预测与技能结果拼接为上下文片段。
+
+        Args:
+            available_skills_description: 可用技能的描述文本
+            skill_predict: 技能预测结果文本
+            skill_results: 技能执行结果文本
+
+        Returns:
+            str: 拼接后的上下文片段；三段均为空时返回空字符串
+        """
+        # 过滤掉空字符串或纯空白字符串
         parts = [s for s in (available_skills_description, skill_predict, skill_results)
                  if s and s.strip()]
+        # 无有效内容则返回空串，避免污染 Prompt
         if not parts: return ""
+        # 以双换行分隔各段，并在最前补双换行以与上文分隔
         return "\n\n" + "\n\n".join(p.rstrip() for p in parts)

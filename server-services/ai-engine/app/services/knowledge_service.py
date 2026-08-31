@@ -167,20 +167,22 @@ class KnowledgeService:
         """
         try:
             collection = self.db.get_collection(self.collection_name)
-            
+
             # 构建搜索管道：阶段化聚合
             pipeline = []
-            
-            # 文本搜索阶段：基于全文索引检索
+
+            # 文本搜索阶段：基于已有 text 索引检索
+            # 注：使用 $match + $text（本地 MongoDB 与 Atlas 均支持），
+            #     避免使用仅 Atlas 可用的 $search 聚合阶段
             search_stage = {
-                "$search": {
+                "$match": {
                     "$text": {
                         "$search": query
                     }
                 }
             }
             pipeline.append(search_stage)
-            
+
             # 分类过滤：若指定分类则追加 match 阶段
             if category:
                 pipeline.append({"$match": {"category": category}})

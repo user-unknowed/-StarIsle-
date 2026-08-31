@@ -70,6 +70,19 @@ class RiskDetectionService:
             "情绪低落", "心情不好", "很丧", "抑郁", "难过",
             "孤独", "不开心", "低落", "消沉"
         ]
+
+        # v2.0 儿少咨询督导增强：家庭系统失衡信号关键词（medium/orange 级）
+        # 来自杜亚松家庭系统视角：问题行为常是家庭关系的报警器
+        self.family_system_keywords = [
+            "父母离异", "父母吵架", "家里没人理", "妈妈控制",
+            "爸爸打人", "被冷落", "没人管我"
+        ]
+
+        # v2.0 儿少咨询督导增强：防御链条指标（岳晓东结构性概念化）
+        # "逃避—否认—退缩"循环识别，用于配合求助意愿做降级判断
+        self.defense_chain_indicators = [
+            "逃避", "否认", "退缩", "不敢", "不敢说自己行"
+        ]
     
     async def detect_risk(self, user_id: str, content: str) -> str:
         """
@@ -88,11 +101,16 @@ class RiskDetectionService:
         # L1.5: 持续时间检测（v1.6 新增）
         duration_risk = await self._detect_duration(content)
 
+        # L1.6: 家庭系统失衡信号检测（v2.0 儿少督导增强）
+        family_system_risk = await self._detect_family_system(content)
+
         # L2: 语义分析（异步）
         semantic_risk = await self._detect_semantic(content)
 
-        # 综合判断（v1.8 传入 content 用于积极词降级）
-        final_risk = self._calculate_final_risk(keyword_risk, duration_risk, semantic_risk, content)
+        # 综合判断（v1.8 传入 content 用于积极词降级；v2.0 传入 family_system 用于防御链条降级）
+        final_risk = self._calculate_final_risk(
+            keyword_risk, duration_risk, semantic_risk, content, family_system_risk
+        )
 
         return final_risk
     
@@ -178,7 +196,30 @@ class RiskDetectionService:
         else:
             return {"level": "green", "reason": "no_duration"}
 
-    def _calculate_final_risk(self, keyword_risk: Dict, duration_risk: Dict, semantic_risk: Dict, content: str = "") -> str:
+    async def _detect_family_system(self, content: str) -> Dict:
+        """
+        L1.6 家庭系统失衡信号检测（v2.0 儿少咨询督导增强）
+
+        规则：
+        - 命中 family_system_keywords → orange（家庭关系报警器信号）
+        - 未命中 → green
+
+        来自杜亚松家庭系统视角：儿少问题行为常是家庭关系失衡的外在映射，
+        识别"高控制"与"缺乏回应"两类模式，纳入综合风险判断。
+
+        Args:
+            content: 待检测的文本内容
+
+        Returns:
+            Dict: 包含 level 与 reason 的家庭系统信号检测结果
+        """
+        content_lower = content.lower()
+        if any(kw in content_lower for kw in self.family_system_keywords):
+            return {"level": "orange", "reason": "family_system_signal"}
+        return {"level": "green", "reason": "no_family_system_signal"}
+
+    def _calculate_final_risk(self, keyword_risk: Dict, duration_risk: Dict, semantic_risk: Dict,
+                              content: str = "", family_system_risk: Dict = None) -> str:
         """
         综合计算最终风险等级。
 
@@ -186,13 +227,16 @@ class RiskDetectionService:
         - L1检测到高风险关键词 → 立即返回红色
         - v1.8: 中等关键词(orange) + 积极词 → 降为 yellow
                 （有改善意愿/求助动机时风险可控，修复 case_017）
-        - L1 + L1.5 + L2 综合判断，取最高风险等级
+        - L1 + L1.5 + L1.6 + L2 综合判断，取最高风险等级
+        - v2.0: 防御链条降级 — 含 3 个以上 defense_chain_indicators 且同时含求助意愿词时，
+                将 orange 降为 yellow（避免把自我觉察的求助误判为高危）
 
         Args:
             keyword_risk: L1 关键词检测结果
             duration_risk: L1.5 持续时间检测结果
             semantic_risk: L2 语义检测结果
             content: 原文，用于积极词等降级判定
+            family_system_risk: L1.6 家庭系统信号检测结果（v2.0 新增）
 
         Returns:
             str: 最终风险等级（green / yellow / orange / red）
@@ -221,19 +265,33 @@ class RiskDetectionService:
         if has_only_social:
             return "yellow"
 
-        # 综合L1、L1.5、L2结果：取最高风险等级
+        # 综合L1、L1.5、L1.6、L2结果：取最高风险等级
         risk_levels = ["green", "yellow", "orange", "red"]
 
         keyword_level = keyword_risk["level"]
         duration_level = duration_risk["level"]
         semantic_level = semantic_risk.get("level", "green")
+        # v2.0: 纳入家庭系统信号等级（默认 green，兼容未传入场景）
+        family_system_level = (family_system_risk or {}).get("level", "green")
 
         # 取最高风险等级：将各级别转为索引后取最大值
         keyword_index = risk_levels.index(keyword_level)
         duration_index = risk_levels.index(duration_level)
         semantic_index = risk_levels.index(semantic_level)
+        family_system_index = risk_levels.index(family_system_level)
 
-        final_index = max(keyword_index, duration_index, semantic_index)
+        final_index = max(keyword_index, duration_index, semantic_index, family_system_index)
+
+        # v2.0 防御链条降级（儿少咨询督导增强）：
+        # 当含 3 个以上 defense_chain_indicators 且同时含求助意愿词时，
+        # 将 orange 降为 yellow（避免把自我觉察的求助误判为高危）
+        if content and risk_levels[final_index] == "orange":
+            content_lower = content.lower()
+            defense_hits = sum(1 for ind in self.defense_chain_indicators if ind in content_lower)
+            positive_indicators = ["好起来", "会好", "想好", "好多了", "帮帮我"]
+            has_positive = any(ind in content_lower for ind in positive_indicators)
+            if defense_hits >= 3 and has_positive:
+                final_index = risk_levels.index("yellow")
 
         return risk_levels[final_index]
     

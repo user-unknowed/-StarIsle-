@@ -116,7 +116,7 @@ class ChatService:
         通过API生成回复
         """
         response = self.client.chat.completions.create(
-            model="deepseek-chat",
+            model=self.model_name,
             messages=messages,
             max_tokens=200,  # 短句为主
             temperature=0.7,

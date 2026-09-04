@@ -1,0 +1,124 @@
+/* pages/teacher/img-library/index.wxss */
+.page {
+  min-height: 100vh;
+  padding: 24rpx 24rpx 160rpx 24rpx;
+  box-sizing: border-box;
+  background: #F3F4F6;
+}
+
+/* ========== Tab 胶囊 ========== */
+.tabs {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16rpx;
+  padding: 8rpx 8rpx 20rpx 8rpx;
+}
+.pill {
+  flex: 1;
+  text-align: center;
+  padding: 14rpx 12rpx;
+  border-radius: 999rpx;
+  background: #E5E7EB;   /* gray */
+  color: #4B5563;
+  font-size: 26rpx;
+  font-weight: 500;
+  transition: all .2s ease;
+}
+.pill-active {
+  background: #6366F1;   /* indigo */
+  color: #fff;
+  box-shadow: 0 6rpx 18rpx rgba(99,102,241,0.35);
+}
+.pill .count {
+  margin-left: 8rpx;
+  padding: 0 12rpx;
+  background: rgba(255,255,255,0.22);
+  border-radius: 999rpx;
+  font-size: 22rpx;
+}
+
+/* ========== 状态提示 ========== */
+.state-bar {
+  padding: 14rpx 20rpx;
+  border-radius: 12rpx;
+  background: #EEF2FF;
+  color: #4338CA;
+  margin-bottom: 16rpx;
+  font-size: 24rpx;
+}
+.state-err { background: #FEF2F2; color: #B91C1C; }
+
+/* ========== Grid 标题 ========== */
+.grid-title {
+  margin: 8rpx 4rpx 16rpx 4rpx;
+  color: #111827;
+  font-size: 28rpx;
+  font-weight: 600;
+}
+
+/* ========== img-grid ========== */
+.img-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16rpx;
+}
+.img-card {
+  background: #fff;
+  border-radius: 16rpx;
+  overflow: hidden;
+  box-shadow: 0 2rpx 10rpx rgba(0,0,0,0.05);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+}
+.img-thumb {
+  width: 100%;
+  height: 200rpx;
+  background: #F9FAFB;
+  display: block;
+}
+.img-name {
+  padding: 10rpx 12rpx 14rpx 12rpx;
+  font-size: 22rpx;
+  line-height: 1.35;
+  color: #1F2937;
+  min-height: 72rpx;
+  word-break: break-all;
+}
+
+.empty-card {
+  grid-column: 1 / -1;
+  background: #fff;
+  border: 1rpx dashed #C7D2FE;
+  border-radius: 16rpx;
+  color: #4B5563;
+  padding: 32rpx 24rpx;
+  font-size: 24rpx;
+  line-height: 1.7;
+  white-space: pre-line;
+  text-align: center;
+}
+
+/* ========== 悬浮上传按钮 ========== */
+.float-bottom-btn {
+  position: fixed;
+  right: 32rpx;
+  bottom: 64rpx;
+  background: #6366F1;
+  color: #fff;
+  padding: 22rpx 28rpx;
+  border-radius: 999rpx;
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  box-shadow: 0 10rpx 26rpx rgba(99,102,241,0.45);
+  z-index: 50;
+  font-size: 28rpx;
+  font-weight: 500;
+}
+.float-bottom-btn .plus {
+  font-size: 36rpx;
+  line-height: 1;
+}
+.btn-hover { opacity: 0.85; }

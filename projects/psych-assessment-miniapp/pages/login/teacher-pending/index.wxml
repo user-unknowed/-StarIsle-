@@ -1,0 +1,73 @@
+<view class="page">
+  <!-- Pending 状态 -->
+  <block wx:if="{{teacherStatus === 'pending'}}">
+    <view class="hero pending">
+      <view class="hero-icon">⏳</view>
+      <view class="hero-title">您的教师资质正在审核…</view>
+      <view class="hero-sub">通常 1–3 个工作日完成，预计还需 {{waitingDays}} 天</view>
+    </view>
+    <view class="tips-card">
+      <view class="tips-title">审核说明</view>
+      <view class="tips-line">① 我们将人工核验您提交的姓名、学校与教师资格证号</view>
+      <view class="tips-line">② 通过后将自动解锁教师端所有功能，无需重复注册</view>
+      <view class="tips-line">③ 可下拉刷新或点击下方按钮随时查询审核状态</view>
+    </view>
+    <button class="primary-btn {{refreshing ? 'disabled' : ''}}" bindtap="onTapRefreshButton" loading="{{refreshing}}">
+      {{refreshing ? '查询中…' : '重新检查审核状态'}}
+    </button>
+  </block>
+
+  <!-- Rejected 状态 -->
+  <block wx:if="{{teacherStatus === 'rejected'}}">
+    <view class="hero rejected">
+      <view class="hero-icon">⚠️</view>
+      <view class="hero-title">很抱歉，您的教师资质审核未通过</view>
+      <view class="hero-sub">请根据下列理由修正后重新提交</view>
+    </view>
+    <view class="reject-card">
+      <view class="reject-title">驳回理由</view>
+      <view class="reject-reason">{{rejectionReason || '请重新核对姓名 / 学校 / 教师资格证号是否与证件一致'}}</view>
+      <view class="reject-actions">
+        <button class="danger-btn" bindtap="openResubmit">重新提交资质</button>
+        <button class="ghost-btn" bindtap="switchToStudent">暂以学生身份使用</button>
+      </view>
+    </view>
+  </block>
+
+  <!-- Approved 状态（理论上会在 onShow 就跳走，这里兜底显示） -->
+  <block wx:if="{{teacherStatus === 'approved'}}">
+    <view class="hero approved">
+      <view class="hero-icon">✅</view>
+      <view class="hero-title">审核已通过</view>
+      <view class="hero-sub">即将进入教师端主页…</view>
+    </view>
+  </block>
+
+  <!-- 重新提交弹层表单 -->
+  <view class="mask {{showResubmitForm ? 'show' : ''}}" bindtap="closeResubmit">
+    <view class="sheet" catchtap="">
+      <view class="sheet-title">重新提交教师资质</view>
+      <view class="sheet-sub">请确保信息与教师资格证件完全一致</view>
+      <view class="form">
+        <view class="form-item">
+          <view class="label">真实姓名</view>
+          <input class="input" placeholder="请输入真实姓名" value="{{form.name}}" bindinput="onInput" data-key="name" />
+        </view>
+        <view class="form-item">
+          <view class="label">所在学校</view>
+          <input class="input" placeholder="请输入完整学校名称" value="{{form.school}}" bindinput="onInput" data-key="school" />
+        </view>
+        <view class="form-item">
+          <view class="label">教师资格证号</view>
+          <input class="input" password placeholder="证号将做SHA256哈希后存储，不保存明文" value="{{form.teacherCertNo}}" bindinput="onInput" data-key="teacherCertNo" />
+        </view>
+      </view>
+      <view class="sheet-actions">
+        <button class="ghost-btn" bindtap="closeResubmit">取消</button>
+        <button class="primary-btn {{submitting ? 'disabled' : ''}}" bindtap="submitResubmit" loading="{{submitting}}">
+          {{submitting ? '提交中…' : '提交审核'}}
+        </button>
+      </view>
+    </view>
+  </view>
+</view>

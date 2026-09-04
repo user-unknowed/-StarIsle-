@@ -1,0 +1,16 @@
+{
+  "name": "classoperate",
+  "version": "1.0.0",
+  "description": "班级与绑定管理云函数：classes/bindings 双集合 CRUD + 邀请码生成",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

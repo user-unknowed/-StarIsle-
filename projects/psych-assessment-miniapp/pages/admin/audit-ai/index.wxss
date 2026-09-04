@@ -1,0 +1,440 @@
+/* pages/admin/audit-ai/index.wxss */
+.page {
+  min-height: 100vh;
+  background: #F3F4F6;
+  padding: 20rpx 24rpx 40rpx 24rpx;
+  box-sizing: border-box;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+}
+
+/* Mock Banner */
+.mock-banner {
+  background: #FFF7ED;
+  color: #9A3412;
+  border: 2rpx solid #FDBA74;
+  border-radius: 12rpx;
+  padding: 18rpx 22rpx;
+  font-size: 26rpx;
+  margin-bottom: 24rpx;
+  line-height: 1.5;
+}
+
+.loading-box {
+  text-align: center;
+  padding: 80rpx 0;
+  color: #6B7280;
+  font-size: 28rpx;
+}
+
+.section-title {
+  font-size: 32rpx;
+  font-weight: 700;
+  color: #111827;
+  margin: 32rpx 4rpx 18rpx 4rpx;
+}
+
+/* ---------- 1. KPI ---------- */
+.kpi-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 20rpx 0;
+}
+.kpi-card {
+  width: 48.5%;
+  background: #FFFFFF;
+  border-radius: 18rpx;
+  padding: 24rpx 22rpx 22rpx 22rpx;
+  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.05);
+  box-sizing: border-box;
+  position: relative;
+}
+.kpi-label {
+  font-size: 24rpx;
+  color: #6B7280;
+  margin-bottom: 10rpx;
+}
+.kpi-value {
+  font-size: 48rpx;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1.1;
+}
+.kpi-sub {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 6rpx;
+}
+.kpi-rate {
+  background: #FFFFFF;
+}
+
+/* ---------- 2. 7 日条形图 ---------- */
+.day-bar-wrap {
+  background: #FFFFFF;
+  border-radius: 18rpx;
+  padding: 30rpx 22rpx 20rpx 22rpx;
+  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.05);
+  position: relative;
+}
+.day-bars {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  min-height: 240rpx;
+  padding-top: 10rpx;
+  padding-left: 60rpx;
+  position: relative;
+  z-index: 1;
+}
+.day-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+.day-bar-pair {
+  height: 180rpx;
+  display: flex;
+  align-items: flex-end;
+  gap: 6rpx;
+}
+.bar {
+  width: 22rpx;
+  border-radius: 6rpx 6rpx 0 0;
+}
+.bar-success { background: #10B981; }
+.bar-failed  { background: #EF4444; }
+.day-label {
+  margin-top: 12rpx;
+  font-size: 22rpx;
+  color: #6B7280;
+}
+.day-counts {
+  font-size: 20rpx;
+  margin-top: 4rpx;
+}
+.day-counts .s { color: #10B981; font-weight: 600; }
+.day-counts .f { color: #EF4444; font-weight: 600; }
+
+.grid-line {
+  position: absolute;
+  left: 0;
+  right: 0;
+  padding-left: 40rpx;
+  padding-top: 40rpx; /* 补偿 padding-top */
+  z-index: 0;
+}
+.grid-label {
+  position: absolute;
+  left: 6rpx;
+  font-size: 20rpx;
+  color: #9CA3AF;
+  transform: translateY(-50%);
+  padding-top: 40rpx;
+}
+.grid-dash {
+  margin-left: 60rpx;
+  border-top: 2rpx dashed #E5E7EB;
+}
+
+.bar-legend {
+  display: flex;
+  gap: 30rpx;
+  margin-top: 18rpx;
+  justify-content: center;
+  font-size: 22rpx;
+  color: #4B5563;
+}
+.lg { display: flex; align-items: center; gap: 8rpx; }
+.lg-dot {
+  width: 20rpx; height: 20rpx; border-radius: 4rpx;
+}
+.lg-green { background: #10B981; }
+.lg-red   { background: #EF4444; }
+.lg-blue  { background: #3B82F6; }
+.lg-teacher { background: #F97316; }
+
+/* ---------- 仪表盘 + 饼图 分栏 ---------- */
+.row-split {
+  display: flex;
+  flex-direction: column;
+}
+
+/* ---------- 4. Token 预算环形仪表盘 ---------- */
+.budget-alert {
+  border-radius: 999rpx;
+  padding: 14rpx 24rpx;
+  font-size: 26rpx;
+  font-weight: 600;
+  margin-bottom: 20rpx;
+  text-align: center;
+}
+.gauge-box {
+  background: #FFFFFF;
+  border-radius: 18rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.05);
+  margin-bottom: 20rpx;
+}
+.gauge-outer {
+  width: 320rpx;
+  height: 320rpx;
+  border-radius: 50%;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 0 0 2rpx #F3F4F6;
+}
+.gauge-inner {
+  width: 240rpx;
+  height: 240rpx;
+  border-radius: 50%;
+  background: #FFFFFF;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2rpx 8rpx rgba(0,0,0,0.06);
+}
+.gauge-pct {
+  font-size: 56rpx;
+  font-weight: 800;
+  color: #111827;
+  line-height: 1;
+}
+.gauge-frac {
+  font-size: 22rpx;
+  color: #6B7280;
+  margin-top: 8rpx;
+  word-break: break-all;
+  max-width: 220rpx;
+  text-align: center;
+}
+.gauge-legend {
+  display: flex;
+  justify-content: space-around;
+  margin-top: 24rpx;
+  font-size: 22rpx;
+}
+.g-legend { display: flex; align-items: center; gap: 8rpx; color: #4B5563; }
+.g-dot { width: 20rpx; height: 20rpx; border-radius: 50%; }
+.gauge-sub {
+  text-align: center;
+  color: #6B7280;
+  margin-top: 10rpx;
+  font-size: 24rpx;
+}
+
+/* ---------- 5. 失败原因饼图 ---------- */
+.pie-box {
+  background: #FFFFFF;
+  border-radius: 18rpx;
+  padding: 24rpx;
+  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.05);
+}
+.pie-canvas {
+  width: 400rpx;
+  height: 400rpx;
+  margin: 0 auto;
+  display: block;
+}
+.pie-legend {
+  margin-top: 20rpx;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12rpx 10rpx;
+  justify-content: center;
+}
+.pie-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8rpx;
+  background: #F9FAFB;
+  border-radius: 999rpx;
+  padding: 8rpx 18rpx;
+  font-size: 22rpx;
+}
+.pie-cap {
+  width: 20rpx;
+  height: 20rpx;
+  border-radius: 4rpx;
+}
+.pie-name {
+  color: #374151;
+  font-weight: 600;
+  max-width: 220rpx;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pie-count {
+  color: #111827;
+  font-weight: 700;
+  min-width: 40rpx;
+  text-align: right;
+}
+.pie-total {
+  text-align: center;
+  margin-top: 16rpx;
+  color: #6B7280;
+  font-size: 24rpx;
+}
+
+/* ---------- 3. 失败列表 ---------- */
+.empty-card {
+  background: #FFFFFF;
+  border-radius: 18rpx;
+  padding: 60rpx 24rpx;
+  text-align: center;
+  color: #6B7280;
+  font-size: 28rpx;
+  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.05);
+}
+.list-card {
+  background: #FFFFFF;
+  border-radius: 18rpx;
+  padding: 10rpx 22rpx;
+  box-shadow: 0 4rpx 16rpx rgba(17, 24, 39, 0.05);
+}
+.list-row {
+  display: flex;
+  align-items: center;
+  padding: 24rpx 0;
+  border-bottom: 2rpx solid #F3F4F6;
+  gap: 16rpx;
+}
+.list-row:last-child { border-bottom: none; }
+.list-main { flex: 1; min-width: 0; }
+.list-head {
+  display: flex;
+  align-items: center;
+  gap: 12rpx;
+  flex-wrap: wrap;
+}
+.fb-id {
+  font-family: Consolas, monospace;
+  font-size: 24rpx;
+  font-weight: 700;
+  color: #111827;
+}
+.ms-tag {
+  background: #FEE2E2;
+  color: #991B1B;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+.retry-tag {
+  background: #FEF3C7;
+  color: #92400E;
+  font-size: 20rpx;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+.list-reason {
+  font-size: 24rpx;
+  color: #374151;
+  margin-top: 8rpx;
+  line-height: 1.4;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+}
+.list-time {
+  font-size: 22rpx;
+  color: #9CA3AF;
+  margin-top: 6rpx;
+}
+.btn-rerun {
+  background: #EFF6FF;
+  color: #1D4ED8;
+  font-size: 22rpx;
+  padding: 10rpx 14rpx;
+  border-radius: 10rpx;
+  border: none;
+  line-height: 1.4;
+  min-width: 140rpx;
+}
+.btn-rerun::after { border: none; }
+
+/* ---------- 6. Divergence ---------- */
+.div-row {
+  padding: 22rpx 0;
+  border-bottom: 2rpx solid #F3F4F6;
+}
+.div-row:last-child { border-bottom: none; }
+.div-head {
+  display: flex;
+  align-items: center;
+  gap: 16rpx;
+  margin-bottom: 14rpx;
+}
+.stu-no {
+  font-size: 22rpx;
+  color: #4B5563;
+  background: #F3F4F6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+.div-val {
+  font-size: 28rpx;
+  font-weight: 800;
+  margin-left: auto;
+}
+.dim-wrap {
+  display: flex;
+  justify-content: space-between;
+  gap: 10rpx;
+  padding: 10rpx 4rpx;
+  background: #FAFAFA;
+  border-radius: 12rpx;
+}
+.dim-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8rpx;
+}
+.dim-label {
+  font-size: 18rpx;
+  color: #6B7280;
+}
+.dim-bar-pair {
+  height: 60rpx;
+  display: flex;
+  align-items: flex-end;
+  gap: 4rpx;
+}
+.dim-bar {
+  width: 14rpx;
+  border-radius: 4rpx 4rpx 0 0;
+}
+.dim-ai { background: #3B82F6; }
+.dim-teacher { background: #F97316; }
+.dim-score {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 18rpx;
+  line-height: 1.2;
+}
+.ds-ai { color: #1D4ED8; font-weight: 600; }
+.ds-tc { color: #C2410C; font-weight: 600; }
+
+.div-legend-small {
+  display: flex;
+  justify-content: center;
+  gap: 20rpx;
+  font-size: 20rpx;
+  color: #6B7280;
+  margin-top: 10rpx;
+}
+
+.footer-space {
+  height: 60rpx;
+}

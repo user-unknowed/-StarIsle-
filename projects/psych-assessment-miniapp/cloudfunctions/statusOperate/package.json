@@ -1,0 +1,16 @@
+{
+  "name": "statusoperate",
+  "version": "1.0.0",
+  "description": "状态打标云函数：标签 CRUD + 打/撤标 + 快照列表 + 审计 CSV 导出 + 绑定归档",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

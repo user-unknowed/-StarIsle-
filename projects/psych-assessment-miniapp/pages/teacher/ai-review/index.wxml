@@ -1,0 +1,276 @@
+<!-- pages/teacher/ai-review/index.wxml -->
+<view class="page">
+
+  <!-- 顶部演示数据提示（mock 模式才显示） -->
+  <view class="demo-banner" wx:if="{{mockBannerVisible}}">
+    🧪 演示数据：云端 queryFeedbacks / getFeedbackDetail / reviewAI 接口未就绪，当前展示为本地 Mock 数据，不产生真实写入。
+  </view>
+
+  <!-- 顶部双 Tab：待审核 / 已审核 -->
+  <view class="top-tabs">
+    <view class="top-tab {{topTab === 'pending' ? 'on' : ''}}" data-tab="pending" bindtap="onTopTabChange">
+      待审核 <text class="tt-count">{{counts.pending + counts.aiFailed + counts.aiSkipped}}</text>
+    </view>
+    <view class="top-tab {{topTab === 'reviewed' ? 'on' : ''}}" data-tab="reviewed" bindtap="onTopTabChange">
+      已审核 <text class="tt-count">{{counts.reviewed}}</text>
+    </view>
+  </view>
+
+  <!-- 筛选条：范围 + 状态（仅待审核 tab 下显示状态筛选） -->
+  <view class="filter-row">
+    <view class="filter-group">
+      <text class="fg-label">范围</text>
+      <view class="fg-options">
+        <view class="fg-opt {{scopeFilter === 'all' ? 'on' : ''}}" data-val="all" bindtap="onScopeFilterChange">全部</view>
+        <view class="fg-opt {{scopeFilter === 'class' ? 'on' : ''}}" data-val="class" bindtap="onScopeFilterChange">班级</view>
+        <view class="fg-opt {{scopeFilter === 'binding' ? 'on' : ''}}" data-val="binding" bindtap="onScopeFilterChange">绑定</view>
+      </view>
+    </view>
+    <view class="filter-group" wx:if="{{topTab === 'pending'}}">
+      <text class="fg-label">状态</text>
+      <view class="fg-options">
+        <view class="fg-opt {{statusFilter === 'pending' ? 'on' : ''}}" data-val="pending" bindtap="onStatusFilterChange">待审核</view>
+        <view class="fg-opt {{statusFilter === 'ai_failed' ? 'on' : ''}}" data-val="ai_failed" bindtap="onStatusFilterChange">AI失败</view>
+        <view class="fg-opt {{statusFilter === 'ai_skipped' ? 'on' : ''}}" data-val="ai_skipped" bindtap="onStatusFilterChange">AI跳过</view>
+        <view class="fg-opt {{statusFilter === 'all' ? 'on' : ''}}" data-val="all" bindtap="onStatusFilterChange">全部</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="state-bar" wx:if="{{loading}}">{{loadingText || '加载中…'}}</view>
+  <view class="state-bar state-err" wx:if="{{errorMsg && !loading}}">{{errorMsg}}</view>
+
+  <!-- ============= 阶段 1 / 3 · 列表 ============= -->
+  <view class="list-wrap" wx:if="{{!showDetail}}">
+    <view wx:if="{{list.length === 0 && !loading}}" class="empty-list">
+      📭 暂无可展示的反馈
+      {"\n"}请下拉刷新或调整筛选条件
+    </view>
+
+    <block wx:for="{{list}}" wx:key="_id" wx:for-item="fb">
+      <view class="card" data-id="{{fb._id}}" bindtap="onOpenDetail">
+        <view class="card-head">
+          <!-- 学生匿名号胶囊 -->
+          <view class="anon-capsule">{{fb.studentAnonymousNo || '#S000000'}}</view>
+          <view class="submit-time">{{fb._submitTimeStr}}</view>
+        </view>
+
+        <view class="preview" wx:if="{{fb.previewText}}">{{fb.previewText}}</view>
+
+        <view class="tag-row">
+          <!-- 状态胶囊：pending 蓝 / ai_failed 橙 / ai_skipped 紫 -->
+          <view class="st-pill pill-{{fb._statusCls}}">{{fb._statusText}}</view>
+          <!-- 预警标签红色 N 个（最多 5） -->
+          <block wx:if="{{fb._warnTagsLabels && fb._warnTagsLabels.length}}">
+            <block wx:for="{{fb._warnTagsLabels}}" wx:key="*this" wx:for-item="lbl">
+              <view class="warn-tag">⚠️ {{lbl}}</view>
+            </block>
+          </block>
+        </view>
+      </view>
+    </block>
+  </view>
+
+  <!-- ============= 阶段 2 · 页内弹层详情（非新页面） ============= -->
+  <view class="detail-mask" wx:if="{{showDetail && detailData}}" catchtap="onCloseDetail">
+    <view class="detail-panel" catchtap="">
+
+      <view class="detail-head">
+        <view class="detail-title">📋 审核详情</view>
+        <view class="detail-st pill-{{detailData._statusCls}}">{{detailData._statusText}}</view>
+      </view>
+
+      <scroll-view class="detail-scroll" scroll-y="true" enhanced="{{true}}" show-scrollbar="{{false}}">
+
+        <!-- 合规：msSec 跳过红条 -->
+        <view class="mssec-bar" wx:if="{{detailData._isMsSecSkipped}}">
+          <view class="mssec-title">⚠️ msSec 合规提示</view>
+          原文命中微信安全检测标签，AI 未调用，请在下方「调整结论」中人工完成审核。
+        </view>
+
+        <view class="ai-failed-bar" wx:elif="{{detailData.status === 'ai_failed'}}">
+          <view class="mssec-title">⚠️ AI 分析失败</view>
+          AI 调用返回失败，您可直接「调整结论」人工审核；或等待系统重试后再「确认 AI 结论」。
+        </view>
+
+        <!-- ===== 双栏：左列原文 + 右列 AI & 操作 ===== -->
+        <view class="two-col">
+          <!-- 左列：学生反馈原文（逐图） -->
+          <view class="col col-left">
+            <view class="col-sec-title">学生提交原文</view>
+            <block wx:if="{{detailData._segments && detailData._segments.length}}">
+              <block wx:for="{{detailData._segments}}" wx:key="index" wx:for-item="seg" wx:for-index="segIdx">
+                <view class="seg-card">
+                  <view class="seg-head">
+                    <view class="seg-index">图 {{seg.index}}</view>
+                  </view>
+                  <image wx:if="{{seg.imageUrl}}" class="seg-img" src="{{seg.imageUrl}}" mode="widthFix" show-menu-by-longpress="true" />
+                  <view class="seg-text">{{seg.text || '（无文字描述）'}}</view>
+                </view>
+              </block>
+            </block>
+            <view class="seg-empty" wx:else>（暂无可展示的反馈原文）</view>
+          </view>
+
+          <!-- 右列：上 AI 结论 + 下 教师操作 -->
+          <view class="col col-right">
+            <!-- 右上：AI 结论（或最终审核结论） -->
+            <view class="col-sec-title">
+              {{detailData._displayScoresSource === 'confirmed' ? '最终审核结论' : 'AI 结论'}}
+            </view>
+            <view class="ai-card">
+
+              <!-- 5 维度条形分 -->
+              <view class="ai-sub-title">五维度评分</view>
+              <block wx:if="{{detailData._displayScoreRows && detailData._displayScoreRows.length}}">
+                <block wx:for="{{detailData._displayScoreRows}}" wx:key="key" wx:for-item="sr">
+                  <view class="score-line">
+                    <view class="score-label">{{sr.label}}</view>
+                    <view class="score-bg">
+                      <view class="score-fg color-{{sr.colorClass}}" style="width:{{sr.barWidth}}%;"></view>
+                    </view>
+                    <view class="score-val">{{sr.val}}/10</view>
+                  </view>
+                </block>
+              </block>
+              <view class="ai-empty" wx:else>（暂无评分数据）</view>
+
+              <!-- 预警标签 -->
+              <view class="ai-sub-title">预警标签</view>
+              <view class="tags-wrap" wx:if="{{detailData._displayTagsLabels && detailData._displayTagsLabels.length}}">
+                <block wx:for="{{detailData._displayTagsLabels}}" wx:key="*this" wx:for-item="lbl">
+                  <view class="warn-tag">{{lbl}}</view>
+                </block>
+              </view>
+              <view class="ai-empty" wx:else>（无预警标签）</view>
+
+              <!-- AI summary -->
+              <view class="ai-sub-title">摘要</view>
+              <view class="summary-box">{{detailData._displaySummary || '（暂无摘要）'}}</view>
+            </view>
+
+            <!-- 已审核记录（若有） -->
+            <view class="reviewed-card" wx:if="{{detailData._displayScoresSource === 'confirmed'}}">
+              <view class="col-sec-title">审核记录</view>
+              <view class="reviewed-line">
+                审核方式：{{detailData.teacherReview.reviewStatus === 'adjusted' ? '人工调整' : '确认 AI 结论'}}
+              </view>
+              <view class="reviewed-line muted">
+                审核人：{{detailData.teacherReview.reviewedByAnonymousNo || '匿名教师'}}
+                · 时间：{{detailData._reviewedAtStr}}
+              </view>
+              <!-- teacherNote 仅本人可见（后端已 strip，此处只渲染已有字段） -->
+              <view class="private-note" wx:if="{{detailData.teacherReview.teacherNote}}">
+                🔒 您的私有备注（其他教师不可见）：
+                <view class="private-note-text">{{detailData.teacherReview.teacherNote}}</view>
+              </view>
+            </view>
+
+            <!-- 右下：教师操作区 -->
+            <view class="action-card">
+              <view class="col-sec-title">教师审核操作</view>
+
+              <!-- a. 确认 AI 结论 -->
+              <button class="btn btn-confirm {{detailData._isMsSecSkipped || !detailData._hasAIAnalysis ? 'disabled' : ''}}"
+                      bindtap="onTapConfirm"
+                      loading="{{false}}">
+                确认 AI 结论 (confirm)
+              </button>
+              <view class="btn-hint" wx:if="{{!detailData._isMsSecSkipped && detailData._hasAIAnalysis}}">
+                · 后端将强制复用 aiAnalysis，即使前端传入调整字段也会被忽略
+              </view>
+              <view class="btn-hint warn" wx:if="{{detailData._isMsSecSkipped}}">
+                · 本条为 msSec 违规跳过 AI，「确认 AI 结论」不可用
+              </view>
+              <view class="btn-hint warn" wx:if="{{!detailData._isMsSecSkipped && !detailData._hasAIAnalysis}}">
+                · AI 分析尚未生成，请使用「调整结论」人工录入
+              </view>
+
+              <!-- b. 调整结论（展开/收起） -->
+              <button class="btn btn-adjust-toggle" bindtap="onToggleAdjustPanel">
+                {{adjustPanelOpen ? '收起调整面板' : '展开调整结论 (adjust)'}}
+              </button>
+
+              <!-- adjust 展开区 -->
+              <view class="adjust-panel" wx:if="{{adjustPanelOpen}}">
+                <!-- 5 个 slider（0-10 step=1） -->
+                <view class="ap-title">① 五维度评分调整（0-10）</view>
+                <block wx:for="{{adjustScores}}" wx:key="key" wx:for-item="sc">
+                  <view class="slider-row">
+                    <view class="slider-name">{{sc.label}}</view>
+                    <slider
+                      class="slider-el"
+                      min="0" max="10" step="1"
+                      value="{{sc.value}}"
+                      show-value
+                      activeColor="#6366F1"
+                      backgroundColor="#E0E7FF"
+                      block-color="#6366F1"
+                      block-size="20"
+                      data-key="{{sc.key}}"
+                      bindchange="onScoreSliderChange" />
+                  </view>
+                </block>
+
+                <!-- 10 warning tags 白名单多选 -->
+                <view class="ap-title">
+                  ② 预警标签（10 白名单 · 可多选）
+                  <text class="muted small"> 已选 {{adjustTags.length}}/10</text>
+                </view>
+                <view class="tag-pick-grid">
+                  <block wx:for="{{warningTagEnum}}" wx:key="key" wx:for-item="tg">
+                    <view
+                      class="tag-pick {{adjustTags.indexOf(tg.key) >= 0 ? 'on' : ''}}"
+                      data-key="{{tg.key}}"
+                      bindtap="onToggleWarningTag">
+                      <text class="tp-key">{{tg.key}}</text>
+                      <text class="tp-label">{{tg.label}}</text>
+                    </view>
+                  </block>
+                </view>
+
+                <!-- summary textarea ≤300 -->
+                <view class="ap-title">
+                  ③ 审核摘要（≤300 字）
+                  <text class="muted small"> {{adjustSummary.length}}/300</text>
+                </view>
+                <textarea class="ap-textarea"
+                          maxlength="300"
+                          auto-height
+                          placeholder="填写或修改结论摘要（≤300 字）"
+                          placeholder-style="color:#94A3B8"
+                          value="{{adjustSummary}}"
+                          bindinput="onSummaryInput"></textarea>
+
+                <!-- teacherNote textarea ≤500（仅本人可见） -->
+                <view class="ap-title">
+                  ④ 教师私有备注（≤500 字）
+                  <text class="muted small"> {{adjustTeacherNote.length}}/500</text>
+                </view>
+                <view class="private-hint">
+                  🔒 此备注仅您本人可见，其他教师不可见（含任何其他老师、管理员均不可读）。
+                </view>
+                <textarea class="ap-textarea note"
+                          maxlength="500"
+                          auto-height
+                          placeholder="填写家访、辅导、家校沟通等仅本人可查阅的内容（≤500字）"
+                          placeholder-style="color:#94A3B8"
+                          value="{{adjustTeacherNote}}"
+                          bindinput="onTeacherNoteInput"></textarea>
+
+                <button class="btn btn-save-adjust" bindtap="onSubmitAdjust">📤 保存调整并提交</button>
+              </view>
+              <!-- /adjust 展开区 -->
+
+              <!-- c. 取消按钮 -->
+              <button class="btn btn-cancel" bindtap="onCloseDetail">取消 · 返回列表</button>
+            </view>
+          </view>
+        </view>
+
+        <!-- 底部留白，兼容小屏 -->
+        <view style="height:40rpx;"></view>
+      </scroll-view>
+    </view>
+  </view>
+</view>

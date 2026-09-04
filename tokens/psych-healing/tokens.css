@@ -1,0 +1,27 @@
+/* psych-healing tokens — CSS 变量输出（Spec §4.1） */
+:root {
+  /* === 疗愈独立色板（8 色） === */
+  --heal-cream-100: #FBF5EA;       /* 奶油米 · 背景 */
+  --heal-green-600: #3C765C;       /* 森林绿 · 主色 */
+  --heal-green-800: #264F3D;       /* 深森林绿 · 强调/文本 */
+  --heal-pink-200: #F5DAD4;        /* 薄纱粉 · 柔色 */
+  --heal-blue-300: #BBD6E0;        /* 柔蓝 · 辅助 */
+  --heal-warn-orange-400: #D48A3C; /* 琥珀橙 · 警示 */
+  --heal-danger-red-500: #B93232;  /* 赤红 · 危机红 */
+  --heal-ink-gray-900: #2C2C2C;    /* 墨水灰 · 正文本 */
+
+  /* === 三层桥接 · spacing（0/1/2/3/4/5/6/8） === */
+  --heal-spacing-0: 0px;
+  --heal-spacing-1: 4px;
+  --heal-spacing-2: 8px;
+  --heal-spacing-3: 12px;
+  --heal-spacing-4: 16px;
+  --heal-spacing-5: 20px;
+  --heal-spacing-6: 24px;
+  --heal-spacing-8: 32px;
+
+  /* === 三层桥接 · radius（sm/md/lg） === */
+  --heal-radius-sm: 6px;
+  --heal-radius-md: 12px;
+  --heal-radius-lg: 20px;
+}

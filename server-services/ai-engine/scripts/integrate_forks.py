@@ -1,4 +1,15 @@
-"""M2 三层整合：M2a Skill 适配器 / M2b RAG知识 / M2c 语料扩充"""
+"""
+integrate_forks.py - Fork 仓库三层整合脚本（M2 阶段）
+
+所属模块：ai-engine/scripts
+功能简述：
+    对已克隆的 fork 仓库执行三层整合：
+      M2a：生成技能适配器（Skill Adapter）注入 app/skills
+      M2b：从 README 构建知识文档并入知识库（RAG 知识注入）
+      M2c：抽取仓库文本语料扩充预训练语料
+依赖关系：
+    - langdetect：语言检测（可选，缺失时按中英文字符数估算）
+"""
 from __future__ import annotations
 import json, logging, re
 from dataclasses import asdict, dataclass
@@ -22,6 +33,7 @@ try:
     from langdetect import detect as _langdetect  # type:ignore
 except Exception:
     def _langdetect(t: str) -> str:
+        """语言检测降级实现：按中英文字符数比例估算语言。"""
         cn = len(re.findall(r"[\u4e00-\u9fff]", t))
         en = len(re.findall(r"[A-Za-z]", t))
         if cn > en * 0.5: return "zh"
@@ -29,6 +41,11 @@ except Exception:
 
 @dataclass
 class CorpusStats:
+    """
+    单仓库语料抽取统计
+
+    记录片段总数、中英通过数、丢弃数与字符总量，用于汇总整合结果。
+    """
     repo_id: str = ""
     total_segments: int = 0
     language_zh_pass: int = 0
@@ -41,6 +58,7 @@ _TEXT_EXTS = {".md", ".markdown", ".rst", ".txt", ".py"}
 _MIN_CHARS = 10
 
 def _iter_text_files(rp: Path) -> Iterable[Path]:
+    """递归遍历仓库内的文本文件，跳过 .git 与 __pycache__ 目录。"""
     for p in rp.rglob("*"):
         if not p.is_file() or ".git" in p.parts or "__pycache__" in p.parts: continue
         if p.suffix.lower() in _TEXT_EXTS: yield p
@@ -49,6 +67,7 @@ _PY_DOC = re.compile(r'"""([\s\S]*?)"""')
 _PY_CN = re.compile(r'#\s*([\u4e00-\u9fff][^\n]*)')
 
 def _raw_from_file(p: Path) -> List[str]:
+    """从文件提取原始文本片段：.py 取 docstring 与中文注释，其他按段落拼接。"""
     try: t = p.read_text(encoding="utf-8", errors="ignore")
     except Exception: return []
     segs: List[str] = []
@@ -68,6 +87,7 @@ def _raw_from_file(p: Path) -> List[str]:
     return segs
 
 def _clean(s: str) -> Optional[str]:
+    """清洗单段文本：去控制字符、合并空白、过滤过短与非中英文本。"""
     s = re.sub(r"[\x00-\x08\x0b-\x1f]", " ", s)
     s = re.sub(r"\s+", " ", s).strip()
     if len(s) < _MIN_CHARS: return None
@@ -77,6 +97,7 @@ def _clean(s: str) -> Optional[str]:
     return s
 
 def extract_text_corpus_from_repo(meta: Dict[str, Any], out: Path) -> CorpusStats:
+    """从单个仓库抽取清洗后语料并写入 out，返回统计结果。"""
     cs = CorpusStats(repo_id=meta["repo_id"])
     clean: List[str] = []
     for fp in _iter_text_files(Path(meta["local_path"])):
@@ -96,6 +117,7 @@ def extract_text_corpus_from_repo(meta: Dict[str, Any], out: Path) -> CorpusStat
 
 # ---------------- M2b Knowledge
 def _split(text: str, max_c: int = 512) -> List[str]:
+    """按句切分文本为不超过 max_c 字符的块。"""
     if len(text) <= max_c: return [text]
     parts, buf = [], ""
     for sent in re.split(r"(?<=[。！？\.\!\?])\s*", text):
@@ -107,6 +129,7 @@ def _split(text: str, max_c: int = 512) -> List[str]:
     return parts or [text]
 
 def build_knowledge_docs_from_repo(meta: Dict[str, Any]) -> List[Dict[str, Any]]:
+    """从仓库 README 切分构建知识文档列表，供知识库注入。"""
     rid = meta["repo_id"]; rm = Path(meta["local_path"]) / "README.md"
     src = rm.read_text(encoding="utf-8", errors="ignore") if rm.exists() else meta.get("description") or ""
     docs: List[Dict[str, Any]] = []
@@ -123,6 +146,7 @@ def build_knowledge_docs_from_repo(meta: Dict[str, Any]) -> List[Dict[str, Any]]
     return docs
 
 def _append_kb(new: List[Dict[str, Any]]) -> Tuple[int, int]:
+    """将新文档去重后追加到知识库 JSON，返回 (新增数, 去重跳过数)。"""
     existing = json.loads(KB_JSON.read_text(encoding="utf-8")) if KB_JSON.exists() else []
     seen = {(d.get("title"), d.get("source")) for d in existing}
     added = 0

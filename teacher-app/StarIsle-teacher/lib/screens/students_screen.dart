@@ -1,3 +1,8 @@
+/// @file students_screen.dart
+/// @description 教师端学生页面，提供学生列表、学生详情（情绪趋势、风险时间线、上报记录、咨询历史）、
+///              上报记录列表与症状反馈表单，按教师角色区分可见内容与操作。
+/// @module teacher-app/screens/students
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
@@ -5,9 +10,19 @@ import '../providers/teacher_providers.dart';
 import '../models/teacher_models.dart';
 import '../theme/teacher_theme.dart';
 
+/// 学生页面根 Widget。
+///
+/// 继承自 [ConsumerWidget]，包含「学生列表」与「上报记录」两个 Tab，
+/// 非心理老师显示发起症状上报的悬浮按钮。
 class StudentsScreen extends ConsumerWidget {
+  /// 构造函数。
   const StudentsScreen({super.key});
 
+  /// 构建页面主体。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [ref]：Riverpod [WidgetRef]，用于读取 [studentsProvider] 与 [currentRoleProvider]。
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final students = ref.watch(studentsProvider);
@@ -24,6 +39,7 @@ class StudentsScreen extends ConsumerWidget {
               Tab(text: '上报记录'),
             ],
           ),
+          // 顶部操作：搜索与筛选入口（占位）
           actions: [
             IconButton(
               icon: const Icon(Icons.search),
@@ -41,6 +57,7 @@ class StudentsScreen extends ConsumerWidget {
             ReportRecordsView(),
           ],
         ),
+        // 非心理老师显示发起上报的悬浮按钮
         floatingActionButton: teacherRole != TeacherRole.counselor
             ? FloatingActionButton(
                 onPressed: () {
@@ -54,9 +71,18 @@ class StudentsScreen extends ConsumerWidget {
   }
 }
 
+/// 学生列表视图。
+///
+/// 监听 [studentsProvider]，渲染学生卡片列表，点击进入详情页。
 class StudentListView extends ConsumerWidget {
+  /// 构造函数。
   const StudentListView({super.key});
 
+  /// 构建学生列表。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [ref]：Riverpod [WidgetRef]。
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final students = ref.watch(studentsProvider);
@@ -71,6 +97,13 @@ class StudentListView extends ConsumerWidget {
     );
   }
 
+  /// 构建单个学生卡片，展示头像、姓名、风险等级、班级与最近状态。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [student]：学生数据。
+  ///
+  /// 返回：可点击进入详情的 [InkWell] 卡片。
   Widget _buildStudentCard(BuildContext context, Student student) {
     return InkWell(
       onTap: () {
@@ -265,6 +298,10 @@ class StudentDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建近 7 日情绪趋势柱状图卡片（心理老师可见）。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文。
   Widget _buildEmotionalTrend(BuildContext context) {
     return Card(
       child: Padding(
@@ -333,6 +370,13 @@ class StudentDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个时间线条目。
+  ///
+  /// 参数：
+  /// - [level]：该时间点的风险等级；
+  /// - [time]：时间描述；
+  /// - [description]：状态描述；
+  /// - [isCurrent]：是否为当前状态，用于高亮。
   Widget _buildTimelineItem(RiskLevel level, String time, String description, {bool isCurrent = false}) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -391,6 +435,11 @@ class StudentDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个上报记录条目，展示时间、症状与状态。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [report]：上报记录数据。
   Widget _buildReportItem(BuildContext context, SymptomReport report) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -452,6 +501,12 @@ class StudentDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// 构建单个咨询历史条目，展示日期、类型与描述。
+  ///
+  /// 参数：
+  /// - [date]：日期文本；
+  /// - [type]：咨询类型；
+  /// - [description]：咨询描述。
   Widget _buildConsultItem(String date, String type, String description) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -479,6 +534,12 @@ class StudentDetailScreen extends ConsumerWidget {
     );
   }
 
+  /// 将症状枚举转换为中文标签。
+  ///
+  /// 参数：
+  /// - [type]：症状类型。
+  ///
+  /// 返回：对应的中文标签字符串。
   String _symptomLabel(SymptomType type) {
     switch (type) {
       case SymptomType.emotionalLow: return '情绪低落';
@@ -492,15 +553,25 @@ class StudentDetailScreen extends ConsumerWidget {
   }
 }
 
+/// 上报记录列表视图。
+///
+/// 监听 [reportsProvider]，心理老师查看全部记录，其他教师仅查看本人提交的记录。
 class ReportRecordsView extends ConsumerWidget {
+  /// 构造函数。
   const ReportRecordsView({super.key});
 
+  /// 构建上报记录列表。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [ref]：Riverpod [WidgetRef]，用于读取 [reportsProvider] 与 [currentTeacherProvider]。
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final reports = ref.watch(reportsProvider);
     final teacher = ref.watch(currentTeacherProvider);
     final teacherRole = teacher.role;
 
+    // 心理老师查看全部，其他教师仅查看本人提交
     final myReports = teacherRole == TeacherRole.counselor
         ? reports
         : reports.where((r) => r.reporterId == teacher.id).toList();
@@ -515,6 +586,12 @@ class ReportRecordsView extends ConsumerWidget {
     );
   }
 
+  /// 构建单个上报记录卡片，含学生信息、上报人、状态与处理回执。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [report]：上报记录数据；
+  /// - [role]：当前教师角色，决定是否显示处理按钮。
   Widget _buildReportCard(BuildContext context, SymptomReport report, TeacherRole role) {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -662,6 +739,7 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     (SeverityLevel.urgent, '紧急', RiskLevel.red),
   ];
 
+  /// 提交报告，校验通过后提示并返回上一页。
   void _submitReport() {
     if (_formKey.currentState!.validate()) {
       _formKey.currentState!.save();
@@ -734,6 +812,11 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     );
   }
 
+  /// 构建学生下拉选择区域。
+  ///
+  /// 参数：
+  /// - [context]：构建上下文；
+  /// - [students]：可选学生列表。
   Widget _buildStudentSelect(BuildContext context, List<Student> students) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -780,6 +863,13 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     );
   }
 
+  /// 构建单选按钮区域（用于持续时间等）。
+  ///
+  /// 参数：
+  /// - [title]：区块标题；
+  /// - [options]：可选项列表（值与标签元组）；
+  /// - [selected]：当前选中的值；
+  /// - [onTap]：点击选项的回调。
   Widget _buildSingleSelectSection<T>(String title, List<(T, String)> options, T? selected, Function(T) onTap) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -848,6 +938,7 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     );
   }
 
+  /// 构建具体描述输入区域。
   Widget _buildDescriptionSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -866,6 +957,7 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     );
   }
 
+  /// 构建沟通情况复选框区域（是否已与学生/家长沟通）。
   Widget _buildCheckboxSection() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,3 +1,15 @@
+"""
+pretrain_model.py - BERT 掩码语言模型预训练脚本
+
+所属模块：ai-engine/scripts
+功能简述：
+    基于 bert-base-chinese 与清洗后语料，执行 MLM（Masked Language Modeling）预训练，
+    输出微调后模型与训练/评估指标摘要（含困惑度 perplexity）。
+依赖关系：
+    - transformers：模型、分词器与训练框架
+    - datasets：数据集加载
+    - torch：深度学习后端
+"""
 import os
 import json
 import math
@@ -22,6 +34,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+# 预训练超参数配置
 PRETRAIN_CONFIG = {
     "model_name": "bert-base-chinese",
     "output_dir": "./models/pretrained_mental_health",
@@ -45,24 +58,24 @@ OUTPUT_DIR = Path(PRETRAIN_CONFIG["output_dir"])
 OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
 
 def prepare_dataset():
-    """准备预训练数据集"""
+    """加载清洗后语料并按 9:1 划分训练/测试集。"""
     logger.info("Loading and preparing dataset...")
-    
+
     combined_text_path = DATA_DIR / "combined_cleaned_text.txt"
-    
+
     dataset = load_dataset("text", data_files=str(combined_text_path))
-    
+
     logger.info(f"Dataset loaded: {dataset}")
-    
+
     dataset = dataset["train"].train_test_split(test_size=0.1, seed=PRETRAIN_CONFIG["seed"])
-    
+
     logger.info(f"Train samples: {len(dataset['train'])}")
     logger.info(f"Test samples: {len(dataset['test'])}")
-    
+
     return dataset
 
 def tokenize_function(examples, tokenizer):
-    """tokenize函数"""
+    """对批次文本进行分词与填充截断。"""
     return tokenizer(
         examples["text"],
         padding="max_length",
@@ -72,21 +85,21 @@ def tokenize_function(examples, tokenizer):
     )
 
 def compute_metrics(eval_pred):
-    """计算评估指标"""
+    """计算 MLM 掩码预测准确率（忽略 -100 填充标签）。"""
     predictions, labels = eval_pred
     predictions = predictions[0] if isinstance(predictions, tuple) else predictions
-    
+
     mask = labels != -100
     correct = ((predictions.argmax(-1) == labels) & mask).sum().item()
     total = mask.sum().item()
     accuracy = correct / total if total > 0 else 0
-    
+
     return {
         "accuracy": accuracy
     }
 
 def train_model():
-    """执行预训练"""
+    """执行完整 MLM 预训练流程：加载数据 → 分词 → 训练 → 评估 → 保存。"""
     set_seed(PRETRAIN_CONFIG["seed"])
     
     logger.info("=" * 60)

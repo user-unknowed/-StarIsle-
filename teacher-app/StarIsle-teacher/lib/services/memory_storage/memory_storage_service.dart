@@ -1,3 +1,8 @@
+/// @file memory_storage_service.dart
+/// @description 教师端加密本地存储服务，基于 sqflite_sqlcipher 提供加密数据库的初始化、
+///              建表、增删改查、过期数据清理、压缩、统计与关闭等能力，密钥通过 FlutterSecureStorage 安全存储。
+/// @module teacher-app/services/memory_storage/memory_storage_service
+
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
@@ -6,20 +11,38 @@ import 'package:path_provider/path_provider.dart';
 import 'package:sqflite_sqlcipher/sqflite.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
+/// 加密本地存储服务。
+///
+/// 单例模式，负责管理加密 SQLite 数据库的连接、表结构创建与常用 CRUD 操作，
+/// 密钥使用 [FlutterSecureStorage] 持久化保存。
 class MemoryStorageService {
+  /// 单例实例。
   static MemoryStorageService? _instance;
+
+  /// 数据库连接。
   Database? _database;
+
+  /// 安全存储，用于读写加密密钥。
   final FlutterSecureStorage _secureStorage = const FlutterSecureStorage();
+
+  /// 数据库文件名。
   static const String _dbName = 'starisle_teacher.db';
+
+  /// 加密密钥在安全存储中的键名。
   static const String _encryptionKey = 'starisle_teacher_encryption_key';
 
+  /// 私有构造函数。
   MemoryStorageService._internal();
 
+  /// 工厂构造，返回单例实例。
   factory MemoryStorageService() {
     _instance ??= MemoryStorageService._internal();
     return _instance!;
   }
 
+  /// 获取数据库加密密钥，不存在时生成并保存。
+  ///
+  /// 返回：Base64 编码的密钥字符串。
   Future<String> _getDatabaseKey() async {
     String? key = await _secureStorage.read(key: _encryptionKey);
     if (key == null) {
@@ -29,22 +52,31 @@ class MemoryStorageService {
     return key;
   }
 
+  /// 生成 32 字节的安全随机密钥并 Base64 编码。
+  ///
+  /// 返回：Base64 编码的密钥字符串。
   String _generateSecureKey() {
     return base64Encode(List<int>.generate(32, (_) => Random.secure().nextInt(256)));
   }
 
+  /// 获取数据库连接，未初始化时自动初始化。
+  ///
+  /// 返回：[Database] 实例。
   Future<Database> get database async {
     if (_database != null) return _database!;
     _database = await _initDatabase();
     return _database!;
   }
 
+  /// 初始化加密数据库连接，配置密钥与 cipher 兼容性。
+  ///
+  /// 返回：已打开的 [Database] 实例。
   Future<Database> _initDatabase() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = '${documentsDirectory.path}/$_dbName';
-    
+
     String key = await _getDatabaseKey();
-    
+
     return await openDatabase(
       path,
       version: 1,
@@ -62,6 +94,10 @@ class MemoryStorageService {
     );
   }
 
+  /// 创建全部业务表与索引。
+  ///
+  /// 参数：
+  /// - [db]：已打开的数据库连接。
   Future<void> _createTables(Database db) async {
     await db.execute('''
       CREATE TABLE observation_notes (
@@ -169,11 +205,26 @@ class MemoryStorageService {
     await db.execute('CREATE INDEX idx_todo_priority ON todo_items(priority)');
   }
 
+  /// 插入一条数据，主键冲突时替换。
+  ///
+  /// 参数：
+  /// - [table]：目标表名；
+  /// - [data]：字段键值对。
   Future<void> insert(String table, Map<String, dynamic> data) async {
     Database db = await database;
     await db.insert(table, data, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  /// 条件查询数据。
+  ///
+  /// 参数：
+  /// - [table]：表名；
+  /// - [where]：可选 WHERE 子句；
+  /// - [whereArgs]：可选绑定参数；
+  /// - [orderBy]：可选排序；
+  /// - [limit]：可选条数上限。
+  ///
+  /// 返回：查询结果行列表。
   Future<List<Map<String, dynamic>>> query(String table, {
     String? where,
     List<dynamic>? whereArgs,
@@ -184,6 +235,15 @@ class MemoryStorageService {
     return await db.query(table, where: where, whereArgs: whereArgs, orderBy: orderBy, limit: limit);
   }
 
+  /// 更新数据。
+  ///
+  /// 参数：
+  /// - [table]：表名；
+  /// - [data]：待更新字段；
+  /// - [where]：WHERE 子句；
+  /// - [whereArgs]：绑定参数。
+  ///
+  /// 返回：受影响行数。
   Future<int> update(String table, Map<String, dynamic> data, {
     required String where,
     required List<dynamic> whereArgs,
@@ -192,6 +252,14 @@ class MemoryStorageService {
     return await db.update(table, data, where: where, whereArgs: whereArgs);
   }
 
+  /// 删除数据。
+  ///
+  /// 参数：
+  /// - [table]：表名；
+  /// - [where]：WHERE 子句；
+  /// - [whereArgs]：绑定参数。
+  ///
+  /// 返回：删除行数。
   Future<int> delete(String table, {
     required String where,
     required List<dynamic> whereArgs,
@@ -200,10 +268,11 @@ class MemoryStorageService {
     return await db.delete(table, where: where, whereArgs: whereArgs);
   }
 
+  /// 清理所有业务表中已过期的数据（expires_at 早于当前时间）。
   Future<void> clearExpiredData() async {
     Database db = await database;
     int now = DateTime.now().millisecondsSinceEpoch;
-    
+
     await db.delete('observation_notes', where: 'expires_at < ?', whereArgs: [now]);
     await db.delete('symptom_reports', where: 'expires_at < ?', whereArgs: [now]);
     await db.delete('alerts', where: 'expires_at < ?', whereArgs: [now]);
@@ -212,14 +281,18 @@ class MemoryStorageService {
     await db.delete('chat_messages', where: 'expires_at < ?', whereArgs: [now]);
   }
 
+  /// 执行 VACUUM 压缩数据库，回收未使用空间。
   Future<void> compactDatabase() async {
     Database db = await database;
     await db.execute('VACUUM');
   }
 
+  /// 获取各业务表的记录数统计。
+  ///
+  /// 返回：键为表名、值为记录数的 Map。
   Future<Map<String, int>> getStorageStats() async {
     Database db = await database;
-    
+
     var observationCount = await db.rawQuery('SELECT COUNT(*) as count FROM observation_notes');
     var reportCount = await db.rawQuery('SELECT COUNT(*) as count FROM symptom_reports');
     var alertCount = await db.rawQuery('SELECT COUNT(*) as count FROM alerts');
@@ -235,6 +308,9 @@ class MemoryStorageService {
     };
   }
 
+  /// 获取数据库文件大小（字节）。
+  ///
+  /// 返回：文件大小，文件不存在时返回 0。
   Future<int> getDatabaseSize() async {
     Directory documentsDirectory = await getApplicationDocumentsDirectory();
     String path = '${documentsDirectory.path}/$_dbName';
@@ -245,6 +321,7 @@ class MemoryStorageService {
     return 0;
   }
 
+  /// 关闭数据库连接并清空缓存实例。
   Future<void> close() async {
     if (_database != null) {
       await _database!.close();
@@ -252,6 +329,7 @@ class MemoryStorageService {
     }
   }
 
+  /// 清空所有业务表数据并压缩数据库。
   Future<void> clearAllData() async {
     Database db = await database;
     await db.delete('observation_notes');

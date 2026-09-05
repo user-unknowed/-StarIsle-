@@ -1,3 +1,8 @@
+/**
+ * @file StudentProfile.tsx
+ * @description 学生端个人资料页：展示/编辑信息、统计打卡数据、快捷菜单、心理测评（含 mock 降级）、设置与退出登录
+ * @module web-frontend/pages/student
+ */
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
@@ -7,6 +12,7 @@ import { assessmentApi } from '../../services/api';
 import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, ClipboardList, Loader2 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 
+// 快捷菜单项：图标、标题、徽章数（可选）
 const menuItems = [
   { icon: Bell, label: '通知中心', badge: 3 },
   { icon: BookOpen, label: '使用记录' },
@@ -14,6 +20,7 @@ const menuItems = [
   { icon: Settings, label: '系统设置' },
 ];
 
+// 设置项：图标、标题、描述
 const settingsItems = [
   { icon: Bell, label: '消息通知', description: '接收系统通知和提醒' },
   { icon: Mail, label: '邮箱设置', description: '配置邮箱通知' },
@@ -21,25 +28,35 @@ const settingsItems = [
   { icon: Phone, label: '隐私设置', description: '管理数据隐私和权限' },
 ];
 
+/**
+ * 学生端个人资料组件
+ * @returns JSX 元素
+ */
 export default function StudentProfile() {
+  // 当前用户、更新资料、退出登录
   const user = useAuthStore((state) => state.user);
   const updateProfile = useAuthStore((state) => state.updateProfile);
   const logout = useAuthStore((state) => state.logout);
+  // 心情历史与连续天数（用于统计展示）
   const moodHistory = useMoodStore((state) => state.moodHistory);
   const continuousDays = useMoodStore((state) => state.continuousDays);
   const toast = useToast();
-  
+
+  // 是否处于资料编辑态
   const [isEditing, setIsEditing] = useState(false);
+  // 编辑中的昵称与签名
   const [editedNickname, setEditedNickname] = useState(user?.nickname || '');
   const [editedSignature, setEditedSignature] = useState(user?.signature || '');
 
   // 心理测评状态
+  // 后端返回的题目结构兼容多种字段命名（text/question）
   interface FetchedQuestion {
     id: string;
     text?: string;
     question?: string;
     options: string[];
   }
+  // 后端返回的结果结构兼容多种字段命名
   interface FetchedResult {
     result_id?: string;
     id?: string;
@@ -51,15 +68,26 @@ export default function StudentProfile() {
     suggestion?: string;
     suggestions?: string[];
   }
+  // 测评弹窗是否打开
   const [assessmentOpen, setAssessmentOpen] = useState(false);
+  // 测评标题
   const [assessmentTitle, setAssessmentTitle] = useState('情绪探索');
+  // 题目列表
   const [assessmentQuestions, setAssessmentQuestions] = useState<FetchedQuestion[]>([]);
+  // 各题目答案（题目ID -> 选项索引）
   const [assessmentAnswers, setAssessmentAnswers] = useState<Record<string, number>>({});
+  // 测评结果
   const [assessmentResult, setAssessmentResult] = useState<FetchedResult | null>(null);
+  // 测评加载中
   const [assessmentLoading, setAssessmentLoading] = useState(false);
+  // 测评错误
   const [assessmentError, setAssessmentError] = useState<string | null>(null);
+  // 数据来源：api 或 mock
   const [assessmentSource, setAssessmentSource] = useState<'api' | 'mock'>('mock');
 
+  /**
+   * 开始测评：打开弹窗，拉取题目，失败时降级 mock 题目
+   */
   const startAssessment = async () => {
     setAssessmentOpen(true);
     setAssessmentLoading(true);
@@ -67,6 +95,7 @@ export default function StudentProfile() {
     setAssessmentResult(null);
     setAssessmentAnswers({});
     try {
+      // 调用后端获取情绪测评题目
       const data = (await assessmentApi.getQuestions('mood')) as unknown as {
         title?: string;
         questions?: FetchedQuestion[];
@@ -93,8 +122,12 @@ export default function StudentProfile() {
     }
   };
 
+  /**
+   * 提交测评：校验全部作答后提交，并拉取结果，失败时降级 mock 结果
+   */
   const submitAssessment = async () => {
     if (!user) return;
+    // 校验：所有题目均已作答
     const answered = assessmentQuestions.every((q) => assessmentAnswers[q.id] !== undefined);
     if (!answered) {
       setAssessmentError('请完成所有题目后再提交');
@@ -102,8 +135,10 @@ export default function StudentProfile() {
     }
     setAssessmentLoading(true);
     setAssessmentError(null);
+    // 将答案按题目顺序整理为数组
     const answers = assessmentQuestions.map((q) => assessmentAnswers[q.id]);
     try {
+      // 提交答案获取结果ID
       const submitRes = (await assessmentApi.submit({
         userId: user.id,
         type: 'mood',
@@ -111,6 +146,7 @@ export default function StudentProfile() {
       })) as unknown as { result_id?: string };
       const resultId = submitRes.result_id;
       if (resultId) {
+        // 拉取结果详情
         const result = (await assessmentApi.getResult(resultId)) as unknown as FetchedResult;
         setAssessmentResult(result);
         setAssessmentSource('api');
@@ -118,7 +154,7 @@ export default function StudentProfile() {
         throw new Error('未返回结果ID');
       }
     } catch {
-      // 降级到 mock 结果
+      // 降级到 mock 结果：根据总分映射风险等级
       setAssessmentSource('mock');
       const total = answers.reduce((a, b) => a + b, 0);
       const level = total <= 2 ? 'green' : total <= 4 ? 'yellow' : total <= 6 ? 'orange' : 'red';
@@ -133,14 +169,19 @@ export default function StudentProfile() {
     }
   };
 
+  /**
+   * 保存资料：调用鉴权 store 更新昵称与签名
+   */
   const handleSave = async () => {
     await updateProfile({ nickname: editedNickname, signature: editedSignature });
     setIsEditing(false);
     toast.success('资料已更新');
   };
 
+  // 统计：总打卡次数
   const totalCheckins = moodHistory.length;
-  const averageMood = moodHistory.length > 0 
+  // 统计：平均心情（保留 1 位小数）
+  const averageMood = moodHistory.length > 0
     ? (moodHistory.reduce((sum, m) => sum + m.moodLevel, 0) / moodHistory.length).toFixed(1)
     : '0';
 

@@ -1,6 +1,13 @@
+/// @file teacher_providers.dart
+/// @description 教师端核心 Riverpod 状态管理层，集中维护教师身份、预警、待办、学生列表、症状报告、
+///              聊天会话、心情记录、自助请求、知识库、情绪概览与授权请求等全局状态，
+///              当前以本地 Mock 数据初始化，后续可替换为后端数据源。
+/// @module teacher-app/providers/teacher
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/teacher_models.dart';
 
+/// 当前登录教师 Provider，默认初始化为班主任「张明」。
 final currentTeacherProvider = StateProvider<Teacher>((ref) => Teacher(
   id: 't1',
   name: '张明',
@@ -10,10 +17,12 @@ final currentTeacherProvider = StateProvider<Teacher>((ref) => Teacher(
   studentCount: 45,
 ));
 
+/// 当前教师角色 Provider，派生自 [currentTeacherProvider]。
 final currentRoleProvider = Provider<TeacherRole>((ref) {
   return ref.watch(currentTeacherProvider).role;
 });
 
+/// 风险预警列表 Provider，由 [AlertsNotifier] 维护，初始化若干示例预警。
 final alertsProvider = StateNotifierProvider<AlertsNotifier, List<Alert>>((ref) {
   return AlertsNotifier([
     Alert(
@@ -46,18 +55,32 @@ final alertsProvider = StateNotifierProvider<AlertsNotifier, List<Alert>>((ref) 
   ]);
 });
 
+/// 预警状态管理器，维护 [List<Alert>]，支持标记已读与移除。
 class AlertsNotifier extends StateNotifier<List<Alert>> {
+  /// 构造预警管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始预警列表。
   AlertsNotifier(List<Alert> initial) : super(initial);
 
+  /// 将指定预警标记为已读。
+  ///
+  /// 参数：
+  /// - [alertId]：预警 ID。
   void markAsRead(String alertId) {
     state = state.map((a) => a.id == alertId ? a.copyWith(isRead: true) : a).toList();
   }
 
+  /// 忽略（移除）指定预警。
+  ///
+  /// 参数：
+  /// - [alertId]：预警 ID。
   void dismiss(String alertId) {
     state = state.where((a) => a.id != alertId).toList();
   }
 }
 
+/// 待办事项列表 Provider，由 [TodosNotifier] 维护，初始化若干示例待办。
 final todosProvider = StateNotifierProvider<TodosNotifier, List<TodoItem>>((ref) {
   return TodosNotifier([
     TodoItem(
@@ -95,18 +118,32 @@ final todosProvider = StateNotifierProvider<TodosNotifier, List<TodoItem>>((ref)
   ]);
 });
 
+/// 待办状态管理器，维护 [List<TodoItem>]，支持切换完成状态与移除。
 class TodosNotifier extends StateNotifier<List<TodoItem>> {
+  /// 构造待办管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始待办列表。
   TodosNotifier(List<TodoItem> initial) : super(initial);
 
+  /// 切换指定待办的完成状态。
+  ///
+  /// 参数：
+  /// - [todoId]：待办 ID。
   void toggleComplete(String todoId) {
     state = state.map((t) => t.id == todoId ? t.copyWith(isCompleted: !t.isCompleted) : t).toList();
   }
 
+  /// 移除指定待办。
+  ///
+  /// 参数：
+  /// - [todoId]：待办 ID。
   void remove(String todoId) {
     state = state.where((t) => t.id != todoId).toList();
   }
 }
 
+/// 学生列表 Provider，由 [StudentsNotifier] 维护，初始化若干示例学生。
 final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>((ref) {
   return StudentsNotifier([
     Student(
@@ -172,10 +209,16 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
   ]);
 });
 
+/// 学生列表状态管理器，目前仅作为数据容器，后续可扩展更新逻辑。
 class StudentsNotifier extends StateNotifier<List<Student>> {
+  /// 构造学生列表管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始学生列表。
   StudentsNotifier(List<Student> initial) : super(initial);
 }
 
+/// 症状报告列表 Provider，由 [ReportsNotifier] 维护，初始化若干示例报告。
 final reportsProvider = StateNotifierProvider<ReportsNotifier, List<SymptomReport>>((ref) {
   return ReportsNotifier([
     SymptomReport(
@@ -240,18 +283,33 @@ final reportsProvider = StateNotifierProvider<ReportsNotifier, List<SymptomRepor
   ]);
 });
 
+/// 症状报告状态管理器，维护 [List<SymptomReport>]，支持新增与状态更新。
 class ReportsNotifier extends StateNotifier<List<SymptomReport>> {
+  /// 构造报告管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始报告列表。
   ReportsNotifier(List<SymptomReport> initial) : super(initial);
 
+  /// 新增一条症状报告。
+  ///
+  /// 参数：
+  /// - [report]：待新增的报告实例。
   void addReport(SymptomReport report) {
     state = [...state, report];
   }
 
+  /// 更新指定报告的处理状态。
+  ///
+  /// 参数：
+  /// - [reportId]：报告 ID；
+  /// - [status]：目标状态。
   void updateStatus(String reportId, ReportStatus status) {
     state = state.map((r) => r.id == reportId ? r.copyWith(status: status) : r).toList();
   }
 }
 
+/// 学生聊天会话列表 Provider，由 [ChatSessionsNotifier] 维护，初始化若干示例会话与消息。
 final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<StudentChatSession>>((ref) {
   return ChatSessionsNotifier([
     StudentChatSession(
@@ -347,9 +405,19 @@ final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<St
   ]);
 });
 
+/// 聊天会话状态管理器，维护 [List<StudentChatSession>]，支持新增消息与切换干预状态。
 class ChatSessionsNotifier extends StateNotifier<List<StudentChatSession>> {
+  /// 构造聊天会话管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始会话列表。
   ChatSessionsNotifier(List<StudentChatSession> initial) : super(initial);
 
+  /// 向指定会话追加一条消息，并更新最近活跃时间。
+  ///
+  /// 参数：
+  /// - [sessionId]：会话 ID；
+  /// - [message]：待追加的消息。
   void addMessage(String sessionId, ChatMessage message) {
     state = state.map((s) {
       if (s.id == sessionId) {
@@ -362,11 +430,17 @@ class ChatSessionsNotifier extends StateNotifier<List<StudentChatSession>> {
     }).toList();
   }
 
+  /// 切换指定会话的干预状态。
+  ///
+  /// 参数：
+  /// - [sessionId]：会话 ID；
+  /// - [isIntervening]：是否处于干预中。
   void toggleIntervention(String sessionId, bool isIntervening) {
     state = state.map((s) => s.id == sessionId ? s.copyWith(isIntervening: isIntervening) : s).toList();
   }
 }
 
+/// 教师心情记录列表 Provider，由 [MoodRecordsNotifier] 维护，初始化最近 7 天的心情记录。
 final moodRecordsProvider = StateNotifierProvider<MoodRecordsNotifier, List<TeacherMoodRecord>>((ref) {
   return MoodRecordsNotifier([
     TeacherMoodRecord(
@@ -414,14 +488,24 @@ final moodRecordsProvider = StateNotifierProvider<MoodRecordsNotifier, List<Teac
   ]);
 });
 
+/// 心情记录状态管理器，维护 [List<TeacherMoodRecord>]，支持新增记录。
 class MoodRecordsNotifier extends StateNotifier<List<TeacherMoodRecord>> {
+  /// 构造心情记录管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始记录列表。
   MoodRecordsNotifier(List<TeacherMoodRecord> initial) : super(initial);
 
+  /// 新增一条心情记录。
+  ///
+  /// 参数：
+  /// - [record]：待新增的心情记录。
   void addRecord(TeacherMoodRecord record) {
     state = [...state, record];
   }
 }
 
+/// 教师自助请求列表 Provider，由 [SelfHelpRequestsNotifier] 维护，初始化示例请求。
 final selfHelpRequestsProvider = StateNotifierProvider<SelfHelpRequestsNotifier, List<SelfHelpRequest>>((ref) {
   return SelfHelpRequestsNotifier([
     SelfHelpRequest(
@@ -440,14 +524,24 @@ final selfHelpRequestsProvider = StateNotifierProvider<SelfHelpRequestsNotifier,
   ]);
 });
 
+/// 自助请求状态管理器，维护 [List<SelfHelpRequest>]，支持新增请求。
 class SelfHelpRequestsNotifier extends StateNotifier<List<SelfHelpRequest>> {
+  /// 构造自助请求管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始请求列表。
   SelfHelpRequestsNotifier(List<SelfHelpRequest> initial) : super(initial);
 
+  /// 新增一条自助请求。
+  ///
+  /// 参数：
+  /// - [request]：待新增的自助请求。
   void addRequest(SelfHelpRequest request) {
     state = [...state, request];
   }
 }
 
+/// 知识库条目列表 Provider，由 [KnowledgeBaseNotifier] 维护，初始化若干示例知识条目。
 final knowledgeBaseProvider = StateNotifierProvider<KnowledgeBaseNotifier, List<KnowledgeBaseItem>>((ref) {
   return KnowledgeBaseNotifier([
     KnowledgeBaseItem(
@@ -605,10 +699,16 @@ final knowledgeBaseProvider = StateNotifierProvider<KnowledgeBaseNotifier, List<
   ]);
 });
 
+/// 知识库状态管理器，目前仅作为数据容器，后续可扩展检索与更新逻辑。
 class KnowledgeBaseNotifier extends StateNotifier<List<KnowledgeBaseItem>> {
+  /// 构造知识库管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始知识条目列表。
   KnowledgeBaseNotifier(List<KnowledgeBaseItem> initial) : super(initial);
 }
 
+/// 班级情绪概览 Provider，初始化为高一(3)班的概览数据。
 final emotionalOverviewProvider = StateProvider<EmotionalOverview>((ref) {
   return EmotionalOverview(
     className: '高一(3)班',
@@ -626,6 +726,7 @@ final emotionalOverviewProvider = StateProvider<EmotionalOverview>((ref) {
   );
 });
 
+/// 授权请求列表 Provider，由 [AuthorizationRequestsNotifier] 维护，初始化示例请求。
 final authorizationRequestsProvider = StateNotifierProvider<AuthorizationRequestsNotifier, List<AuthorizationRequest>>((ref) {
   return AuthorizationRequestsNotifier([
     AuthorizationRequest(
@@ -642,13 +743,26 @@ final authorizationRequestsProvider = StateNotifierProvider<AuthorizationRequest
   ]);
 });
 
+/// 授权请求状态管理器，维护 [List<AuthorizationRequest>]，支持批准与拒绝。
 class AuthorizationRequestsNotifier extends StateNotifier<List<AuthorizationRequest>> {
+  /// 构造授权请求管理器。
+  ///
+  /// 参数：
+  /// - [initial]：初始请求列表。
   AuthorizationRequestsNotifier(List<AuthorizationRequest> initial) : super(initial);
 
+  /// 批准指定授权请求。
+  ///
+  /// 参数：
+  /// - [requestId]：授权请求 ID。
   void approve(String requestId) {
     state = state.map((a) => a.id == requestId ? a.copyWith(isApproved: true) : a).toList();
   }
 
+  /// 拒绝（移除）指定授权请求。
+  ///
+  /// 参数：
+  /// - [requestId]：授权请求 ID。
   void reject(String requestId) {
     state = state.where((a) => a.id != requestId).toList();
   }

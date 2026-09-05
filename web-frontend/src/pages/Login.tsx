@@ -1,21 +1,42 @@
+/**
+ * @file Login.tsx
+ * @description 登录/注册页面，支持账号密码登录、注册、角色切换、快速体验、第三方（微信/QQ/Apple）登录与手机号验证码登录
+ * @module web-frontend/pages
+ */
 import { useState } from 'react';
 import { useAuthStore, LoginMethod } from '../store/authStore';
 import { Star, User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Phone, Apple, Sparkles, ChevronLeft } from 'lucide-react';
 import { Button, Input, Modal } from '../components/ui';
 
+/**
+ * 登录页组件
+ * @returns JSX 元素
+ */
 export default function Login() {
+  // 从鉴权 store 取出登录、注册、第三方登录、手机号登录等方法与状态
   const { login, register, loginWithThirdParty, loginWithPhone, isLoading, error, clearError } = useAuthStore();
 
+  // 是否处于登录态（false 为注册态）
   const [isLogin, setIsLogin] = useState(true);
+  // 当前选中的角色
   const [role, setRole] = useState<'student' | 'teacher' | 'parent'>('student');
+  // 用户名/昵称与密码
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  // 是否明文显示密码
   const [showPassword, setShowPassword] = useState(false);
+  // 是否显示手机号登录弹窗
   const [showPhoneModal, setShowPhoneModal] = useState(false);
+  // 手机号、短信验证码
   const [phoneNumber, setPhoneNumber] = useState('');
   const [smsCode, setSmsCode] = useState('');
+  // 验证码倒计时（秒），>0 时按钮禁用
   const [codeCountdown, setCodeCountdown] = useState(0);
 
+  /**
+   * 表单提交：登录态调用 login，注册态调用 register
+   * @param e - 表单事件
+   */
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
@@ -27,6 +48,9 @@ export default function Login() {
     }
   };
 
+  /**
+   * 快速体验：按当前角色使用预置演示账号登录
+   */
   const handleDemoLogin = async () => {
     if (role === 'student') {
       await login({ username: 'student1', password: '123456', role: 'student' });
@@ -37,7 +61,12 @@ export default function Login() {
     }
   };
 
+  /**
+   * 第三方登录：构造模拟用户信息并交给 store 处理
+   * @param method - 第三方登录方式
+   */
   const handleThirdPartyLogin = async (method: LoginMethod) => {
+    // 构造模拟的第三方用户信息（演示用）
     const mockUserInfo = {
       provider: method,
       openId: `openid-${method}-${Date.now()}`,
@@ -47,9 +76,13 @@ export default function Login() {
     await loginWithThirdParty(method, mockUserInfo);
   };
 
+  /**
+   * 发送短信验证码：仅在 11 位手机号时启动 60 秒倒计时
+   */
   const handleSendCode = () => {
     if (phoneNumber.length === 11) {
       setCodeCountdown(60);
+      // 每秒递减，到 0 清除定时器
       const timer = setInterval(() => {
         setCodeCountdown((prev) => {
           if (prev <= 1) {
@@ -62,6 +95,9 @@ export default function Login() {
     }
   };
 
+  /**
+   * 手机号登录：手机号 11 位且验证码 6 位时调用登录并关闭弹窗
+   */
   const handlePhoneLogin = async () => {
     if (phoneNumber.length === 11 && smsCode.length === 6) {
       await loginWithPhone(phoneNumber, smsCode);
@@ -69,6 +105,7 @@ export default function Login() {
     }
   };
 
+  // 各角色文案与配色配置
   const roleConfig = {
     student: { label: '学生', accentText: 'text-primary-600', accentRing: 'ring-primary-500' },
     teacher: { label: '教师', accentText: 'text-primary-600', accentRing: 'ring-primary-500' },
@@ -127,7 +164,7 @@ export default function Login() {
             <p className="text-gray-500 mt-2 text-sm">你的情绪星球，永远亮着灯</p>
           </div>
 
-          {/* 角色选择 */}
+          {/* 角色选择：学生/教师/家长，决定登录后进入哪一端 */}
           <div className="flex bg-gray-100 rounded-xl p-1 mb-6" role="tablist" aria-label="选择登录角色">
             {(['student', 'teacher', 'parent'] as const).map((r) => (
               <button
@@ -148,7 +185,9 @@ export default function Login() {
             ))}
           </div>
 
+          {/* 登录/注册表单 */}
           <form onSubmit={handleSubmit} className="space-y-5">
+            {/* 注册态额外渲染昵称输入框 */}
             {!isLogin && (
               <Input
                 label="昵称"
@@ -160,6 +199,7 @@ export default function Login() {
               />
             )}
 
+            {/* 登录态渲染用户名输入框 */}
             {isLogin && (
               <Input
                 label="用户名"
@@ -172,6 +212,7 @@ export default function Login() {
               />
             )}
 
+            {/* 密码输入框，右侧带显隐切换按钮 */}
             <Input
               label="密码"
               icon={<Lock className="w-5 h-5" />}
@@ -193,12 +234,14 @@ export default function Login() {
               required
             />
 
+            {/* 错误提示 */}
             {error && (
               <div className="p-3 bg-danger-50 border border-danger-200 rounded-xl text-danger-600 text-sm">
                 {error}
               </div>
             )}
 
+            {/* 提交按钮：加载态显示旋转图标 */}
             <Button
               type="submit"
               disabled={isLoading}
@@ -219,6 +262,7 @@ export default function Login() {
             </Button>
           </form>
 
+          {/* 快速体验按钮：使用预置演示账号登录 */}
           <button
             onClick={handleDemoLogin}
             className="w-full py-3 mt-4 bg-gradient-to-r from-accent-50 to-accent-100 text-accent-600 font-semibold rounded-xl hover:from-accent-100 hover:to-accent-200 transition-all border border-accent-200"
@@ -227,6 +271,7 @@ export default function Login() {
             快速体验·{roleConfig[role].label}模式
           </button>
 
+          {/* 分隔线：其他登录方式 */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-200"></div>
@@ -236,6 +281,7 @@ export default function Login() {
             </div>
           </div>
 
+          {/* 第三方与手机号登录入口网格 */}
           <div className="grid grid-cols-4 gap-3">
             <button
               onClick={() => handleThirdPartyLogin('wechat')}
@@ -271,6 +317,7 @@ export default function Login() {
             </button>
           </div>
 
+          {/* 登录/注册切换入口 */}
           <div className="text-center mt-6">
             <button
               onClick={() => setIsLogin(!isLogin)}
@@ -281,11 +328,13 @@ export default function Login() {
           </div>
         </div>
 
+        {/* 页脚版权 */}
         <p className="text-center text-white/80 text-sm mt-6">
           星屿心理健康管理系统 © 2026
         </p>
       </div>
 
+      {/* 手机号登录弹窗 */}
       <Modal
         isOpen={showPhoneModal}
         onClose={() => setShowPhoneModal(false)}
@@ -293,6 +342,7 @@ export default function Login() {
         size="md"
       >
         <div className="space-y-4">
+          {/* 手机号输入：仅保留数字并截断到 11 位 */}
           <Input
             label="手机号"
             icon={<Phone className="w-5 h-5" />}
@@ -302,6 +352,7 @@ export default function Login() {
             placeholder="请输入手机号"
           />
           <div className="flex gap-3">
+            {/* 验证码输入：仅保留数字并截断到 6 位 */}
             <Input
               label="验证码"
               value={smsCode}
@@ -309,6 +360,7 @@ export default function Login() {
               placeholder="请输入验证码"
               className="flex-1"
             />
+            {/* 获取验证码按钮：倒计时中或手机号不完整时禁用 */}
             <button
               onClick={handleSendCode}
               disabled={codeCountdown > 0 || phoneNumber.length !== 11}
@@ -317,6 +369,7 @@ export default function Login() {
               {codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码'}
             </button>
           </div>
+          {/* 手机号登录提交按钮：手机号 11 位且验证码 6 位时可用 */}
           <Button
             onClick={handlePhoneLogin}
             disabled={phoneNumber.length !== 11 || smsCode.length !== 6}

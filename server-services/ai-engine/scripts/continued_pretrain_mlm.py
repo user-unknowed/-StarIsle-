@@ -1,5 +1,13 @@
-"""M3a: MLM 继续预训练 bert-base-chinese。lr=3e-5 略低于首次预训练。支持 --smoke。
-若 transformers/torch/datasets 任一缺失则自动进入 SIMULATION 降级模式。"""
+"""
+continued_pretrain_mlm.py - MLM 继续预训练脚本（M3a 阶段）
+
+所属模块：ai-engine/scripts
+功能简述：
+    对 bert-base-chinese 进行 MLM 继续预训练，学习率 3e-5 略低于首次预训练，支持 --smoke 冒烟测试。
+    若 transformers/torch/datasets 任一缺失则自动进入 SIMULATION 降级模式（仿真损失曲线，不下载权重）。
+依赖关系：
+    - transformers / torch / datasets：实际训练所需（缺失时降级）
+"""
 from __future__ import annotations
 import argparse, json, logging, math, os, random
 from datetime import datetime
@@ -9,10 +17,12 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
     handlers=[logging.FileHandler("continued_pretrain_mlm.log"), logging.StreamHandler()])
 log = logging.getLogger("cmlm")
 
+# 项目根目录、语料与输出路径
 ROOT = Path(__file__).resolve().parent.parent
 CORPUS = ROOT / "data" / "combined_cleaned_text.txt"
 OUT = ROOT / "models" / "pretrained_mental_health_v2"
 
+# 训练配置（部分参数支持环境变量覆盖）
 CFG = dict(model_name=os.getenv("MLM_MODEL", "bert-base-chinese"),
            output_dir=str(OUT), learning_rate=3e-5,
            batch_size=int(os.getenv("MLM_BATCH","8")),
@@ -23,6 +33,7 @@ CFG = dict(model_name=os.getenv("MLM_MODEL", "bert-base-chinese"),
 
 
 def run_simulation_mlm(cfg, steps: int = 80):
+    """降级模式：仿真指定步数的损失曲线，不下载权重也不实际训练。"""
     log.warning(">>>>> MLM SIMULATION MODE: 仿真 %d 步曲线，不下载权重。", steps)
     import math as _m
     rng = random.Random(cfg["seed"])
@@ -40,6 +51,7 @@ def run_simulation_mlm(cfg, steps: int = 80):
 
 
 def _heavy_deps_available() -> bool:
+    """检测 torch/datasets/transformers 是否可用，决定是否降级到仿真模式。"""
     try:
         import torch, datasets, transformers  # noqa
         return True
@@ -47,6 +59,7 @@ def _heavy_deps_available() -> bool:
 
 
 def prepare(smoke, cfg):
+    """加载语料并按 9:1 划分训练/测试集；smoke=True 时仅取前 200 条。"""
     if not CORPUS.exists(): raise FileNotFoundError(CORPUS)
     from datasets import load_dataset
     ds = load_dataset("text", data_files=str(CORPUS))
@@ -56,10 +69,12 @@ def prepare(smoke, cfg):
     return split
 
 def tokfn(ex, tok, mx):
+    """分词函数：对单条文本做填充截断。"""
     return tok(ex["text"], padding="max_length", truncation=True,
                max_length=mx, return_overflowing_tokens=False)
 
 def metrics(ep):
+    """计算 MLM 掩码预测准确率。"""
     logits, labels = ep; logits = logits[0] if isinstance(logits, tuple) else logits
     mask = labels != -100
     c = ((logits.argmax(-1) == labels) & mask).sum().item()
@@ -68,12 +83,14 @@ def metrics(ep):
 
 
 def parse():
+    """解析命令行参数（--smoke / --epochs / --batch-size）。"""
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
     ap.add_argument("--epochs", type=int); ap.add_argument("--batch-size", type=int)
     return ap.parse_args()
 
 def main():
+    """主入口：解析参数 → 降级判定 → 训练或仿真 → 输出摘要。"""
     args = parse(); cfg = dict(CFG)
     if args.smoke: cfg["smoke"]=True; cfg["epochs"]=1; cfg["save_steps"]=10; cfg["smoke_n"]=200
     if args.epochs: cfg["epochs"]=args.epochs

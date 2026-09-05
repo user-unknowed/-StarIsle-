@@ -1,23 +1,39 @@
+/// @file ai_tools_screen.dart
+/// @description 学生端 AI 辅助工具页面，提供文章生成、内容摘要、风格转换、主题分析
+///              四大功能的表单交互，并通过 [aiProviderState] 驱动结果与错误展示。
+/// @module student-app/screens
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/ai_provider.dart';
 
+/// AI 辅助工具页面，承载多种 AI 文本处理功能的交互表单。
 class AiToolsScreen extends ConsumerStatefulWidget {
+  /// 构造函数。
   const AiToolsScreen({super.key});
 
+  /// 创建 State 对象。
   @override
   ConsumerState<AiToolsScreen> createState() => _AiToolsScreenState();
 }
 
+/// [AiToolsScreen] 的 State，持有各表单控制器与选项。
 class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
+  // API Key 输入控制器
   final _apiKeyController = TextEditingController();
+  // 文章主题输入控制器
   final _topicController = TextEditingController();
+  // 通用内容输入控制器（摘要/风格转换/主题分析共用）
   final _contentController = TextEditingController();
-  
+
+  // 当前选中的写作风格
   String _selectedStyle = 'professional';
+  // 文章目标字数
   int _wordCount = 800;
+  // 风格转换目标风格
   String _targetStyle = 'warm';
-  
+
+  // 可选风格列表
   final List<String> _styleOptions = [
     'professional',
     'casual',
@@ -28,6 +44,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     'simple',
   ];
 
+  /// 弹出 API 密钥配置对话框，保存时写入 Provider。
   void _showApiKeyDialog(BuildContext context) {
     showDialog(
       context: context,
@@ -42,10 +59,12 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
           obscureText: true,
         ),
         actions: [
+          // 取消按钮
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: const Text('取消'),
           ),
+          // 保存按钮：写入 Provider 并提示
           TextButton(
             onPressed: () {
               ref.read(aiProviderState.notifier).setApiKey(_apiKeyController.text);
@@ -61,11 +80,16 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建页面主体。
+  ///
+  /// 监听 [aiProviderState]，依次渲染文章生成、内容摘要、风格转换、主题分析模块，
+  /// 以及加载指示器、结果卡片与错误卡片。
   @override
   Widget build(BuildContext context) {
     final aiState = ref.watch(aiProviderState);
-    
+
     return Scaffold(
+      // 顶部 AppBar：标题 + 设置入口
       appBar: AppBar(
         title: const Text('AI辅助工具'),
         actions: [
@@ -75,6 +99,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
           ),
         ],
       ),
+      // 主体：可滚动表单区
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -83,23 +108,26 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
             _buildSectionTitle('文章生成'),
             _buildArticleGenerator(),
             const SizedBox(height: 24),
-            
+
             _buildSectionTitle('内容摘要'),
             _buildSummarizer(),
             const SizedBox(height: 24),
-            
+
             _buildSectionTitle('风格转换'),
             _buildStyleConverter(),
             const SizedBox(height: 24),
-            
+
             _buildSectionTitle('主题分析'),
             _buildTopicAnalyzer(),
             const SizedBox(height: 24),
-            
+
+            // 加载中指示器
             if (aiState.isLoading)
               const Center(child: CircularProgressIndicator()),
+            // 结果卡片
             if (aiState.result != null)
               _buildResultCard(aiState.result!),
+            // 错误卡片
             if (aiState.error != null)
               _buildErrorCard(aiState.error!),
           ],
@@ -108,6 +136,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建区块标题。
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
@@ -115,12 +144,14 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建文章生成模块（主题、风格、字数、生成按钮）。
   Widget _buildArticleGenerator() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 文章主题输入
             TextField(
               controller: _topicController,
               decoration: const InputDecoration(
@@ -129,6 +160,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // 写作风格选择
             Row(
               children: [
                 const Text('写作风格：'),
@@ -144,6 +176,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ],
             ),
             const SizedBox(height: 12),
+            // 字数滑块
             Row(
               children: [
                 const Text('字数：'),
@@ -162,6 +195,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ],
             ),
             const SizedBox(height: 12),
+            // 生成按钮：触发 Provider 调用
             ElevatedButton(
               onPressed: () {
                 if (_topicController.text.isEmpty) {
@@ -184,12 +218,14 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建内容摘要模块。
   Widget _buildSummarizer() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 原文输入
             TextField(
               controller: _contentController,
               maxLines: 5,
@@ -200,6 +236,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // 触发摘要生成
             ElevatedButton(
               onPressed: () {
                 if (_contentController.text.isEmpty) {
@@ -220,12 +257,14 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建风格转换模块。
   Widget _buildStyleConverter() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 原文输入
             TextField(
               controller: _contentController,
               maxLines: 5,
@@ -236,6 +275,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // 目标风格选择
             Row(
               children: [
                 const Text('目标风格：'),
@@ -251,6 +291,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ],
             ),
             const SizedBox(height: 12),
+            // 触发风格转换
             ElevatedButton(
               onPressed: () {
                 if (_contentController.text.isEmpty) {
@@ -272,12 +313,14 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建主题分析模块。
   Widget _buildTopicAnalyzer() {
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
+            // 待分析内容输入
             TextField(
               controller: _contentController,
               maxLines: 5,
@@ -288,6 +331,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               ),
             ),
             const SizedBox(height: 12),
+            // 触发主题分析
             ElevatedButton(
               onPressed: () {
                 if (_contentController.text.isEmpty) {
@@ -308,6 +352,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建结果卡片，支持复制与清空。
   Widget _buildResultCard(String result) {
     return Card(
       color: Colors.green[50],
@@ -321,13 +366,16 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
+            // 结果文本（可滚动）
             SingleChildScrollView(
               child: Text(result),
             ),
             const SizedBox(height: 12),
+            // 操作按钮区
             Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
+                // 复制结果到剪贴板
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).clipboard.writeText(result);
@@ -337,6 +385,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
                   },
                   child: const Text('复制'),
                 ),
+                // 清空当前结果
                 TextButton(
                   onPressed: () => ref.read(aiProviderState.notifier).clearResult(),
                   child: const Text('清空'),
@@ -349,6 +398,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 构建错误卡片，可关闭清空状态。
   Widget _buildErrorCard(String error) {
     return Card(
       color: Colors.red[50],
@@ -364,6 +414,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
             const SizedBox(height: 8),
             Text(error),
             const SizedBox(height: 12),
+            // 关闭并清空错误状态
             TextButton(
               onPressed: () => ref.read(aiProviderState.notifier).clearResult(),
               child: const Text('关闭'),
@@ -374,6 +425,7 @@ class _AiToolsScreenState extends ConsumerState<AiToolsScreen> {
     );
   }
 
+  /// 将风格标识映射为中文标签。
   String _styleLabel(String style) {
     final labels = {
       'professional': '专业严谨',

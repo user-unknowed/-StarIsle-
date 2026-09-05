@@ -1,9 +1,12 @@
+/* 引入平台级基础样式（包含设计 token、跨平台适配等） */
 @import './design/platform.css';
 
+/* 引入 Tailwind 三大基础层：base 重置、components 组件层、utilities 工具类 */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* 根元素全局排版设置：字体栈覆盖 iOS/Android/Windows 多端，含中文系统字体 */
 :root {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Helvetica Neue", Helvetica, Arial, sans-serif;
   line-height: 1.5;
@@ -15,12 +18,14 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* body 基础重置：去除默认外边距，限定最小尺寸保证移动端可读 */
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
 }
 
+/* 应用根容器：占满视口宽度与高度，承载 React 挂载内容 */
 #root {
   width: 100%;
   min-height: 100vh;

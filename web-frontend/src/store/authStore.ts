@@ -1,39 +1,48 @@
+/**
+ * @file authStore.ts
+ * @description 鉴权 store：使用 Zustand + persist 管理登录态、用户信息、token 与登录方式，
+ *              支持账号密码、第三方（微信/QQ/Apple）、手机号三种登录路径，并在无后端时短路到 mock 数据。
+ * @module web-frontend/store
+ */
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { User, LoginRequest, RegisterRequest } from '../types';
 import { authApi } from '../services/api';
 import { ApiError } from '../services/http';
 
+// 登录方式：账号密码 / 微信 / QQ / Apple / 手机号
 export type LoginMethod = 'credentials' | 'wechat' | 'qq' | 'apple' | 'phone';
 
+/** 第三方用户信息（用于第三方登录） */
 export interface ThirdPartyUserInfo {
-  provider: string;
-  openId: string;
-  nickname?: string;
-  avatar?: string;
-  unionId?: string;
+  provider: string;    // 提供商：wechat/qq/apple
+  openId: string;       // 第三方 openid
+  nickname?: string;    // 昵称（可选）
+  avatar?: string;      // 头像 URL（可选）
+  unionId?: string;     // unionId（可选，用于跨应用识别）
 }
 
+/** 鉴权 store 状态 */
 interface AuthState {
-  user: User | null;
-  token: string | null;
-  isLoggedIn: boolean;
-  isLoading: boolean;
-  error: string | null;
-  loginMethod: LoginMethod | null;
-  isUsingMockData: boolean;
+  user: User | null;                // 当前用户
+  token: string | null;             // JWT Token
+  isLoggedIn: boolean;               // 是否已登录
+  isLoading: boolean;                // 加载中
+  error: string | null;              // 错误信息
+  loginMethod: LoginMethod | null;   // 登录方式
+  isUsingMockData: boolean;          // 是否使用 mock 数据
 
-  login: (credentials: LoginRequest) => Promise<void>;
-  register: (data: RegisterRequest) => Promise<void>;
-  logout: () => void;
-  clearError: () => void;
-  loginWithThirdParty: (provider: LoginMethod, userInfo: ThirdPartyUserInfo) => Promise<void>;
-  loginWithPhone: (phone: string, code: string) => Promise<void>;
-  setLoginMethod: (method: LoginMethod | null) => void;
-  updateProfile: (data: { nickname?: string; signature?: string }) => Promise<void>;
+  login: (credentials: LoginRequest) => Promise<void>;                                   // 账号密码登录
+  register: (data: RegisterRequest) => Promise<void>;                                    // 注册
+  logout: () => void;                                                                     // 退出登录
+  clearError: () => void;                                                                 // 清空错误
+  loginWithThirdParty: (provider: LoginMethod, userInfo: ThirdPartyUserInfo) => Promise<void>; // 第三方登录
+  loginWithPhone: (phone: string, code: string) => Promise<void>;                        // 手机号登录
+  setLoginMethod: (method: LoginMethod | null) => void;                                  // 设置登录方式
+  updateProfile: (data: { nickname?: string; signature?: string }) => Promise<void>;    // 更新资料
 }
 
-// Mock 数据（降级使用）
+// Mock 数据（后端不可用时降级使用）：内置 student1/teacher1/parent1 三个演示账号
 const mockUsers: Record<string, User> = {
   'student1': {
     id: 'student1',
@@ -67,8 +76,12 @@ const mockUsers: Record<string, User> = {
   },
 };
 
-// 判断是否应走 mock 降级：
-// ① 断网（status=0） ② 后端不存在（404/405，常见于纯静态托管） ③ 服务端异常（≥500）
+/**
+ * 判断是否应走 mock 降级（请求失败后兜底）：
+ *  ① 断网（status=0） ② 后端不存在（404/405，常见于纯静态托管） ③ 服务端异常（≥500）
+ * @param err - 捕获的错误
+ * @returns 是否降级到 mock
+ */
 function shouldUseMockFallback(err: unknown): boolean {
   if (!(err instanceof ApiError)) return false;
   return err.status === 0
@@ -77,7 +90,10 @@ function shouldUseMockFallback(err: unknown): boolean {
     || err.status >= 500;
 }
 
-// 判断当前是否应跳过网络请求、直接走 mock（无真实后端时）
+/**
+ * 判断是否应跳过网络请求、直接走 mock（无真实后端时短路）
+ * @returns true 表示应直接使用 mock
+ */
 function shouldShortCircuitToMock(): boolean {
   // 仅当未配置真实 API base 或明确标记为静态部署时短路
   const apiBase = import.meta.env.VITE_API_BASE_URL;
@@ -85,6 +101,9 @@ function shouldShortCircuitToMock(): boolean {
   return import.meta.env.VITE_USE_MOCK === 'true';
 }
 
+/**
+ * 鉴权 store（持久化到 localStorage 的 starisle-auth key）
+ */
 export const useAuthStore = create<AuthState>()(
   persist(
     (set, get) => ({
@@ -96,6 +115,10 @@ export const useAuthStore = create<AuthState>()(
       loginMethod: null,
       isUsingMockData: false,
 
+      /**
+       * 账号密码登录：演示账号在无后端时短路到 mock；真实后端失败时降级到 mock
+       * @param credentials - 账号、密码、角色
+       */
       login: async (credentials) => {
         set({ isLoading: true, error: null });
 
@@ -116,6 +139,7 @@ export const useAuthStore = create<AuthState>()(
         }
 
         try {
+          // 真实登录
           const response = await authApi.login(credentials);
           set({
             user: response.user,
@@ -148,6 +172,10 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /**
+       * 注册新账号：真实后端失败时降级为本地创建新用户
+       * @param data - 注册请求体
+       */
       register: async (data) => {
         set({ isLoading: true, error: null });
 
@@ -162,7 +190,7 @@ export const useAuthStore = create<AuthState>()(
             isUsingMockData: false,
           });
         } catch (error) {
-          // 降级到 mock 数据
+          // 降级到 mock 数据：本地生成新用户
           if (shouldUseMockFallback(error)) {
             const newUser: User = {
               id: `user-${Date.now()}`,
@@ -191,6 +219,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /**
+       * 第三方登录：无真实后端时直接走 mock；真实失败时降级
+       * @param provider - 登录方式
+       * @param userInfo - 第三方用户信息
+       */
       loginWithThirdParty: async (provider, userInfo) => {
         set({ isLoading: true, error: null });
 
@@ -262,6 +295,11 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /**
+       * 手机号登录：无真实后端时直接走 mock；真实失败时降级
+       * @param phone - 手机号
+       * @param code - 验证码
+       */
       loginWithPhone: async (phone, code) => {
         set({ isLoading: true, error: null });
 
@@ -328,6 +366,7 @@ export const useAuthStore = create<AuthState>()(
         }
       },
 
+      /** 退出登录：清空所有登录态 */
       logout: () => {
         set({
           user: null,
@@ -340,14 +379,23 @@ export const useAuthStore = create<AuthState>()(
         });
       },
 
+      /** 清空错误信息 */
       clearError: () => {
         set({ error: null });
       },
 
+      /**
+       * 设置登录方式
+       * @param method - 登录方式
+       */
       setLoginMethod: (method) => {
         set({ loginMethod: method });
       },
 
+      /**
+       * 更新个人资料（昵称/签名）：本地更新 user 状态（已通过 persist 持久化）
+       * @param data - 待更新字段
+       */
       updateProfile: async (data) => {
         const currentUser = get().user;
         if (!currentUser) return;
@@ -365,6 +413,7 @@ export const useAuthStore = create<AuthState>()(
       },
     }),
     {
+      // 持久化配置：仅持久化登录态相关字段
       name: 'starisle-auth',
       partialize: (state) => ({
         user: state.user,

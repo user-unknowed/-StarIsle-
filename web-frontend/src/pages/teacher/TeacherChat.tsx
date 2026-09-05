@@ -1,3 +1,8 @@
+/**
+ * @file TeacherChat.tsx
+ * @description 教师端专业心理咨询助手对话页，支持历史消息加载、专业话题选择、风险信号提示
+ * @module web-frontend/pages/teacher
+ */
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useChatStore } from '../../store/chatStore';
@@ -7,6 +12,7 @@ import { EmergencyHelpButton } from '../../components/common/EmergencyHelpButton
 import { AI_CHAT_ENABLED } from '../../config/features';
 import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
 
+// 教师专业话题列表：分析/评估/技巧/知识/干预
 const professionalTopics = [
   { id: 'pt1', title: '学生情绪波动分析', category: '分析' },
   { id: 'pt2', title: '班级心理状态评估', category: '评估' },
@@ -15,12 +21,19 @@ const professionalTopics = [
   { id: 'pt5', title: '危机干预建议', category: '干预' },
 ];
 
+/**
+ * 教师端专业心理咨询助手对话组件
+ * @returns JSX 元素（功能关闭时返回禁用占位组件）
+ */
 export default function TeacherChat() {
+  // AI 聊天功能未开启时直接展示禁用占位
   if (!AI_CHAT_ENABLED) {
     return <ChatDisabledPlaceholder role="teacher" />;
   }
 
+  // 当前登录用户
   const user = useAuthStore((state) => state.user);
+  // 从聊天 store 取出消息列表、输入态、话题选择 action
   const {
     messages,
     isTyping,
@@ -30,11 +43,15 @@ export default function TeacherChat() {
     selectTopic,
     setInputValue,
   } = useChatStore();
+  // 单独订阅 mock 状态
   const isUsingMockData = useChatStore((s) => s.isUsingMockData);
 
+  // 消息列表底部锚点，用于自动滚动
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  // 是否正在加载历史消息
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
 
+  // 进入页面拉取历史消息
   useEffect(() => {
     if (user) {
       setIsLoadingMessages(true);
@@ -42,16 +59,24 @@ export default function TeacherChat() {
     }
   }, [user, fetchMessages]);
 
+  // 消息列表变化时自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  /**
+   * 发送消息：非空且已登录时调用 store 发送
+   */
   const handleSend = async () => {
     if (inputValue.trim() && user) {
       await sendMessage(user.id, inputValue.trim());
     }
   };
 
+  /**
+   * 输入框按键事件：Enter 发送，Shift+Enter 换行
+   * @param e - 键盘事件
+   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

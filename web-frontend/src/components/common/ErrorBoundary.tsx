@@ -1,12 +1,23 @@
+/**
+ * @file ErrorBoundary.tsx
+ * @description 全局错误边界（类组件），捕获子树渲染异常并展示友好的兜底 UI，提供刷新页面按钮
+ * @module web-frontend/components/common
+ */
 import React from 'react';
 import { AlertCircle } from 'lucide-react';
 
+/**
+ * 错误边界内部状态
+ */
 interface ErrorBoundaryState {
-  hasError: boolean;
+  hasError: boolean; // 是否已捕获到错误
 }
 
+/**
+ * 错误边界组件属性
+ */
 interface ErrorBoundaryProps {
-  children: React.ReactNode;
+  children: React.ReactNode; // 被包裹的子组件树
 }
 
 /**
@@ -14,24 +25,44 @@ interface ErrorBoundaryProps {
  * 提供"刷新页面"按钮调用 window.location.reload()。
  */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  /**
+   * 构造函数：初始化无错误状态
+   * @param props - 组件属性
+   */
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
+  /**
+   * 静态生命周期：捕获到错误时切换状态为已出错，触发重新渲染展示兜底 UI
+   * @returns 新的状态对象
+   */
   static getDerivedStateFromError(): ErrorBoundaryState {
     return { hasError: true };
   }
 
+  /**
+   * 捕获错误后的副作用钩子，用于日志记录
+   * @param error - 捕获到的错误对象
+   * @param info - React 组件栈信息
+   */
   componentDidCatch(error: Error, info: React.ErrorInfo): void {
     // 记录错误便于排查
     console.error('[ErrorBoundary] 捕获到渲染异常:', error, info);
   }
 
+  /**
+   * 点击"刷新页面"按钮的回调，触发整页重新加载
+   */
   handleReload = (): void => {
     window.location.reload();
   };
 
+  /**
+   * 渲染：已出错时展示错误兜底页，否则正常渲染子组件
+   * @returns React 节点
+   */
   render(): React.ReactNode {
     if (this.state.hasError) {
       return (

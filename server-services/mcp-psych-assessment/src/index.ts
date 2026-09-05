@@ -230,8 +230,9 @@ async function main(): Promise<void> {
   await server.connect(transport);
 }
 
-// 仅在直接运行时启动
-if (import.meta.url === `file://${process.argv[1]}` || process.argv[1]?.endsWith('dist/index.js')) {
+// 仅在直接运行时启动（兼容 Windows 反斜杠路径）
+const argv1Norm = process.argv[1]?.replace(/\\/g, '/');
+if (import.meta.url === `file://${process.argv[1]}` || argv1Norm?.endsWith('dist/index.js')) {
   void main();
 }
 

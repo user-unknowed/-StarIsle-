@@ -35,6 +35,13 @@ export function enforceRole(toolName: string, meta: CallerMeta): void {
   }
 }
 
+/** enforceOwn 接受的业务参数：只需这几个越权判定字段 */
+export interface ScopeArgs {
+  anonymousNo?: string;
+  anonymousNos?: string[];
+  teacherId?: string;
+}
+
 /**
  * enforceOwn: 越权 anonymousNo 场景。
  * 对 listTasks / reviewFeedback / submitFeedback 等，
@@ -43,7 +50,7 @@ export function enforceRole(toolName: string, meta: CallerMeta): void {
  *
  * args: 业务参数，可能含 anonymousNo / anonymousNos / teacherId
  */
-export function enforceOwn(toolName: string, meta: CallerMeta, args: Record<string, unknown>): void {
+export function enforceOwn(toolName: string, meta: CallerMeta, args: ScopeArgs): void {
   enforceRole(toolName, meta);
 
   const role = meta.callerRole;

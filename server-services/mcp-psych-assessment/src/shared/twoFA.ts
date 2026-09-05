@@ -5,7 +5,7 @@
 // pepper 先 SHA256 再比对。
 
 import CryptoJS from 'crypto-js';
-import { TOTP } from 'otplib';
+import { totp as TOTP } from 'otplib';
 
 export interface TwoFAError extends Error {
   code: 'password_locked_10min' | 'sms_rate_limited' | 'password_invalid' | 'sms_invalid' | 'totp_invalid';

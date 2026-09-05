@@ -98,7 +98,7 @@ export async function auditLogger(ctx: MiddlewareCtx, next: NextFn): Promise<Ret
     callerRole: ctx.meta.callerRole,
     requestId: ctx.requestId,
   });
-  let result: ReturnType<NextFn>;
+  let result: Awaited<ReturnType<NextFn>>;
   try {
     result = await next();
   } catch (err) {

@@ -1,0 +1,74 @@
+/* starlisle-bridge.css — 仅含栅格 gap/p/m、圆角三档、按钮三态；不含 layout 类 */
+
+/* ====== 1. spacing · gap-* ====== */
+.gap-0 { gap: 0px; }
+.gap-1 { gap: 4px; }
+.gap-2 { gap: 8px; }
+.gap-3 { gap: 12px; }
+.gap-4 { gap: 16px; }
+.gap-5 { gap: 20px; }
+.gap-6 { gap: 24px; }
+.gap-8 { gap: 32px; }
+
+/* ====== 2. spacing · p-* ====== */
+.p-0 { padding: 0px; }
+.p-1 { padding: 4px; }
+.p-2 { padding: 8px; }
+.p-3 { padding: 12px; }
+.p-4 { padding: 16px; }
+.p-5 { padding: 20px; }
+.p-6 { padding: 24px; }
+.p-8 { padding: 32px; }
+
+/* ====== 3. spacing · m-* ====== */
+.m-0 { margin: 0px; }
+.m-1 { margin: 4px; }
+.m-2 { margin: 8px; }
+.m-3 { margin: 12px; }
+.m-4 { margin: 16px; }
+.m-5 { margin: 20px; }
+.m-6 { margin: 24px; }
+.m-8 { margin: 32px; }
+
+/* ====== 4. 圆角三档 ====== */
+.rounded-sm { border-radius: 6px; }
+.rounded-md { border-radius: 12px; }
+.rounded-lg { border-radius: 20px; }
+
+/* ====== 5. 按钮三态 ====== */
+/* primary：森林绿背景 + 白字，hover 深 5% */
+.btn-primary {
+  background-color: #3C765C;
+  color: #FFFFFF;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.btn-primary:hover {
+  background-color: #366C54; /* 主色深 5% */
+}
+
+/* secondary：森林绿边框 1px + 透明背景 + 深森林绿字 */
+.btn-secondary {
+  background-color: transparent;
+  color: #264F3D;
+  border: 1px solid #3C765C;
+  border-radius: 12px;
+  padding: 12px 24px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+.btn-secondary:hover {
+  background-color: rgba(60, 118, 92, 0.06);
+}
+
+/* disabled：opacity 0.4 + 禁止 cursor */
+.btn-disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+}

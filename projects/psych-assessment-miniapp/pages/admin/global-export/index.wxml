@@ -1,0 +1,141 @@
+<!-- pages/admin/global-export/index.wxml · 全局科研/审计导出 · 默认不展示 PII -->
+<view class="page-content">
+
+  <!-- 演示数据诚实横幅（仅 Mock 模式显示） -->
+  <view wx:if="{{usingMockData}}" class="mock-banner">
+    <text>⚠️ 演示数据，未从云端拉取（接口暂未就绪）</text>
+  </view>
+
+  <view class="page-header">
+    <view class="title">全局科研 / 审计导出</view>
+    <view class="subtitle">admin 身份 · scope=all 全校 · 7 天 TTL · 匿名 CSV</view>
+  </view>
+
+  <view wx:if="{{errorMsg}}" class="error-banner"><text>{{errorMsg}}</text></view>
+
+  <!-- Tab 切换 -->
+  <view class="tab-bar card">
+    <view class="tab-btn {{currentTab === 'A' ? 'tab-active tab-a' : ''}}" bindtap="switchTabA">
+      <text class="tab-icon">🔬</text><text>科研数据导出</text>
+    </view>
+    <view class="tab-btn {{currentTab === 'B' ? 'tab-active tab-b' : ''}}" bindtap="switchTabB">
+      <text class="tab-icon">📸</text><text>快照审计 CSV</text>
+    </view>
+  </view>
+
+  <!-- ================= Tab A: 科研数据导出 ================= -->
+  <view wx:if="{{currentTab === 'A'}}" class="card tab-card">
+    <view class="card-title-row">
+      <view class="card-title">🔬 科研数据导出（全校）</view>
+      <view class="card-subtitle">taskOperate · researchExport · admin scope=all</view>
+    </view>
+
+    <view class="form-row">
+      <view class="form-label">开始日期</view>
+      <picker mode="date" value="{{tabA_startDate}}" bindchange="onStartDateChange">
+        <view class="form-picker">
+          <text>{{tabA_startDate}}</text><text class="arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+    <view class="form-row">
+      <view class="form-label">结束日期</view>
+      <picker mode="date" value="{{tabA_endDate}}" bindchange="onEndDateChange">
+        <view class="form-picker">
+          <text>{{tabA_endDate}}</text><text class="arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+    <view class="form-row">
+      <view class="form-label">导出格式</view>
+      <picker mode="selector" range="{{tabA_formatOptions}}" range-key="label" value="{{tabA_formatIndex}}" bindchange="onFormatChange">
+        <view class="form-picker">
+          <text>{{tabA_formatOptions[tabA_formatIndex].label}}</text><text class="arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <view class="notice-box notice-emerald">
+      <text>✅ 仅导出匿名化字段：studentAnonymousNo / warning_tags / submit_ts_bucket 等，</text>
+      <text>\n绝不包含 studentName / phone / idCardNo / 班级 等 PII。</text>
+    </view>
+
+    <button class="primary-btn primary-btn-a {{tabA_running ? 'btn-loading' : ''}}" bindtap="onRunExportResearch" disabled="{{tabA_running}}">
+      <text wx:if="{{tabA_running}}">生成中…请稍候</text>
+      <text wx:else>📤 生成全校科研数据导出（{{tabA_format}}）</text>
+    </button>
+  </view>
+
+  <!-- ================= Tab B: 状态快照审计 CSV ================= -->
+  <view wx:if="{{currentTab === 'B'}}" class="card tab-card">
+    <view class="card-title-row">
+      <view class="card-title">📸 状态快照审计 CSV（全校）</view>
+      <view class="card-subtitle">statusOperate · exportSnapshotsAuditCSV · admin</view>
+    </view>
+
+    <view class="notice-box notice-teal">
+      <text>📋 审计快照字段包括：status_tag / tag_time / studentAnonymousNo / teacherAnonymousNo /</text>
+      <text>\nreview_status（0 PII 明文，仅 anonymousNo 化可追溯）。</text>
+    </view>
+
+    <button class="primary-btn primary-btn-b {{tabB_running ? 'btn-loading' : ''}}" bindtap="onRunExportAudit" disabled="{{tabB_running}}">
+      <text wx:if="{{tabB_running}}">生成中…请稍候</text>
+      <text wx:else>🗂️ 生成全校快照审计 CSV</text>
+    </button>
+  </view>
+
+  <!-- ================= 历史导出列表 ================= -->
+  <view class="card history-card">
+    <view class="row-between section-head">
+      <view class="card-title">
+        历史导出
+        <text class="badge pill pill-gray">{{historyList.length}}</text>
+      </view>
+      <view class="card-subtitle">7 天 TTL · 过期自动禁用下载</view>
+    </view>
+
+    <view wx:if="{{loadingHistory}}" class="skeleton-list">
+      <view class="skeleton-row" wx:for="{{[0,1,2,3]}}" wx:key="*this"></view>
+    </view>
+
+    <view wx:elif="{{historyEmpty && historyList.length === 0}}" class="empty-state">
+      <view class="empty-icon">🗃️</view>
+      <view class="empty-title">暂无导出历史</view>
+      <view class="empty-desc">点击上方按钮生成你的第一份导出</view>
+    </view>
+
+    <view wx:else class="history-list">
+      <block wx:for="{{historyList}}" wx:key="_id">
+        <view class="history-item {{item.expired ? 'item-expired' : ''}}">
+          <view class="row-between hi-head">
+            <view class="hi-name">{{item.exportName}}</view>
+            <view wx:if="{{item.expired}}" class="pill pill-gray">已过期</view>
+            <view wx:else class="pill pill-emerald">剩余 {{item.remainDays}} 天</view>
+          </view>
+          <view class="hi-meta">
+            <view class="hi-meta-row"><text class="meta-label">范围：</text><text>{{item.scopeTypeLabel}}</text></view>
+            <view class="hi-meta-row"><text class="meta-label">类型：</text><text>{{item.exportTypeLabel}}</text></view>
+            <view class="hi-meta-row"><text class="meta-label">行数：</text><text>{{item.rowCount}}</text></view>
+            <view class="hi-meta-row"><text class="meta-label">创建：</text><text>{{item.createdAtLabel}}</text></view>
+            <view class="hi-meta-row"><text class="meta-label">过期：</text><text>{{item.ttlExpireAtLabel}}</text></view>
+          </view>
+          <view class="hi-action">
+            <button
+              class="download-btn {{item.expired ? 'btn-disabled' : ''}} {{item.downloading ? 'btn-loading' : ''}}"
+              size="mini"
+              disabled="{{item.expired || item.downloading}}"
+              bindtap="onDownloadExport"
+              data-expid="{{item.exportId}}"
+            >
+              <text wx:if="{{item.downloading}}">下载中…</text>
+              <text wx:elif="{{item.expired}}">已过期 · 不可下载</text>
+              <text wx:else>⬇️ 下载 / 打开</text>
+            </button>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>

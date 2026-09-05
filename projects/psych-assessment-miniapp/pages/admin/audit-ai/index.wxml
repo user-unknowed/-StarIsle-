@@ -1,0 +1,165 @@
+<!-- pages/admin/audit-ai/index.wxml -->
+<!-- Task15 AI 端质量监控 Dashboard -->
+<view class="page">
+
+  <!-- 诚实 Mock 提示 Banner -->
+  <view wx:if="{{usingMockData}}" class="mock-banner">🧪 演示数据：云端 aiAnalyze.getBudgetStatus/manualRerun/getQueueStats 接口未就绪或无权限</view>
+
+  <!-- Loading -->
+  <view wx:if="{{loading}}" class="loading-box">正在加载 AI 质量数据…</view>
+
+  <block wx:if="{{!loading}}">
+
+    <!-- ========== 1. 4 KPI 卡片 ========== -->
+    <view class="section-title">📊 核心 KPI</view>
+    <view class="kpi-grid">
+      <!-- row1 左：今日 AI 调用数 -->
+      <view class="kpi-card">
+        <view class="kpi-label">今日 AI 调用数</view>
+        <view class="kpi-value">{{kpiCallCount}}</view>
+        <view class="kpi-sub">次</view>
+      </view>
+      <!-- row1 右：平均时延 -->
+      <view class="kpi-card">
+        <view class="kpi-label">平均时延</view>
+        <view class="kpi-value">{{kpiAvgLatencyMs}}</view>
+        <view class="kpi-sub">ms</view>
+      </view>
+      <!-- row2 左：Token 日累计 -->
+      <view class="kpi-card">
+        <view class="kpi-label">Token 累计</view>
+        <view class="kpi-value">{{kpiTotalTokensUsed}}</view>
+        <view class="kpi-sub">近 24h</view>
+      </view>
+      <!-- row2 右：成功通过率（三档颜色边框） -->
+      <view class="kpi-card kpi-rate" style="border-left: 8rpx solid {{kpiSuccessRateColor}};">
+        <view class="kpi-label">成功通过率</view>
+        <view class="kpi-value" style="color: {{kpiSuccessRateColor}};">{{kpiSuccessRate}}%</view>
+        <view class="kpi-sub">绿 ≥95 / 黄 85-94 / 红 ＜85</view>
+      </view>
+    </view>
+
+    <!-- ========== 2. 近 7 日 AI 成功 vs 失败 条形图 ========== -->
+    <view class="section-title">📈 近 7 日 成功 vs 失败</view>
+    <view class="day-bar-wrap">
+      <!-- 虚线网格 3 条：0 / ½ / max -->
+      <view wx:for="{{gridLines}}" wx:key="label" class="grid-line" style="top: {{item.top}};">
+        <text class="grid-label">{{item.label}}</text>
+        <view class="grid-dash"></view>
+      </view>
+      <view class="day-bars">
+        <view wx:for="{{last7Days}}" wx:key="label" class="day-col">
+          <view class="day-bar-pair">
+            <!-- 成功绿柱：(success/maxCount)*180rpx -->
+            <view class="bar bar-success" style="height: {{item.successHeightRpx}};"></view>
+            <!-- 失败红柱：(failed/maxCount)*180rpx -->
+            <view class="bar bar-failed" style="height: {{item.failedHeightRpx}};"></view>
+          </view>
+          <view class="day-label">{{item.label}}</view>
+          <view class="day-counts">
+            <text class="s">{{item.success}}</text>/<text class="f">{{item.failed}}</text>
+          </view>
+        </view>
+      </view>
+      <view class="bar-legend">
+        <view class="lg"><view class="lg-dot lg-green"></view>成功</view>
+        <view class="lg"><view class="lg-dot lg-red"></view>失败</view>
+      </view>
+    </view>
+
+    <view class="row-split">
+      <!-- ========== 4. Token 预算环形仪表盘（左列） ========== -->
+      <view class="section-title">🔴 Token 预算（月）</view>
+      <!-- 预算告警文案条 -->
+      <view class="budget-alert" style="background: {{budgetAlert.bg}}; color: {{budgetAlert.color}};">{{budgetAlert.text}}</view>
+
+      <view class="gauge-box">
+        <!-- conic-gradient 环形：外层 gauge-outer + 内圈 gauge-inner 白色盖住中心 -->
+        <view class="gauge-outer" style="{{gaugeBgStyle}}">
+          <view class="gauge-inner">
+            <view class="gauge-pct">{{usedPctRounded}}%</view>
+            <view class="gauge-frac">{{totalTokensUsed}}/{{monthlyBudget}}</view>
+          </view>
+        </view>
+        <view class="gauge-legend">
+          <view class="g-legend"><view class="g-dot" style="background:#10B981;"></view>正常 ＜80%</view>
+          <view class="g-legend"><view class="g-dot" style="background:#F59E0B;"></view>警告 80-95%</view>
+          <view class="g-legend"><view class="g-dot" style="background:#EF4444;"></view>危险 ≥95%</view>
+        </view>
+        <view class="gauge-sub">剩余可用：{{tokenLeft}} tokens</view>
+      </view>
+
+      <!-- ========== 5. 失败原因分类饼图（右列） ========== -->
+      <view class="section-title">🥧 失败原因分类（近 100 条）</view>
+      <view class="pie-box">
+        <canvas type="2d" id="pieCanvas" class="pie-canvas"></canvas>
+        <view class="pie-legend">
+          <view wx:for="{{pieData}}" wx:key="key" class="pie-legend-item">
+            <view class="pie-cap" style="background: {{item.color}};"></view>
+            <text class="pie-name">{{item.key}}</text>
+            <text class="pie-count">{{item.count}}</text>
+          </view>
+        </view>
+        <view class="pie-total">失败合计：{{pieTotal}} 条</view>
+      </view>
+    </view>
+
+    <!-- ========== 3. 失败列表 TOP20 + 🔁 手动重跑 ========== -->
+    <view class="section-title">🚫 失败列表 TOP20（近 100 条）</view>
+    <view wx:if="{{failureEmpty}}" class="empty-card">无失败记录（近 100 条）</view>
+    <view wx:else class="list-card">
+      <view wx:for="{{failureList}}" wx:key="feedbackId" class="list-row">
+        <view class="list-main">
+          <view class="list-head">
+            <text class="fb-id">#{{item.feedbackIdShort}}</text>
+            <text wx:if="{{item.msSecHitLabel}}" class="ms-tag">⛔ {{item.msSecHitLabel}}</text>
+            <text class="retry-tag">重试 {{item.retryCount}}x</text>
+          </view>
+          <view class="list-reason">{{item.failureReasonShort}}</view>
+          <view class="list-time">{{item.createdAt}}</view>
+        </view>
+        <button
+          class="btn-rerun"
+          size="mini"
+          data-id="{{item.feedbackId}}"
+          bindtap="onManualRerun"
+          loading="{{rerunningId === item.feedbackId}}"
+          disabled="{{rerunningId !== '' && rerunningId !== item.feedbackId}}">🔁 手动重跑</button>
+      </view>
+    </view>
+
+    <!-- ========== 6. Teacher-AI 分 divergence TOP10 差异预警 ========== -->
+    <view class="section-title">⚡ Teacher-AI Divergence TOP10（显著差异 ≥25）</view>
+    <view wx:if="{{divergenceEmpty}}" class="empty-card">近 100 条反馈暂无显著差异（divergence＜25）</view>
+    <view wx:else class="list-card">
+      <view wx:for="{{divergenceList}}" wx:key="feedbackId" class="div-row">
+        <view class="div-head">
+          <text class="fb-id">#{{item.feedbackIdShort}}</text>
+          <text class="stu-no">{{item.studentAnonymousNo}}</text>
+          <text class="div-val" style="color: {{item.divergenceColor}};">Δ {{item.divergence}}</text>
+        </view>
+        <!-- 5 维差异条：ai / teacher 并列小条 -->
+        <view class="dim-wrap">
+          <view wx:for="{{item.dims}}" wx:for-item="dim" wx:key="key" class="dim-col">
+            <view class="dim-label">{{dim.key}}</view>
+            <view class="dim-bar-pair">
+              <view class="dim-bar dim-ai" style="height: {{dim.aiH}};"></view>
+              <view class="dim-bar dim-teacher" style="height: {{dim.tcH}};"></view>
+            </view>
+            <view class="dim-score">
+              <text class="ds-ai">{{dim.ai}}</text>
+              <text class="ds-tc">{{dim.tc}}</text>
+            </view>
+          </view>
+        </view>
+        <view class="div-legend-small">
+          <text class="lg-dot lg-blue"></text>AI
+          <text class="lg-dot lg-teacher"></text>Teacher
+        </view>
+      </view>
+    </view>
+
+  </block>
+
+  <view class="footer-space"></view>
+</view>

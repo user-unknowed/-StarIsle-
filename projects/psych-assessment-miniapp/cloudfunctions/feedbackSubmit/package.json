@@ -1,0 +1,16 @@
+{
+  "name": "feedbacksubmit",
+  "version": "1.0.0",
+  "description": "心理测评反馈提交云函数：学生提交反馈、教师读取/审核AI结论、三集合原子写入、管理员读待审批教师",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

@@ -1,0 +1,66 @@
+/* miniapp-app.wxss — 微信小程序全局样式 · psych-healing 疗愈色板 */
+/* 说明：色值直接展开，不使用 CSS 变量；兼容 wxss 行内注释 */
+
+/* ====== 页面根级：奶油米背景 + 墨水灰正文 ====== */
+page {
+  background: #FBF5EA;
+  color: #2C2C2C;
+  font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-size: 28rpx;
+  line-height: 1.6;
+}
+
+/* ====== 主按钮：森林绿背景 + 白字 + 12px 圆角 + 12px 24px padding ====== */
+.btn-primary {
+  background: #3C765C;
+  color: #FFFFFF;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 30rpx;
+  line-height: 1.4;
+  text-align: center;
+  display: inline-block;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+/* 主按钮禁用态：opacity 0.4 */
+.btn-primary[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ====== 次按钮：森林绿 1px 边框 + 深森林绿字 + 透明背景 ====== */
+.btn-secondary {
+  background: transparent;
+  border: 1px solid #3C765C;
+  color: #264F3D;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 30rpx;
+  line-height: 1.4;
+  text-align: center;
+  display: inline-block;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+
+.btn-secondary[disabled] {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ====== 卡片：12px 圆角 + 白背景 + 16px padding + 12px 0 外边距 + 淡阴影 ====== */
+.card {
+  border-radius: 12px;
+  background: #FFFFFF;
+  padding: 16px;
+  margin: 12px 0;
+  box-shadow: 0 2px 10px rgba(60, 118, 92, .06);
+  box-sizing: border-box;
+}
+
+/* ====== 文本工具色 ====== */
+.text-ink    { color: #2C2C2C; }   /* 墨水灰 · 正文本 */
+.text-warn   { color: #D48A3C; }   /* 琥珀橙 · 警示 */
+.text-danger { color: #B93232; }   /* 赤红 · 危机红 */

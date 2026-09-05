@@ -1,0 +1,10 @@
+{
+  "name": "login",
+  "version": "1.0.0",
+  "description": "login 云函数：8 动作 dispatch（jscode2session/teacherApprovalSubmit/queryApprovalStatus/resubmitTeacherApproval/adminVerifyPassword/adminSend2FACode/adminVerify2FACode/adminChangePassword）+ Admin 双因子 SMS stub（限频 5 次/小时）",
+  "main": "index.js",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "wx-server-sdk": "^4.0.2"
+  }
+}

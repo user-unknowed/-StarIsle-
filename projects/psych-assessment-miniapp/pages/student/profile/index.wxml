@@ -1,0 +1,66 @@
+<view class="page">
+
+  <!-- ===== 顶部匿名编号大胶囊 ===== -->
+  <view class="anon-card">
+    <view class="anon-subtitle">您的匿名编号</view>
+    <view class="anon-big-capsule">
+      <text class="anon-no">{{anonymousNo}}</text>
+    </view>
+    <view class="anon-tip">此编号用于科研匿名化追踪，教师/管理员无法识别您身份</view>
+  </view>
+
+  <!-- ===== 昵称区 ===== -->
+  <view class="card">
+    <view class="card-row">
+      <view class="card-label">昵称</view>
+      <block wx:if="{{!nicknameEditing}}">
+        <view class="nickname-value">{{nickname || '(未设置)'}}</view>
+        <view class="edit-btn" bindtap="onTapEditNickname">修改</view>
+      </block>
+      <block wx:else>
+        <input
+          class="nickname-input"
+          placeholder="请输入昵称"
+          value="{{nicknameInput}}"
+          bindinput="onNicknameInput"
+          maxlength="40"
+          focus="{{true}}"
+        />
+        <view class="edit-btn cancel" bindtap="onCancelEditNickname">取消</view>
+        <view class="edit-btn save" bindtap="onSaveNickname">保存</view>
+      </block>
+    </view>
+  </view>
+
+  <!-- ===== 班级列表 ===== -->
+  <view class="card">
+    <view class="card-title-row">
+      <view class="card-title">我的班级</view>
+      <view wx:if="{{classes.length}}" class="class-count">共 {{classes.length}} 个</view>
+    </view>
+
+    <view wx:if="{{classesLoading}}" class="mini-loading">加载中...</view>
+
+    <view wx:elif="{{!classes.length}}" class="classes-empty">
+      <view class="classes-empty-text">{{emptyClassHint || '尚未加入任何班级'}}</view>
+    </view>
+
+    <view wx:else class="class-list">
+      <view wx:for="{{classes}}" wx:key="_id" class="class-row">
+        <view class="class-info">
+          <view class="class-name">{{item.name || '未命名班级'}}</view>
+          <view wx:if="{{item.grade}}" class="class-grade">{{item.grade}}</view>
+        </view>
+        <view class="teacher-anon-capsule">{{item.teacherAnonymousNo}}</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 退出登录 ===== -->
+  <view class="logout-wrap">
+    <view class="logout-btn" bindtap="onTapLogout">退出登录</view>
+    <view class="logout-tip">退出后本地信息将被清除，需重新选择角色进入</view>
+  </view>
+
+  <view class="bottom-safe"></view>
+</view>

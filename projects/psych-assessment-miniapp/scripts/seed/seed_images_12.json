@@ -1,0 +1,206 @@
+[
+  {
+    "_id": "sys_ro1",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 I · 蝙蝠/蝴蝶轮廓",
+    "description": "经典对称墨迹 I，整体轮廓常被感知为蝙蝠、蝴蝶或带翼生物；中央纵向折痕对称。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro1.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_ro2",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 II · 双人与黑红图形",
+    "description": "黑红两色构成的对称墨迹 II，上部黑色常被感知为两人相对，下部红色块被视作动物或物品。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro2.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_ro3",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 III · 两人抬物图形",
+    "description": "灰黑与红色组合的对称墨迹 III，常被感知为两个对称人物共同抬举或操作某个物体。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro3.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_ro4",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 IV · 怪兽/巨影剪影",
+    "description": "大面积深灰黑色对称墨迹 IV，轮廓常见解读为巨兽、巨人或自上而下的阴影感。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro4.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_ro5",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 V · 高一致的蝙蝠/蝴蝶",
+    "description": "结构简洁的对称墨迹 V，高一致性反应多为蝙蝠或蝴蝶，整体较为\"容易\"组织。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro5.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_ro6",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 VI · 纹理与毛皮质感",
+    "description": "横向扩展的灰色对称墨迹 VI，中央纹理细密，常见解读涉及毛皮、地毯或动物背部。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro6.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_tat1",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 1 · 男孩凝视小提琴",
+    "description": "前景男孩站立凝望放在桌上的小提琴，人物关系与背景留白，可引出成就、家庭与抱负主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat1.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_tat2",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 2 · 乡村田野三人场景",
+    "description": "背景为乡村田野，前景一女站立、一男子伏身劳作、远处一人影，常见家庭与劳作主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat2.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_tat3",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 3BM · 倚门少年 + 倒地人影",
+    "description": "倚门站立的少年形象与地面上躺卧的人影，常见哀伤、悔恨、冲突或家庭变故主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat3.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_tat4",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 4 · 女子抓握男子手腕",
+    "description": "女子正面抓握男子手腕的紧张姿态，男子试图向画面外挣脱，常见亲密关系冲突主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat4.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_tat5",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 5 · 窗边女子侧影",
+    "description": "室内窗边侧身而立的女子，注视窗外光线，常见独处、期待、隐秘或思念主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat5.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  },
+  {
+    "_id": "sys_tat6",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 6BM · 老妇人与背后青年",
+    "description": "前景老妇侧面神色忧虑，其身后站着一位戴帽青年男子，常见母子/代际冲突主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat6.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788446773247,
+    "updateTime": 1788446773247
+  }
+]

@@ -1,0 +1,80 @@
+<!--pages/teacher/img-library/index.wxml-->
+<view class="page">
+  <!-- 顶部 Tab：3 个胶囊按钮 -->
+  <view class="tabs">
+    <view wx:for="{{tabs}}" wx:key="key"
+          class="pill {{activeTab === item.key ? 'pill-active' : ''}}"
+          bindtap="onSwitchTab" data-key="{{item.key}}">
+      {{item.label}}
+      <text class="count" wx:if="{{item.count >= 0}}">{{item.count}}</text>
+    </view>
+  </view>
+
+  <!-- 状态提示条 -->
+  <view class="state-bar" wx:if="{{loading}}">加载中…</view>
+  <view class="state-bar state-err" wx:if="{{errorMsg}}">{{errorMsg}}（{{errorCode}}）</view>
+
+  <!-- 主体 Grid：3 段 Tab 对应 3 段视图 -->
+  <block wx:if="{{activeTab === 'rorschach'}}">
+    <view class="grid-title">系统预置 · 罗夏墨迹卡 (6 张)</view>
+    <view class="img-grid">
+      <view wx:for="{{rorschachList}}" wx:key="_id"
+            class="img-card"
+            bindtap="onPreviewImage" data-id="{{item._id}}"
+            data-list="rorschach">
+        <image class="img-thumb" src="{{item.storageFileID}}" mode="aspectFit"
+               lazy-load="true"></image>
+        <view class="img-name">{{item.name}}</view>
+      </view>
+      <view wx:if="{{rorschachList.length === 0 && !loading}}" class="empty-card">
+        暂无罗夏卡片（请确认种子已导入）
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{activeTab === 'tat'}}">
+    <view class="grid-title">系统预置 · TAT 主题统觉卡 (6 张)</view>
+    <view class="img-grid">
+      <view wx:for="{{tatList}}" wx:key="_id"
+            class="img-card"
+            bindtap="onPreviewImage" data-id="{{item._id}}"
+            data-list="tat">
+        <image class="img-thumb" src="{{item.storageFileID}}" mode="aspectFit"
+               lazy-load="true"></image>
+        <view class="img-name">{{item.name}}</view>
+      </view>
+      <view wx:if="{{tatList.length === 0 && !loading}}" class="empty-card">
+        暂无 TAT 卡片（请确认种子已导入）
+      </view>
+    </view>
+  </block>
+
+  <block wx:if="{{activeTab === 'custom'}}">
+    <view class="grid-title">我的自定义图（长按卡片可删除）</view>
+    <view class="img-grid">
+      <view wx:for="{{customList}}" wx:key="_id"
+            class="img-card"
+            bindtap="onPreviewImage" data-id="{{item._id}}"
+            data-list="custom"
+            bindlongpress="onLongPressDelete" data-id="{{item._id}}">
+        <image class="img-thumb" src="{{item.storageFileID}}" mode="aspectFit"
+               lazy-load="true"></image>
+        <view class="img-name">{{item.name}}</view>
+      </view>
+      <view wx:if="{{customList.length === 0 && !loading}}" class="empty-card">
+        目前还没有自定义图\n
+        你可以：\n
+        · 去创建任务时从本地上传\n
+        · 或点击右下角 + 按钮直接上传
+      </view>
+    </view>
+
+    <!-- 悬浮 + 按钮 -->
+    <view class="float-bottom-btn" bindtap="onUploadCustom" hover-class="btn-hover">
+      <text class="plus">+</text>
+      <text class="btn-label">上传自定义图</text>
+    </view>
+  </block>
+
+  <safe-area-bottom></safe-area-bottom>
+</view>

@@ -1,0 +1,37 @@
+{
+  "data": [
+    {
+      "id": "image-001",
+      "title": "两张人脸自拍原图",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785758400000,
+      "devMetadata": {
+        "imageSrc": "assets/two-people-selfie.jpg"
+      },
+      "canvasData": {
+        "x": 0,
+        "y": 0
+      }
+    },
+    {
+      "id": "image-002",
+      "title": "人脸模糊处理结果",
+      "type": "image",
+      "version": 1,
+      "createdAt": 1785758400001,
+      "devMetadata": {
+        "imageSrc": "assets/two-people-selfie-faces-blurred.jpg"
+      },
+      "canvasData": {
+        "x": 944,
+        "y": 0
+      }
+    }
+  ],
+  "config": {
+    "autoLayout": true,
+    "deviceType": "freeSize",
+    "projectName": "人脸模糊处理"
+  }
+}

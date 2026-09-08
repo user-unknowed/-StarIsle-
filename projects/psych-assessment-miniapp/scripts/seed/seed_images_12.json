@@ -13,8 +13,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro1.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_ro2",
@@ -30,8 +30,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro2.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_ro3",
@@ -47,8 +47,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro3.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_ro4",
@@ -64,8 +64,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro4.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_ro5",
@@ -81,8 +81,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro5.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_ro6",
@@ -98,8 +98,76 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro6.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_ro7",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 VII · 双人头部或发饰",
+    "description": "浅灰对称墨迹 VII，上部常见两个相对的人头侧影或女性发饰，与人际、亲密主题关联。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro7.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_ro8",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 VIII · 多色动物与脊柱",
+    "description": "粉橙绿黄多色对称墨迹 VIII，两侧常被感知为动物（鼠/兔/熊），中央脊柱样结构。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro8.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_ro9",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 IX · 暖色人与妖魔轮廓",
+    "description": "橙黄绿粉混合的对称墨迹 IX，常见解读为双人、人形或妖魔轮廓，色彩反应较突出。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro9.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_ro10",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "rorschach",
+    "name": "罗夏卡片 X · 终末卡与多样感知",
+    "description": "色彩最丰富的对称墨迹 X，常见螃蟹、蜘蛛、兔等多样感知，反映整合与终末情绪。",
+    "tags": [
+      "inkblot",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/ro10.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_tat1",
@@ -115,8 +183,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat1.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_tat2",
@@ -132,8 +200,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat2.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_tat3",
@@ -149,8 +217,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat3.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_tat4",
@@ -166,8 +234,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat4.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_tat5",
@@ -183,8 +251,8 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat5.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   },
   {
     "_id": "sys_tat6",
@@ -200,7 +268,75 @@
     "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat6.jpg",
     "isBuiltIn": true,
     "allowUse": true,
-    "createTime": 1788446773247,
-    "updateTime": 1788446773247
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_tat7",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 7 · 课堂少年与同伴",
+    "description": "校园课堂或操场场景，少年与同伴互动，常引出同伴关系、校园适应、归属感主题，贴合青少年群体。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat7.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_tat8",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 8 · 灯下独坐少年",
+    "description": "夜晚台灯下独坐学习的少年，神情疲惫或凝思，常引出学业压力、孤独、自我期待主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat8.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_tat9",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 9 · 母子隔门对话",
+    "description": "少年立于卧室门外，与门内母亲隔门交谈的场景，常引出亲子沟通、边界、独立与依赖主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat9.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
+  },
+  {
+    "_id": "sys_tat10",
+    "uploaderId": "SYSTEM",
+    "uploaderAnonymousNo": "#SYSTEM",
+    "imageType": "tat",
+    "name": "TAT 卡片 10 · 手机屏幕前的少年",
+    "description": "少年独自凝视手机屏幕的近景，背景虚化，常引出网络成瘾、虚拟社交、孤独感与自我认同主题。",
+    "tags": [
+      "thematic-apperception",
+      "system"
+    ],
+    "storageFileID": "cloud://REPLACE_ENV.系统预置占位/tat10.jpg",
+    "isBuiltIn": true,
+    "allowUse": true,
+    "createTime": 1788898957633,
+    "updateTime": 1788898957633
   }
 ]

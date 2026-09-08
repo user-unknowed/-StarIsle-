@@ -3,8 +3,10 @@ pretrain_english.py - 英文 Word2Vec 预训练脚本
 
 所属模块：ai-engine/scripts
 功能简述：
-    基于清洗后的英文语料（combined_cleaned_text.txt）训练 Word2Vec 词向量，
+    基于增强英文心理健康语料（english_corpus_augmented.txt）训练 Word2Vec 词向量，
     并通过相似词检索与困惑度（perplexity）评估模型质量。
+    v2.1.1: 语料源切换为 build_english_corpus.py 生成的增强语料（学术文献 + PRD 青少年句式），
+    覆盖 mood/calm/happy/adolescent/crisis/suicide/Rorschach 等 PRD 核心词。
 依赖关系：
     - gensim：Word2Vec 模型与回调
 """
@@ -26,6 +28,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # 预训练超参数配置
+# v2.1.1: 语料源切换为 english_corpus_augmented.txt（学术 + PRD 青少年句式）；epochs 15→20
 PRETRAIN_CONFIG = {
     "vector_size": 300,
     "window": 5,
@@ -34,7 +37,7 @@ PRETRAIN_CONFIG = {
     "hs": 0,
     "negative": 5,
     "workers": 4,
-    "epochs": 15,
+    "epochs": 20,
     "seed": 42,
     "output_dir": "./models/pretrained_english"
 }
@@ -71,9 +74,18 @@ def load_and_tokenize_data():
     """加载并 tokenize 英文语料，返回句子（词列表）集合。"""
     logger.info("Loading and tokenizing English data...")
 
+    # v2.1.1: 优先使用增强语料（学术 + PRD 青少年句式）
+    augmented_path = DATA_DIR / "english_corpus_augmented.txt"
     combined_text_path = DATA_DIR / "combined_cleaned_text.txt"
 
-    with open(combined_text_path, 'r', encoding='utf-8') as f:
+    if augmented_path.exists():
+        corpus_path = augmented_path
+        logger.info(f"Using augmented English corpus: {corpus_path}")
+    else:
+        corpus_path = combined_text_path
+        logger.warning(f"english_corpus_augmented.txt not found, falling back to: {corpus_path}")
+
+    with open(corpus_path, 'r', encoding='utf-8') as f:
         text = f.read()
 
     sentences = []
@@ -138,10 +150,20 @@ def train_word2vec(sentences):
     return model, summary
 
 def evaluate_model(model):
-    """通过预设测试词检索相似词，评估模型语义表示质量。"""
+    """通过预设测试词检索相似词，评估模型语义表示质量。
+
+    v2.1.1: 扩展为 PRD 对齐的 16 个核心词，覆盖 mood/CBT/relaxation/risk/adolescent/projective。
+    """
     logger.info("Evaluating model...")
 
-    test_words = ["depression", "anxiety", "emotion", "mental", "health", "treatment", "symptoms", "trauma", "childhood", "stress"]
+    test_words = [
+        # PRD 核心情绪/心理健康词
+        "depression", "anxiety", "emotion", "mental", "health", "treatment", "symptoms", "trauma", "childhood", "stress",
+        # PRD 功能词
+        "mood", "adolescent", "student", "crisis", "suicide",
+        # PRD v2.1 投射测评
+        "rorschach", "projective",
+    ]
     results = {}
 
     for word in test_words:
@@ -151,7 +173,7 @@ def evaluate_model(model):
             logger.info(f"Similar to '{word}': {similar_words}")
         else:
             results[word] = []
-            logger.info(f"'{word}' not in vocabulary")
+            logger.warning(f"'{word}' not in vocabulary")
 
     with open(OUTPUT_DIR / "evaluation_results.json", "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)

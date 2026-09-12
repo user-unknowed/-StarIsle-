@@ -7,14 +7,19 @@
     "hs": 0,
     "negative": 5,
     "workers": 4,
-    "epochs": 15,
+    "epochs": 20,
     "seed": 42,
     "output_dir": "./models/pretrained_english"
   },
-  "vocab_size": 777,
-  "total_sentences": 2386,
-  "total_tokens": 21478,
+  "vocab_size": 2399,
+  "total_sentences": 3997,
+  "total_tokens": 225915,
   "training_losses": [
+    0.0,
+    0.0,
+    0.0,
+    0.0,
+    0.0,
     0.0,
     0.0,
     0.0,
@@ -31,6 +36,6 @@
     0.0,
     0.0
   ],
-  "completed_at": "2026-07-22T12:59:54.322422",
-  "perplexity": 1.0963846128328727
+  "completed_at": "2026-09-12T18:53:15.846291",
+  "perplexity": 1.3520618553901729
 }

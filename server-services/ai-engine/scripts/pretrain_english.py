@@ -3,7 +3,7 @@ pretrain_english.py - 英文 Word2Vec 预训练脚本
 
 所属模块：ai-engine/scripts
 功能简述：
-    基于清洗后的英文语料（combined_cleaned_text.txt）训练 Word2Vec 词向量，
+    基于学术文献 + PRD 对齐的英文心理健康语料（english_corpus_augmented.txt）训练 Word2Vec 词向量，
     并通过相似词检索与困惑度（perplexity）评估模型质量。
 依赖关系：
     - gensim：Word2Vec 模型与回调
@@ -34,7 +34,7 @@ PRETRAIN_CONFIG = {
     "hs": 0,
     "negative": 5,
     "workers": 4,
-    "epochs": 15,
+    "epochs": 20,
     "seed": 42,
     "output_dir": "./models/pretrained_english"
 }
@@ -71,7 +71,7 @@ def load_and_tokenize_data():
     """加载并 tokenize 英文语料，返回句子（词列表）集合。"""
     logger.info("Loading and tokenizing English data...")
 
-    combined_text_path = DATA_DIR / "combined_cleaned_text.txt"
+    combined_text_path = DATA_DIR / "english_corpus_augmented.txt"
 
     with open(combined_text_path, 'r', encoding='utf-8') as f:
         text = f.read()
@@ -141,7 +141,15 @@ def evaluate_model(model):
     """通过预设测试词检索相似词，评估模型语义表示质量。"""
     logger.info("Evaluating model...")
 
-    test_words = ["depression", "anxiety", "emotion", "mental", "health", "treatment", "symptoms", "trauma", "childhood", "stress"]
+    # PRD 核心词：情绪/心理健康 + 功能词 + 投射测评
+    test_words = [
+        # PRD 核心情绪/心理健康词
+        "depression", "anxiety", "emotion", "mental", "health", "treatment", "symptoms", "trauma", "childhood", "stress",
+        # PRD 功能词
+        "mood", "adolescent", "student", "crisis", "suicide",
+        # PRD v2.1 投射测评
+        "rorschach", "projective",
+    ]
     results = {}
 
     for word in test_words:

@@ -1,28 +1,28 @@
 /**
  * scripts/seed-images.js
  *
- * 生成 images 集合 12 条系统预置图片的元数据种子 JSON。
+ * 生成 images 集合 20 条系统预置图片的元数据种子 JSON。
  * 仅存元数据（占位 storageFileID），**不**下载任何真实图片二进制。
  *
- * 罗夏卡片 (Rorschach inkblot): 6 张 (sys_ro1 ~ sys_ro6)
- * TAT 卡片 (Thematic Apperception Test Murray): 6 张 (sys_tat1 ~ sys_tat6)
+ * 罗夏卡片 (Rorschach inkblot): 10 张 (sys_ro1 ~ sys_ro10)
+ * TAT 卡片 (Thematic Apperception Test Murray): 10 张 (sys_tat1 ~ sys_tat10)
  *
  * 用法：
  *   node scripts/seed-images.js
  * 输出：
- *   scripts/seed/seed_images_12.json
+ *   scripts/seed/seed_images_20.json
  */
 
 const fs = require('fs');
 const path = require('path');
 
 const OUT_DIR = path.resolve(__dirname, 'seed');
-const OUT_FILE = path.join(OUT_DIR, 'seed_images_12.json');
+const OUT_FILE = path.join(OUT_DIR, 'seed_images_20.json');
 if (!fs.existsSync(OUT_DIR)) fs.mkdirSync(OUT_DIR, { recursive: true });
 
 const now = Date.now();
 
-// 罗夏 6 张 — 通用中文描述（仅描述轮廓/常见首反应，不构成完整施测）
+// 罗夏 10 张 — 通用中文描述（仅描述轮廓/常见首反应，不构成完整施测）
 const rorschachList = [
   {
     n: 1,
@@ -53,10 +53,30 @@ const rorschachList = [
     n: 6,
     name: '罗夏卡片 VI · 纹理与毛皮质感',
     desc: '横向扩展的灰色对称墨迹 VI，中央纹理细密，常见解读涉及毛皮、地毯或动物背部。'
+  },
+  {
+    n: 7,
+    name: '罗夏卡片 VII · 双人头部或发饰',
+    desc: '浅灰对称墨迹 VII，上部常见两个相对的人头侧影或女性发饰，与人际、亲密主题关联。'
+  },
+  {
+    n: 8,
+    name: '罗夏卡片 VIII · 多色动物与脊柱',
+    desc: '粉橙绿黄多色对称墨迹 VIII，两侧常被感知为动物（鼠/兔/熊），中央脊柱样结构。'
+  },
+  {
+    n: 9,
+    name: '罗夏卡片 IX · 暖色人与妖魔轮廓',
+    desc: '橙黄绿粉混合的对称墨迹 IX，常见解读为双人、人形或妖魔轮廓，色彩反应较突出。'
+  },
+  {
+    n: 10,
+    name: '罗夏卡片 X · 终末卡与多样感知',
+    desc: '色彩最丰富的对称墨迹 X，常见螃蟹、蜘蛛、兔等多样感知，反映整合与终末情绪。'
   }
 ];
 
-// TAT 6 张 — 选取 Murray 经典卡片中常见的主题卡（仅场景描述，非版权扫描图）
+// TAT 10 张 — 选取 Murray 经典卡片 + 青少年主题卡（仅场景描述，非版权扫描图）
 const tatList = [
   {
     n: 1,
@@ -87,6 +107,26 @@ const tatList = [
     n: 6,
     name: 'TAT 卡片 6BM · 老妇人与背后青年',
     desc: '前景老妇侧面神色忧虑，其身后站着一位戴帽青年男子，常见母子/代际冲突主题。'
+  },
+  {
+    n: 7,
+    name: 'TAT 卡片 7 · 课堂少年与同伴',
+    desc: '校园课堂或操场场景，少年与同伴互动，常引出同伴关系、校园适应、归属感主题，贴合青少年群体。'
+  },
+  {
+    n: 8,
+    name: 'TAT 卡片 8 · 灯下独坐少年',
+    desc: '夜晚台灯下独坐学习的少年，神情疲惫或凝思，常引出学业压力、孤独、自我期待主题。'
+  },
+  {
+    n: 9,
+    name: 'TAT 卡片 9 · 母子隔门对话',
+    desc: '少年立于卧室门外，与门内母亲隔门交谈的场景，常引出亲子沟通、边界、独立与依赖主题。'
+  },
+  {
+    n: 10,
+    name: 'TAT 卡片 10 · 手机屏幕前的少年',
+    desc: '少年独自凝视手机屏幕的近景，背景虚化，常引出网络成瘾、虚拟社交、孤独感与自我认同主题。'
   }
 ];
 

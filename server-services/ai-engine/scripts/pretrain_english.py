@@ -29,7 +29,7 @@ logger = logging.getLogger(__name__)
 PRETRAIN_CONFIG = {
     "vector_size": 300,
     "window": 5,
-    "min_count": 5,
+    "min_count": 3,
     "sg": 1,
     "hs": 0,
     "negative": 5,

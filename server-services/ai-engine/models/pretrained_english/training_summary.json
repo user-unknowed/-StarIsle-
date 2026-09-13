@@ -2,7 +2,7 @@
   "config": {
     "vector_size": 300,
     "window": 5,
-    "min_count": 5,
+    "min_count": 3,
     "sg": 1,
     "hs": 0,
     "negative": 5,
@@ -11,9 +11,9 @@
     "seed": 42,
     "output_dir": "./models/pretrained_english"
   },
-  "vocab_size": 2399,
-  "total_sentences": 3997,
-  "total_tokens": 225915,
+  "vocab_size": 3294,
+  "total_sentences": 4033,
+  "total_tokens": 226426,
   "training_losses": [
     0.0,
     0.0,
@@ -36,6 +36,6 @@
     0.0,
     0.0
   ],
-  "completed_at": "2026-09-12T18:53:15.846291",
-  "perplexity": 1.3520618553901729
+  "completed_at": "2026-09-13T15:53:36.105227",
+  "perplexity": 1.3338061138336172
 }

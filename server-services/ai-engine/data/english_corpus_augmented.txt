@@ -4331,23 +4331,59 @@ Students record daily mood check-ins choosing from happy calm low anxious sad em
 The mood check-in feature lets adolescents track happy calm low anxious sad feelings over time.
 Mood check-in data helps teachers identify at-risk students through class mood visualization.
 The class status page displays mood trends and warning counts for student risk detection.
+Daily mood check-in lets students choose happy calm low anxious sad to record their mood.
+Teachers use mood check-in data to see student happy calm low anxious sad emotions daily.
+The mood check-in tracks happy calm low anxious sad helping teachers identify at-risk students.
+When students select low anxious sad in mood check-in the system alerts teachers to student risk.
+Mood check-in statistics show daily trends of student happy calm low anxious sad changes.
+Today mood is happy calm low anxious or sad mood check-in helps students record daily feelings.
 The AI chat uses cognitive behavioral therapy to help adolescents identify negative thought distortions.
 Star AI chat uses Socratic questioning to guide students to recognize irrational beliefs and relieve anxiety depression.
 When the AI chat detects negative emotions it guides adolescents through cognitive restructuring and emotion regulation.
 The chat feature provides AI psychological counseling with topic cards guiding students to express inner feelings.
+AI chat helps adolescents identify anxiety depression and negative cognitive distortions adjusting irrational beliefs.
+Cognitive behavioral therapy through AI chat guides students to recognize anxiety depression and emotion for cognitive restructuring.
+Star AI chat relieves adolescent anxiety depression through Socratic questioning adjusting irrational beliefs.
+AI chat detects negative emotion and anxiety depression guiding adolescent cognitive restructuring and emotion regulation.
+Chat topic cards help adolescents express anxiety depression and inner emotion feelings.
+Cognitive behavioral therapy AI chat helps adolescents identify irrational beliefs relieving anxiety depression symptoms.
 Relaxation tools include puzzle games meditation guides and music players to help adolescents relieve stress and anxiety.
 Meditation guides use mindfulness breathing exercises to help students relax and reduce anxiety and stress symptoms.
 Puzzle games help students shift attention and relieve academic stress and peer relationship difficulties.
 The music player provides soothing music to help adolescents regulate emotions and reduce anxiety symptoms.
+Relaxation tools puzzle games and meditation guides help adolescents relieve academic stress and anxiety emotion.
+Meditation guide mindfulness breathing exercises let students relax reducing anxiety stress and negative emotion.
+Music player soothing music helps adolescents relax relieving stress anxiety and emotional distress.
+Relaxation tools help adolescents relieve stress anxiety including puzzle meditation and music relaxation methods.
+Academic stress and peer relationship difficulties can be relieved by relaxation tools puzzle meditation and music for anxiety.
+Relaxation tools meditation guides music players puzzle games help adolescents reduce stress and anxiety symptoms.
 The risk detection system identifies crisis keywords like self-harm and suicide triggering emergency crisis intervention.
 When the AI chat detects self-harm or suicide risk keywords it immediately initiates safety guidance and crisis response.
 Crisis intervention includes emergency contact notification professional hotline referral and safety companionship.
 The teacher dashboard shows risk-warning students helping detect suicide and self-harm risks in a timely manner.
+Risk detection identifies self-harm suicide and crisis keywords triggering emergency crisis intervention and safety guidance.
+When AI chat detects suicide self-harm risk keywords it immediately starts crisis intervention and safety guidance.
+Crisis intervention includes emergency contact notification and hotline referral for suicide self-harm risk.
+Teacher dashboard shows risk warning students detecting suicide self-harm crisis in a timely manner.
+Risk detection system identifies suicide self-harm crisis through keywords triggering emergency intervention and safety.
+When suicide self-harm keywords are detected the risk detection system immediately starts crisis intervention and emergency response.
 Adolescent mental health focuses on emotional development and psychological adaptation of students aged 12 to 18.
 Core developmental tasks of adolescence include identity formation peer relationship deepening and autonomy development.
 Junior and senior high school students face academic stress peer relationship difficulties and identity crises requiring psychological support.
 School mental health teachers identify students needing attention through class-level emotion data.
+Adolescent mental health focuses on student depression anxiety emotion stress and identity development.
+Adolescence identity formation and peer relationship deepening students face academic stress and anxiety depression.
+Junior high students peer relationship difficulties and identity crisis need emotion support and stress relief.
+School mental health teachers identify adolescent depression anxiety and stress risk through class emotion data.
+Adolescent depression anxiety and academic stress need emotion support peer guidance and identity formation.
+Students aged 12 to 18 mental health focuses on depression anxiety emotion stress peer relationship and identity.
 The Rorschach inkblot test analyzes adolescent psychological projection and emotional states through symmetric inkblot images.
 The TAT thematic apperception test uses picture scenes to guide adolescents in telling stories revealing inner conflicts.
 Projective assessment combines Rorschach inkblots and TAT images to analyze adolescent unconscious content and emotional distress.
 The psych assessment mini-program provides Rorschach and TAT image libraries supporting teacher projective assessment analysis.
+Rorschach inkblot test and TAT thematic apperception test are two main projective assessment image analysis methods.
+Rorschach inkblot images analyze adolescent psychological projection TAT images reveal inner conflicts.
+Projective assessment uses Rorschach inkblots and TAT images analyzing adolescent unconscious content and emotion.
+Psych assessment mini-program Rorschach and TAT image libraries support projective assessment and unconscious analysis.
+Rorschach inkblot test uses symmetric inkblot images for projective analysis TAT uses picture scenes to reveal conflicts.
+Projective assessment Rorschach inkblot images and TAT thematic apperception images help analyze adolescent emotional distress.

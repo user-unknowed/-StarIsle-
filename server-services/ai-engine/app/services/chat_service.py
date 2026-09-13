@@ -33,6 +33,14 @@ class ChatService:
         self.system_prompt = Star宝SystemPrompt()
         self.encryption_util = EncryptionUtil()
         self.knowledge_service = KnowledgeService()
+<<<<<<< HEAD
+=======
+        self.skill_router = SkillRouter([])
+
+    def set_skills(self, skills: List[BaseSkill]) -> None:
+        """Orchestrator 完成 M2a 后注入新生成的 adapters"""
+        self.skill_router = SkillRouter(skills)
+>>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
     
     async def generate_response(
         self, 
@@ -67,7 +75,20 @@ class ChatService:
         # 将检索到的知识注入到System Prompt中（不修改模型参数，仅作为上下文参考）
         if knowledge_context:
             system_prompt += f"\n\n【专业知识参考】\n你可以参考以下心理咨询专业知识来帮助用户，但请以自己的方式表达，不要直接引用原文：\n{knowledge_context}\n\n注意：这些知识仅作为参考，你需要结合小星的身份和说话风格来组织回复。"
+<<<<<<< HEAD
         
+=======
+
+        # +++ Skill 三段注入 +++
+        skill_desc = self.skill_router.build_available_skills_description()
+        skill_predict = self.skill_router.build_prompt_context(message, context or [], user_profile or {})
+        skill_results = await self.skill_router.inject_for_chat(message, context or [], user_profile or {})
+        system_prompt += self.system_prompt.add_available_skills_context(
+            skill_desc, skill_predict, skill_results
+        )
+        # +++ End 三段注入
+
+>>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
         # 构建对话历史
         messages = [
             {"role": "system", "content": system_prompt}

@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+from typing import Any, Dict, List, Optional
+
+>>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
 class Star宝SystemPrompt:
     """
     小星（星宝）的System Prompt生成器
@@ -107,4 +112,16 @@ class Star宝SystemPrompt:
 📞 12355 青少年服务热线
 📞 400-161-9995 希望24热线
 要不要试试打个电话？小星陪着你。"
+<<<<<<< HEAD
 """
+=======
+"""
+
+    def add_available_skills_context(self, available_skills_description: str,
+                                      skill_predict: str,
+                                      skill_results: str) -> str:
+        parts = [s for s in (available_skills_description, skill_predict, skill_results)
+                 if s and s.strip()]
+        if not parts: return ""
+        return "\n\n" + "\n\n".join(p.rstrip() for p in parts)
+>>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))

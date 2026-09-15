@@ -410,7 +410,7 @@ server {
 
 | 变量名 | 说明 | 示例 |
 |--------|------|------|
-| `DATABASE_URL` | MySQL/PostgreSQL 连接串 | `jdbc:mysql://mysql:3306/starisle` |
+| `DATABASE_URL` | PostgreSQL 连接串 | `jdbc:postgresql://postgres:5432/starisle` |
 | `DATABASE_USERNAME` | 数据库用户名 | `starisle_user` |
 | `DATABASE_PASSWORD` | 数据库密码 | - |
 | `MONGODB_URL` | MongoDB 连接串 | `mongodb://admin:pass@mongodb:27017/starisle` |

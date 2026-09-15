@@ -1,22 +1,21 @@
 version: '3.8'
 
 services:
-  # MySQL数据库 (生产环境)
-  mysql:
-    image: mysql:8.0
-    container_name: starisle-mysql
+  # PostgreSQL数据库 (生产环境，统一数据库选型)
+  postgres:
+    image: postgres:14-alpine
+    container_name: starisle-postgres
     environment:
-      MYSQL_DATABASE: starisle
-      MYSQL_USER: starisle_user
-      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB:-starisle}
+      POSTGRES_USER: ${POSTGRES_USER:-starisle_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
-      - mysql_data:/var/lib/mysql
-      - ./mysql/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgresql/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "3306:3306"
+      - "5432:5432"
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "starisle_user", "-p${MYSQL_PASSWORD}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-starisle_user} -d ${POSTGRES_DB:-starisle}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -56,11 +55,11 @@ services:
   # Java后端服务
   backend-java:
     build:
-      context: ../backend-java
+      context: ../../backend-java
       dockerfile: Dockerfile
     container_name: starisle-backend-java
     depends_on:
-      mysql:
+      postgres:
         condition: service_healthy
       mongodb:
         condition: service_healthy
@@ -70,11 +69,12 @@ services:
       - "8080:8080"
     environment:
       ENVIRONMENT: production
-      DATABASE_URL: jdbc:mysql://mysql:3306/starisle?useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-      DATABASE_USERNAME: starisle_user
-      DATABASE_PASSWORD: ${MYSQL_PASSWORD}
-      DATABASE_DRIVER: com.mysql.cj.jdbc.Driver
-      HIBERNATE_DIALECT: org.hibernate.dialect.MySQLDialect
+      SPRING_PROFILES_ACTIVE: prod
+      DATABASE_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-starisle}
+      DATABASE_USERNAME: ${POSTGRES_USER:-starisle_user}
+      DATABASE_PASSWORD: ${POSTGRES_PASSWORD}
+      DATABASE_DRIVER: org.postgresql.Driver
+      HIBERNATE_DIALECT: org.hibernate.dialect.PostgreSQLDialect
       MONGODB_URL: mongodb://starisle_admin:${MONGO_PASSWORD}@mongodb:27017/starisle
       REDIS_HOST: redis
       REDIS_PORT: 6379
@@ -84,6 +84,7 @@ services:
       ENCRYPTION_MASTER_KEY: ${ENCRYPTION_MASTER_KEY}
       AI_SERVICE_URL: http://ai-engine:8000
       SHOW_SQL: false
+    restart: unless-stopped
 
   # AI对话引擎
   ai-engine:
@@ -101,8 +102,9 @@ services:
       MODEL_API_BASE: ${MODEL_API_BASE}
       REDIS_URL: redis://redis:6379
       MONGODB_URL: mongodb://starisle_admin:${MONGO_PASSWORD}@mongodb:27017/starisle
+    restart: unless-stopped
 
 volumes:
-  mysql_data:
+  postgres_data:
   mongodb_data:
   redis_data:

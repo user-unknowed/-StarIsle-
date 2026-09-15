@@ -1,0 +1,28 @@
+# 星屿后端生产环境配置 - 通过 spring.profiles.active=prod 激活
+# 安全生产配置：关闭调试功能、收紧日志、移除 Mongo/Redis 自动配置排除
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: false
+
+  h2:
+    console:
+      enabled: false
+
+  # 生产环境启用 MongoDB 与 Redis 自动配置
+  autoconfigure:
+    exclude: []
+
+  sql:
+    init:
+      mode: never
+
+logging:
+  level:
+    com.starisle: INFO
+    org.springframework: WARN
+    org.hibernate.SQL: WARN

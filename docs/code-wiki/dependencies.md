@@ -234,8 +234,7 @@ sequenceDiagram
 | spring-boot-starter-security | 3.2.5 | 安全框架 |
 | spring-boot-starter-data-mongodb | 3.2.5 | MongoDB 支持 |
 | jjwt-api/impl/jackson | 0.12.5 | JWT 实现 |
-| postgresql | - | PostgreSQL 驱动 |
-| mysql-connector-j | 8.4.0 | MySQL 驱动 |
+| postgresql | - | PostgreSQL 驱动（生产） |
 | h2 | - | H2 开发数据库 |
 | jedis | 5.1.0 | Redis 客户端 |
 | lombok | - | 代码简化 |

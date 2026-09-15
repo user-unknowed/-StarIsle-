@@ -1,0 +1,37 @@
+# =====================
+# 星屿 StarIsle 全局 Git 忽略
+# =====================
+
+# 环境变量与密钥（切勿提交真实凭据）
+.env
+.env.*
+!.env.template
+!.env.example
+*.pem
+*.key
+secrets.yaml
+secrets.json
+
+# IDE
+.idea/
+.vscode/
+*.iml
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# 日志
+*.log
+logs/
+*.pid
+
+# 构建产物
+**/target/
+**/dist/
+**/build/
+**/node_modules/
+*.class

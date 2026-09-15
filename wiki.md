@@ -676,14 +676,14 @@ mvn spring-boot:run
 # 无需额外配置，默认使用 H2
 ```
 
-**生产环境（MySQL）**：
+**生产环境（PostgreSQL）**：
 ```bash
-export DATABASE_URL=jdbc:mysql://localhost:3306/starisle
+export DATABASE_URL=jdbc:postgresql://localhost:5432/starisle
 export DATABASE_USERNAME=starisle_user
 export DATABASE_PASSWORD=your_password
-export DATABASE_DRIVER=com.mysql.cj.jdbc.Driver
-export DDL_AUTO=update
-export HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+export DATABASE_DRIVER=org.postgresql.Driver
+export DDL_AUTO=validate
+export HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
 export H2_CONSOLE_ENABLED=false
 
 mvn spring-boot:run
@@ -1427,11 +1427,11 @@ server {
 
 | 变量名 | 说明 | 示例 |
 |--------|------|------|
-| `DATABASE_URL` | 数据库连接串 | `jdbc:mysql://mysql:3306/starisle` |
+| `DATABASE_URL` | 数据库连接串 | `jdbc:postgresql://postgres:5432/starisle` |
 | `DATABASE_USERNAME` | 数据库用户名 | `starisle_user` |
 | `DATABASE_PASSWORD` | 数据库密码 | - |
-| `DATABASE_DRIVER` | 数据库驱动 | `com.mysql.cj.jdbc.Driver` |
-| `HIBERNATE_DIALECT` | Hibernate 方言 | `org.hibernate.dialect.MySQLDialect` |
+| `DATABASE_DRIVER` | 数据库驱动 | `org.postgresql.Driver` |
+| `HIBERNATE_DIALECT` | Hibernate 方言 | `org.hibernate.dialect.PostgreSQLDialect` |
 | `MONGODB_URL` | MongoDB 连接串 | `mongodb://admin:pass@mongodb:27017/starisle` |
 | `REDIS_HOST` | Redis 主机 | `redis` |
 | `REDIS_PORT` | Redis 端口 | `6379` |
@@ -1642,13 +1642,13 @@ flutter pub get
 编辑 `application.yml` 或通过环境变量：
 
 ```bash
-# 使用 MySQL
-export DATABASE_URL=jdbc:mysql://localhost:3306/starisle
+# 使用 PostgreSQL
+export DATABASE_URL=jdbc:postgresql://localhost:5432/starisle
 export DATABASE_USERNAME=starisle_user
 export DATABASE_PASSWORD=your_password
-export DATABASE_DRIVER=com.mysql.cj.jdbc.Driver
-export DDL_AUTO=update
-export HIBERNATE_DIALECT=org.hibernate.dialect.MySQLDialect
+export DATABASE_DRIVER=org.postgresql.Driver
+export DDL_AUTO=validate
+export HIBERNATE_DIALECT=org.hibernate.dialect.PostgreSQLDialect
 export H2_CONSOLE_ENABLED=false
 
 mvn spring-boot:run

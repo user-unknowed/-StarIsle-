@@ -103,20 +103,15 @@
             <version>5.1.0</version>
         </dependency>
 
-        <!-- H2 Database for development/testing without external PostgreSQL -->
+        <!-- H2 Database for local development/testing only -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>
 
-        <!-- MySQL Connector for production -->
-        <dependency>
-            <groupId>com.mysql</groupId>
-            <artifactId>mysql-connector-j</artifactId>
-            <version>8.4.0</version>
-            <scope>runtime</scope>
-        </dependency>
+        <!-- PostgreSQL Driver for production (统一数据库选型) -->
+        <!-- 版本由 Spring Boot BOM 管理 -->
     </dependencies>
     
     <build>

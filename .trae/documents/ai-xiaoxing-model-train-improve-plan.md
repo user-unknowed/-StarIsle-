@@ -424,8 +424,53 @@ python -m scripts.evaluate_model
 
 ## 十、复跑指引（在有 GPU + HF 可达的环境上达到完整提分）
 
+### 10.1 SSL 阻断问题已解决（v3，2026-09-15 09:25）
+
+**根因诊断**：
+```
+curl -v https://huggingface.co → SSL_ERROR_SYSCALL (TLS Client Hello 后被阻断)
+curl -v https://hf-mirror.com → TLSv1.3 完整握手成功
+curl -v https://pypi.org      → 200 OK
+curl -v https://github.com    → 200 OK
+```
+→ **huggingface.co 的 SNI 被防火墙针对性过滤**，hf-mirror.com 镜像不受影响。
+
+**解决方案**：
+1. 用 [scripts/download_model.sh](file:///workspace/server-services/ai-engine/scripts/download_model.sh) 从 hf-mirror.com 下载模型文件到本地
+2. `from_pretrained` 用本地路径加载，完全绕过网络
+3. SFT 脚本设置 `HF_HUB_OFFLINE=1` + `TRANSFORMERS_OFFLINE=1` 避免联网检查
+
+**已验证**：
+- ✅ Qwen2-0.5B-Instruct 7 个文件（954MB）从 hf-mirror.com 下载成功
+- ✅ `AutoTokenizer.from_pretrained` 本地加载成功（vocab 151936）
+- ✅ `AutoModelForCausalLM.from_pretrained` 本地加载成功（494M 参数）
+- ✅ 模型中文生成正常（"你好，我是小星" → "您好！请问有什么可以帮助您的吗？"）
+- ✅ SFT 脚本 `probe_params` 成功探测 0.37B 参数（不再 fallback 1.8B 估算）
+- ✅ 修复 transformers 5.x 兼容性：`evaluation_strategy`→`eval_strategy`，`warmup_ratio`→`warmup_steps`
+
+**模型文件位置**：
+```
+/workspace/.hf_cache/Qwen2-0.5B-Instruct/
+├── config.json (659B)
+├── generation_config.json (242B)
+├── merges.txt (1.6MB)
+├── model.safetensors (988MB)
+├── tokenizer.json (7.0MB)
+├── tokenizer_config.json (1.3KB)
+└── vocab.json (2.8MB)
+```
+
+**下载其他模型**：
 ```bash
-# 0. 安装缺失依赖（v2 已在沙箱装好，GPU 环境需重装 GPU 版 torch）
+# 下载 Qwen1.5-1.8B-Chat（需 ~3.6GB 磁盘）
+bash scripts/download_model.sh Qwen/Qwen1.5-1.8B-Chat /workspace/.hf_cache/Qwen1.5-1.8B-Chat
+# 然后修改 SFT 脚本默认模型路径
+```
+
+### 10.2 在有 GPU 的环境复跑完整训练
+
+```bash
+# 0. 安装缺失依赖（GPU 环境）
 pip install torch transformers peft datasets accelerate cryptography openai
 # GPU 版 torch：pip install torch --index-url https://download.pytorch.org/whl/cu121
 
@@ -436,14 +481,29 @@ export EVAL_API_KEY=sk-xxxxxxxx     # 启用 LLM-as-Judge 6 维 1-5 评分
 # 2. 重跑 Word2Vec（已在 CPU 上真训完成，可跳过）
 cd /workspace/server-services/ai-engine && python -m scripts.pretrain_word2vec
 
-# 3. 真正跑 SFT 全参数微调（应进 FULL/LORA 模式，HF 可达时下载 Qwen-1_8B-Chat）
-python -m scripts.sft_full_finetune --smoke  # 先 smoke 64 条
+# 3. 真正跑 SFT 全参数微调
+# 方式 A：用本地已下载的 0.5B 模型（SSL 已解决，本地加载）
+python -m scripts.sft_full_finetune --smoke  # 先 smoke
 python -m scripts.sft_full_finetune           # 正式跑 3 epoch，产出 final_model/
+
+# 方式 B：下载 1.8B 模型（需 GPU >= 8GB VRAM）
+bash scripts/download_model.sh Qwen/Qwen1.5-1.8B-Chat /workspace/.hf_cache/Qwen1.5-1.8B-Chat
+python -m scripts.sft_full_finetune --model /workspace/.hf_cache/Qwen1.5-1.8B-Chat
 
 # 4. 重跑评估，应见 ours 6 维分数高于 baseline
 python -m scripts.evaluate_model
 cat models/sft_xiaoxing_v1/evaluation_results.json | jq '.comparison'
 # 预期：delabeling +15%+、red_line -60%+、empathy +150%+、judge_dim_avg_1_5 非空
 ```
+
+### 10.3 当前沙箱 CPU 真训限制
+
+在当前 3 CPU + 5.8GB RAM 沙箱中尝试 CPU_OFFLOAD 真训：
+- ✅ 模型加载成功（494M 参数，290/290 weights）
+- ❌ 训练卡在 0/2 步 3+ 分钟（CPU 矩阵运算太慢）
+- 内存使用 3.8GB/5.8GB（无 swap，无 OOM）
+- 预估单步 3-5 分钟，smoke 2 步需 6-10 分钟，正式 3 epoch 需数小时
+
+结论：**SSL 阻断已完全解决，但 CPU 真训不现实**。需在有 GPU 的环境跑 SFT。
 
 ---

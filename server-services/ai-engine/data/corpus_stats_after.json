@@ -1,0 +1,38 @@
+{
+  "generated_at": "2026-09-15",
+  "phase": "C2_after_expansion",
+  "chinese_corpus": {
+    "file": "/workspace/server-services/ai-engine/data/chinese_corpus.txt",
+    "lines": 825,
+    "chars": 50590,
+    "external_sentences_loaded": 150,
+    "external_sources": [
+      "data/forked_repos/manual_fetch/scutcyr-SoulChat-README.md",
+      "data/forked_repos/manual_fetch/scutcyr-SoulChat2.0-README.md",
+      "data/forked_repos/manual_fetch/Kevin11Kaikai-AwesomeMentalHealth-README.md"
+    ]
+  },
+  "english_corpus": {
+    "file": "/workspace/server-services/ai-engine/data/english_corpus_augmented.txt",
+    "lines": 3457,
+    "chars": 276688
+  },
+  "sft_dataset": {
+    "file": "/workspace/server-services/ai-engine/data/sft_dataset_xiaoxing.jsonl",
+    "total_written": 2754,
+    "by_source": {
+      "design_doc": 800,
+      "knowledge_base": 1435,
+      "fork_skills": 750,
+      "extra_pad": 15
+    },
+    "n_per_template": 80,
+    "perturbation_prefixes": 10,
+    "perturbation_suffixes": 10
+  },
+  "delta_vs_baseline": {
+    "chinese_lines": "+199 (from 616 to 825 after external merge + dedup)",
+    "sft_total": "+972 (from 1782 to 2754)",
+    "external_repos_added": 3
+  }
+}

@@ -161,7 +161,7 @@ PRD_ALIGNED_EN = [
 
 
 def build_chinese_corpus():
-    """从 knowledge_base.json 提取中文内容 + PRD 对齐句式 → chinese_corpus.txt"""
+    """从 knowledge_base.json 提取中文内容 + PRD 对齐句式 + 外部语料 → chinese_corpus.txt"""
     kb_path = DATA_DIR / "knowledge_base.json"
     out_path = DATA_DIR / "chinese_corpus.txt"
 
@@ -192,6 +192,9 @@ def build_chinese_corpus():
     # 补充 PRD 对齐句式
     sentences.extend(PRD_ALIGNED_CN)
 
+    # 补充外部抓取语料（GitHub README / fork_manifest 指向的文件）
+    sentences.extend(_load_external_chinese())
+
     # 去重
     seen = set()
     unique = []
@@ -205,6 +208,47 @@ def build_chinese_corpus():
 
     print(f"[chinese_corpus] 写入 {len(unique)} 句到 {out_path}")
     return len(unique)
+
+
+def _load_external_chinese():
+    """从 data/forked_repos/manual_fetch/*.md 与 fork_manifest.local_path 提取中文行。"""
+    out = []
+    fetch_dir = DATA_DIR / "forked_repos" / "manual_fetch"
+    if not fetch_dir.exists():
+        return out
+    # 同时扫描 manual_fetch 下的 .md/.txt 与 fork_manifest 中显式列出的 local_path
+    candidates = list(fetch_dir.glob("*.md")) + list(fetch_dir.glob("*.txt"))
+    manifest = DATA_DIR / "forked_repos" / "fork_manifest.json"
+    if manifest.exists():
+        try:
+            forks = json.loads(manifest.read_text(encoding="utf-8")).get("forks", [])
+            for f in forks:
+                p = f.get("local_path")
+                if p:
+                    candidates.append(Path(p))
+        except Exception:
+            pass
+    seen_lines = set()
+    for path in candidates:
+        try:
+            text = Path(path).read_text(encoding="utf-8", errors="ignore")
+        except Exception:
+            continue
+        for line in text.split("\n"):
+            line = re.sub(r"[*#>`\-\[\]\(\)]", "", line).strip()
+            if len(line) < 10:
+                continue
+            # 仅保留中文为主的行（中文占比 > 30%）
+            cn = sum(1 for c in line if "\u4e00" <= c <= "\u9fff")
+            if cn > 0 and cn / max(1, len(line)) > 0.3:
+                # 按句号再切分，保留 ≥10 字短句
+                for sent in re.split(r"[。！？；\n]", line):
+                    sent = sent.strip()
+                    if len(sent) >= 10 and sent not in seen_lines:
+                        seen_lines.add(sent)
+                        out.append(sent)
+    print(f"[external] 外部语料补充 {len(out)} 句")
+    return out
 
 
 def build_english_corpus():

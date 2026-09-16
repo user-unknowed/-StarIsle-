@@ -1,8 +1,8 @@
 {
-  "design_doc": 500,
-  "knowledge_base": 1000,
-  "fork_skills": 500,
-  "extra_pad": 0,
-  "total_written": 1784,
+  "design_doc": 800,
+  "knowledge_base": 1435,
+  "fork_skills": 750,
+  "extra_pad": 15,
+  "total_written": 2754,
   "output_jsonl": "/workspace/server-services/ai-engine/data/sft_dataset_xiaoxing.jsonl"
 }

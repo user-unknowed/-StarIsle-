@@ -27,16 +27,16 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # 预训练超参数配置
-# v2.1.1: min_count 3→2 适配中文语料规模；epochs 10→15 提升小语料收敛；语料源切换为 chinese_corpus.txt
+# v2.1.2: 扩展语料后调整 - vector_size 300→200, min_count 2→1, epochs 15→30, negative 5→10
 PRETRAIN_CONFIG = {
-    "vector_size": 300,
+    "vector_size": 200,
     "window": 5,
-    "min_count": 2,
+    "min_count": 1,
     "sg": 1,
     "hs": 0,
-    "negative": 5,
+    "negative": 10,
     "workers": 4,
-    "epochs": 15,
+    "epochs": 30,
     "seed": 42,
     "output_dir": "./models/pretrained_word2vec"
 }
@@ -104,7 +104,8 @@ def train_word2vec(sentences):
         workers=PRETRAIN_CONFIG["workers"],
         epochs=PRETRAIN_CONFIG["epochs"],
         seed=PRETRAIN_CONFIG["seed"],
-        callbacks=[epoch_logger]
+        callbacks=[epoch_logger],
+        compute_loss=True
     )
 
     logger.info("Training completed!")

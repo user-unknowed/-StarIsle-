@@ -1,5 +1,19 @@
+<<<<<<< HEAD
 """M1: GitHub Fork 发现与获取
 流程：try GitHub MCP (get_me+search) → 失败 fallback → 浅克隆 → 写 manifest JSON"""
+=======
+"""
+discover_forks.py - GitHub Fork 仓库发现与获取脚本（M1 阶段）
+
+所属模块：ai-engine/scripts
+功能简述：
+    发现并获取心理学/AI 相关开源 Fork 仓库。流程：
+    尝试读取环境变量 FORKS_JSON（由 Orchestrator 通过 MCP 预取注入）→
+    失败时回退到内置演示列表 → 浅克隆仓库到本地 → 写入 manifest JSON。
+依赖关系：
+    - git：浅克隆工具（可选，缺失时跳过克隆）
+"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 from __future__ import annotations
 import json, logging, os, shutil, subprocess
 from datetime import datetime
@@ -9,14 +23,26 @@ from typing import Any, Dict, List, Tuple
 log = logging.getLogger("discover_forks")
 logging.basicConfig(level=logging.INFO, format="%(levelname)s %(message)s")
 
+<<<<<<< HEAD
 ROOT = Path(__file__).resolve().parent.parent
 FORKS_DIR = ROOT / "data" / "forked_repos"
 FORKS_DIR.mkdir(parents=True, exist_ok=True)
+=======
+# 项目根目录与 fork 仓库存放目录
+ROOT = Path(__file__).resolve().parent.parent
+FORKS_DIR = ROOT / "data" / "forked_repos"
+FORKS_DIR.mkdir(parents=True, exist_ok=True)
+# 默认 manifest 输出路径
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 DEFAULT_MANIFEST_PATH = FORKS_DIR / "fork_manifest.json"
 
 
 def build_fallback_fork_list() -> List[Dict[str, Any]]:
+<<<<<<< HEAD
     """无可用 fork 时的演示数据（3个心理/AI热门开源项目）"""
+=======
+    """无可用 fork 时的演示数据（3 个心理/AI 热门开源项目），并补充本地路径等集成字段。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     samples = [
         {"repo_id":"thu-coai/Emotional-Support-Conversation",
          "repo_url":"https://github.com/thu-coai/Emotional-Support-Conversation",
@@ -40,6 +66,10 @@ def build_fallback_fork_list() -> List[Dict[str, Any]]:
 
 
 def validate_manifest(data: Dict[str, Any]) -> List[str]:
+<<<<<<< HEAD
+=======
+    """校验 manifest 数据结构完整性，返回错误信息列表（空列表表示通过）。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     errs: List[str] = []
     if not isinstance(data, dict): return ["root not dict"]
     for k in ("discovered_at","total_forks","forks","failed_repos"):
@@ -56,6 +86,10 @@ def validate_manifest(data: Dict[str, Any]) -> List[str]:
 def write_manifest(forks: List[Dict[str, Any]],
                    failed_repos: List[Dict[str, str]] | None = None,
                    manifest_path: Path | None = None) -> str:
+<<<<<<< HEAD
+=======
+    """将 fork 列表与失败记录写入 manifest JSON 文件，并返回文件路径。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     path = Path(manifest_path or DEFAULT_MANIFEST_PATH)
     payload = {"discovered_at": datetime.now().isoformat(timespec="seconds"),
                "total_forks": len(forks), "forks": forks,
@@ -68,6 +102,10 @@ def write_manifest(forks: List[Dict[str, Any]],
 
 
 def _try_clone(url: str, dest: Path, timeout: int = 180) -> None:
+<<<<<<< HEAD
+=======
+    """使用 git 浅克隆仓库到指定目录；git 不可用时跳过并告警。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     if dest.exists(): shutil.rmtree(dest)
     if not shutil.which("git"):
         log.warning("git not found, skip clone for %s", url); return
@@ -94,6 +132,10 @@ def discover_forks_via_mcp(max_forks: int = 5
 
 
 def clone_forks_local(forks: List[Dict[str, Any]]) -> List[Dict[str, str]]:
+<<<<<<< HEAD
+=======
+    """逐个浅克隆 fork 仓库到本地，返回克隆失败的仓库与原因列表。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     failed: List[Dict[str, str]] = []
     for f in forks:
         try: _try_clone(f["repo_url"], Path(f["local_path"]))
@@ -104,6 +146,10 @@ def clone_forks_local(forks: List[Dict[str, Any]]) -> List[Dict[str, str]]:
 
 
 def run(max_forks: int = 5, manifest_path: Path | None = None) -> str:
+<<<<<<< HEAD
+=======
+    """完整执行发现→克隆→写 manifest 流程，返回 manifest 文件路径。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     forks, failed_mcp = discover_forks_via_mcp(max_forks)
     if not forks:
         log.warning("no forks available, using fallback demo list")

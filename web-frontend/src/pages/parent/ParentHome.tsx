@@ -1,3 +1,8 @@
+/**
+ * @file ParentHome.tsx
+ * @description 家长端首页，展示孩子情绪状态、趋势图、风险等级及紧急告警/AI 顾问/孩子管理入口
+ * @module web-frontend/pages/parent
+ */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParentStore } from '../../store/parentStore';
@@ -14,6 +19,7 @@ import {
   Users,
 } from 'lucide-react';
 
+// 心情等级到 emoji 的映射表（1~5 级，越高级越正向）
 const moodEmojis: Record<number, string> = {
   1: '😔',
   2: '😞',
@@ -22,9 +28,19 @@ const moodEmojis: Record<number, string> = {
   5: '😄',
 };
 
+/**
+ * 根据心情等级返回对应 emoji
+ * @param level - 心情等级（1~5），未打卡时为 undefined
+ * @returns 对应 emoji，未打卡返回问号
+ */
 const getMoodEmoji = (level: number | undefined) =>
   level ? moodEmojis[level] || '😐' : '❓';
 
+/**
+ * 根据风险等级返回对应 Tailwind 类名（背景/文字/边框配色）
+ * @param level - 风险等级：red/orange/yellow/green
+ * @returns Tailwind 类名字符串
+ */
 const getRiskColor = (level: string | undefined) => {
   switch (level) {
     case 'red':
@@ -38,6 +54,11 @@ const getRiskColor = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据风险等级返回中文标签
+ * @param level - 风险等级
+ * @returns 高风险/中风险/低风险/正常
+ */
 const getRiskLabel = (level: string | undefined) => {
   switch (level) {
     case 'red':
@@ -51,10 +72,17 @@ const getRiskLabel = (level: string | undefined) => {
   }
 };
 
+// 趋势图时间范围类型：7天/30天/90天
 type RangeKey = 7 | 30 | 90;
 
+/**
+ * 家长端首页组件
+ * @returns JSX 元素
+ */
 export default function ParentHome() {
+  // 路由跳转
   const navigate = useNavigate();
+  // 从家长 store 取出孩子列表、当前孩子、心情记录、告警、加载/错误状态及各 action
   const {
     children,
     selectedChildId,
@@ -69,25 +97,37 @@ export default function ParentHome() {
     fetchAlerts,
   } = useParentStore();
 
+  // 趋势图当前查看的时间范围
   const [range, setRange] = useState<RangeKey>(7);
 
+  // 进入页面即拉取孩子列表与紧急告警
   useEffect(() => {
     fetchChildren();
     fetchAlerts();
   }, [fetchChildren, fetchAlerts]);
 
+  // 当选中的孩子或时间范围变化时，拉取对应心情记录
   useEffect(() => {
     if (selectedChildId) {
       fetchChildMood(range);
     }
   }, [selectedChildId, range, fetchChildMood]);
 
+  // 当前选中的孩子对象
   const selectedChild = children.find((c) => c.bindingId === selectedChildId);
+  // 最近一次心情等级
   const currentMood = childMood[childMood.length - 1]?.moodLevel;
+  // 连续打卡天数（即心情记录条数）
   const continuousDays = childMood.length;
+  // 第一条未确认告警作为活跃告警
   const activeAlert = emergencyAlerts.find((a) => !a.confirmed);
+  // 风险等级：取活跃告警等级，无则默认正常
   const riskLevel = activeAlert?.level || 'green';
 
+  /**
+   * 选择某个孩子作为当前查看对象
+   * @param bindingId - 绑定关系 ID
+   */
   const handleSelectChild = (bindingId: string) => {
     selectChild(bindingId);
   };
@@ -213,13 +253,16 @@ export default function ParentHome() {
           {isLoading ? (
             <div className="h-40 flex items-center justify-center text-gray-400">加载中...</div>
           ) : childMood.length === 0 ? (
+            // 无心情记录的空状态
             <div className="h-40 flex flex-col items-center justify-center text-gray-400">
               <CheckCircle className="w-10 h-10 mb-2 text-gray-300" />
               <p>暂无心情记录</p>
             </div>
           ) : (
+            // 柱状图：按心情等级映射高度
             <div className="flex items-end justify-between h-40 gap-2">
               {childMood.slice(-Math.min(range, childMood.length)).map((record) => {
+                // 柱高 = 心情等级 / 5 * 100%
                 const height = (record.moodLevel / 5) * 100;
                 return (
                   <div key={record.id} className="flex-1 flex flex-col items-center min-w-0">

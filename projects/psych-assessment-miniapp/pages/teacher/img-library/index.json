@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "图片库",
+  "navigationBarBackgroundColor": "#6366F1",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F3F4F6",
+  "usingComponents": {
+    "image-preview-grid": "components/image-preview-grid/image-preview-grid",
+    "safe-area-bottom": "components/safe-area-bottom/safe-area-bottom"
+  }
+}

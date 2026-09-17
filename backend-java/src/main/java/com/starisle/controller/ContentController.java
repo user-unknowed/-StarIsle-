@@ -9,15 +9,27 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 内容资源接口控制器
+ * 提供冥想列表、冥想详情与呼吸练习等心理健康辅助内容查询接口（公开访问）。
+ */
 @RestController
 @RequestMapping("/api/v1/content")
 @RequiredArgsConstructor
 @Validated
 public class ContentController {
 
+    /**
+     * 获取冥想列表（公开接口）
+     *
+     * @HTTP GET /api/v1/content/meditations
+     * @param category 内容分类，默认 all
+     * @return 冥想内容列表
+     */
     @GetMapping("/meditations")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMeditationList(
             @RequestParam(defaultValue = "all") String category) {
+        // 返回内置的冥想内容列表
         return ResponseEntity.ok(ApiResponse.success(Map.of(
             "category", category,
             "meditations", List.of(
@@ -49,8 +61,16 @@ public class ContentController {
         )));
     }
 
+    /**
+     * 获取冥想详情（公开接口）
+     *
+     * @HTTP GET /api/v1/content/meditation/{id}
+     * @param id 冥想 ID
+     * @return 冥想详情
+     */
     @GetMapping("/meditation/{id}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMeditationDetail(@PathVariable String id) {
+        // 返回内置的冥想详情
         return ResponseEntity.ok(ApiResponse.success(Map.of(
             "id", id,
             "title", "考前放松",
@@ -61,8 +81,16 @@ public class ContentController {
         )));
     }
 
+    /**
+     * 获取呼吸练习详情（公开接口）
+     *
+     * @HTTP GET /api/v1/content/breathing/{type}
+     * @param type 呼吸练习类型
+     * @return 呼吸练习步骤与推荐时长
+     */
     @GetMapping("/breathing/{type}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getBreathingExercise(@PathVariable String type) {
+        // 返回内置的呼吸练习步骤
         return ResponseEntity.ok(ApiResponse.success(Map.of(
             "type", type,
             "steps", List.of(

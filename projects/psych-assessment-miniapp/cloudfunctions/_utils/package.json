@@ -1,0 +1,9 @@
+{
+  "name": "_utils",
+  "version": "1.0.0",
+  "description": "Internal utility cloud function: scheduled cleanup scripts (expired drafts, 30-day TTL entry points).",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "latest"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "completed_at": "2026-08-29T09:25:27",
+  "manifest": "/workspace/server-services/ai-engine/data/forked_repos/fork_manifest.json",
+  "per_repo": {
+    "thu-coai/Emotional-Support-Conversation": {
+      "repo_id": "thu-coai/Emotional-Support-Conversation",
+      "corpus_stats": {
+        "repo_id": "thu-coai/Emotional-Support-Conversation",
+        "total_segments": 3570,
+        "language_zh_pass": 0,
+        "language_en_pass": 3556,
+        "language_dropped": 3,
+        "short_dropped": 11,
+        "chars_total": 3745188
+      },
+      "knowledge_new": 7,
+      "kb_added": 0,
+      "skill": "/workspace/server-services/ai-engine/app/skills/emotional_support_conversation_adapter.py"
+    },
+    "songlab-cal/bert-mental-health": {
+      "repo_id": "songlab-cal/bert-mental-health",
+      "corpus_stats": {
+        "repo_id": "songlab-cal/bert-mental-health",
+        "total_segments": 0,
+        "language_zh_pass": 0,
+        "language_en_pass": 0,
+        "language_dropped": 0,
+        "short_dropped": 0,
+        "chars_total": 0
+      },
+      "knowledge_new": 1,
+      "kb_added": 0,
+      "skill": "/workspace/server-services/ai-engine/app/skills/bert_mental_health_adapter.py"
+    },
+    "Utkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health": {
+      "repo_id": "Utkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health",
+      "corpus_stats": {
+        "repo_id": "Utkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health",
+        "total_segments": 0,
+        "language_zh_pass": 0,
+        "language_en_pass": 0,
+        "language_dropped": 0,
+        "short_dropped": 0,
+        "chars_total": 0
+      },
+      "knowledge_new": 1,
+      "kb_added": 0,
+      "skill": "/workspace/server-services/ai-engine/app/skills/sentiment_analysis_mental_health_adapter.py"
+    }
+  },
+  "corpus": {
+    "repo_id": "thu-coai/Emotional-Support-Conversationsonglab-cal/bert-mental-healthUtkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health",
+    "total_segments": 3570,
+    "language_zh_pass": 0,
+    "language_en_pass": 3556,
+    "language_dropped": 3,
+    "short_dropped": 11,
+    "chars_total": 3745188
+  },
+  "knowledge": {
+    "added": 0,
+    "dedup_skipped": 9,
+    "file": "/workspace/server-services/ai-engine/data/knowledge_base.json"
+  },
+  "skills_generated": [
+    "/workspace/server-services/ai-engine/app/skills/emotional_support_conversation_adapter.py",
+    "/workspace/server-services/ai-engine/app/skills/bert_mental_health_adapter.py",
+    "/workspace/server-services/ai-engine/app/skills/sentiment_analysis_mental_health_adapter.py"
+  ]
+}

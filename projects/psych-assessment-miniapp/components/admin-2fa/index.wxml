@@ -1,0 +1,15 @@
+<view class="a2fa-mask" wx:if="{{visible}}" bindtap="onClose">
+  <view class="a2fa-sheet" catchtap="">
+    <view class="a2fa-title">{{title}}</view>
+    <view class="a2fa-desc">高敏感操作需双因子验证：密码 + 6位短信验证码</view>
+    <input class="a2fa-input" password="true" placeholder="请输入管理员密码" bindinput="onInputPassword" />
+    <view class="a2fa-row">
+      <input class="a2fa-input a2fa-flex" placeholder="6位短信验证码" bindinput="onInputCode" maxlength="6" />
+      <button class="btn-ghost a2fa-btn" size="mini" bindtap="onSendCode">发送</button>
+    </view>
+    <view class="a2fa-actions">
+      <button class="btn-ghost" bindtap="onClose">取消</button>
+      <button class="btn-primary" bindtap="onConfirm">确认</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,65 @@
+/* 主题变量（模拟CSS var，WXSS原生不支持var，用注释+约定） */
+/* --color-primary: #6366F1 */
+/* --color-success: #10B981 */
+/* --color-warning: #F59E0B */
+/* --color-danger:  #EF4444 */
+/* --color-purple:  #A855F7（审核 adjusted 用） */
+/* --color-surface: #FFFFFF */
+/* --color-bg:      #F3F4F6 */
+/* --color-text-primary:   #0F172A */
+/* --color-text-secondary: #64748B */
+/* --font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif */
+
+page {
+  background: #F3F4F6;
+  color: #0F172A;
+  font-size: 28rpx;
+  font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+  line-height: 1.55;
+}
+
+.page-header { padding: 24rpx 32rpx 16rpx; padding-top: calc(24rpx + env(safe-area-inset-top)); }
+.tab-bar { padding-bottom: calc(24rpx + env(safe-area-inset-bottom)); }
+.float-bottom-btn { position: fixed; left: 32rpx; right: 32rpx; bottom: calc(32rpx + env(safe-area-inset-bottom)); z-index: 99; }
+.page-content { padding-left: env(safe-area-inset-left); padding-right: env(safe-area-inset-right); }
+
+/* 鸿蒙手势条叠加兼容 */
+.tab-bar.harmony { padding-bottom: calc(24rpx + max(env(safe-area-inset-bottom), 36rpx)); }
+.float-bottom-btn.harmony { bottom: calc(32rpx + max(env(safe-area-inset-bottom), 36rpx)); }
+
+/* 通用卡片 */
+.card { background: #FFFFFF; border-radius: 24rpx; padding: 24rpx; box-shadow: 0 2rpx 8rpx rgba(15,23,42,0.04); margin: 16rpx 0; }
+.card-title { font-size: 30rpx; font-weight: 600; color: #0F172A; margin-bottom: 12rpx; }
+.card-subtitle { font-size: 24rpx; color: #64748B; }
+
+/* 通用按钮 */
+.btn-primary { background: #6366F1; color: white; border-radius: 16rpx; padding: 20rpx 0; text-align: center; font-weight: 500; }
+.btn-primary[disabled], .btn-primary.disabled { background: #C7D2FE; color: white; }
+.btn-ghost { background: white; color: #6366F1; border: 2rpx solid #6366F1; border-radius: 16rpx; padding: 18rpx 0; text-align: center; }
+.btn-danger { background: #EF4444; color: white; border-radius: 16rpx; padding: 20rpx 0; text-align: center; }
+
+/* 徽章/胶囊 */
+.pill { display: inline-block; padding: 4rpx 16rpx; border-radius: 999rpx; font-size: 22rpx; font-weight: 500; }
+.pill-green  { background: #D1FAE5; color: #065F46; }
+.pill-yellow { background: #FEF3C7; color: #92400E; }
+.pill-red    { background: #FEE2E2; color: #991B1B; }
+.pill-purple { background: #EDE9FE; color: #5B21B6; }
+.pill-gray    { background: #F3F4F6; color: #374151; }
+.pill-indigo  { background: #E0E7FF; color: #3730A3; }
+
+/* 审核状态胶囊：语义化别名 */
+.pill-warning         { background: #FEE2E2; color: #991B1B; }
+.pill-pending-review  { background: #FEF3C7; color: #92400E; }
+.pill-confirmed       { background: #D1FAE5; color: #065F46; }
+.pill-adjusted        { background: #EDE9FE; color: #5B21B6; }
+.pill-ai-failed       { background: #F3F4F6; color: #374151; }
+
+/* 分隔 */
+.divider { height: 2rpx; background: #E5E7EB; margin: 24rpx 0; }
+
+/* 辅助 */
+.row { display: flex; flex-direction: row; align-items: center; }
+.row-between { display: flex; justify-content: space-between; align-items: center; }
+.col { display: flex; flex-direction: column; }
+.text-ellipsis { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.mt-8 { margin-top: 16rpx; } .mt-16 { margin-top: 32rpx; } .mt-24 { margin-top: 48rpx; }

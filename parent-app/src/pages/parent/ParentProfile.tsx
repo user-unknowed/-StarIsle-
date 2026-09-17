@@ -1,27 +1,47 @@
+/**
+ * @file ParentProfile.tsx
+ * @description 家长端「我的」页面，展示家长资料编辑、孩子绑定管理、知识库、
+ *              通知设置、隐私与安全、深色模式切换与退出登录，并支持文章详情弹窗。
+ * @module parent-app/pages/parent/ParentProfile
+ */
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useParentStore } from '../../store/parentStore';
 import { Heart, MessageCircle, User, Settings, BookOpen, Shield, Bell, LogOut, ChevronRight, Edit3, QrCode, X, Check, Sun, Moon } from 'lucide-react';
 
+/**
+ * 家长个人中心页面组件。
+ *
+ * 从 [useAuthStore] 获取用户与登出方法，从 [useParentStore] 获取孩子列表、知识文章、
+ * 通知设置及其更新方法，渲染资料编辑、孩子管理、知识库、通知与隐私设置等模块。
+ *
+ * @returns 个人中心页 JSX。
+ */
 export default function ParentProfile() {
   const navigate = useNavigate();
   const { user, logout } = useAuthStore();
-  const { 
-    children, 
-    knowledgeArticles, 
-    notificationSettings, 
-    fetchChildren, 
-    fetchKnowledgeArticles, 
+  const {
+    children,
+    knowledgeArticles,
+    notificationSettings,
+    fetchChildren,
+    fetchKnowledgeArticles,
     fetchNotificationSettings,
-    updateNotificationSettings 
+    updateNotificationSettings
   } = useParentStore();
-  
+
+  // 是否处于昵称编辑态
   const [isEditing, setIsEditing] = useState(false);
+  // 编辑中的昵称
   const [editNickname, setEditNickname] = useState(user?.nickname || '');
+  // 当前选中的文章 ID（用于弹窗展示）
   const [selectedArticle, setSelectedArticle] = useState<string | null>(null);
+  // 深色模式开关（本地态）
   const [isDarkMode, setIsDarkMode] = useState(false);
 
+  // 初始化拉取孩子、知识文章与通知设置
   useEffect(() => {
     if (user?.id) {
       fetchChildren(user.id);
@@ -30,10 +50,16 @@ export default function ParentProfile() {
     fetchNotificationSettings();
   }, [user?.id, fetchChildren, fetchKnowledgeArticles, fetchNotificationSettings]);
 
+  /** 保存资料编辑，退出编辑态。 */
   const handleSaveProfile = () => {
     setIsEditing(false);
   };
 
+  /**
+   * 切换通知项开关，应急预案（emergencyAlert）强制开启不可关闭。
+   *
+   * @param key - 通知设置项的键名。
+   */
   const handleToggleNotification = (key: keyof typeof notificationSettings) => {
     if (key === 'emergencyAlert') return;
     updateNotificationSettings({
@@ -42,11 +68,18 @@ export default function ParentProfile() {
     });
   };
 
+  /** 退出登录并跳转到首页。 */
   const handleLogout = () => {
     logout();
     navigate('/');
   };
 
+  /**
+   * 根据风险等级返回对应的圆点背景色 Tailwind 类名。
+   *
+   * @param level - 风险等级字符串。
+   * @returns 对应颜色的 Tailwind 类名。
+   */
   const getRiskColor = (level: string | undefined) => {
     switch (level) {
       case 'red': return 'bg-red-500';

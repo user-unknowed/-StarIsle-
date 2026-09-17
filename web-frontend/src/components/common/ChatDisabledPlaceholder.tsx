@@ -1,24 +1,35 @@
+/**
+ * @file ChatDisabledPlaceholder.tsx
+ * @description AI 对话功能被屏蔽时的占位页面，在三端 Chat 页面未启用 AI 时渲染，避免用户直接访问
+ * @module web-frontend/components/common
+ */
 import { Header } from './Header';
 import { Sparkles, Clock } from 'lucide-react';
 
+/**
+ * 占位组件的属性
+ */
 interface ChatDisabledPlaceholderProps {
-  role: 'student' | 'teacher' | 'parent';
+  role: 'student' | 'teacher' | 'parent'; // 当前端角色，用于决定配色与助手名称
 }
 
 // 各端 AI 助手配色（统一走 token 体系：学生/教师用 primary/secondary，家长用 accent）
 const accentByRole = {
+  // 学生端配色：主色与次色渐变
   student: {
     gradient: 'from-primary-500 to-secondary-500',
     soft: 'from-primary-100 to-secondary-100',
     iconText: 'text-secondary-600',
     bg: 'from-primary-50 via-white to-secondary-50',
   },
+  // 教师端配色：与学生端一致
   teacher: {
     gradient: 'from-primary-500 to-secondary-500',
     soft: 'from-primary-100 to-secondary-100',
     iconText: 'text-secondary-600',
     bg: 'from-primary-50 via-white to-secondary-50',
   },
+  // 家长端配色：使用 accent 暖色系
   parent: {
     gradient: 'from-accent-400 to-accent-600',
     soft: 'from-accent-100 to-accent-200',
@@ -29,19 +40,22 @@ const accentByRole = {
 
 // AI 助手名称（与原 Chat 页面一致）
 const assistantNameByRole = {
-  student: '小星',
-  teacher: '专业心理咨询助手',
-  parent: '大星',
+  student: '小星', // 学生端 AI 助手
+  teacher: '专业心理咨询助手', // 教师端 AI 助手
+  parent: '大星', // 家长端 AI 助手
 } as const;
 
 /**
- * AI 对话功能被屏蔽时的占位页面。
+ * AI 对话功能被屏蔽时的占位页面组件
  *
  * 在功能开关 VITE_AI_CHAT_ENABLED !== 'true' 时由三端 Chat 页面渲染，
  * 防止用户通过 URL 直接访问聊天页。仍保留 Header。
  * 紧急帮助按钮已由 App.tsx 全局渲染，此处不再重复挂载。
+ * @param props - 组件属性
+ * @returns JSX 元素
  */
 export function ChatDisabledPlaceholder({ role }: ChatDisabledPlaceholderProps) {
+  // 根据角色取出配色与助手名称
   const accent = accentByRole[role];
   const assistantName = assistantNameByRole[role];
 

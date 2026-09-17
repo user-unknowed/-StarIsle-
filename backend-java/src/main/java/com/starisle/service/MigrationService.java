@@ -18,42 +18,64 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 
+/**
+ * 数据迁移服务
+ * 将源数据库中的用户、心情记录、聊天消息、测评结果、紧急预警、
+ * 家长用户与亲子绑定数据迁移至目标 JPA 仓库，并提供数据一致性校验与校验和计算能力。
+ */
 @Service
 public class MigrationService {
 
+    /** 源数据库 JDBC 模板，注入名为 sourceJdbcTemplate 的 Bean */
     @Autowired
     @Qualifier("sourceJdbcTemplate")
     private JdbcTemplate sourceJdbcTemplate;
 
+    /** 目标数据库 JDBC 模板，默认注入主数据源模板 */
     @Autowired
     private JdbcTemplate targetJdbcTemplate;
 
+    /** 用户仓库，用于持久化迁移后的用户数据 */
     @Autowired
     private UserRepository userRepository;
 
+    /** 心情记录仓库，用于持久化迁移后的心情打卡数据 */
     @Autowired
     private MoodRecordRepository moodRecordRepository;
 
+    /** 聊天消息仓库，用于持久化迁移后的对话记录 */
     @Autowired
     private ChatMessageRepository chatMessageRepository;
 
+    /** 测评结果仓库，用于持久化迁移后的心理测评数据 */
     @Autowired
     private AssessmentResultRepository assessmentResultRepository;
 
+    /** 紧急预警仓库，用于持久化迁移后的预警数据 */
     @Autowired
     private EmergencyAlertRepository emergencyAlertRepository;
 
+    /** 家长用户仓库，用于持久化迁移后的家长账号数据 */
     @Autowired
     private ParentUserRepository parentUserRepository;
 
+    /** 亲子绑定仓库，用于持久化迁移后的家长-学生绑定关系 */
     @Autowired
     private ParentStudentBindingRepository parentStudentBindingRepository;
 
+    /** JPA 实体管理器，用于事务内批量操作 */
     @PersistenceContext
     private EntityManager entityManager;
 
+    /** 校验和计算所用的哈希算法 */
     private static final String HASH_ALGORITHM = "SHA-256";
 
+    /**
+     * 迁移全部业务数据
+     * 依次迁移各业务表数据并累加迁移行数；任一异常将状态置为失败并抛出运行时异常。
+     *
+     * @return 迁移结果对象，包含迁移标识、起止时间、状态与影响行数
+     */
     public MigrationResult migrateAllData() {
         MigrationResult result = new MigrationResult();
         result.setMigrationId(UUID.randomUUID().toString());
@@ -85,6 +107,13 @@ public class MigrationService {
         return result;
     }
 
+    /**
+     * 迁移用户数据
+     * 从源库查询用户记录并逐条转换保存至目标仓库，单条失败会记录错误但不会中断整体迁移。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateUsers(MigrationResult result) {
         List<Map<String, Object>> sourceUsers = sourceJdbcTemplate.queryForList(
@@ -119,6 +148,13 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 迁移心情打卡数据
+     * 从源库查询心情记录并逐条转换保存至目标仓库，缺失标签字段初始化为空列表。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateMoodRecords(MigrationResult result) {
         List<Map<String, Object>> sourceRecords = sourceJdbcTemplate.queryForList(
@@ -146,6 +182,13 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 迁移聊天消息数据
+     * 从源库查询对话消息并逐条转换保存至目标仓库。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateChatMessages(MigrationResult result) {
         List<Map<String, Object>> sourceMessages = sourceJdbcTemplate.queryForList(
@@ -174,6 +217,13 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 迁移测评结果数据
+     * 从源库查询测评记录并逐条转换保存至目标仓库。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateAssessmentResults(MigrationResult result) {
         List<Map<String, Object>> sourceResults = sourceJdbcTemplate.queryForList(
@@ -202,6 +252,13 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 迁移紧急预警数据
+     * 从源库查询预警记录并逐条转换保存至目标仓库。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateEmergencyAlerts(MigrationResult result) {
         List<Map<String, Object>> sourceAlerts = sourceJdbcTemplate.queryForList(
@@ -232,6 +289,13 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 迁移家长用户数据
+     * 从源库查询家长账号并逐条转换保存至目标仓库。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateParentUsers(MigrationResult result) {
         List<Map<String, Object>> sourceParents = sourceJdbcTemplate.queryForList(
@@ -261,6 +325,13 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 迁移亲子绑定数据
+     * 从源库查询家长-学生绑定关系并逐条转换保存至目标仓库。
+     *
+     * @param result 迁移结果对象，用于累计错误
+     * @return 成功迁移的行数
+     */
     @Transactional
     public long migrateParentStudentBindings(MigrationResult result) {
         List<Map<String, Object>> sourceBindings = sourceJdbcTemplate.queryForList(
@@ -295,10 +366,16 @@ public class MigrationService {
         return migrated;
     }
 
+    /**
+     * 校验数据一致性
+     * 对比源库与目标库各业务表的记录总数，生成一致性报告。
+     *
+     * @return 数据一致性报告
+     */
     public DataConsistencyReport verifyDataConsistency() {
         DataConsistencyReport report = new DataConsistencyReport();
 
-        report.addTableCheck("users", 
+        report.addTableCheck("users",
                 sourceJdbcTemplate.queryForObject("SELECT COUNT(*) FROM users", Long.class),
                 userRepository.count());
 
@@ -329,6 +406,13 @@ public class MigrationService {
         return report;
     }
 
+    /**
+     * 计算表数据校验和
+     * 通过 CRC32 聚合全表数据并取 SHA-256 摘要作为校验和，用于核对源库完整性。
+     *
+     * @param tableName 表名
+     * @return 十六进制校验和字符串
+     */
     public String calculateChecksum(String tableName) {
         try {
             String query = "SELECT COALESCE(SUM(ABS(CRC32(CONCAT_WS('|', *)))), 0) FROM " + tableName;
@@ -341,6 +425,12 @@ public class MigrationService {
         }
     }
 
+    /**
+     * 字节数组转十六进制字符串
+     *
+     * @param bytes 字节数组
+     * @return 小写十六进制字符串
+     */
     private String bytesToHex(byte[] bytes) {
         StringBuilder sb = new StringBuilder();
         for (byte b : bytes) {
@@ -349,20 +439,51 @@ public class MigrationService {
         return sb.toString();
     }
 
+    /**
+     * 从行 Map 获取字符串
+     *
+     * @param row 行数据
+     * @param key 字段名
+     * @return 字段字符串值，缺失返回 null
+     */
     private String getString(Map<String, Object> row, String key) {
         return getString(row, key, null);
     }
 
+    /**
+     * 从行 Map 获取字符串
+     *
+     * @param row          行数据
+     * @param key          字段名
+     * @param defaultValue 缺失时的默认值
+     * @return 字段字符串值或默认值
+     */
     private String getString(Map<String, Object> row, String key, String defaultValue) {
         Object value = row.get(key);
         if (value == null) return defaultValue;
         return String.valueOf(value);
     }
 
+    /**
+     * 从行 Map 获取整数
+     *
+     * @param row 行数据
+     * @param key 字段名
+     * @return 字段整数值，缺失返回 null
+     */
     private Integer getInteger(Map<String, Object> row, String key) {
         return getInteger(row, key, null);
     }
 
+    /**
+     * 从行 Map 获取整数
+     * 兼容 Integer、Long 与字符串数字解析失败的情况。
+     *
+     * @param row          行数据
+     * @param key          字段名
+     * @param defaultValue 缺失时的默认值
+     * @return 字段整数值或默认值
+     */
     private Integer getInteger(Map<String, Object> row, String key, Integer defaultValue) {
         Object value = row.get(key);
         if (value == null) return defaultValue;
@@ -375,6 +496,14 @@ public class MigrationService {
         }
     }
 
+    /**
+     * 从行 Map 获取长整型
+     * 兼容 Long、Integer 与字符串数字解析失败的情况。
+     *
+     * @param row 行数据
+     * @param key 字段名
+     * @return 字段长整型值，缺失或解析失败返回 null
+     */
     private Long getLong(Map<String, Object> row, String key) {
         Object value = row.get(key);
         if (value == null) return null;
@@ -387,10 +516,26 @@ public class MigrationService {
         }
     }
 
+    /**
+     * 从行 Map 获取布尔值
+     *
+     * @param row 行数据
+     * @param key 字段名
+     * @return 字段布尔值，缺失返回 null
+     */
     private Boolean getBoolean(Map<String, Object> row, String key) {
         return getBoolean(row, key, null);
     }
 
+    /**
+     * 从行 Map 获取布尔值
+     * 兼容 Boolean、Integer（1 为 true）与字符串解析。
+     *
+     * @param row          行数据
+     * @param key          字段名
+     * @param defaultValue 缺失时的默认值
+     * @return 字段布尔值或默认值
+     */
     private Boolean getBoolean(Map<String, Object> row, String key, Boolean defaultValue) {
         Object value = row.get(key);
         if (value == null) return defaultValue;
@@ -399,6 +544,14 @@ public class MigrationService {
         return Boolean.parseBoolean(String.valueOf(value));
     }
 
+    /**
+     * 从行 Map 获取本地日期时间
+     * 兼容 LocalDateTime、Timestamp 与 Date 类型。
+     *
+     * @param row 行数据
+     * @param key 字段名
+     * @return 字段本地日期时间值，缺失或类型不支持返回 null
+     */
     private LocalDateTime getLocalDateTime(Map<String, Object> row, String key) {
         Object value = row.get(key);
         if (value == null) return null;
@@ -412,6 +565,14 @@ public class MigrationService {
         return null;
     }
 
+    /**
+     * 从行 Map 获取本地日期
+     * 兼容 LocalDate、Timestamp、Date 与字符串解析，缺失默认返回当前日期。
+     *
+     * @param row 行数据
+     * @param key 字段名
+     * @return 字段本地日期值
+     */
     private LocalDate getLocalDate(Map<String, Object> row, String key) {
         Object value = row.get(key);
         if (value == null) return LocalDate.now();
@@ -429,58 +590,123 @@ public class MigrationService {
         }
     }
 
+    /**
+     * 迁移结果
+     * 记录一次迁移任务的标识、起止时间、状态、影响行数、错误信息与错误明细列表。
+     */
     public static class MigrationResult {
+        /** 迁移任务唯一标识 */
         private String migrationId;
+        /** 迁移开始时间 */
         private LocalDateTime startTime;
+        /** 迁移结束时间 */
         private LocalDateTime endTime;
+        /** 迁移状态：running、success、failed */
         private String status;
+        /** 本次迁移影响的总行数 */
         private long affectedRows;
+        /** 失败时的错误信息 */
         private String errorMessage;
+        /** 迁移过程中收集的错误明细 */
         private List<MigrationError> errors = new ArrayList<>();
 
+        /**
+         * 新增错误明细
+         *
+         * @param table      发生错误的表名
+         * @param identifier 出错记录的标识
+         * @param message    错误信息
+         */
         public void addError(String table, String identifier, String message) {
             errors.add(new MigrationError(table, identifier, message));
         }
 
+        /** @return 迁移标识 */
         public String getMigrationId() { return migrationId; }
+        /** @param migrationId 迁移标识 */
         public void setMigrationId(String migrationId) { this.migrationId = migrationId; }
+        /** @return 开始时间 */
         public LocalDateTime getStartTime() { return startTime; }
+        /** @param startTime 开始时间 */
         public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
+        /** @return 结束时间 */
         public LocalDateTime getEndTime() { return endTime; }
+        /** @param endTime 结束时间 */
         public void setEndTime(LocalDateTime endTime) { this.endTime = endTime; }
+        /** @return 迁移状态 */
         public String getStatus() { return status; }
+        /** @param status 迁移状态 */
         public void setStatus(String status) { this.status = status; }
+        /** @return 影响行数 */
         public long getAffectedRows() { return affectedRows; }
+        /** @param affectedRows 影响行数 */
         public void setAffectedRows(long affectedRows) { this.affectedRows = affectedRows; }
+        /** @return 错误信息 */
         public String getErrorMessage() { return errorMessage; }
+        /** @param errorMessage 错误信息 */
         public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
+        /** @return 错误明细列表 */
         public List<MigrationError> getErrors() { return errors; }
+        /** @param errors 错误明细列表 */
         public void setErrors(List<MigrationError> errors) { this.errors = errors; }
     }
 
+    /**
+     * 迁移错误明细
+     * 描述单条数据迁移失败时的表名、记录标识与错误信息。
+     */
     public static class MigrationError {
+        /** 发生错误的表名 */
         private String table;
+        /** 出错记录的标识 */
         private String identifier;
+        /** 错误信息 */
         private String message;
 
+        /**
+         * 构造方法
+         *
+         * @param table      表名
+         * @param identifier 记录标识
+         * @param message    错误信息
+         */
         public MigrationError(String table, String identifier, String message) {
             this.table = table;
             this.identifier = identifier;
             this.message = message;
         }
 
+        /** @return 表名 */
         public String getTable() { return table; }
+        /** @param table 表名 */
         public void setTable(String table) { this.table = table; }
+        /** @return 记录标识 */
         public String getIdentifier() { return identifier; }
+        /** @param identifier 记录标识 */
         public void setIdentifier(String identifier) { this.identifier = identifier; }
+        /** @return 错误信息 */
         public String getMessage() { return message; }
+        /** @param message 错误信息 */
         public void setMessage(String message) { this.message = message; }
     }
 
+    /**
+     * 数据一致性报告
+     * 汇总各业务表源库与目标库记录数对比结果，标识是否全部一致。
+     */
     public static class DataConsistencyReport {
+        /** 各表校验结果列表 */
         private List<TableCheck> tableChecks = new ArrayList<>();
+        /** 是否所有表均一致 */
         private boolean allConsistent = true;
 
+        /**
+         * 新增表校验结果
+         *
+         * @param tableName   表名
+         * @param sourceCount 源库记录数
+         * @param targetCount 目标库记录数
+         */
         public void addTableCheck(String tableName, Long sourceCount, Long targetCount) {
             boolean consistent = Objects.equals(sourceCount, targetCount);
             tableChecks.add(new TableCheck(tableName, sourceCount, targetCount, consistent));
@@ -489,18 +715,38 @@ public class MigrationService {
             }
         }
 
+        /** @return 各表校验结果列表 */
         public List<TableCheck> getTableChecks() { return tableChecks; }
+        /** @param tableChecks 各表校验结果列表 */
         public void setTableChecks(List<TableCheck> tableChecks) { this.tableChecks = tableChecks; }
+        /** @return 是否全部一致 */
         public boolean isAllConsistent() { return allConsistent; }
+        /** @param allConsistent 是否全部一致 */
         public void setAllConsistent(boolean allConsistent) { this.allConsistent = allConsistent; }
     }
 
+    /**
+     * 表校验结果
+     * 描述单个表的源库记录数、目标库记录数与一致性结论。
+     */
     public static class TableCheck {
+        /** 表名 */
         private String tableName;
+        /** 源库记录数 */
         private Long sourceCount;
+        /** 目标库记录数 */
         private Long targetCount;
+        /** 是否一致 */
         private boolean consistent;
 
+        /**
+         * 构造方法
+         *
+         * @param tableName   表名
+         * @param sourceCount 源库记录数
+         * @param targetCount 目标库记录数
+         * @param consistent  是否一致
+         */
         public TableCheck(String tableName, Long sourceCount, Long targetCount, boolean consistent) {
             this.tableName = tableName;
             this.sourceCount = sourceCount;
@@ -508,13 +754,21 @@ public class MigrationService {
             this.consistent = consistent;
         }
 
+        /** @return 表名 */
         public String getTableName() { return tableName; }
+        /** @param tableName 表名 */
         public void setTableName(String tableName) { this.tableName = tableName; }
+        /** @return 源库记录数 */
         public Long getSourceCount() { return sourceCount; }
+        /** @param sourceCount 源库记录数 */
         public void setSourceCount(Long sourceCount) { this.sourceCount = sourceCount; }
+        /** @return 目标库记录数 */
         public Long getTargetCount() { return targetCount; }
+        /** @param targetCount 目标库记录数 */
         public void setTargetCount(Long targetCount) { this.targetCount = targetCount; }
+        /** @return 是否一致 */
         public boolean isConsistent() { return consistent; }
+        /** @param consistent 是否一致 */
         public void setConsistent(boolean consistent) { this.consistent = consistent; }
     }
 }

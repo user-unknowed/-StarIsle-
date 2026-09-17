@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "超级管理员 · 全局监控",
+  "navigationBarBackgroundColor": "#7C3AED",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F3F4F6",
+  "enablePullDownRefresh": true,
+  "usingComponents": {}
+}

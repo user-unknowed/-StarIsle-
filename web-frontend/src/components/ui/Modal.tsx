@@ -1,17 +1,26 @@
+/**
+ * @file Modal.tsx
+ * @description 通用模态弹窗组件，支持标题、尺寸档位、可关闭遮罩，并实现键盘焦点陷阱与焦点恢复等无障碍特性
+ * @module web-frontend/components/ui
+ */
 import React, { useEffect, useCallback, useRef } from 'react';
 import { clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 
+/**
+ * 模态弹窗组件属性
+ */
 interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title?: string;
-  children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'full';
-  dismissible?: boolean;
-  className?: string;
+  isOpen: boolean; // 是否打开
+  onClose: () => void; // 关闭回调
+  title?: string; // 可选标题
+  children: React.ReactNode; // 弹窗主体内容
+  size?: 'sm' | 'md' | 'lg' | 'full'; // 尺寸档位
+  dismissible?: boolean; // 是否允许点击遮罩与 Esc 关闭
+  className?: string; // 自定义类名
 }
 
+/** 各尺寸对应的最大宽度类名 */
 const sizeClasses: Record<string, string> = {
   sm: 'max-w-sm',
   md: 'max-w-md',
@@ -19,11 +28,18 @@ const sizeClasses: Record<string, string> = {
   full: 'max-w-full',
 };
 
+// 可聚焦元素选择器，用于焦点陷阱计算
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])';
 
+// 模态标题 id 计数器，保证多个 Modal 实例 id 唯一
 let modalTitleIdCounter = 0;
 
+/**
+ * 通用模态弹窗组件
+ * @param props - 弹窗属性
+ * @returns JSX 元素（未打开时返回 null）
+ */
 export const Modal: React.FC<ModalProps> = ({
   isOpen,
   onClose,
@@ -33,13 +49,19 @@ export const Modal: React.FC<ModalProps> = ({
   dismissible = true,
   className,
 }) => {
+  // 弹窗容器 ref，用于焦点管理与遮罩点击判断
   const modalRef = useRef<HTMLDivElement>(null);
+  // 触发元素 ref，记录打开前的焦点元素以便关闭后恢复
   const triggerRef = useRef<HTMLElement | null>(null);
   // 为 aria-labelledby 生成稳定 id（每个 Modal 实例一份）
   const titleIdRef = useRef<string>(`modal-title-${++modalTitleIdCounter}`);
 
+  /**
+   * 键盘事件处理：Esc 关闭、Tab 在 Modal 内循环（焦点陷阱）
+   */
   const handleKeyDown = useCallback(
     (e: KeyboardEvent) => {
+      // Esc 关闭（仅在允许关闭时）
       if (e.key === 'Escape' && isOpen && dismissible) {
         onClose();
         return;
@@ -58,12 +80,14 @@ export const Modal: React.FC<ModalProps> = ({
         const last = focusable[focusable.length - 1];
         const active = document.activeElement as HTMLElement | null;
 
+        // Shift+Tab：在首个元素上时跳到末尾
         if (e.shiftKey) {
           if (active === first || !modalRef.current.contains(active)) {
             e.preventDefault();
             last.focus();
           }
         } else {
+          // 普通 Tab：在末尾元素上时跳到首位
           if (active === last || !modalRef.current.contains(active)) {
             e.preventDefault();
             first.focus();
@@ -74,6 +98,7 @@ export const Modal: React.FC<ModalProps> = ({
     [isOpen, onClose, dismissible]
   );
 
+  // 打开/关闭时的副作用：绑定键盘事件、锁滚动、聚焦与恢复
   useEffect(() => {
     if (isOpen) {
       // 记录打开前的焦点元素，关闭时恢复
@@ -110,6 +135,9 @@ export const Modal: React.FC<ModalProps> = ({
     };
   }, [isOpen, handleKeyDown]);
 
+  /**
+   * 遮罩点击：仅当点击的是遮罩自身（非弹窗内容）且允许关闭时才关闭
+   */
   const handleMaskClick = useCallback(
     (e: React.MouseEvent) => {
       if (e.target === e.currentTarget && dismissible) {
@@ -119,6 +147,7 @@ export const Modal: React.FC<ModalProps> = ({
     [onClose, dismissible]
   );
 
+  // 未打开时不渲染
   if (!isOpen) return null;
 
   return (
@@ -126,6 +155,7 @@ export const Modal: React.FC<ModalProps> = ({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 modal-mask"
       onClick={handleMaskClick}
     >
+      {/* 半透明遮罩 + 背景模糊 + 渐入动画 */}
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm animate-fade-in" />
       <div
         ref={modalRef}
@@ -141,6 +171,7 @@ export const Modal: React.FC<ModalProps> = ({
           )
         )}
       >
+        {/* 头部：标题 + 关闭按钮（仅当有标题或可关闭时渲染） */}
         {(title || dismissible) && (
           <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200">
             {title && (
@@ -161,6 +192,7 @@ export const Modal: React.FC<ModalProps> = ({
             )}
           </div>
         )}
+        {/* 主体内容 */}
         <div className="p-6">
           {children}
         </div>

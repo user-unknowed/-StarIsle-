@@ -1,0 +1,93 @@
+<!--pages/teacher/class-manage/index.wxml-->
+<view class="page">
+  <!-- 顶部标题 -->
+  <view class="header-bar">
+    <view>
+      <view class="page-title">班级管理</view>
+      <view class="page-subtitle">创建班级 · 分享邀请码 · 管理学生成员</view>
+    </view>
+  </view>
+
+  <!-- 状态提示条 -->
+  <view class="state-bar" wx:if="{{loading}}">加载中…</view>
+  <view class="state-bar state-err" wx:if="{{errorMsg}}">{{errorMsg}}{{errorCode ? '（' + errorCode + '）' : ''}}</view>
+
+  <!-- 创建班级卡片 -->
+  <view class="create-card">
+    <view class="cc-title">+ 创建新班级</view>
+    <view class="cc-form">
+      <input class="cc-input" placeholder="班级名称（如：高二1班心理测评组）" placeholder-class="ph"
+             value="{{newClassName}}" bindinput="onNewClassNameInput" maxlength="40"/>
+      <input class="cc-input" placeholder="年级（选填，如：高2026级 / 初二）" placeholder-class="ph"
+             value="{{newClassGrade}}" bindinput="onNewClassGradeInput" maxlength="20"/>
+      <view class="cc-btn btn-hover" bindtap="onCreateClass">创建班级并生成邀请码</view>
+    </view>
+  </view>
+
+  <!-- 我的班级列表 -->
+  <view wx:if="{{classList.length === 0 && !loading}}" class="empty-classes">
+    <text class="emoji">📚</text>
+    目前还没有班级
+    {"\n"}你可以：
+    {"\n"}· 点击上方卡片创建第一个班级
+    {"\n"}· 生成邀请码后发给学生加入
+  </view>
+
+  <block wx:for="{{classList}}" wx:key="_id" wx:for-item="cls">
+    <view class="class-card">
+      <view class="cc-header">
+        <view>
+          <view class="cc-name">{{cls.name}}</view>
+          <view class="cc-grade" wx:if="{{cls.grade}}">{{cls.grade}}</view>
+        </view>
+        <view class="cc-actions">
+          <view class="cc-mini-btn btn-reset btn-hover" data-class-id="{{cls._id}}" bindtap="onResetInviteCode">重置邀请码</view>
+          <view class="cc-mini-btn btn-delete btn-hover" data-class-id="{{cls._id}}" data-class-name="{{cls.name}}" bindtap="onDeleteClass">删除班级</view>
+        </view>
+      </view>
+
+      <!-- 邀请码胶囊 -->
+      <view class="invite-capsule">
+        <view>
+          <text class="invite-label">班级邀请码 · </text>
+          <text class="invite-code">{{cls.inviteCode}}</text>
+        </view>
+        <view class="copy-btn btn-hover" data-code="{{cls.inviteCode}}" bindtap="onCopyInviteCode">复制</view>
+      </view>
+
+      <!-- 学生统计 -->
+      <view class="student-stats">
+        <view class="student-count">
+          班级成员：<text class="num">{{cls.countStudentIds}}</text>人
+        </view>
+        <view class="toggle-students" data-class-id="{{cls._id}}" bindtap="onToggleStudents">
+          {{expandedClassId === cls._id ? '收起学生列表 ▲' : '展开学生列表 ▼'}}
+        </view>
+      </view>
+
+      <!-- 展开：学生列表 -->
+      <block wx:if="{{expandedClassId === cls._id}}">
+        <view class="student-list">
+          <view wx:if="{{cls.studentIds.length === 0}}" class="empty-students">
+            暂无学生 · 将邀请码分享给学生即可加入
+          </view>
+          <block wx:for="{{cls.studentIds}}" wx:key="*this" wx:for-item="sid" wx:for-index="sidx">
+            <view class="student-row">
+              <view>
+                <text class="student-index">#{{sidx + 1}}</text>
+                <text class="student-anon">学生（ID 隐藏，仅展示加入次序）</text>
+              </view>
+              <view class="btn-remove-student btn-hover"
+                    data-class-id="{{cls._id}}"
+                    data-student-id="{{sid}}"
+                    data-student-index="{{sidx + 1}}"
+                    bindtap="onRemoveStudent">移除</view>
+            </view>
+          </block>
+        </view>
+      </block>
+    </view>
+  </block>
+
+  <safe-area-bottom></safe-area-bottom>
+</view>

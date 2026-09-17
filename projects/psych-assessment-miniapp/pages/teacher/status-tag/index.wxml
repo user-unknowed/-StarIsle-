@@ -1,0 +1,272 @@
+<!--pages/teacher/status-tag/index.wxml-->
+<view class="page">
+  <!-- 顶部标题 -->
+  <view class="header-bar">
+    <view>
+      <view class="page-title">状态标签管理</view>
+      <view class="page-subtitle">
+        标签库维护 + 学生打标追溯；所有操作均 <text class="hl">匿名编号</text> 化，保留科研数据
+      </view>
+    </view>
+  </view>
+
+  <!-- 状态提示条 -->
+  <view class="state-bar" wx:if="{{loading}}">加载中…</view>
+  <view class="state-bar state-err" wx:if="{{errorMsg}}">{{errorMsg}}{{errorCode ? '（' + errorCode + '）' : ''}}</view>
+
+  <!-- Tab 切换：标签库 / 打标记录 -->
+  <view class="tabs">
+    <view class="pill {{activeTab === 'library' ? 'pill-active' : ''}}"
+          bindtap="onSwitchTab" data-tab="library">
+      🏷️ 标签库
+      <text class="count">{{builtinList.length + customList.length}}</text>
+    </view>
+    <view class="pill {{activeTab === 'records' ? 'pill-active' : ''}}"
+          bindtap="onSwitchTab" data-tab="records">
+      📋 打标记录
+      <text class="count">{{snapshotCount}}</text>
+    </view>
+  </view>
+
+  <!-- ========== Tab 1：标签库 ========== -->
+  <block wx:if="{{activeTab === 'library'}}">
+
+    <!-- 新建自定义标签 -->
+    <view class="create-card btn-hover" bindtap="onOpenCreateForm">
+      <view class="cc-title">+ 新建自定义标签</view>
+      <view class="cc-desc">系统内置 5 个状态枚举 + 教师自定义补充标签（仅本人可见）</view>
+    </view>
+
+    <!-- 系统内置标签 -->
+    <view class="section-title">
+      系统内置标签
+      <text class="sub">不可修改/删除，全体教师通用</text>
+    </view>
+    <view class="tags-grid">
+      <block wx:for="{{builtinList}}" wx:key="_id" wx:for-item="t">
+        <view class="tag-chip builtin-chip"
+              style="background: {{t.color}}; border-color: {{t.color}};">
+          <text class="chip-name">{{t.name}}</text>
+          <view class="chip-builtin-badge">内置</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 教师自定义标签 -->
+    <view class="section-title">
+      我的自定义标签
+      <text class="sub">仅本人可见 · 支持修改/删除</text>
+    </view>
+    <view wx:if="{{customList.length === 0 && !loading}}" class="empty-binding">
+      <text class="emoji">🏷️</text>
+      暂无自定义标签
+      {"\n"}点击上方卡片，创建您的专属补充标签
+    </view>
+    <view class="tags-grid">
+      <block wx:for="{{customList}}" wx:key="_id" wx:for-item="t">
+        <view class="tag-card" style="border-left-color: {{t.color}};">
+          <view class="tc-main">
+            <view class="tc-swatch" style="background: {{t.color}};"></view>
+            <view class="tc-name">{{t.name}}</view>
+          </view>
+          <view class="tc-actions">
+            <view class="tc-mini-btn btn-edit btn-hover"
+                  data-tag-id="{{t._id}}" bindtap="onOpenEditForm">编辑</view>
+            <view class="tc-mini-btn btn-del btn-hover"
+                  data-tag-id="{{t._id}}" data-tag-name="{{t.name}}" bindtap="onDeleteTag">删除</view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </block>
+
+  <!-- ========== Tab 2：打标记录 ========== -->
+  <block wx:if="{{activeTab === 'records'}}">
+
+    <!-- 学生选择 -->
+    <view class="pick-student-card">
+      <view class="pc-title">🎯 选择学生</view>
+      <view class="pc-desc">从本人「一对一绑定」列表中选择学生（仅展示匿名编号）</view>
+
+      <block wx:if="{{!selectedStudentId}}">
+        <view wx:if="{{bindingOptions.length === 0}}" class="no-bindings">
+          📭 您暂无有效一对一绑定
+          {"\n"}请先在「绑定管理」中添加学生绑定后，再进行打标
+        </view>
+        <view class="student-pick-list" wx:else>
+          <block wx:for="{{bindingOptions}}" wx:key="value" wx:for-item="opt" wx:for-index="idx">
+            <view class="sp-item btn-hover"
+                  data-index="{{idx}}" bindtap="onPickStudent">
+              <text class="sp-anon">{{opt.label}}</text>
+              <text class="sp-arrow">选择 →</text>
+            </view>
+          </block>
+        </view>
+      </block>
+
+      <block wx:else>
+        <view class="selected-student-row">
+          <view>
+            <text class="ss-label">已选学生：</text>
+            <text class="ss-anon">{{selectedStudentAnon}}</text>
+          </view>
+          <view class="ss-clear btn-hover" bindtap="onClearPickStudent">更换学生</view>
+        </view>
+      </block>
+    </view>
+
+    <!-- 打标表单（选中学生后显示） -->
+    <block wx:if="{{selectedStudentId}}">
+      <view class="tag-form-card">
+        <view class="tf-title">✍️ 给学生打状态标签</view>
+
+        <view class="tf-sub-title">① 选择标签（可多选）</view>
+        <view class="tags-grid">
+          <block wx:for="{{availableTags}}" wx:key="_id" wx:for-item="t">
+            <view class="tag-chip pickable-chip {{selectedTagIds.indexOf(t._id) >= 0 ? 'picked' : ''}}"
+                  style="background: {{selectedTagIds.indexOf(t._id) >= 0 ? t.color : '#fff'}};
+                         color: {{selectedTagIds.indexOf(t._id) >= 0 ? '#fff' : '#1F2937'}};
+                         border-color: {{t.color}};"
+                  data-tag-id="{{t._id}}" bindtap="onToggleTagPick">
+              <text class="chip-name">{{t.name}}</text>
+              <text class="chip-sub" wx:if="{{t.builtIn}}">内置</text>
+              <text class="chip-sub" wx:else>自定义</text>
+            </view>
+          </block>
+        </view>
+
+        <view class="tf-sub-title">② 打标理由（≤300 字 · 必填 · 追溯用）</view>
+        <textarea class="tf-textarea"
+                  placeholder="例如：近期测评情绪分持续偏低 / 班主任反映厌学倾向 / 转介心理咨询前预打标…"
+                  value="{{tagReason}}" bindinput="onTagReasonInput"
+                  maxlength="300" auto-height></textarea>
+        <view class="reason-counter">
+          <text class="{{reasonLen > 300 ? 'over' : ''}}">{{reasonLen}}</text> / 300
+          <text class="hint">（超长后端自动截断，不报错）</text>
+        </view>
+
+        <view class="tf-sub-title">③ 关联反馈 ID（选填）</view>
+        <input class="tf-input" placeholder="例：feedback_xxx（可选，便于关联某次具体反馈）"
+               value="{{tagRelatedFeedbackId}}" bindinput="onTagFeedbackInput"/>
+
+        <view class="tf-submit btn-hover {{submittingTag ? 'disabled' : ''}}"
+              bindtap="onSubmitTagStudent">
+          {{submittingTag ? '提交中…' : '确认打标并生成快照'}}
+        </view>
+      </view>
+
+      <!-- 打标快照列表 -->
+      <view class="section-title">
+        该学生历史打标记录
+        <text class="sub">共 {{snapshotCount}} 条 · 仅本人打标可撤销</text>
+      </view>
+      <view wx:if="{{snapshotList.length === 0 && !loading}}" class="empty-binding">
+        <text class="emoji">📝</text>
+        暂无打标记录
+        {"\n"}填写上方表单后即可为学生打状态标签
+      </view>
+      <block wx:for="{{snapshotList}}" wx:key="_id" wx:for-item="s">
+        <view class="snapshot-card sc-{{s.statusClass}}">
+          <view class="sc-top">
+            <view class="sc-tags">
+              <block wx:for="{{s.tagNamesSnapshot}}" wx:key="tagId" wx:for-item="tn">
+                <text class="sc-tag" style="background: {{tn.color || '#9CA3AF'}};">{{tn.name}}</text>
+              </block>
+            </view>
+            <view class="sc-status ss-{{s.statusClass}}">{{s.statusText}}</view>
+          </view>
+
+          <view class="sc-reason" wx:if="{{s.reason}}">
+            <text class="sc-label">理由：</text>{{s.reason}}
+          </view>
+
+          <view class="sc-meta">
+            <view>打标教师：<text class="hl-mono">{{s.teacherAnonymousNo}}</text></view>
+            <view>创建时间：{{s.createdAtText}}</view>
+            <view wx:if="{{s.relatedFeedbackId}}">关联反馈：{{s.relatedFeedbackId}}</view>
+            <view>有效期：{{s.validFromText}} ~ {{s.validUntilText || '至今'}}</view>
+            <view wx:if="{{s.revokeOfSnapshotId}}" class="sc-revoke-ref">
+              撤销来源：snapshot {{s.revokeOfSnapshotId}}
+            </view>
+          </view>
+
+          <view class="sc-actions" wx:if="{{s.isOwn && s.isActive}}">
+            <view class="btn-untag btn-hover"
+                  data-snapshot-id="{{s._id}}" data-tag-text="{{s.tagText}}"
+                  bindtap="onUntagStudent">撤销打标</view>
+          </view>
+          <view class="sc-notice" wx:elif="{{!s.isOwn}}">
+            <text class="notice-icon">🔒</text> 非本人打标，仅可查阅
+          </view>
+          <view class="sc-notice" wx:elif="{{s.statusClass === 'revoke'}}">
+            <text class="notice-icon">ℹ️</text> 撤销动作记录
+          </view>
+          <view class="sc-notice" wx:else>
+            <text class="notice-icon">📦</text> 历史归档记录
+          </view>
+        </view>
+      </block>
+    </block>
+  </block>
+
+  <!-- ========== 模态：标签新建/编辑表单 ========== -->
+  <view class="modal-mask" wx:if="{{showTagForm}}" catchtap="onCloseTagForm">
+    <view class="modal-card" catchtap="">
+      <view class="modal-header">
+        <text>{{formMode === 'edit' ? '编辑自定义标签' : '新建自定义标签'}}</text>
+        <view class="modal-close btn-hover" bindtap="onCloseTagForm">×</view>
+      </view>
+
+      <view class="modal-body">
+        <view class="mb-row">
+          <view class="mb-label"><text class="required">*</text>标签名称（≤20字）</view>
+          <input class="mb-input" placeholder="例如：睡眠不足 / 家庭变故 / 青春期波动"
+                 value="{{formName}}" bindinput="onFormNameInput" maxlength="20"/>
+          <view class="reason-counter">
+            <text class="{{formNameLen > 20 ? 'over' : ''}}">{{formNameLen}}</text> / 20
+          </view>
+        </view>
+
+        <view class="mb-row">
+          <view class="mb-label"><text class="required">*</text>标签颜色</view>
+          <view class="color-grid">
+            <block wx:for="{{colorOptions}}" wx:key="key" wx:for-item="c">
+              <view class="color-swatch {{formColorKey === c.key ? 'sw-active' : ''}} btn-hover"
+                    style="background: {{c.value}};"
+                    data-key="{{c.key}}" bindtap="onPickColor">
+                <text class="sw-check" wx:if="{{formColorKey === c.key}}">✓</text>
+              </view>
+            </block>
+          </view>
+          <view class="custom-color-row">
+            <view class="color-swatch {{formColorKey === 'custom' ? 'sw-active' : ''}} sw-custom btn-hover"
+                  data-key="custom" bindtap="onPickColor">
+              <text class="sw-hash">#</text>
+            </view>
+            <input class="mb-input color-input" placeholder="自定义 #RRGGBB（如 #FFA500）"
+                   value="{{formCustomColor}}" bindinput="onCustomColorInput" maxlength="7"/>
+          </view>
+          <view class="color-preview">
+            预览色：
+            <text class="preview-chip" style="background: {{formColorKey === 'custom' ? formCustomColor : (colorOptions[0].value)}};">
+              {{formName || '(标签名)'}}
+            </text>
+            <text wx:for="{{colorOptions}}" wx:key="key" wx:for-item="c" wx:if="{{formColorKey === c.key}}" class="preview-chip"
+                  style="background: {{c.value}};">
+              {{formName || '(标签名)'}}
+            </text>
+          </view>
+        </view>
+      </view>
+
+      <view class="modal-footer">
+        <view class="mf-btn mf-cancel btn-hover" bindtap="onCloseTagForm">取消</view>
+        <view class="mf-btn mf-confirm btn-hover" bindtap="onSubmitTagForm">
+          {{formMode === 'edit' ? '保存修改' : '创建标签'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <safe-area-bottom></safe-area-bottom>
+</view>

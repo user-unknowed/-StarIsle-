@@ -1,3 +1,8 @@
+/**
+ * @file TeacherHome.tsx
+ * @description 教师端首页：班级状态总览（人数/平均心情/今日打卡/需关注）、心情分布、需关注学生列表（接入 riskApi）、学生表格
+ * @module web-frontend/pages/teacher
+ */
 import { Fragment, useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useClassroomStore } from '../../store/classroomStore';
@@ -7,6 +12,7 @@ import { ApiError } from '../../services/http';
 import { BarChart3, AlertTriangle, Users, CheckCircle, TrendingUp, Eye, Download, Upload, ShieldAlert, Loader2 } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 
+// 风险详情结构：等级、分数、原因、历史趋势、数据来源
 interface RiskDetail {
   level: string;
   score?: number;
@@ -15,6 +21,11 @@ interface RiskDetail {
   source: 'api' | 'mock';
 }
 
+/**
+ * 根据风险等级返回对应 Tailwind 配色
+ * @param level - 风险等级
+ * @returns Tailwind 类名字符串
+ */
 const getRiskColor = (level: string | undefined) => {
   switch (level) {
     case 'red': return 'bg-danger-100 text-danger-600 border-danger-200';
@@ -24,6 +35,11 @@ const getRiskColor = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据风险等级返回中文标签
+ * @param level - 风险等级
+ * @returns 高风险/中风险/低风险/正常
+ */
 const getRiskLabel = (level: string | undefined) => {
   switch (level) {
     case 'red': return '高风险';
@@ -33,6 +49,11 @@ const getRiskLabel = (level: string | undefined) => {
   }
 };
 
+/**
+ * 根据心情等级返回对应 emoji
+ * @param level - 心情等级（1~5）
+ * @returns 对应 emoji，未打卡返回问号
+ */
 const getMoodEmoji = (level: number | undefined) => {
   if (!level) return '❓';
   if (level <= 1) return '😔';
@@ -42,17 +63,32 @@ const getMoodEmoji = (level: number | undefined) => {
   return '😄';
 };
 
+/**
+ * 教师端首页组件
+ * @returns JSX 元素
+ */
 export default function TeacherHome() {
+  // 当前用户
   const user = useAuthStore((state) => state.user);
+  // 班级 store：学生列表、统计、拉取方法
   const { students, stats, fetchClassStats, fetchStudents } = useClassroomStore();
   const toast = useToast();
 
   // 高风险告警接入 riskApi.getLevel
+  // 各学生风险详情（按学生ID为键）
   const [riskDetails, setRiskDetails] = useState<Record<string, RiskDetail | null>>({});
+  // 当前正在加载风险详情的学生ID
   const [riskLoadingId, setRiskLoadingId] = useState<string | null>(null);
+  // 当前展开风险详情的学生ID
   const [expandedRiskId, setExpandedRiskId] = useState<string | null>(null);
+  // 学生搜索关键字
   const [searchQuery, setSearchQuery] = useState('');
 
+  /**
+   * 拉取某学生风险详情：失败时降级使用学生列表中的风险等级与 mock 历史
+   * @param studentId - 学生ID
+   * @param fallbackLevel - 降级时使用的风险等级
+   */
   const fetchRiskLevel = async (studentId: string, fallbackLevel?: string) => {
     setRiskLoadingId(studentId);
     try {
@@ -88,22 +124,36 @@ export default function TeacherHome() {
     }
   };
 
+  /**
+   * 切换某学生风险详情的展开态，首次展开时拉取详情
+   * @param studentId - 学生ID
+   * @param fallbackLevel - 降级时使用的风险等级
+   */
   const toggleRiskDetail = (studentId: string, fallbackLevel?: string) => {
+    // 再次点击同一学生则收起
     if (expandedRiskId === studentId) {
       setExpandedRiskId(null);
       return;
     }
     setExpandedRiskId(studentId);
+    // 首次展开且无缓存数据时拉取
     if (!riskDetails[studentId]) {
       fetchRiskLevel(studentId, fallbackLevel);
     }
   };
 
+  // 进入页面拉取班级统计与学生列表
   useEffect(() => {
     fetchClassStats('class1');
     fetchStudents('class1');
   }, [fetchClassStats, fetchStudents]);
 
+  /**
+   * 渲染风险详情：加载态/空态/详情（含历史趋势条）
+   * @param detail - 风险详情
+   * @param loading - 是否正在加载
+   * @returns JSX 元素
+   */
   const renderRiskDetail = (detail: RiskDetail | null | undefined, loading: boolean) => {
     if (loading) {
       return (
@@ -150,7 +200,9 @@ export default function TeacherHome() {
     );
   };
 
+  // 需关注学生（带 alert 标志）
   const alertStudents = students.filter(s => s.alert);
+  // 心情分布：1~5 级对应学生数与配色
   const moodDistribution = [
     { level: 1, count: students.filter(s => s.latestMood === 1).length, label: '很低落', color: 'bg-danger-500' },
     { level: 2, count: students.filter(s => s.latestMood === 2).length, label: '有点低落', color: 'bg-warning-500' },
@@ -158,6 +210,7 @@ export default function TeacherHome() {
     { level: 4, count: students.filter(s => s.latestMood === 4).length, label: '还不错', color: 'bg-primary-500' },
     { level: 5, count: students.filter(s => s.latestMood === 5).length, label: '很开心', color: 'bg-success-500' },
   ];
+  // 按昵称或ID过滤学生
   const filteredStudents = students.filter(
     s => s.nickname.includes(searchQuery) || s.id.includes(searchQuery)
   );

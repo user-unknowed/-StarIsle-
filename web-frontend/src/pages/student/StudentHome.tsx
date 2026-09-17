@@ -1,3 +1,8 @@
+/**
+ * @file StudentHome.tsx
+ * @description 学生端首页，提供每日心情打卡（含心情等级与标签）、心情趋势、连续打卡与本周心情统计
+ * @module web-frontend/pages/student
+ */
 import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useMoodStore } from '../../store/moodStore';
@@ -6,6 +11,7 @@ import { Calendar, TrendingUp, Award, Sparkles, Check, Loader2 } from 'lucide-re
 import { Button } from '../../components/ui';
 import { useToast } from '../../components/ui/Toast';
 
+// 心情等级选项：1~5 级，含 emoji、文案与配色
 const moodOptions = [
   { level: 1, emoji: '😔', label: '很低落', color: 'bg-red-100 text-red-600 border-red-200' },
   { level: 2, emoji: '😞', label: '有点低落', color: 'bg-orange-100 text-orange-600 border-orange-200' },
@@ -14,10 +20,17 @@ const moodOptions = [
   { level: 5, emoji: '😄', label: '很开心', color: 'bg-green-100 text-green-600 border-green-200' },
 ];
 
+// 心情相关标签（可多选）
 const tagOptions = ['学习压力', '考试焦虑', '人际关系', '家庭', '睡眠', '身体不适', '其他'];
 
+/**
+ * 学生端首页组件
+ * @returns JSX 元素
+ */
 export default function StudentHome() {
+  // 当前登录用户
   const user = useAuthStore((state) => state.user);
+  // 从心情 store 取出历史、选中等级、打卡状态、连续天数及 action
   const {
     moodHistory,
     selectedMood,
@@ -28,31 +41,43 @@ export default function StudentHome() {
     checkinMood,
     selectMood,
   } = useMoodStore();
+  // 单独订阅加载与错误状态
   const isLoading = useMoodStore((s) => s.isLoading);
   const error = useMoodStore((s) => s.error);
   const toast = useToast();
 
+  // 选中的心情相关标签
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  // 是否展开标签选择区
   const [showTags, setShowTags] = useState(false);
 
+  // 用户存在时拉取心情历史
   useEffect(() => {
     if (user) {
       fetchMoodHistory(user.id);
     }
   }, [user, fetchMoodHistory]);
 
+  // 打卡失败时弹出 toast 提示
   useEffect(() => {
     if (checkinStatus === 'error') {
       toast.error(checkinMessage || '心情打卡失败，请稍后重试');
     }
   }, [checkinStatus, checkinMessage, toast]);
 
+  /**
+   * 切换某个标签的选中态
+   * @param tag - 标签文本
+   */
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
       prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
     );
   };
 
+  /**
+   * 提交心情打卡：将选中心情与标签提交到 store，成功后清空标签
+   */
   const handleCheckin = async () => {
     if (selectedMood && user) {
       await checkinMood(user.id, selectedMood, selectedTags);
@@ -61,6 +86,11 @@ export default function StudentHome() {
     }
   };
 
+  /**
+   * 根据心情等级返回对应 emoji
+   * @param level - 心情等级（1~5）
+   * @returns 对应 emoji，未匹配返回默认
+   */
   const getMoodEmoji = (level: number) => {
     return moodOptions.find(m => m.level === level)?.emoji || '😐';
   };
@@ -68,6 +98,7 @@ export default function StudentHome() {
   // 计算本周（最近 7 天）平均心情
   const getWeekMoodEmoji = (): string => {
     if (moodHistory.length === 0) return '--';
+    // 计算本周起点（7 天前的 0 点）
     const weekStart = new Date();
     weekStart.setHours(0, 0, 0, 0);
     weekStart.setDate(weekStart.getDate() - 6);
@@ -75,11 +106,13 @@ export default function StudentHome() {
       (r) => new Date(`${r.checkinDate}T00:00:00`) >= weekStart
     );
     if (weekRecords.length === 0) return '--';
+    // 平均心情 = 各天心情等级之和 / 天数
     const avg = weekRecords.reduce((sum, r) => sum + r.moodLevel, 0) / weekRecords.length;
     return getMoodEmoji(Math.round(avg));
   };
   const weekMoodEmoji = getWeekMoodEmoji();
 
+  // 当前日期与星期（用于顶部展示）
   const today = new Date();
   const dayOfWeek = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'][today.getDay()];
 

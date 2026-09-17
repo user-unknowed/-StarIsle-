@@ -1,3 +1,8 @@
+/**
+ * @file ParentChat.tsx
+ * @description 家长端 AI 心理顾问对话页，支持聊天、危机关键词检测、风险上报、降级 mock 回复
+ * @module web-frontend/pages/parent
+ */
 import { useEffect, useRef, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { Header } from '../../components/common/Header';
@@ -9,6 +14,7 @@ import type { ChatMessage } from '../../types';
 import { AI_CHAT_ENABLED } from '../../config/features';
 import { ChatDisabledPlaceholder } from '../../components/common/ChatDisabledPlaceholder';
 
+// 家长常见话题列表（点击可填入输入框或触发危机提示）
 const parentTopics = [
   { id: 't1', title: '孩子不愿意跟我说话怎么办', category: '沟通' },
   { id: 't2', title: '怎么判断孩子是否需要专业帮助', category: '评估' },
@@ -18,6 +24,7 @@ const parentTopics = [
   { id: 't6', title: '家长自己压力大怎么调节', category: '自助' },
 ];
 
+// 后端不可用时的示例回复池
 const mockReplies = [
   '大星理解您的担心。咱们慢慢来，先听听孩子的想法呢。',
   '您是很用心的家长。慢慢来，多给孩子安全感就好。',
@@ -25,33 +32,52 @@ const mockReplies = [
   '请先确保孩子安全。可拨打 12355 或 400-161-9995 获取专业指导。咱们一起面对，慢慢来。',
 ];
 
+// 危机热线列表，用于危机话题提示
 const CRISIS_HOTLINES = [
   { name: '12355 青少年服务热线', number: '12355' },
   { name: '希望24热线', number: '400-161-9995' },
   { name: '北京心理危机干预中心', number: '010-82951332' },
 ];
 
+/**
+ * 家长端 AI 心理顾问对话组件
+ * @returns JSX 元素（功能关闭时返回禁用占位组件）
+ */
 export default function ParentChat() {
+  // AI 聊天功能未开启时直接展示禁用占位
   if (!AI_CHAT_ENABLED) {
     return <ChatDisabledPlaceholder role="parent" />;
   }
+  // 当前登录用户
   const user = useAuthStore((state) => state.user);
+  // 消息列表
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // 输入框内容
   const [inputValue, setInputValue] = useState('');
+  // AI 是否正在输入（请求中）
   const [isTyping, setIsTyping] = useState(false);
+  // 错误信息
   const [error, setError] = useState<string | null>(null);
+  // 是否正在使用 mock 回复（后端不可用降级）
   const [isUsingMock, setIsUsingMock] = useState(false);
+  // 消息列表底部锚点，用于自动滚动
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // 消息或输入态变化时，自动滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
+  /**
+   * 发送消息：含危机关键词检测、调用后端、风险上报、降级 mock
+   */
   const handleSend = async () => {
     const content = inputValue.trim();
+    // 空内容、未登录或正在输入时不发送
     if (!content || !user || isTyping) return;
 
     setError(null);
+    // 构造用户消息并加入列表
     const userMessage: ChatMessage = {
       id: `u-${Date.now()}`,
       userId: user.id,
@@ -62,7 +88,7 @@ export default function ParentChat() {
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
 
-    // 前端危机关键词检测
+    // 前端危机关键词检测：命中则直接返回危机提示，不再请求后端
     const crisisKeywords = ['自伤', '自杀', '不想活', '想死', '结束生命'];
     if (crisisKeywords.some(kw => content.includes(kw))) {
       setMessages((prev) => [...prev, {
@@ -88,6 +114,7 @@ export default function ParentChat() {
 
       if (reply) {
         const riskLevel = data?.riskLevel;
+        // 将 AI 回复加入消息列表
         setMessages((prev) => [
           ...prev,
           {
@@ -104,6 +131,7 @@ export default function ParentChat() {
         // 如果检测到高风险，展示风险提示
         if (riskLevel === 'red' || riskLevel === 'orange') {
           try {
+            // 异步上报危机事件，失败不影响主流程
             await riskApi.reportCrisis({ userId: user.id, riskLevel, triggerType: 'chat' });
           } catch {
             // 上报失败不影响主流程
@@ -118,6 +146,7 @@ export default function ParentChat() {
         err instanceof ApiError && (err.status === 0 || err.status >= 500);
       if (isNetError) {
         setIsUsingMock(true);
+        // 模拟 AI 思考延迟
         await new Promise((r) => setTimeout(r, 1200));
         const reply = mockReplies[Math.floor(Math.random() * mockReplies.length)];
         setMessages((prev) => [
@@ -131,6 +160,7 @@ export default function ParentChat() {
           },
         ]);
       } else {
+        // 业务错误（如长度超限）直接展示
         setError(err instanceof ApiError ? err.message : '发送失败，请稍后重试');
       }
     } finally {
@@ -138,6 +168,10 @@ export default function ParentChat() {
     }
   };
 
+  /**
+   * 输入框按键事件：Enter 发送，Shift+Enter 换行
+   * @param e - 键盘事件
+   */
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

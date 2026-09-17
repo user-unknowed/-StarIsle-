@@ -1,0 +1,155 @@
+<view class="page">
+
+  <!-- ===== 顶部胶囊：加入班级 ===== -->
+  <view class="top-bar">
+    <view class="join-capsule" bindtap="onTapJoinClass">
+      <text class="join-plus">＋</text>
+      <text class="join-text">加入班级</text>
+    </view>
+    <view wx:if="{{usingDemoData}}" class="demo-badge">演示数据</view>
+  </view>
+
+  <!-- ===== 加载状态 ===== -->
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="spinner"></view>
+    <view class="loading-tip">加载任务中...</view>
+  </view>
+
+  <!-- ===== 空态 ===== -->
+  <view wx:elif="{{!tasks.length}}" class="empty-wrap">
+    <view class="empty-icon">📭</view>
+    <view class="empty-text">{{emptyHint || '暂无任务'}}</view>
+    <view class="empty-sub">点击右上角「加入班级」输入老师提供的 6 位邀请码</view>
+  </view>
+
+  <!-- ===== 任务列表 ===== -->
+  <view wx:else class="task-list">
+    <view
+      wx:for="{{tasks}}"
+      wx:key="_id"
+      class="task-card"
+      data-id="{{item._id}}"
+      bindtap="onTapTaskCard"
+    >
+      <view class="task-header">
+        <view class="task-title">{{item.title}}</view>
+        <view class="task-class-name">{{item.className}}</view>
+      </view>
+
+      <view class="task-teacher-row">
+        <view class="teacher-anon-capsule">{{item.teacherAnonymousNo}}</view>
+        <view class="task-deadline">截止：{{item.deadline ? '' : '长期有效'}}</view>
+      </view>
+
+      <view class="task-instruction">{{item.instruction}}</view>
+
+      <view class="task-footer">
+        <view class="task-image-type">
+          <text wx:if="{{item.imageType === 'rorschach'}}">🃏 罗夏卡牌</text>
+          <text wx:elif="{{item.imageType === 'tat'}}">🎭 情境卡牌</text>
+          <text wx:else>🖼 图片任务</text>
+        </view>
+        <view class="go-btn">查看详情 ›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 加入班级 弹层 ===== -->
+  <view wx:if="{{showJoinModal}}" class="modal-mask" catchtap="onCloseJoinModal">
+    <view class="modal-card" catchtap="">
+      <view class="modal-title">加入班级</view>
+      <view class="modal-desc">请输入教师提供的 6 位邀请码（不含 O/0/I/1）</view>
+      <input
+        class="invite-input"
+        placeholder="例：AB23K9"
+        value="{{inviteInput}}"
+        bindinput="onInviteInput"
+        maxlength="6"
+        confirm-type="done"
+        bindconfirm="onConfirmJoin"
+      />
+      <view class="modal-btns">
+        <view class="modal-btn cancel" bindtap="onCloseJoinModal">取消</view>
+        <view class="modal-btn primary" bindtap="onConfirmJoin">确认加入</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 任务详情 弹层 ===== -->
+  <view wx:if="{{showTaskModal && selectedTask}}" class="modal-mask" catchtap="onCloseTaskModal">
+    <view class="task-modal-card" catchtap="">
+      <view class="modal-header">
+        <view class="modal-title">{{selectedTask.title}}</view>
+        <view class="modal-close" bindtap="onCloseTaskModal">×</view>
+      </view>
+
+      <scroll-view class="task-modal-body" scroll-y="true">
+        <view class="detail-row">
+          <view class="detail-label">班级</view>
+          <view class="detail-value">{{selectedTask.className}}</view>
+        </view>
+        <view class="detail-row">
+          <view class="detail-label">发布教师</view>
+          <view class="teacher-anon-capsule small">{{selectedTask.teacherAnonymousNo}}</view>
+        </view>
+        <view class="detail-section">
+          <view class="detail-section-title">任务说明</view>
+          <view class="detail-section-text">{{selectedTask.instruction}}</view>
+        </view>
+
+        <view class="detail-section">
+          <view class="detail-section-title">任务图片（点击放大）</view>
+          <view class="image-thumb" bindtap="onTapPreviewImage">
+            <image
+              wx:if="{{selectedTask.imageIds[0] && selectedTask._resolvedImage}}"
+              src="{{selectedTask._resolvedImage}}"
+              mode="aspectFit"
+              class="thumb-img"
+            />
+            <image
+              wx:elif="{{selectedTask.imageIds[0] === 'mock_img_ro_01'}}"
+              src="https://img.icons8.com/color/240/infinity.png"
+              mode="aspectFit"
+              class="thumb-img"
+            />
+            <image
+              wx:elif="{{selectedTask.imageIds[0] === 'mock_img_tat_01'}}"
+              src="https://img.icons8.com/color/240/narrative.png"
+              mode="aspectFit"
+              class="thumb-img"
+            />
+            <image
+              wx:else
+              src="https://img.icons8.com/color/240/image.png"
+              mode="aspectFit"
+              class="thumb-img"
+            />
+            <view class="image-tap-hint">🔍 点击查看大图</view>
+          </view>
+        </view>
+
+        <view class="detail-section">
+          <view class="detail-section-title">我的反馈</view>
+          <textarea
+            class="feedback-textarea"
+            placeholder="请写下你的观察、感受、联想、故事... 建议不少于20字，越详细分析越准确"
+            value="{{feedbackText}}"
+            bindinput="onFeedbackTextInput"
+            maxlength="2000"
+            auto-height="{{true}}"
+            show-confirm-bar="{{false}}"
+          />
+          <view class="text-count">{{feedbackTextCount}} / 2000</view>
+        </view>
+      </scroll-view>
+
+      <view class="task-modal-footer">
+        <view class="submit-btn {{submitting ? 'disabled' : ''}}" bindtap="onSubmitFeedback">
+          {{submitting ? '提交中...' : '提交反馈'}}
+        </view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-safe"></view>
+</view>

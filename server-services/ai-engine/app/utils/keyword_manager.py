@@ -1,15 +1,29 @@
+"""
+keyword_manager.py - 风险检测关键词管理器
+
+所属模块：ai-engine/app/utils
+功能简述：
+    维护风险检测所用的关键词库（高/中/低三档），提供内容扫描与风险分级能力，
+    供风险检测服务的 L1 关键词检测层调用。
+"""
 class KeywordManager:
     """
     关键词管理器 - 管理风险检测关键词库
+
+    持有按风险等级（high_risk / medium_risk / low_risk）与类别组织的中文关键词字典，
+    通过 check_keywords 对用户内容进行扫描并返回风险等级与命中信息。
     """
-    
+
     def __init__(self):
         # 加载关键词库
         self.keywords = self._load_keywords()
-    
+
     def _load_keywords(self) -> dict:
         """
-        加载关键词库
+        加载并返回分层关键词库。
+
+        Returns:
+            dict: 按 high_risk / medium_risk / low_risk 三档组织的嵌套关键词字典
         """
         return {
             "high_risk": {
@@ -29,11 +43,14 @@ class KeywordManager:
                 "家庭矛盾": ["和父母吵架", "家庭矛盾", "爸妈不理解"]
             }
         }
-    
+
     def check_keywords(self, content: str) -> dict:
         """
-        检查关键词
-        
+        检查内容中的风险关键词，按高→中→低优先级返回首个命中等级。
+
+        Args:
+            content: 待检查的用户文本内容
+
         Returns:
             {
                 "risk_level": "high" / "medium" / "low",
@@ -44,15 +61,15 @@ class KeywordManager:
         matched_keywords = []
         risk_level = "low"
         categories = []
-        
-        # 检查高风险关键词
+
+        # 检查高风险关键词：一旦命中即定为 high，无需继续低档
         for category, keywords in self.keywords["high_risk"].items():
             for keyword in keywords:
                 if keyword in content:
                     matched_keywords.append(keyword)
                     categories.append(category)
                     risk_level = "high"
-        
+
         # 如果没有高风险，检查中风险
         if risk_level == "low":
             for category, keywords in self.keywords["medium_risk"].items():
@@ -61,7 +78,7 @@ class KeywordManager:
                         matched_keywords.append(keyword)
                         categories.append(category)
                         risk_level = "medium"
-        
+
         # 如果没有中风险，检查低风险
         if risk_level == "low":
             for category, keywords in self.keywords["low_risk"].items():
@@ -69,16 +86,20 @@ class KeywordManager:
                     if keyword in content:
                         matched_keywords.append(keyword)
                         categories.append(category)
-        
+
         return {
             "risk_level": risk_level,
             "matched_keywords": matched_keywords,
             "categories": categories
         }
-    
+
     def update_keywords(self, category: str, keywords: list):
         """
-        更新关键词库
+        更新关键词库（预留接口）。
+
+        Args:
+            category: 关键词所属类别
+            keywords: 待新增/更新的关键词列表
         """
         # TODO: 实现关键词库更新逻辑
         pass

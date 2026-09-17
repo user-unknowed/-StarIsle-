@@ -1,0 +1,14 @@
+{
+  "name": "taskOperate",
+  "version": "1.0.0",
+  "description": "任务 CRUD + 科研导出 researchExport（3 层 scope 防漏）云函数",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --check index.js"
+  },
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "author": "",
+  "license": "ISC"
+}

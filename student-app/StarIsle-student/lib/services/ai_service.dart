@@ -1,25 +1,56 @@
+/// @file ai_service.dart
+/// @description 学生端 AI 服务层，封装智谱 GLM 与 SiliconFlow 两大模型供应商的调用，
+///              提供文章生成、内容摘要、风格转换、主题分析等能力，并支持主备供应商自动容错切换。
+/// @module student-app/services
+
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
+/// AI 服务，统一封装大模型 API 调用。
+///
+/// 内部维护当前供应商 [_currentProvider]（默认 'zhipu'），主供应商调用失败时
+/// 自动回退到备用供应商 'siliconflow'。
 class AIService {
+  // 智谱 API 基础地址
   static const String _zhipuBaseUrl = 'https://open.bigmodel.cn/api/paas/v4';
+  // SiliconFlow API 基础地址
   static const String _siliconFlowBaseUrl = 'https://api.siliconflow.cn/v1';
-  
+
+  // 当前配置的 API Key
   String? _apiKey;
+  // 当前使用的供应商标识：'zhipu' 或 'siliconflow'
   String _currentProvider = 'zhipu';
 
+  /// 构造函数，可传入初始 [apiKey]。
   AIService({String? apiKey}) {
     _apiKey = apiKey;
   }
 
+  /// 设置 API Key。
+  ///
+  /// 参数：
+  /// - [key]：待配置的 API 密钥。
   void setApiKey(String key) {
     _apiKey = key;
   }
 
+  /// 切换当前供应商。
+  ///
+  /// 参数：
+  /// - [provider]：供应商标识（如 'zhipu' 或 'siliconflow'）。
   void switchProvider(String provider) {
     _currentProvider = provider;
   }
 
+  /// 生成文章。
+  ///
+  /// 参数：
+  /// - [topic]：文章主题（必填）；
+  /// - [style]：写作风格，默认 'professional'；
+  /// - [wordCount]：字数目标，默认 800；
+  /// - [additionalRequirements]：可选的附加要求。
+  ///
+  /// 返回：模型生成的文章文本。
   Future<String> generateArticle({
     required String topic,
     String? style = 'professional',
@@ -42,6 +73,14 @@ ${additionalRequirements != null ? '附加要求：${additionalRequirements}' : 
     return await _callAPI(systemPrompt, userPrompt);
   }
 
+  /// 摘要内容。
+  ///
+  /// 参数：
+  /// - [content]：原文内容（必填）；
+  /// - [summaryLength]：摘要字数，默认 200；
+  /// - [summaryType]：摘要类型，默认 'general'（可为 'academic'）。
+  ///
+  /// 返回：模型生成的摘要文本。
   Future<String> summarizeContent({
     required String content,
     int? summaryLength = 200,
@@ -60,6 +99,13 @@ ${content}
     return await _callAPI(systemPrompt, userPrompt);
   }
 
+  /// 风格转换。
+  ///
+  /// 参数：
+  /// - [content]：原文内容（必填）；
+  /// - [targetStyle]：目标风格标识（必填）。
+  ///
+  /// 返回：转换为目标风格后的文本。
   Future<String> convertStyle({
     required String content,
     required String targetStyle,
@@ -79,6 +125,15 @@ ${content}
     return await _callAPI(systemPrompt, userPrompt);
   }
 
+  /// 主题分析。
+  ///
+  /// 参数：
+  /// - [content]：待分析内容（必填）；
+  /// - [includeSentiment]：是否包含情感分析；
+  /// - [includeKeywords]：是否包含关键词提取；
+  /// - [includeSuggestions]：是否包含改进建议。
+  ///
+  /// 返回：结构化的主题分析结果文本。
   Future<String> analyzeTopic({
     required String content,
     bool includeSentiment = true,
@@ -103,6 +158,12 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
     return await _callAPI(systemPrompt, userPrompt);
   }
 
+  /// 根据角色标识构建系统提示词。
+  ///
+  /// 参数：
+  /// - [role]：角色标识，支持 article_writer / summarizer / style_converter / topic_analyzer。
+  ///
+  /// 返回：对应的系统提示词文本，未知角色回退到 article_writer。
   String _buildSystemPrompt(String role) {
     final rolePrompts = {
       'article_writer': '''
@@ -203,6 +264,12 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
     return rolePrompts[role] ?? rolePrompts['article_writer']!;
   }
 
+  /// 根据风格标识获取风格描述文本。
+  ///
+  /// 参数：
+  /// - [style]：风格标识（如 'professional' / 'warm' 等）。
+  ///
+  /// 返回：对应的风格描述，未知风格回退到 'professional'。
   String _styleDescription(String? style) {
     final descriptions = {
       'professional': '专业严谨，适合学术或正式场合',
@@ -216,7 +283,15 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
     return descriptions[style] ?? descriptions['professional']!;
   }
 
+  /// 统一 API 调用入口，依据当前供应商分发请求，并在主供应商失败时自动回退。
+  ///
+  /// 参数：
+  /// - [systemPrompt]：系统提示词；
+  /// - [userPrompt]：用户提示词。
+  ///
+  /// 返回：模型回复内容。
   Future<String> _callAPI(String systemPrompt, String userPrompt) async {
+    // 校验 API Key 是否已配置
     if (_apiKey == null || _apiKey!.isEmpty) {
       throw Exception('API密钥未配置，请先设置API Key');
     }
@@ -228,6 +303,7 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
         return await _callSiliconFlowAPI(systemPrompt, userPrompt);
       }
     } catch (e) {
+      // 主供应商（智谱）失败时切换到备用供应商重试
       if (_currentProvider == 'zhipu') {
         _currentProvider = 'siliconflow';
         return await _callSiliconFlowAPI(systemPrompt, userPrompt);
@@ -236,9 +312,17 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
     }
   }
 
+  /// 调用智谱 GLM API（模型 glm-4-flash）。
+  ///
+  /// 参数：
+  /// - [systemPrompt]：系统提示词；
+  /// - [userPrompt]：用户提示词。
+  ///
+  /// 返回：模型回复内容；HTTP 非 200 时抛出异常。
   Future<String> _callZhipuAPI(String systemPrompt, String userPrompt) async {
     final url = Uri.parse('$_zhipuBaseUrl/chat/completions');
-    
+
+    // 构造请求体：模型名、消息列表、采样参数
     final body = jsonEncode({
       'model': 'glm-4-flash',
       'messages': [
@@ -249,6 +333,7 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
       'max_tokens': 2048,
     });
 
+    // 发起 POST 请求，使用 Bearer Token 鉴权
     final response = await http.post(
       url,
       headers: {
@@ -266,9 +351,17 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
     }
   }
 
+  /// 调用 SiliconFlow API（模型 Qwen/Qwen2-7B-Instruct）。
+  ///
+  /// 参数：
+  /// - [systemPrompt]：系统提示词；
+  /// - [userPrompt]：用户提示词。
+  ///
+  /// 返回：模型回复内容；HTTP 非 200 时抛出异常。
   Future<String> _callSiliconFlowAPI(String systemPrompt, String userPrompt) async {
     final url = Uri.parse('$_siliconFlowBaseUrl/chat/completions');
-    
+
+    // 构造请求体
     final body = jsonEncode({
       'model': 'Qwen/Qwen2-7B-Instruct',
       'messages': [
@@ -279,6 +372,7 @@ ${includeSuggestions ? '- 改进建议：针对内容提出优化建议' : ''}
       'max_tokens': 2048,
     });
 
+    // 发起 POST 请求
     final response = await http.post(
       url,
       headers: {

@@ -1,0 +1,124 @@
+<!-- pages/teacher/student-history/index.wxml · Task7 严格范围冻结 -->
+<view class="page-content">
+
+  <!-- 演示数据横幅（仅 Mock 模式显示） -->
+  <view wx:if="{{usingMockData}}" class="mock-banner">
+    <text>⚠️ 演示数据，未从云端拉取（接口暂未就绪）</text>
+  </view>
+
+  <view class="page-header">
+    <view class="title">学生历史记录</view>
+    <view class="subtitle card-subtitle">仅限本人白名单 · 5 维度趋势 · 全匿名</view>
+
+    <!-- 学生 picker（匿名编号） -->
+    <view class="student-picker card">
+      <view class="scope-label">选择学生（匿名编号）</view>
+      <picker mode="selector" range="{{studentOptions}}" range-key="label" value="{{studentIndex}}" bindchange="onStudentChange">
+        <view class="picker-value {{studentIndex < 0 ? 'placeholder' : ''}}">
+          <text wx:if="{{studentIndex < 0 || !studentOptions.length}}">请从白名单中选择</text>
+          <text wx:else>{{studentOptions[studentIndex].label}}</text>
+          <text class="arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+
+    <!-- 白名单骨架 -->
+    <view wx:if="{{loadingWhitelist}}" class="skeleton-big"></view>
+  </view>
+
+  <!-- 错误横幅 -->
+  <view wx:if="{{errorMsg}}" class="error-banner"><text>{{errorMsg}}</text></view>
+
+  <!-- 未选 + picker 有项 → 引导 -->
+  <view wx:if="{{!loadingWhitelist && !currentStudentId && studentOptions.length > 0}}" class="guide-state card">
+    <view class="guide-icon">👤</view>
+    <view class="guide-title">请选择一名学生</view>
+    <view class="guide-desc">下拉选择器仅显示您名下班级 / 绑定范围内的学生匿名编号</view>
+  </view>
+
+  <!-- 白名单空 -->
+  <view wx:if="{{!loadingWhitelist && studentOptions.length === 0}}" class="guide-state card empty-whitelist">
+    <view class="guide-icon">📭</view>
+    <view class="guide-title">暂无名下学生</view>
+    <view class="guide-desc">请先到「班级管理」创建班级并邀请加入，或在「绑定管理」添加一对一绑定</view>
+  </view>
+
+  <!-- 选中 → 画布折线图（canvas 2d）+ 时间轴 -->
+  <block wx:if="{{currentStudentId}}">
+
+    <!-- 5 维度折线图 + 图例 -->
+    <view class="card chart-card">
+      <view class="row-between section-head">
+        <view>
+          <view class="card-title">5 维度分趋势（近 {{totalCount}} 条）</view>
+          <view class="card-subtitle">匿名编号：{{currentAnonymousNo}} · 纵轴 0-100</view>
+        </view>
+        <view wx:if="{{loadingHistory}}" class="pill pill-indigo">加载中…</view>
+      </view>
+
+      <!-- canvas 容器 + 骨架 -->
+      <view wx:if="{{loadingHistory && !chartXLabels.length}}" class="skeleton-chart"></view>
+
+      <view wx:else class="chart-wrap">
+        <!-- 新版 canvas 2d：用 node 接口，type="2d"；canvas-id 仅兼容旧版忽略 -->
+        <canvas type="2d" id="scoreLineChart" class="line-canvas"></canvas>
+      </view>
+
+      <!-- 5 色图例（WXML，与 DIM_COLORS 严格一致） -->
+      <view class="chart-legend">
+        <block wx:for="{{chartLegend}}" wx:key="key">
+          <view class="legend-item">
+            <view class="legend-swatch" style="background: {{item.color}};"></view>
+            <view class="legend-label">{{item.label}}</view>
+            <view class="legend-hex" style="color: {{item.color}};">{{item.color}}</view>
+          </view>
+        </block>
+      </view>
+    </view>
+
+    <!-- 时间轴列表 -->
+    <view class="card timeline-card">
+      <view class="row-between section-head">
+        <view class="card-title">历史反馈时间轴</view>
+        <view class="card-subtitle">共 {{totalCount}} 条 · 倒序</view>
+      </view>
+
+      <view wx:if="{{loadingHistory}}" class="skeleton-list">
+        <view class="skeleton-row" wx:for="{{[0,1,2]}}" wx:key="*this"></view>
+      </view>
+
+      <view wx:elif="{{timelineList.length === 0}}" class="empty-state small-empty">
+        <view class="empty-icon">🗂️</view>
+        <view class="empty-title">暂无历史反馈</view>
+        <view class="empty-desc">该学生尚未在您的任务中提交反馈</view>
+      </view>
+
+      <view wx:else class="timeline">
+        <block wx:for="{{timelineList}}" wx:key="_id">
+          <view class="tl-node">
+            <view class="tl-dot"></view>
+            <view class="tl-content" bindtap="onTimelineItemTap" data-id="{{item._id}}">
+              <view class="row-between tl-head">
+                <view class="tl-title text-ellipsis">{{item.taskTitle}}</view>
+                <view class="pill {{item.reviewPillClass}}">{{item.reviewPillText}}</view>
+              </view>
+              <view class="tl-time">{{item.submitTimeText}}</view>
+
+              <!-- 预警红胶囊 -->
+              <view wx:if="{{item.warningTags.length}}" class="tl-tags">
+                <block wx:for="{{item.warningTags}}" wx:for-item="t" wx:key="*this">
+                  <view class="pill pill-warning">#{{t}}</view>
+                </block>
+              </view>
+
+              <view wx:if="{{item.previewText}}" class="tl-preview">{{item.previewText}}…</view>
+              <view class="tl-link">查看详情 →</view>
+            </view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </block>
+
+  <view class="bottom-space"></view>
+</view>

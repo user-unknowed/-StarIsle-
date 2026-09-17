@@ -1,3 +1,8 @@
+/**
+ * @file TeacherProfile.tsx
+ * @description 教师端个人资料页：展示/编辑信息、班级统计、快捷菜单、权限配置、数据管理、设置与退出登录
+ * @module web-frontend/pages/teacher
+ */
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useClassroomStore } from '../../store/classroomStore';
@@ -5,6 +10,7 @@ import { Header } from '../../components/common/Header';
 import { useToast } from '../../components/ui/Toast';
 import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, Shield, Users, Download, Upload } from 'lucide-react';
 
+// 快捷菜单项：图标、标题、徽章数（可选）
 const menuItems = [
   { icon: Bell, label: '通知中心', badge: 2 },
   { icon: BookOpen, label: '数据报告' },
@@ -12,6 +18,7 @@ const menuItems = [
   { icon: Settings, label: '系统设置' },
 ];
 
+// 设置项：图标、标题、描述
 const settingsItems = [
   { icon: Bell, label: '消息通知', description: '接收系统通知和提醒' },
   { icon: Mail, label: '邮箱设置', description: '配置邮箱通知' },
@@ -19,6 +26,7 @@ const settingsItems = [
   { icon: Phone, label: '隐私设置', description: '管理数据隐私和权限' },
 ];
 
+// 权限初始配置：班级管理、学生数据、数据导入导出、风险预警、专业咨询
 const initialPermissions = [
   { id: 'class-management', name: '班级管理', description: '管理班级信息和学生名单', enabled: true },
   { id: 'student-data', name: '学生数据查看', description: '查看学生心情数据和风险评估', enabled: true },
@@ -27,29 +35,48 @@ const initialPermissions = [
   { id: 'consult', name: '专业咨询', description: '使用专业心理咨询助手', enabled: true },
 ];
 
+/**
+ * 教师端个人资料组件
+ * @returns JSX 元素
+ */
 export default function TeacherProfile() {
+  // 当前用户、退出登录、更新资料
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
   const updateProfile = useAuthStore((state) => state.updateProfile);
+  // 班级统计（用于展示）
   const stats = useClassroomStore((state) => state.stats);
   const toast = useToast();
 
+  // 是否处于资料编辑态
   const [isEditing, setIsEditing] = useState(false);
+  // 编辑中的昵称与签名
   const [editedNickname, setEditedNickname] = useState(user?.nickname || '');
   const [editedSignature, setEditedSignature] = useState(user?.signature || '');
+  // 权限列表
   const [permissions, setPermissions] = useState(initialPermissions);
 
+  /**
+   * 保存资料：调用鉴权 store 更新昵称与签名
+   */
   const handleSave = async () => {
     await updateProfile({ nickname: editedNickname, signature: editedSignature });
     setIsEditing(false);
     toast.success('资料已更新');
   };
 
+  /**
+   * 切换某权限开关
+   * @param id - 权限ID
+   */
   const togglePermission = (id: string) => {
     setPermissions(prev => prev.map(p => p.id === id ? { ...p, enabled: !p.enabled } : p));
     toast.info('权限已更新（演示）');
   };
 
+  /**
+   * 未开发功能占位提示
+   */
   const comingSoon = () => toast.info('功能开发中，敬请期待');
 
   // totalClasses 由 classroomStore 提供（跨文件依赖，类型尚未包含则安全降级到 '--'）

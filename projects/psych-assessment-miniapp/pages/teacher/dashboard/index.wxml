@@ -1,0 +1,197 @@
+<!-- pages/teacher/dashboard/index.wxml · Task7 严格范围冻结 -->
+<view class="page-content">
+
+  <!-- 顶部：演示数据横幅（仅 Mock 模式显示） -->
+  <view wx:if="{{usingMockData}}" class="mock-banner">
+    <text>⚠️ 演示数据，未从云端拉取（接口暂未就绪）</text>
+  </view>
+
+  <view class="page-header">
+    <view class="title-row">
+      <view class="title">教师工作台 · Dashboard</view>
+      <view class="subtitle card-subtitle">KPI · 趋势 · 预警 TOP20 · 全匿名</view>
+    </view>
+
+    <!-- 范围筛选器：全部 / 匿名班级·邀请码后4位 / 一对一绑定 #Sxxxxxx -->
+    <view class="scope-picker card">
+      <view class="scope-label">筛选范围</view>
+      <picker mode="selector" range="{{scopeOptions}}" range-key="label" value="{{scopeIndex}}" bindchange="onScopeChange">
+        <view class="picker-value">
+          <text>{{scopeOptions[scopeIndex].label || '全部范围'}}</text>
+          <text class="arrow">▾</text>
+        </view>
+      </picker>
+    </view>
+  </view>
+
+  <!-- 错误横幅 -->
+  <view wx:if="{{errorMsg}}" class="error-banner"><text>{{errorMsg}}</text></view>
+
+  <!-- KPI 4 卡 · 2×2 → 今日预警 / 7日累计 / 待审核AI / 范围学生数 -->
+  <view class="kpi-grid">
+    <view class="kpi-card kpi-red">
+      <view class="kpi-icon">🚨</view>
+      <view class="kpi-value">
+        <text wx:if="{{loadingKpi}}" class="kpi-skeleton">——</text>
+        <text wx:else>{{kpiTodayWarn}}</text>
+      </view>
+      <view class="kpi-title">今日预警</view>
+      <view class="kpi-desc">预警标签 &gt; 0 · 今日 00:00 起</view>
+    </view>
+    <view class="kpi-card kpi-indigo">
+      <view class="kpi-icon">📈</view>
+      <view class="kpi-value">
+        <text wx:if="{{loadingKpi}}" class="kpi-skeleton">——</text>
+        <text wx:else>{{kpiWeek7Warn}}</text>
+      </view>
+      <view class="kpi-title">7 日累计预警</view>
+      <view class="kpi-desc">近 7 天滚动累计</view>
+    </view>
+    <view class="kpi-card kpi-yellow">
+      <view class="kpi-icon">🔍</view>
+      <view class="kpi-value">
+        <text wx:if="{{loadingKpi}}" class="kpi-skeleton">——</text>
+        <text wx:else>{{kpiPendingAi}}</text>
+      </view>
+      <view class="kpi-title">待审核 AI</view>
+      <view class="kpi-desc">reviewStatus = pending_review</view>
+    </view>
+    <view class="kpi-card kpi-blue">
+      <view class="kpi-icon">👥</view>
+      <view class="kpi-value">
+        <text wx:if="{{loadingKpi}}" class="kpi-skeleton">——</text>
+        <text wx:else>{{kpiStudentCount}}</text>
+      </view>
+      <view class="kpi-title">本人范围学生</view>
+      <view class="kpi-desc">班级 + 绑定白名单总人数</view>
+    </view>
+  </view>
+
+  <!-- 7 日趋势条形图（纯 WXML + WXSS · day-bar flex 列） -->
+  <view class="card trend-card">
+    <view class="row-between section-head">
+      <view class="card-title">近 7 日预警趋势</view>
+      <view class="card-subtitle">单位：条 / 日 · 高峰 {{dayMaxCount}}</view>
+    </view>
+
+    <view wx:if="{{loadingWarnings}}" class="skeleton-trend"></view>
+
+    <view wx:else class="trend-area">
+      <!-- 背景网格：0 / ½Max / Max 三档虚线 -->
+      <view class="grid-lines">
+        <view class="grid-line g-0"></view>
+        <view class="grid-line g-half"></view>
+        <view class="grid-line g-max"></view>
+      </view>
+      <view class="day-columns">
+        <block wx:for="{{dayBars}}" wx:key="dateLabel">
+          <view class="day-col">
+            <view class="day-count">{{item.count}}</view>
+            <view class="day-bar" style="height: {{item.heightRpx}};"></view>
+            <view class="day-label">{{item.dateLabel}}</view>
+          </view>
+        </block>
+      </view>
+    </view>
+  </view>
+
+  <!-- 预警列表 TOP20 -->
+  <view class="card warning-section">
+    <view class="row-between section-head">
+      <view class="card-title">
+        预警列表 TOP20
+        <text class="badge-warn pill pill-red">{{warningsTotal}}</text>
+      </view>
+      <view class="card-subtitle">按提交时间倒序</view>
+    </view>
+
+    <view wx:if="{{loadingWarnings}}" class="skeleton-list">
+      <view class="skeleton-row" wx:for="{{[0,1,2,3,4]}}" wx:key="*this"></view>
+    </view>
+
+    <view wx:elif="{{emptyState && warningList.length === 0}}" class="empty-state">
+      <view class="empty-icon">🗂️</view>
+      <view class="empty-title">暂无预警</view>
+      <view class="empty-desc">当前范围内暂无预警记录，下拉刷新或创建任务后再试</view>
+    </view>
+
+    <view wx:else class="warning-list">
+      <block wx:for="{{warningList}}" wx:key="_id">
+        <view class="warning-item" catchtap="onWarningTap" data-id="{{item._id}}">
+          <view class="row-between wi-head">
+            <view class="wi-anon">{{item.studentAnonymousNo}}</view>
+            <view class="pill {{item.reviewPillClass}}">{{item.reviewPillText}}</view>
+          </view>
+          <view class="wi-time">{{item.submitTimeText}}</view>
+          <view class="wi-tags">
+            <block wx:for="{{item.warningTags}}" wx:for-item="t" wx:key="*this">
+              <view class="pill pill-warning">#{{t}}</view>
+            </block>
+            <view wx:if="{{item.warningTags.length === 0}}" class="pill pill-gray">（无预警标签）</view>
+          </view>
+          <view wx:if="{{item.summaryPreview}}" class="wi-preview">{{item.summaryPreview}}…</view>
+          <view class="wi-action">
+            <view class="wi-detail-btn">查看详情</view>
+          </view>
+        </view>
+      </block>
+    </view>
+  </view>
+
+  <!-- 预警详情弹窗（catchtap 阻止冒泡） -->
+  <view wx:if="{{detailModalOpen}}" class="modal-mask" catchtap="onCloseDetail">
+    <view class="modal-box" catchtap="_noop">
+      <view class="modal-head">
+        <view class="modal-title">预警详情</view>
+        <view class="modal-close" catchtap="onCloseDetail">×</view>
+      </view>
+      <scroll-view scroll-y class="modal-body">
+        <block wx:if="{{detailLoading}}">
+          <view class="skeleton-list">
+            <view class="skeleton-row" style="height: 80rpx"></view>
+            <view class="skeleton-row" style="height: 120rpx"></view>
+            <view class="skeleton-row" style="height: 160rpx"></view>
+          </view>
+        </block>
+        <block wx:elif="{{detailData && detailData.errorMsg}}">
+          <view class="empty-state small-empty">
+            <view class="empty-icon">⚠️</view>
+            <view class="empty-title">无法读取详情</view>
+            <view class="empty-desc">{{detailData.errorMsg}}</view>
+          </view>
+        </block>
+        <block wx:elif="{{detailData}}">
+          <view class="d-row d-top">
+            <view class="d-anon">{{detailData.studentAnonymousNo}}</view>
+            <view class="pill {{detailData.reviewPillClass}}">{{detailData.reviewPillText}}</view>
+          </view>
+          <view class="d-meta">
+            <view class="d-meta-item">📅 {{detailData.submitTimeText}}</view>
+            <view class="d-meta-item">📋 {{detailData.taskTitle}}</view>
+            <view wx:if="{{detailData.reviewedByAnonymousNo}}" class="d-meta-item">✅ 审核人：{{detailData.reviewedByAnonymousNo}}</view>
+          </view>
+          <view wx:if="{{detailData.mergedTags.length}}" class="d-tags">
+            <block wx:for="{{detailData.mergedTags}}" wx:for-item="t" wx:key="*this">
+              <view class="pill pill-warning">#{{t}}</view>
+            </block>
+          </view>
+          <view wx:if="{{detailData.aiSummary}}" class="d-section">
+            <view class="d-sec-label">AI 分析摘要</view>
+            <view class="d-sec-body">{{detailData.aiSummary}}</view>
+          </view>
+          <view class="d-section">
+            <view class="d-sec-label">学生反馈原文（逐题）</view>
+            <block wx:for="{{detailData.previewTexts}}" wx:for-item="pt" wx:key="idx">
+              <view class="d-preview">
+                <view class="d-preview-label">题目 {{pt.idx}}</view>
+                <view class="d-preview-body">{{pt.text || '（未填写文字）'}}</view>
+              </view>
+            </block>
+          </view>
+        </block>
+      </scroll-view>
+    </view>
+  </view>
+
+  <view class="bottom-space"></view>
+</view>

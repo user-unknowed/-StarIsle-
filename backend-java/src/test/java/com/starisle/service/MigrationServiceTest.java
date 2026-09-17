@@ -20,39 +20,57 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
+/**
+ * 数据迁移服务测试
+ * 覆盖校验和计算、一致性报告、迁移结果结构与错误收集、
+ * 以及用户、心情、聊天消息等数据迁移场景。
+ */
 @ExtendWith(MockitoExtension.class)
 public class MigrationServiceTest {
 
+    /** 源数据库 JDBC 模板 Mock */
     @Mock
     private JdbcTemplate sourceJdbcTemplate;
 
+    /** 目标数据库 JDBC 模板 Mock */
     @Mock
     private JdbcTemplate targetJdbcTemplate;
 
+    /** 用户仓库 Mock */
     @Mock
     private UserRepository userRepository;
 
+    /** 心情记录仓库 Mock */
     @Mock
     private MoodRecordRepository moodRecordRepository;
 
+    /** 聊天消息仓库 Mock */
     @Mock
     private ChatMessageRepository chatMessageRepository;
 
+    /** 测评结果仓库 Mock */
     @Mock
     private AssessmentResultRepository assessmentResultRepository;
 
+    /** 紧急预警仓库 Mock */
     @Mock
     private EmergencyAlertRepository emergencyAlertRepository;
 
+    /** 家长用户仓库 Mock */
     @Mock
     private ParentUserRepository parentUserRepository;
 
+    /** 亲子绑定仓库 Mock */
     @Mock
     private ParentStudentBindingRepository parentStudentBindingRepository;
 
+    /** 待测迁移服务，依赖注入上述 Mock */
     @InjectMocks
     private MigrationService migrationService;
 
+    /**
+     * 测试计算表校验和，结果应为 64 位十六进制
+     */
     @Test
     @DisplayName("测试计算校验和")
     void testCalculateChecksum() {
@@ -60,12 +78,15 @@ public class MigrationServiceTest {
                 .thenReturn(1234567890L);
 
         String checksum = migrationService.calculateChecksum("users");
-        
+
         assertNotNull(checksum);
         assertFalse(checksum.isEmpty());
         assertEquals(64, checksum.length());
     }
 
+    /**
+     * 测试所有表记录数一致时报告显示全部一致
+     */
     @Test
     @DisplayName("测试验证数据一致性报告")
     void testVerifyDataConsistency() {
@@ -98,12 +119,15 @@ public class MigrationServiceTest {
         when(parentStudentBindingRepository.count()).thenReturn(15L);
 
         MigrationService.DataConsistencyReport report = migrationService.verifyDataConsistency();
-        
+
         assertNotNull(report);
         assertTrue(report.isAllConsistent());
         assertEquals(7, report.getTableChecks().size());
     }
 
+    /**
+     * 测试用户表记录数不一致时报告标识不一致
+     */
     @Test
     @DisplayName("测试数据不一致时报告显示不一致")
     void testDataInconsistencyReport() {
@@ -136,30 +160,33 @@ public class MigrationServiceTest {
         when(parentStudentBindingRepository.count()).thenReturn(15L);
 
         MigrationService.DataConsistencyReport report = migrationService.verifyDataConsistency();
-        
+
         assertNotNull(report);
         assertFalse(report.isAllConsistent());
-        
+
         MigrationService.TableCheck usersCheck = report.getTableChecks().stream()
                 .filter(c -> "users".equals(c.getTableName()))
                 .findFirst().orElse(null);
-        
+
         assertNotNull(usersCheck);
         assertFalse(usersCheck.isConsistent());
         assertEquals(10L, usersCheck.getSourceCount());
         assertEquals(9L, usersCheck.getTargetCount());
     }
 
+    /**
+     * 测试迁移结果对象的基本属性与错误列表初始化
+     */
     @Test
     @DisplayName("测试迁移结果结构")
     void testMigrationResultStructure() {
         MigrationService.MigrationResult result = new MigrationService.MigrationResult();
-        
+
         result.setMigrationId("test-migration-id");
         result.setStartTime(LocalDateTime.now());
         result.setStatus("running");
         result.setAffectedRows(100);
-        
+
         assertNotNull(result.getMigrationId());
         assertNotNull(result.getStartTime());
         assertEquals("running", result.getStatus());
@@ -168,13 +195,16 @@ public class MigrationServiceTest {
         assertTrue(result.getErrors().isEmpty());
     }
 
+    /**
+     * 测试向迁移结果中新增错误明细
+     */
     @Test
     @DisplayName("测试添加迁移错误")
     void testAddMigrationError() {
         MigrationService.MigrationResult result = new MigrationService.MigrationResult();
-        
+
         result.addError("users", "user123", "Duplicate username");
-        
+
         assertEquals(1, result.getErrors().size());
         MigrationService.MigrationError error = result.getErrors().get(0);
         assertEquals("users", error.getTable());
@@ -182,6 +212,9 @@ public class MigrationServiceTest {
         assertEquals("Duplicate username", error.getMessage());
     }
 
+    /**
+     * 测试从源库迁移单条用户数据成功
+     */
     @Test
     @DisplayName("测试迁移用户数据")
     void testMigrateUsers() {
@@ -206,12 +239,15 @@ public class MigrationServiceTest {
 
         MigrationService.MigrationResult result = new MigrationService.MigrationResult();
         long migrated = migrationService.migrateUsers(result);
-        
+
         assertEquals(1, migrated);
         assertTrue(result.getErrors().isEmpty());
         verify(userRepository, times(1)).save(any(User.class));
     }
 
+    /**
+     * 测试从源库迁移单条心情记录数据成功
+     */
     @Test
     @DisplayName("测试迁移心情记录数据")
     void testMigrateMoodRecords() {
@@ -230,12 +266,15 @@ public class MigrationServiceTest {
 
         MigrationService.MigrationResult result = new MigrationService.MigrationResult();
         long migrated = migrationService.migrateMoodRecords(result);
-        
+
         assertEquals(1, migrated);
         assertTrue(result.getErrors().isEmpty());
         verify(moodRecordRepository, times(1)).save(any(MoodRecord.class));
     }
 
+    /**
+     * 测试从源库迁移单条聊天消息数据成功
+     */
     @Test
     @DisplayName("测试迁移聊天消息数据")
     void testMigrateChatMessages() {
@@ -256,12 +295,15 @@ public class MigrationServiceTest {
 
         MigrationService.MigrationResult result = new MigrationService.MigrationResult();
         long migrated = migrationService.migrateChatMessages(result);
-        
+
         assertEquals(1, migrated);
         assertTrue(result.getErrors().isEmpty());
         verify(chatMessageRepository, times(1)).save(any(ChatMessage.class));
     }
 
+    /**
+     * 测试迁移过程中保存失败时记录错误且不计入迁移行数
+     */
     @Test
     @DisplayName("测试迁移失败时记录错误")
     void testMigrateFailureRecordsError() {
@@ -277,7 +319,7 @@ public class MigrationServiceTest {
 
         MigrationService.MigrationResult result = new MigrationService.MigrationResult();
         long migrated = migrationService.migrateUsers(result);
-        
+
         assertEquals(0, migrated);
         assertEquals(1, result.getErrors().size());
         assertEquals("users", result.getErrors().get(0).getTable());

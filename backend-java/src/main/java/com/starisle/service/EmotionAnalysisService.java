@@ -7,15 +7,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * 情感分析服务
+ * 通过关键词匹配识别文本中的情绪类型，支持基础情感检测。
+ */
 @Service
 public class EmotionAnalysisService {
     
+    /** 支持识别的情绪标签集合 */
     private final List<String> emotionLabels = List.of(
         "开心", "兴奋", "平静", "焦虑",
         "担忧", "愤怒", "悲伤", "孤独",
         "疲惫", "迷茫", "无助"
     );
     
+    /**
+     * 分析文本情感
+     * 基于关键词匹配识别文本中的情绪类型。
+     *
+     * @param content 待分析文本
+     * @return 检测到的情绪列表
+     */
     public List<String> analyze(String content) {
         try {
             return keywordBasedAnalysis(content);
@@ -24,6 +36,13 @@ public class EmotionAnalysisService {
         }
     }
     
+    /**
+     * 基于关键词的情感分析
+     * 遍历情绪关键词字典，命中即加入结果；无命中时默认返回"平静"。
+     *
+     * @param content 待分析文本
+     * @return 检测到的情绪列表
+     */
     private List<String> keywordBasedAnalysis(String content) {
         List<String> detectedEmotions = new ArrayList<>();
         

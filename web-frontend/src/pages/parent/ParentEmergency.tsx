@@ -1,3 +1,8 @@
+/**
+ * @file ParentEmergency.tsx
+ * @description 家长端应急中心：展示紧急告警（含红色告警弹窗与二次确认）、按类型筛选应急资源、提供热线/医院导航
+ * @module web-frontend/pages/parent
+ */
 import { useEffect, useState } from 'react';
 import { useParentStore } from '../../store/parentStore';
 import { Header } from '../../components/common/Header';
@@ -15,12 +20,18 @@ import {
 } from 'lucide-react';
 import type { EmergencyResource } from '../../types';
 
+// 资源类型元信息：标签、图标、配色
 const resourceTypeMeta: Record<string, { label: string; icon: typeof Phone; color: string }> = {
   hotline: { label: '心理热线', icon: Phone, color: 'bg-red-100 text-red-600' },
   hospital: { label: '医疗机构', icon: Hospital, color: 'bg-orange-100 text-orange-600' },
   community: { label: '社区支持', icon: UsersIcon, color: 'bg-amber-100 text-amber-600' },
 };
 
+/**
+ * 根据告警等级返回对应 Tailwind 配色（边框 + 背景）
+ * @param level - 告警等级
+ * @returns Tailwind 类名字符串
+ */
 const getAlertColor = (level: string) => {
   switch (level) {
     case 'red':
@@ -34,6 +45,11 @@ const getAlertColor = (level: string) => {
   }
 };
 
+/**
+ * 根据告警等级返回徽章配色
+ * @param level - 告警等级
+ * @returns Tailwind 类名字符串
+ */
 const getAlertBadge = (level: string) => {
   switch (level) {
     case 'red':
@@ -47,6 +63,11 @@ const getAlertBadge = (level: string) => {
   }
 };
 
+/**
+ * 根据告警等级返回中文标签
+ * @param level - 告警等级
+ * @returns 高风险/中风险/低风险/正常
+ */
 const getAlertLabel = (level: string) => {
   switch (level) {
     case 'red':
@@ -60,9 +81,15 @@ const getAlertLabel = (level: string) => {
   }
 };
 
+// 资源筛选类型：全部/热线/医院/社区
 type FilterType = 'all' | 'hotline' | 'hospital' | 'community';
 
+/**
+ * 家长端应急中心组件
+ * @returns JSX 元素
+ */
 export default function ParentEmergency() {
+  // 从家长 store 取出告警、资源、加载/错误/mock 状态及相关 action
   const {
     emergencyAlerts,
     emergencyResources,
@@ -75,15 +102,23 @@ export default function ParentEmergency() {
   } = useParentStore();
 
   const toast = useToast();
+  // 当前资源筛选类型
   const [filter, setFilter] = useState<FilterType>('all');
+  // 当前等待二次确认的告警 ID
   const [confirmingAlertId, setConfirmingAlertId] = useState<string | null>(null);
+  // 红色告警弹窗是否被用户「稍后处理」
   const [redAlertDismissed, setRedAlertDismissed] = useState(false);
 
+  // 进入页面拉取告警与资源列表
   useEffect(() => {
     fetchAlerts();
     fetchResources();
   }, [fetchAlerts, fetchResources]);
 
+  /**
+   * 确认告警：第一次点击进入二次确认态，第二次点击才真正调用确认接口
+   * @param alertId - 告警 ID
+   */
   const handleConfirm = async (alertId: string) => {
     if (confirmingAlertId !== alertId) {
       setConfirmingAlertId(alertId);
@@ -94,16 +129,23 @@ export default function ParentEmergency() {
     toast.success('已确认告警');
   };
 
+  /**
+   * 切换资源筛选类型并拉取对应资源
+   * @param type - 筛选类型
+   */
   const handleFilterChange = (type: FilterType) => {
     setFilter(type);
     fetchResources(type === 'all' ? undefined : type);
   };
 
+  // 客户端二次过滤资源列表
   const filteredResources: EmergencyResource[] =
     filter === 'all' ? emergencyResources : emergencyResources.filter((r) => r.type === filter);
 
+  // 拆分告警为「待处理」与「已确认」两组
   const activeAlerts = emergencyAlerts.filter((a) => !a.confirmed);
   const confirmedAlerts = emergencyAlerts.filter((a) => a.confirmed);
+  // 是否存在未确认的红色告警（决定弹窗是否展示）
   const hasUnconfirmedRed = activeAlerts.some(a => a.level === 'red');
 
   // 当无未确认红色告警时重置「稍后处理」状态，以便后续新告警可再次弹出

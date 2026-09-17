@@ -1,3 +1,6 @@
+/* platform.css：跨平台基础样式与无障碍/触控适配工具类，覆盖安全区、滚动、输入框、模糊、模态、平台触控目标等 */
+
+/* 根级安全区变量：默认取环境安全区域（刘海屏/底部 Home 条） */
 :root {
   --safe-area-inset-top: env(safe-area-inset-top);
   --safe-area-inset-bottom: env(safe-area-inset-bottom);
@@ -5,6 +8,7 @@
   --safe-area-inset-right: env(safe-area-inset-right);
 }
 
+/* 当浏览器支持 env(safe-area-inset-top) 时，显式覆盖一遍变量，确保取到正确值 */
 @supports (padding-top: env(safe-area-inset-top)) {
   :root {
     --safe-area-inset-top: env(safe-area-inset-top);
@@ -14,6 +18,7 @@
   }
 }
 
+/* html 基础：根字号 16px，禁止移动端横竖屏切换时的字号缩放 */
 html {
   font-size: 16px;
   -webkit-text-size-adjust: 100%;
@@ -21,6 +26,7 @@ html {
   text-size-adjust: 100%;
 }
 
+/* body 基础：字体平滑、去除点击高亮、禁止纵向过度滚动回弹 */
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -28,6 +34,7 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* 单边安全区内边距工具类 */
 .safe-area-top {
   padding-top: var(--safe-area-inset-top);
 }
@@ -44,6 +51,7 @@ body {
   padding-right: var(--safe-area-inset-right);
 }
 
+/* 四向安全区内边距：用于全屏容器 */
 .safe-area-inset {
   padding-top: var(--safe-area-inset-top);
   padding-bottom: var(--safe-area-inset-bottom);
@@ -51,26 +59,31 @@ body {
   padding-right: var(--safe-area-inset-right);
 }
 
+/* 滚动容器：开启 iOS 惯性滚动并隐藏滚动条 */
 .scroll-container {
   -webkit-overflow-scrolling: touch;
   overflow-y: auto;
 }
 
+/* 隐藏 webkit 滚动条 */
 .scroll-container::-webkit-scrollbar {
   display: none;
 }
 
+/* 隐藏 IE/Edge 与 Firefox 滚动条 */
 .scroll-container {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
+/* 表单元素基础字号，避免 iOS 聚焦自动放大 */
 input,
 select,
 textarea {
   font-size: 16px;
 }
 
+/* 文本类输入框：去除原生外观，统一字号 */
 input[type="text"],
 input[type="password"],
 input[type="email"],
@@ -83,39 +96,46 @@ textarea {
   appearance: none;
 }
 
+/* 聚焦时去除默认外描边（自定义 UI 接管高亮） */
 input:focus,
 select:focus,
 textarea:focus {
   outline: none;
 }
 
+/* 支持背景模糊时的样式：透明度更低，配合毛玻璃效果 */
 .backdrop-blur-supported {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
 }
 
+/* 不支持背景模糊时的回退：使用更高不透明度的纯色背景 */
 .backdrop-blur-fallback {
   background-color: rgba(255, 255, 255, 0.9);
 }
 
+/* 暗色模式下的回退背景 */
 .dark .backdrop-blur-fallback {
   background-color: rgba(17, 24, 39, 0.9);
 }
 
+/* 当浏览器支持 backdrop-filter 时，启用更透明的高亮背景（浅/暗模式） */
 @supports (backdrop-filter: blur(12px)) {
   .backdrop-blur-supported {
     background-color: rgba(255, 255, 255, 0.7);
   }
-  
+
   .dark .backdrop-blur-supported {
     background-color: rgba(17, 24, 39, 0.7);
   }
 }
 
+/* 模态遮罩：禁止触摸滚动穿透 */
 .modal-mask {
   touch-action: none;
 }
 
+/* 模态遮罩前置层：占满视口的定位占位（用于隔离层级） */
 .modal-mask::before {
   content: '';
   position: fixed;
@@ -126,6 +146,7 @@ textarea:focus {
   z-index: -1;
 }
 
+/* 各平台触控目标最小尺寸（iOS/鸿蒙 44px，Android 48px） */
 .platform-ios {
   --platform-touch-target: 44px;
 }
@@ -138,28 +159,34 @@ textarea:focus {
   --platform-touch-target: 44px;
 }
 
+/* 触控目标工具类：保证按钮等可点区域不小于平台推荐尺寸 */
 .touch-target {
   min-height: var(--platform-touch-target, 44px);
   min-width: var(--platform-touch-target, 44px);
 }
 
+/* iOS 底部 Home 指示条预留内边距 */
 .ios-home-indicator-padding {
   padding-bottom: calc(var(--safe-area-inset-bottom) + env(safe-area-inset-bottom));
 }
 
+/* Android 沉浸式导航栏预留内边距 */
 .android-immersive-padding {
   padding-bottom: calc(var(--safe-area-inset-bottom) + 16px);
 }
 
+/* 通用隐藏滚动条工具类（webkit） */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }
 
+/* 通用隐藏滚动条工具类（IE/Edge/Firefox） */
 .no-scrollbar {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
 
+/* 按钮：去除 300ms 点击延迟、按下缩放反馈 */
 button {
   touch-action: manipulation;
 }
@@ -168,20 +195,24 @@ button:active {
   transform: scale(0.98);
 }
 
+/* 键盘聚焦时的可见外描边（无障碍） */
 button:focus-visible {
   outline: 2px solid #6b7bff;
   outline-offset: 2px;
 }
 
+/* 图片：禁止长按弹菜单与文本选择 */
 img {
   -webkit-touch-callout: none;
   user-select: none;
 }
 
+/* 链接：禁止长按弹菜单 */
 a {
   -webkit-touch-callout: none;
 }
 
+/* 文本选中色：使用主色半透明背景，保留原文字色 */
 ::selection {
   background-color: rgba(107, 123, 255, 0.3);
   color: inherit;

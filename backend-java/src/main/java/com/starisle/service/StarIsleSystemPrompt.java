@@ -4,9 +4,22 @@ import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
+/**
+ * 星屿系统提示生成器
+ * 构建符合青少年心理健康教育场景的 AI 助手角色与对话规则，
+ * 支持标准模式与危机干预模式的提示词生成。
+ */
 @Component
 public class StarIsleSystemPrompt {
     
+    /**
+     * 生成标准系统提示
+     * 根据用户画像生成个性化的 AI 助手角色提示词，包含身份、说话风格、
+     * 对话原则、安全红线、危机模式说明与 CBT 对话框架。
+     *
+     * @param userProfile 用户画像，包含年龄段、昵称等信息
+     * @return 系统提示文本
+     */
     public String generatePrompt(Map<String, Object> userProfile) {
         StringBuilder basePrompt = new StringBuilder();
         basePrompt.append("你是「小星」，一个来自情绪星球的萌系小精灵。你是「星屿」APP 的 AI 情绪伙伴，陪伴 12-18 岁的初高中生。\n\n");
@@ -62,6 +75,13 @@ public class StarIsleSystemPrompt {
         return basePrompt.toString();
     }
     
+    /**
+     * 生成危机干预模式提示
+     * 当检测到自伤/自杀意念时切换为危机干预模式的提示词，
+     * 引导 AI 暂停卖萌、深度共情并引导用户拨打专业热线。
+     *
+     * @return 危机干预系统提示文本
+     */
     public String generateCrisisPrompt() {
         return """
             【危机干预模式】

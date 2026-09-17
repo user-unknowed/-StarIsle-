@@ -1,0 +1,16 @@
+{
+  "name": "imageoperate",
+  "version": "1.0.0",
+  "description": "图片库云函数：listLibrary / presignUploadPath / addMetadata / delete / getImageDetail",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

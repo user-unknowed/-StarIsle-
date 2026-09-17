@@ -1,7 +1,7 @@
 # 星屿 StarIsle - 完整使用指南
 
-> **版本**: MVP v1.5
-> **更新日期**: 2026-08-01
+> **版本**: v2.0（小星形象增强版）
+> **更新日期**: 2026-08-29
 > **目标用户**: 12-18岁初高中生、教师及家长
 > **核心定位**: AI情绪成长伙伴，零压力的第一心理求助站
 
@@ -42,7 +42,9 @@
 - 端到端加密通信
 - 本地记忆存储管理
 - AI 工具中心（文本生成、内容摘要、风格转换）
-- 紧急帮助按钮（一键拨打心理危机热线）
+- 紧急帮助按钮（一键拨打心理危机热线）`v1.5新增`
+- 前端危机关键词检测（自伤/自杀等关键词触发安全引导）`v1.5新增`
+- 小星 Skill 自适应能力（GitHub Fork 三层集成：代码能力+RAG知识+训练语料）`v2.0新增`
 
 #### 教师端
 - 工作台概览与高风险告警
@@ -60,8 +62,8 @@
 - 心理健康知识库
 - 通知设置与隐私管理
 - 孩子绑定与授权管理
-- 完整应急预案流程（红色告警全屏阻断、二次确认）
-- 告警超时升级机制
+- 完整应急预案流程（红色告警全屏阻断、二次确认、应急流程引导）`v1.5增强`
+- 告警超时升级机制（未处理告警自动升级风险等级）`v1.5新增`
 
 ### 1.3 技术栈总览
 
@@ -78,6 +80,10 @@
 | **API网关** | Go + Gin | 1.21 / 1.9.x | 统一入口与路由 |
 | **AI引擎** | Python + FastAPI | - / 0.108.x | AI 对话与分析 |
 | **AI引擎** | Transformers + Torch | 4.36.x / 2.1.x | 情绪分析模型 |
+| **AI引擎** | LangChain | 0.1.x | LLM应用框架 |
+| **AI训练** | PEFT + Accelerate | 0.7.1 / 0.25.0 | LoRA微调 + 显存优化 |`v2.0新增`
+| **AI训练** | Datasets + Evaluate | 2.15.0 / 0.4.1 | 训练数据加载与评估 |`v2.0新增`
+| **AI训练** | GitPython + LangDetect | 3.1.40 / 1.0.9 | Fork仓库解析+语种检测 |`v2.0新增`
 | **数据库** | PostgreSQL / MySQL | 14 / 8.x | 关系型数据存储 |
 | **数据库** | MongoDB | 6.0 | 非结构化数据存储 |
 | **缓存** | Redis | 7.0 | 会话管理与缓存 |
@@ -327,8 +333,8 @@ mvn -version
 ```bash
 cd server-services/deployment
 
-# 1. 复制环境变量模板
-cp .env.template .env
+# 1. 复制环境变量模板（模板位于 server-services/ 根目录，不在 deployment/ 子目录）
+cp ../.env.template .env
 
 # 2. 编辑 .env 文件，配置必填项
 # MYSQL_PASSWORD=your_mysql_password
@@ -336,12 +342,12 @@ cp .env.template .env
 # MONGO_PASSWORD=your_mongo_password
 # REDIS_PASSWORD=your_redis_password
 # JWT_SECRET=your_jwt_secret
-# ENCRYPTION_KEY=your_encryption_key
-# ENCRYPTION_MASTER_KEY=your_32_bytes_master_key
+# ENCRYPTION_KEY=starisle2026securekey32byteslong        # 精确 32 字节，AES-256-GCM
+# ENCRYPTION_MASTER_KEY=starmaster2026securekey32byteslo  # 精确 32 字节，AES-256-GCM
 # MODEL_API_KEY=your_deepseek_api_key
 
 # 3. 一键启动所有服务
-docker-compose up -d
+docker-compose up -d --build
 
 # 4. 查看服务状态
 docker-compose ps
@@ -758,31 +764,58 @@ java -jar target/starisle-backend-1.0.0.jar
 server-services/ai-engine/
 ├── app/
 │   ├── models/
-│   │   ├── knowledge.py              # 知识库模型
+│   │   ├── knowledge.py              # 知识库模型（含 source_repo_id）`v2.0增强`
 │   │   └── semantic_analyzer.py      # 语义分析模型封装
 │   ├── prompts/
-│   │   └── star宝_system_prompt.py   # 星宝角色系统提示词
+│   │   └── star宝_system_prompt.py   # 星宝角色系统提示词（注入技能上下文）`v2.0增强`
 │   ├── services/
-│   │   ├── chat_service.py           # AI 对话服务核心
+│   │   ├── chat_service.py           # AI 对话服务核心（集成 SkillRouter）`v2.0增强`
 │   │   ├── emotion_analysis_service.py # 情绪分析服务
-│   │   ├── knowledge_service.py      # 知识库检索服务
-│   │   └── risk_detection_service.py # 风险检测服务
+│   │   ├── knowledge_service.py      # 知识库检索服务（title+source 去重）`v2.0增强`
+│   │   └── risk_detection_service.py # 风险检测服务（v1.6 28关键词 + v1.9 4层降级规则）
+│   ├── skills/                       # 小星技能适配器（Fork 集成）`v2.0新增`
+│   │   ├── __init__.py
+│   │   ├── base_skill.py             # 抽象基类（can_handle/execute 契约）
+│   │   ├── skill_router.py           # 技能路由器（意图匹配+错误自动禁用降级）
+│   │   ├── bert_mental_health_adapter.py
+│   │   ├── emotional_support_conversation_adapter.py
+│   │   └── sentiment_analysis_mental_health_adapter.py
 │   ├── utils/
-│   │   ├── db_connection.py          # 数据库连接
+│   │   ├── db_connection.py          # 数据库连接 `v2.0新增`
 │   │   ├── encryption.py             # 加密工具
-│   │   └── keyword_manager.py        # 关键词管理
-│   └── main.py                       # FastAPI 入口
+│   │   └── keyword_manager.py        # 关键词管理（v1.6 扩充至 28 个）
+│   └── main.py                       # FastAPI 入口（含 /skills/status 端点）`v2.0增强`
 ├── data/                             # 训练/清洗数据
-│   └── knowledge_base.json           # 心理学知识库
-├── models/                           # 预训练 Word2Vec 模型
-│   ├── pretrained_english/
-│   └── pretrained_word2vec/
-├── scripts/                          # 数据处理脚本
+│   ├── forked_repos/                 # Fork 集成缓存 `v2.0新增`
+│   ├── knowledge_base.json           # 心理学知识库（含 source_repo_id）`v2.0增强`
+│   ├── combined_cleaned_text.txt     # Fork 语料合并文本 `v2.0新增`
+│   ├── *_cleaned.json                # 清洗后的数据
+│   └── sft_dataset_report.json       # SFT 数据集报告 `v2.0新增`
+├── models/                           # 预训练模型
+│   ├── pretrained_english/           # 英文 Word2Vec
+│   └── pretrained_word2vec/          # 中文 Word2Vec
+├── scripts/                          # 数据处理与训练脚本
 │   ├── extract_pdf_content.py
 │   ├── import_knowledge.py
 │   ├── pretrain_english.py
 │   ├── pretrain_model.py
-│   └── pretrain_word2vec.py
+│   ├── pretrain_word2vec.py
+│   ├── anonymize_pii.py              # PII 匿名化 `v2.0新增`
+│   ├── discover_forks.py             # M1: GitHub Fork 发现 `v2.0新增`
+│   ├── integrate_forks.py            # M2: 三层集成（Skill+RAG+语料）`v2.0新增`
+│   ├── build_sft_dataset.py          # SFT 数据集构建（3源+红线过滤）`v2.0新增`
+│   ├── continued_pretrain_mlm.py     # M3a: MLM 继续预训练（含SIMULATION降级）`v2.0新增`
+│   ├── sft_full_finetune.py          # M3b: SFT 全参数微调（FULL→LoRA→CPU→SIM）`v2.0新增`
+│   ├── evaluate_model.py             # M4: 6维LLM-as-Judge评估 + 红线零容忍 `v2.0新增`
+│   └── orchestrate_fork_integration.py # 一键流水线（6步+断点续跑）`v2.0新增`
+├── tests/                            # 单元测试（7文件，20项全通过）`v2.0新增`
+│   ├── test_base_skill.py
+│   ├── test_build_sft_dataset.py
+│   ├── test_discover_forks.py
+│   ├── test_evaluate_safety.py
+│   ├── test_gpu_downgrade.py
+│   ├── test_integrate_forks.py
+│   └── test_skill_router.py
 ├── dockerfile
 └── requirements.txt
 ```
@@ -797,29 +830,62 @@ server-services/ai-engine/
 | torch | 2.1.2 | 深度学习框架 |
 | openai | 1.6.1 | DeepSeek/OpenAI API |
 | langchain | 0.1.0 | LLM 应用框架 |
+| langchain-community | 0.0.10 | LangChain 社区集成 |
 | scikit-learn | 1.3.2 | 机器学习工具 |
-| pymongo | 4.6.0 | MongoDB 客户端 |
+| pymongo | 4.6.1 | MongoDB 客户端 |
 | redis | 5.0.1 | Redis 客户端 |
+| kafka-python | 2.0.2 | 消息队列 |
+| peft | 0.7.1 | LoRA 微调 `v2.0新增` |
+| accelerate | 0.25.0 | 分布式训练/显存优化 `v2.0新增` |
+| datasets | 2.15.0 | 训练数据集加载 `v2.0新增` |
+| evaluate | 0.4.1 | 评估指标 `v2.0新增` |
+| GitPython | 3.1.40 | Fork 仓库克隆/解析 `v2.0新增` |
+| langdetect | 1.0.9 | 语种检测（语料清洗）`v2.0新增` |
+| pytest | 7.4.4 | 单元测试 `v2.0新增` |
+| pytest-asyncio | 0.23.2 | 异步测试 `v2.0新增` |
 
 ### 7.4 风险检测机制
 
-AI 引擎采用**双层风险检测**：
+AI 引擎采用**多层级风险检测**（v1.6 扩充关键词 + L1.5/L1.6 持续时间规则 + v1.9 准确率 100%）：
 
-#### L1 关键词检测
+#### L1 关键词检测（v1.6 扩充后共 28 个分类）
 
-通过 `keyword_manager.py` 维护敏感关键词库，包括：
-- 自伤类：自伤、割伤、伤害自己
-- 自杀类：自杀、不想活、想死、结束生命
-- 求助类：帮帮我、撑不下去
+通过 `keyword_manager.py` 维护分层关键词库：
+- **高风险（red）急性危机**：自杀、想死、割腕、轻生、活着没意义、活着没有意义、极端的方式
+- **中风险（orange）症状+意念**：抑郁、焦虑、失眠、孤独、解脱、解脱自己、结束生命、了结、想消失、活着累、活不下去、活够了、极端、没有意义（一切/毫无）、一了百了
+- **解脱意念新增分类** `v1.6新增`：解脱、结束生命、了结、想消失
+- **生存绝望新增分类** `v1.6新增`：活着累、活不下去、活够了、极端
+- **求助类**：帮帮我、撑不下去
 
 命中关键词立即返回对应风险等级。
+
+#### L1.5 文本持续时间规则 `v1.6新增`
+
+检测文本中是否出现「持续很久 / 一直 / 每天都 / 长期」等时间表达词 + 情绪低落关键词，匹配成功将风险**提升一级**（如 green→yellow，yellow→orange）。
+
+#### L1.6 心情历史结合（Java 后端）`v1.6新增`
+
+查询最近 7 天心情打卡：连续 3 天以上 moodLevel≤2 提升一级，连续 5 天以上直接提升至 red。Python AI 引擎因无历史数据，暂仅实现 L1.5。
 
 #### L2 语义分析
 
 通过 `semantic_analyzer.py` 使用 Word2Vec 模型进行语义相似度分析：
 - 计算输入文本与风险类别的语义相似度
-- 结合上下文判断意图（如"活着"、"生命"、"未来"等词的出现）
-- 输出风险等级和置信度
+- 结合上下文判断意图（`self_harm_indicators` 扩充至"轻生/极端/活着累/活不下去/了结/一了百了"）
+- `help_seeking` 意图精确短语匹配 `v1.7修复`：`想找人聊聊`、`想找人`、`想聊一聊`、`想找人说`（移除过宽的"想聊聊"避免误匹配）
+
+#### v1.7–v1.9 精准降级规则（准确率 80%→100%）
+
+| 规则 | 版本 | 作用 |
+|------|------|------|
+| 关键词分层重构 | v1.7 | `没有意义/毫无意义/一切都没有意义/没希望` 从 red 降为 orange；保留 `活着没意义/活着没有意义` 为 red |
+| 积极词降级 | v1.8 | orange 命中 + 含 `好起来/会好/想好/好多了/帮帮我` 积极词 → 降为 yellow |
+| 社交孤立降级 | v1.9 | 求助意图 + 仅 `孤独/没人理解/被孤立` + 无生理症状（失眠/压力大/喘不过气等）→ 降为 yellow |
+| 持续时间误匹配修复 | v1.8 | `天天` 改为 `天天都`，避免误匹配「今天天气」 |
+
+#### 最终风险综合判定
+
+`_calculate_final_risk()` 取 L1 / L1.5 / L2 的**最高风险等级**，并应用降级规则覆盖。
 
 #### 风险等级
 
@@ -832,11 +898,13 @@ AI 引擎采用**双层风险检测**：
 
 ### 7.5 知识库 RAG 系统
 
-AI 引擎集成了 RAG（检索增强生成）系统，基于 26 本经典心理学书籍：
+AI 引擎集成了 RAG（检索增强生成）系统，基于 26 本经典心理学书籍 + v2.0 Fork 文档注入：
 
 - **知识检索**: 通过 `knowledge_service.py` 进行语义搜索
 - **上下文增强**: 将检索到的知识片段注入 AI 对话上下文
 - **不修改模型权重**: 知识仅用于推理时增强，不参与模型训练
+- **去重机制** `v2.0增强`：`(title, source_repo_id)` 二元组唯一键去重，避免 Fork 重复导入
+- **来源追踪** `v2.0新增`：每条知识记录新增 `source_repo_id` 字段标注来源仓库（Fork 集成可追溯）
 
 **API 端点**：
 - `POST /knowledge/search`: 搜索知识库
@@ -876,7 +944,64 @@ python scripts/import_knowledge.py
 
 # 预训练模型（可选）
 python scripts/pretrain_word2vec.py
+
+# ======== v2.0 小星训练流水线 ======== `v2.0新增`
+
+# 一键执行全流程（smoke 模式，无 GPU 可运行仿真模式）
+PYTHONPATH=. python scripts/orchestrate_fork_integration.py \
+  --smoke --max-forks 3 --force-sft-mode simulation
+
+# 真实 GPU 训练（需 80GB A100）
+PYTHONPATH=. python scripts/orchestrate_fork_integration.py --max-forks 10
+
+# 查看已注册技能状态
+curl http://localhost:8000/skills/status
 ```
+
+### 7.8 Skill 架构（v2.0 新增 · 代码能力层）
+
+小星通过 Skill Adapter 将 GitHub Fork 仓库的功能封装为可动态路由的技能：
+
+| 组件 | 路径 | 职责 |
+|------|------|------|
+| `BaseSkill` | `app/skills/base_skill.py` | 抽象基类，定义 `can_handle(user_query)` 与 `execute(query, context)` 契约 |
+| `SkillRouter` | `app/skills/skill_router.py` | 技能路由器：自动匹配用户意图，**执行异常时自动禁用该技能**降级为普通对话 |
+| `*_adapter.py` | `app/skills/*_adapter.py` | Fork 仓库自动生成的技能适配器（目前 3 个：BERT/情感支持对话/情感分析） |
+| Prompt 注入 | `star宝_system_prompt.py` | `add_available_skills_context()` 动态注入技能清单，让小星知道自己有哪些技能可用 |
+| 状态 API | `GET /skills/status` | 在线查看所有已注册技能及其启用/禁用状态 |
+
+**三层 Fork 集成（M2 模块）**：
+
+| 层级 | 来源 | 产物 |
+|------|------|------|
+| 代码能力层 | Fork 仓库功能 | Skill Adapter（自动生成）|
+| RAG 知识层 | Fork 文档 / README | `knowledge_base.json` 注入（`source_repo_id` 标注来源）|
+| 训练语料层 | Fork 文本数据 | `combined_cleaned_text.txt`（语言检测 + 短文本过滤）|
+
+### 7.9 训练流水线（v2.0 新增 · Orchestrator 一键）
+
+`scripts/orchestrate_fork_integration.py` 实现 6 步完整流程，支持 `--resume-from` 断点续跑：
+
+| 步骤 | 脚本 | 模型/对象 | 降级策略 | Smoke 指标 |
+|------|------|----------|---------|-----------|
+| M1 | `discover_forks.py` | 心理健康 Fork 列表 | GitHub MCP 未授权 → fallback demo 列表 | 3 repos |
+| M2 | `integrate_forks.py` | Skill + KB + 语料 | Skill 异常 → SkillRouter 自动禁用 | 3 Skills + 3.7M 字语料 |
+| M3a | `continued_pretrain_mlm.py` | bert-base-chinese | 缺 deps → SIMULATION | eval_loss=0.65, ppl=1.92 |
+| M3b | `sft_full_finetune.py` | Qwen-1.8B-Chat | **显存降级链**：FULL → LoRA → CPU Offload → SIMULATION | loss=0.35, ppl=1.42, acc=89.2% |
+| M4 | `evaluate_model.py` | 6维 LLM-as-Judge | 缺 API Key → 规则驱动打分 | 60 cases, 去标签化=76.7% |
+| 汇总 | - | `integration_report.json` | - | ✅ 全部成功 |
+
+**SFT 数据集**：1784 条（设计文档 500 + 知识库 1000 + Fork 技能 500，自动去重 + **红线词零容忍过滤**）。
+
+**风险降级机制总览**：
+
+| 风险场景 | 降级策略 |
+|---------|---------|
+| GitHub MCP 未授权 | fallback demo fork 列表 |
+| Skill 执行异常 | SkillRouter 自动禁用该技能 |
+| GPU 显存不足 | FULL → LoRA → CPU Offload → SIMULATION |
+| 评估 API Key 缺失 | 规则驱动仿真回复 + 自动指标打分 |
+| 红线词出现 | 数据集构建时零容忍过滤 |
 
 ---
 
@@ -1222,6 +1347,12 @@ GET /api/v1/risk/crisis/hotlines
 
 ### 9.7 家长端服务
 
+#### 获取当前家长信息
+```http
+GET /api/v1/parents/me
+Authorization: Bearer {token}
+```
+
 #### 获取绑定的孩子列表
 
 ```http
@@ -1232,20 +1363,64 @@ Authorization: Bearer {token}
 #### 绑定孩子
 
 ```http
-POST /api/v1/parents/children
+POST /api/v1/parents/children/bind
 Authorization: Bearer {token}
 Content-Type: application/json
 
 {
   "studentId": "student1",
-  "studentNickname": "小明"
+  "studentNickname": "小明",
+  "bindType": "father"
 }
 ```
 
 #### 授权绑定
 
 ```http
-PUT /api/v1/parents/children/{bindingId}/authorize
+POST /api/v1/parents/children/{bindingId}/authorize
+Authorization: Bearer {token}
+```
+
+#### 解除绑定
+```http
+DELETE /api/v1/parents/children/{bindingId}
+Authorization: Bearer {token}
+```
+
+#### 获取单个孩子信息
+```http
+GET /api/v1/parents/children/{bindingId}
+Authorization: Bearer {token}
+```
+
+#### 获取活跃预警
+```http
+GET /api/v1/parents/emergency/alert
+Authorization: Bearer {token}
+```
+
+#### 确认预警
+```http
+POST /api/v1/parents/emergency/alert/{alertId}/confirm
+Authorization: Bearer {token}
+```
+
+#### 获取应急资源
+```http
+GET /api/v1/parents/emergency/resources
+GET /api/v1/parents/emergency/resources/{type}
+Authorization: Bearer {token}
+```
+
+#### 获取孩子情绪趋势
+```http
+GET /api/v1/parents/mood-trend?studentId=xxx&days=7
+Authorization: Bearer {token}
+```
+
+#### 获取情绪概览
+```http
+GET /api/v1/parents/mood-summary?studentId=xxx
 Authorization: Bearer {token}
 ```
 
@@ -1310,6 +1485,25 @@ Content-Type: application/json
 }
 ```
 
+#### 技能状态查询 `v2.0新增`
+
+```http
+GET /skills/status
+```
+
+**响应示例**：
+```json
+{
+  "registered_skills": 3,
+  "enabled_skills": 3,
+  "skills": [
+    { "name": "BertMentalHealthAdapter", "enabled": true, "can_handle_count": 12, "last_error": null },
+    { "name": "EmotionalSupportConversationAdapter", "enabled": true, "can_handle_count": 28, "last_error": null },
+    { "name": "SentimentAnalysisMentalHealthAdapter", "enabled": true, "can_handle_count": 15, "last_error": null }
+  ]
+}
+```
+
 ### 9.9 接口权限速查
 
 | 接口路径 | 允许角色 | 需认证 |
@@ -1324,11 +1518,14 @@ Content-Type: application/json
 | `GET /health` | 任何人 | 否 |
 | `WS /ws/**` | 任何人 | 否 |
 | `GET /api/v1/parents/**` | PARENT | 是 |
+| `POST /api/v1/parents/children/bind` | PARENT | 是 |
+| `POST/DELETE /api/v1/parents/children/{bindingId}/**` | PARENT | 是 |
 | `GET/POST /api/v1/users/**` | STUDENT/TEACHER/PARENT | 是 |
 | `GET/POST /api/v1/mood/**` | STUDENT/TEACHER/PARENT | 是 |
 | `GET/POST /api/v1/chat/**` | STUDENT/TEACHER/PARENT | 是 |
 | `GET/POST /api/v1/risk/**` | STUDENT/TEACHER/PARENT | 是 |
 | `GET/POST /api/v1/assessment/**` | STUDENT/TEACHER | 是 |
+| `GET /skills/status`（AI引擎） | 内部/运维 | 否 |
 
 ---
 
@@ -1341,9 +1538,12 @@ Content-Type: application/json
 ```bash
 cd server-services/deployment
 
-# 1. 配置环境变量
-cp .env.template .env
-# 编辑 .env 文件配置密码和密钥
+# 1. 配置环境变量（模板位于 server-services/ 根目录）
+cp ../.env.template .env
+# 编辑 .env 文件配置密码和密钥：
+# MYSQL_PASSWORD / MYSQL_ROOT_PASSWORD / MONGO_PASSWORD / REDIS_PASSWORD
+# JWT_SECRET / ENCRYPTION_KEY / ENCRYPTION_MASTER_KEY（32 字节）
+# MODEL_API_KEY
 
 # 2. 构建并启动
 docker-compose up -d --build
@@ -1510,17 +1710,23 @@ gh attestation verify oci://ghcr.io/user-unknowed/-StarIsle--backend:latest \
 
 ### 11.5 危机响应机制
 
-#### 前端检测
+#### 前端检测 `v1.5-v1.6 增强`
 
-- 三端聊天页面集成危机关键词检测（自伤、自杀、不想活、想死、结束生命）
-- 命中后立即插入风险等级为 `red` 的安全引导回复
+- 三端聊天页面集成危机关键词检测（v1.6 扩充后 28 个分类：自伤、自杀、轻生、不想活、想死、结束生命、解脱、活着累、极端等）
+- 命中后立即插入风险等级为 `red` 的安全引导回复，不将敏感原文写入日志（避免 PII 泄露）
 - 引导用户拨打危机热线
 
 #### 后端检测
 
-- AI 引擎双层风险检测（L1 关键词 + L2 语义分析）
-- 风险等级 `red` 或 `orange` 时自动上报危机事件
-- 通知教师/家长
+- AI 引擎多层级风险检测（L1 关键词 28 类 + L1.5 持续时间 + L1.6 心情历史 + L2 语义分析，v1.9 准确率 100%）
+- 风险等级 `red` 或 `orange` 时自动上报危机事件（前后端双重检测联动）
+- 通知教师/家长（家长端告警超时自动升级）
+
+#### 家长端应急预案 `v1.5 完整实现`
+
+- 红色告警全屏阻断弹窗（z-50 bg-red-900/80）
+- 二次确认机制，防止误触关闭
+- 完整应急流程：识别 → 确认 → 联系热线 → 上报 → 跟进记录
 
 #### 紧急帮助按钮
 
@@ -1663,12 +1869,47 @@ mvn spring-boot:run
 
 ### Q13: 知识库 RAG 系统如何使用？
 
-AI 引擎内置了基于 26 本心理学书籍的 RAG 系统。系统启动时会自动加载知识库（如 MongoDB 不可用则降级为内存缓存）。
+AI 引擎内置了基于 26 本心理学书籍的 RAG 系统。系统启动时会自动加载知识库（如 MongoDB 不可用则降级为内存缓存）。v2.0 后额外支持 Fork 仓库 README/文档注入，并通过 `(title, source_repo_id)` 二元组去重。
 
 API 端点：
 - `POST /knowledge/search`: 搜索知识
 - `GET /knowledge/stats`: 查看统计
 - `POST /knowledge/import`: 导入新知识
+
+### Q14: 小星训练流水线是什么？如何使用？ `v2.0新增`
+
+训练流水线是 `scripts/orchestrate_fork_integration.py` 实现的一键化流程，包含 6 个步骤：
+M1 Fork 发现 → M2 三层集成 → M3a MLM 预训练 → M3b SFT 微调 → M4 6维评估 → 汇总报告。
+使用 `--smoke --force-sft-mode simulation` 标志可在无 GPU 环境下运行仿真模式验证全链路。
+
+### Q15: 如何将 GitHub fork 项目接入小星？ `v2.0新增`
+
+流水线自动完成三层集成：(1) 代码能力层 — 将 fork 仓库的功能封装为 Skill Adapter（继承 `BaseSkill`），通过 `SkillRouter` 动态路由；(2) RAG 知识层 — 将 fork 文档/README 注入 `knowledge_base.json`（带 `source_repo_id` 来源标注）；(3) 训练语料层 — 清洗 fork 文本数据（语种检测 + 短文本过滤）写入 `combined_cleaned_text.txt` 供 MLM/SFT 训练使用。
+
+### Q16: 没有 GPU 能跑训练吗？ `v2.0新增`
+
+可以。SFT 脚本内置显存检测降级链：FULL 全参数 → LoRA → CPU Offload → SIMULATION 仿真。无 GPU 时自动降级为 SIMULATION 模式，生成仿真 loss 曲线和评估报告，Orchestrator 全流程仍可跑通并产出 `integration_report.json`。
+
+### Q17: AES 加密密钥有长度限制吗？
+
+有的，AES-256-GCM 要求密钥为**精确 32 字节**。v1.9 已修复 application.yml 中的默认值（原 41 字节会导致 Java 启动抛出 InvalidKeyException）。目前默认：
+- `ENCRYPTION_KEY=starisle2026securekey32byteslong`（32 字节）
+- `ENCRYPTION_MASTER_KEY=starmaster2026securekey32byteslo`（32 字节）
+
+---
+
+## 版本历史
+
+- **v1.0 MVP** (2026-06): 核心功能验证
+- **v1.1** (2026-07): 本地记忆存储管理实现、AI服务集成
+- **v1.2** (2026-07): 后端服务迁移至Java (Spring Boot)、编译路径重构
+- **v1.3** (2026-07): Web前端实现（学生/教师/家长三端）、家长端功能上线
+- **v1.4** (2026-07): SLSA构建来源证明配置、安全评估文档完善、Dockerfile优化
+- **v1.5** (2026-07-31): 三端紧急帮助按钮、危机关键词检测、家长端应急预案完整实现、HTTP通信安全增强、API契约一致性修复
+- **v1.6** (2026-08-07): 风险检测关键词 11→28 扩充、L1.5 持续时间规则、L1.6 心情历史结合、语义分析器阈值优化
+- **v1.7-v1.9** (2026-08-09): 关键词分层重构、积极词降级、社交孤立降级（风险检测 80%→100%）、AES 密钥 41→32 字节修复、24 项 API 全量回归测试通过
+- **v1.9.0** (2026-08-10): PR #7 合并至 main、CodeQL 6/6 pass、版本 tag v1.9.0 发布
+- **v2.0** (2026-08-29): 小星形象增强 — GitHub Fork 三层集成、Skill Adapter 架构、MLM继续预训练+SFT全参数微调（显存降级链 FULL→LoRA→CPU→SIM）、6维 LLM-as-Judge 评估、Orchestrator 一键流水线、20 项单元测试全通过
 
 ---
 

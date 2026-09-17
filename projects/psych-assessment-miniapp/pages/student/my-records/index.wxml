@@ -1,0 +1,109 @@
+<view class="page">
+
+  <view wx:if="{{usingLocalDemo}}" class="demo-top-tip">
+    <text class="demo-tip-icon">📡</text>
+    <text class="demo-tip-text">演示数据（未从云端拉取 · 仅本地记录）</text>
+  </view>
+
+  <view wx:if="{{loading}}" class="loading-wrap">
+    <view class="spinner"></view>
+    <view class="loading-tip">加载反馈记录中...</view>
+  </view>
+
+  <view wx:elif="{{!records.length}}" class="empty-wrap">
+    <view class="empty-icon">📋</view>
+    <view class="empty-text">{{emptyHint || '暂无反馈记录'}}</view>
+    <view class="empty-sub">完成任务提交后，可在此查看 AI 分析与教师反馈</view>
+  </view>
+
+  <view wx:else class="record-list">
+    <view
+      wx:for="{{records}}"
+      wx:key="_id"
+      class="record-card"
+      data-id="{{item._id}}"
+      bindtap="onTapRecord"
+    >
+      <view class="record-title-row">
+        <view class="record-title">{{item.taskTitle || '未命名任务'}}</view>
+        <!-- reviewStatus 三色胶囊：灰=待审核 / 绿=已确认 / 橙=已调整 -->
+        <view class="review-capsule status-{{item._reviewClass}}">
+          {{item._reviewText}}
+        </view>
+      </view>
+
+      <view class="record-time">{{item._submitTimeText}}</view>
+
+      <view wx:if="{{item._preview}}" class="record-preview">{{item._preview}}{{item._preview.length >= 60 ? '...' : ''}}</view>
+
+      <view class="record-footer">
+        <!-- AI 预警 红色胶囊标签 -->
+        <view wx:if="{{item._warningCount > 0}}" class="warning-capsule">
+          ⚠️ AI 预警 × {{item._warningCount}}
+        </view>
+        <view wx:else class="no-warning">AI 分析无风险标签</view>
+        <view class="go-detail">查看详情 ›</view>
+      </view>
+    </view>
+  </view>
+
+  <!-- ===== 详情弹层 ===== -->
+  <view wx:if="{{showDetailModal && selectedRecord}}" class="modal-mask" catchtap="onCloseDetail">
+    <view class="detail-modal-card" catchtap="">
+      <view class="modal-header">
+        <view class="modal-title">反馈详情</view>
+        <view class="modal-close" bindtap="onCloseDetail">×</view>
+      </view>
+
+      <scroll-view class="detail-body" scroll-y="true">
+        <view class="detail-block">
+          <view class="detail-block-title">任务信息</view>
+          <view class="detail-line"><text class="k">任务：</text><text class="v">{{selectedRecord.taskTitle || '-'}}</text></view>
+          <view class="detail-line"><text class="k">提交：</text><text class="v">{{selectedRecord._submitTimeText}}</text></view>
+          <view class="detail-line">
+            <text class="k">审核：</text>
+            <text class="review-capsule-inline status-{{selectedRecord._reviewClass}}">{{selectedRecord._reviewText}}</text>
+          </view>
+        </view>
+
+        <view class="detail-block">
+          <view class="detail-block-title">AI 预警标签</view>
+          <view wx:if="{{selectedRecord._warningCount > 0}}" class="warning-tags-row">
+            <view wx:for="{{selectedRecord._warningTags}}" wx:for-item="tag" wx:key="*this" class="warning-tag-item">
+              ⚠️ {{tag}}
+            </view>
+          </view>
+          <view wx:else class="no-warning-detail">暂无 AI 预警标签</view>
+        </view>
+
+        <view class="detail-block">
+          <view class="detail-block-title">我的提交内容</view>
+          <view wx:if="{{selectedRecord.content}}" class="my-content">{{selectedRecord.content}}</view>
+          <block wx:elif="{{selectedRecord.imageFeedbacks && selectedRecord.imageFeedbacks.length}}">
+            <view wx:for="{{selectedRecord.imageFeedbacks}}" wx:for-item="fb" wx:key="imageId" class="image-feedback-item">
+              <view class="fb-label">📷 图片反馈</view>
+              <view class="fb-text">{{fb.text || '(未填写文字)'}}</view>
+            </view>
+          </block>
+          <view wx:else class="no-content">（无提交内容记录）</view>
+        </view>
+
+        <view class="detail-block">
+          <view class="detail-block-title">AI / 教师 分析摘要</view>
+          <view wx:if="{{selectedRecord._aiSummary}}" class="ai-summary">{{selectedRecord._aiSummary}}</view>
+          <view wx:else class="no-content">AI 分析进行中，通常 1~3 分钟后可查看</view>
+        </view>
+
+        <view class="privacy-note">
+          🔒 为保护双方隐私，教师备注不对学生可见；所有数据以匿名编号追踪。
+        </view>
+      </scroll-view>
+
+      <view class="detail-footer">
+        <view class="close-btn" bindtap="onCloseDetail">我知道了</view>
+      </view>
+    </view>
+  </view>
+
+  <view class="bottom-safe"></view>
+</view>

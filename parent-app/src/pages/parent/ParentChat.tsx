@@ -1,9 +1,17 @@
+/**
+ * @file ParentChat.tsx
+ * @description 家长端 AI 心理顾问对话页，展示与「大星」AI 的聊天记录、推荐话题快捷入口
+ *              与消息输入框，支持 Enter 发送与历史记录加载。
+ * @module parent-app/pages/parent/ParentChat
+ */
+
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../../store/authStore';
 import { useParentStore } from '../../store/parentStore';
 import { Heart, MessageCircle, Send, ArrowLeft, Sparkles, AlertTriangle, ChevronRight } from 'lucide-react';
 
+/** 推荐聊天话题列表，用于空状态与更多话题入口。 */
 const chatTopics = [
   '孩子不愿意跟我说话怎么办',
   '怎么判断孩子是否需要专业帮助',
@@ -13,38 +21,63 @@ const chatTopics = [
   '家长自己压力大怎么调节',
 ];
 
+/**
+ * 家长 AI 对话页面组件。
+ *
+ * 从 [useAuthStore] 获取当前用户，从 [useParentStore] 获取聊天记录与发送方法，
+ * 渲染消息列表、推荐话题与输入框，支持新消息自动滚动到底部。
+ *
+ * @returns 对话页 JSX。
+ */
 export default function ParentChat() {
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const { chatMessages, sendChatMessage, fetchChatHistory, isLoading } = useParentStore();
+  // 输入框文本
   const [inputValue, setInputValue] = useState('');
+  // 消息列表底部锚点，用于自动滚动
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // 登录后拉取历史聊天记录
   useEffect(() => {
     if (user?.id) {
       fetchChatHistory(user.id);
     }
   }, [user?.id, fetchChatHistory]);
 
+  // 新消息到达时滚动到底部
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatMessages]);
 
+  /**
+   * 发送当前输入的消息，发送成功后清空输入框。
+   */
   const handleSend = async () => {
     if (!inputValue.trim() || !user?.id) return;
-    
+
     await sendChatMessage(user.id, inputValue.trim());
     setInputValue('');
   };
 
+  /**
+   * 点击推荐话题直接发送该话题消息。
+   *
+   * @param topic - 话题文本。
+   */
   const handleTopicClick = async (topic: string) => {
     if (!user?.id) return;
-    
+
     setInputValue(topic);
     await sendChatMessage(user.id, topic);
     setInputValue('');
   };
 
+  /**
+   * 处理输入框按键事件，Enter（无 Shift）时发送消息。
+   *
+   * @param e - 键盘事件。
+   */
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();

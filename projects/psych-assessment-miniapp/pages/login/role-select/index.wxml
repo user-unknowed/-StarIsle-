@@ -1,0 +1,48 @@
+<view class="page">
+  <view class="hero">
+    <view class="hero-logo">💗</view>
+    <view class="hero-title">心语 · 心理测评</view>
+    <view class="hero-subtitle">让每一个声音都被温柔听见</view>
+  </view>
+
+  <view class="card-wrap">
+    <view class="card">
+      <view class="role-card role-student {{loading ? 'disabled' : ''}}" bindtap="onChooseRole" data-role="student" hover-class="role-card-hover">
+        <view class="role-emoji">👨‍🎓</view>
+        <view class="role-name">我是学生</view>
+        <view class="role-desc">完成心理测评任务，查看自己的反馈记录</view>
+      </view>
+
+      <view class="role-card role-teacher {{loading ? 'disabled' : ''}}" bindtap="onChooseRole" data-role="teacher" hover-class="role-card-hover">
+        <view class="role-emoji">👩‍🏫</view>
+        <view class="role-name">我是教师</view>
+        <view class="role-desc">发布测评、查看分析、管理班级与标签</view>
+      </view>
+    </view>
+
+    <view class="hint">
+      <text>※ 超级管理员席位不开放注册；管理员账号由部署阶段手工写入</text>
+    </view>
+  </view>
+
+  <view class="footer">
+    <!-- 关于心语 单入口合规：避免重复的「用户协议 / 隐私政策」按钮 -->
+    <view class="about-entry" bindtap="openAbout">关于心语 · 用户协议与隐私政策</view>
+    <view class="copy">© 2026 心语 · 心理测评反馈小程序</view>
+  </view>
+
+  <!-- 关于心语弹层：协议与隐私单入口展示 -->
+  <view class="mask {{aboutShow ? 'show' : ''}}" bindtap="closeAbout">
+    <view class="sheet" catchtap="">
+      <view class="sheet-title">关于心语</view>
+      <view class="sheet-sub">请在使用前阅读以下协议</view>
+      <view class="sheet-list">
+        <view class="sheet-item" wx:for="{{aboutLinks}}" wx:key="key" bindtap="openLegal" data-url="{{item.url}}">
+          <text class="sheet-item-title">{{item.title}}</text>
+          <text class="sheet-item-arrow">›</text>
+        </view>
+      </view>
+      <view class="sheet-close" bindtap="closeAbout">我已阅读并同意</view>
+    </view>
+  </view>
+</view>

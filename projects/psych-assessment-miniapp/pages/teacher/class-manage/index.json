@@ -1,0 +1,10 @@
+{
+  "navigationBarTitleText": "班级管理",
+  "navigationBarBackgroundColor": "#6366F1",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F3F4F6",
+  "enablePullDownRefresh": true,
+  "usingComponents": {
+    "safe-area-bottom": "components/safe-area-bottom/safe-area-bottom"
+  }
+}

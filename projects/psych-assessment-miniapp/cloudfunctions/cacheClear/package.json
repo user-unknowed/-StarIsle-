@@ -1,0 +1,12 @@
+{
+  "name": "cacheclear",
+  "version": "1.0.0",
+  "description": "学生草稿同步4闸原子提交云函数（cache_queue TTL 管理 + 兄弟通路调用 feedbackSubmit.submitFinalFromCacheClear）",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"no test\" && exit 0"
+  },
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  }
+}

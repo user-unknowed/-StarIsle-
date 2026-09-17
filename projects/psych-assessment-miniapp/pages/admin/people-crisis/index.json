@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "危机高危学生 · 最高权限",
+  "navigationBarBackgroundColor": "#991B1B",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F3F4F6",
+  "enablePullDownRefresh": true,
+  "usingComponents": {}
+}

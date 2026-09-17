@@ -1,13 +1,30 @@
+/**
+ * @file MoodDetail.tsx
+ * @description 家长端情绪趋势详情页，展示孩子近 7/30/90 天情绪趋势柱状图、
+ *              情绪标签分布、打卡日历与 AI 关怀建议。
+ * @module parent-app/pages/parent/MoodDetail
+ */
+
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useParentStore } from '../../store/parentStore';
 import { ArrowLeft, TrendingUp, Calendar, Tag, Sparkles, ChevronRight } from 'lucide-react';
 
+/**
+ * 情绪趋势详情页面组件。
+ *
+ * 根据当前选中的孩子和时间范围拉取情绪趋势与摘要，渲染趋势柱状图、
+ * 标签分布条形图、打卡日历与 AI 建议。
+ *
+ * @returns 情绪详情页 JSX。
+ */
 export default function MoodDetail() {
   const navigate = useNavigate();
   const { moodTrend, moodSummary, fetchMoodTrend, fetchMoodSummary, children, currentChildId } = useParentStore();
+  // 时间范围：7 / 30 / 90 天
   const [timeRange, setTimeRange] = useState<'7' | '30' | '90'>('7');
 
+  // 当孩子或时间范围变化时拉取趋势与摘要
   useEffect(() => {
     const currentChild = children.find(c => c.id === currentChildId);
     if (currentChild) {
@@ -18,6 +35,12 @@ export default function MoodDetail() {
 
   const currentChild = children.find(c => c.id === currentChildId);
 
+  /**
+   * 根据心情等级返回对应的背景色 Tailwind 类名。
+   *
+   * @param level - 心情等级（1-5）。
+   * @returns 对应颜色的 Tailwind 类名。
+   */
   const getMoodColor = (level: number) => {
     if (level <= 2) return 'bg-red-400';
     if (level <= 3) return 'bg-yellow-400';
@@ -25,6 +48,12 @@ export default function MoodDetail() {
     return 'bg-green-400';
   };
 
+  /**
+   * 根据心情等级返回对应的 Emoji。
+   *
+   * @param level - 心情等级（1-5）。
+   * @returns 对应心情的 Emoji 字符串。
+   */
   const getMoodEmoji = (level: number) => {
     if (level <= 1) return '😔';
     if (level <= 2) return '😞';
@@ -33,6 +62,11 @@ export default function MoodDetail() {
     return '😄';
   };
 
+  /**
+   * 生成时间范围内的日历天数数据，关联每日心情等级与标签。
+   *
+   * @returns 日历天数数据数组。
+   */
   const generateCalendarDays = () => {
     const days = [];
     const today = new Date();
@@ -42,21 +76,23 @@ export default function MoodDetail() {
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
       const moodData = moodTrend.find(m => m.date === dateStr);
-      days.push({ 
-        date: dateStr, 
+      days.push({
+        date: dateStr,
         moodLevel: moodData?.moodLevel,
         tags: moodData?.tags || [],
-        day: date.getDate(), 
+        day: date.getDate(),
         weekday: ['日', '一', '二', '三', '四', '五', '六'][date.getDay()]
       });
     }
     return days;
   };
 
+  // 趋势图纵轴归一化所需的最大/最小心情值
   const maxMood = Math.max(...moodTrend.map(m => m.moodLevel));
   const minMood = Math.min(...moodTrend.map(m => m.moodLevel));
   const moodRange = maxMood - minMood || 1;
 
+  // 标签分布处理
   const tagDistribution = moodSummary?.tagDistribution || {};
   const tags = Object.entries(tagDistribution);
   const maxTagCount = Math.max(...tags.map(([, count]) => count), 1);

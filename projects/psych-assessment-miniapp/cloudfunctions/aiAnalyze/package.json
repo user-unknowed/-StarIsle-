@@ -1,0 +1,16 @@
+{
+  "name": "aianalyze",
+  "version": "1.0.0",
+  "description": "AI 分析云函数：千问 DashScope qwen-plus few-shot 评估反馈文字，含 4 次退避重试 + retry_queue + ai_quality_metrics + msSecCheck 合规红线",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"no test\" && exit 0"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "keywords": [],
+  "type": "commonjs"
+}

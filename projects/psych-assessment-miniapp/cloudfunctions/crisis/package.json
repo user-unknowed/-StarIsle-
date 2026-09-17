@@ -1,0 +1,14 @@
+{
+  "name": "crisis",
+  "version": "1.0.0",
+  "description": "危机干预云函数：TOP50 全匿名高危集合查询 · PII 访问后端二次 2FA 校验（跨进程 TTL 写入 users.adminInfo.piiGrantUntil）· 30 秒实名窗口颁发/吊销 · audit_logs 匿名化留痕（与前端 people-crisis 4 层 null 化 + 审计写入形成端到端闭环）",
+  "main": "index.js",
+  "scripts": {
+    "test": "node --check index.js"
+  },
+  "dependencies": {
+    "wx-server-sdk": "^4.0.2"
+  },
+  "author": "",
+  "license": "ISC"
+}

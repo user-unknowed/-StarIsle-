@@ -1,0 +1,8 @@
+{
+  "navigationBarTitleText": "教师资质审核中",
+  "navigationBarBackgroundColor": "#6366F1",
+  "navigationBarTextStyle": "white",
+  "backgroundColor": "#F3F4F6",
+  "enablePullDownRefresh": true,
+  "usingComponents": {}
+}

@@ -1,6 +1,20 @@
+<<<<<<< HEAD
 """Orchestrator 一键跑 M1→M2→M3→M4 全流程。
 Steps: discover → integrate → mlm → sft → evaluate → report
 支持 --resume-from、--smoke、--max-forks。"""
+=======
+"""
+orchestrate_fork_integration.py - Fork 集成全流程编排器
+
+所属模块：ai-engine/scripts
+功能简述：
+    一键执行 M1→M2→M3→M4 全流程：discover → integrate → mlm → sft → evaluate → report。
+    支持 --resume-from 断点续跑、--smoke 冒烟测试、--max-forks 限制数量。
+依赖关系：
+    - scripts/discover_forks.py、integrate_forks.py、continued_pretrain_mlm.py、
+      sft_full_finetune.py、evaluate_model.py：各阶段子脚本
+"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 from __future__ import annotations
 import argparse, json, logging, os, sys, traceback
 from datetime import datetime
@@ -15,15 +29,27 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
 REPORT = ROOT / "integration_report.json"
 
+<<<<<<< HEAD
 ALL_STEPS: List[str] = ["discover", "integrate", "mlm", "sft", "evaluate", "report"]
 
 def _cli(cmd: str, env: Dict[str, str] | None = None) -> int:
+=======
+# 全流程步骤顺序
+ALL_STEPS: List[str] = ["discover", "integrate", "mlm", "sft", "evaluate", "report"]
+
+def _cli(cmd: str, env: Dict[str, str] | None = None) -> int:
+    """在项目根目录执行 shell 命令，返回退出码。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     log.info("$ %s", cmd)
     import subprocess
     merged = dict(os.environ); merged.update(env or {})
     return subprocess.call(cmd, shell=True, cwd=str(ROOT), env=merged)
 
 def step_discover(max_forks: int, github_forks_json: str | None = None) -> str:
+<<<<<<< HEAD
+=======
+    """M1 步骤：运行 discover_forks.py 发现并克隆 fork 仓库，返回 manifest 路径。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     env = {}
     if github_forks_json: env["FORKS_JSON"] = github_forks_json
     rc = _cli(f"PYTHONPATH=. python scripts/discover_forks.py", {**env, "MAX_FORKS": str(max_forks)})
@@ -33,10 +59,18 @@ def step_discover(max_forks: int, github_forks_json: str | None = None) -> str:
     return str(manifest)
 
 def step_integrate() -> Dict[str, Any]:
+<<<<<<< HEAD
+=======
+    """M2 步骤：调用 integrate_forks.integrate_all 完成三层整合。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     import importlib, scripts.integrate_forks as m; importlib.reload(m)
     return m.integrate_all()
 
 def step_mlm(smoke: bool) -> str:
+<<<<<<< HEAD
+=======
+    """M3a 步骤：运行 MLM 继续预训练，返回训练摘要路径。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     extra = " --smoke" if smoke else ""
     rc = _cli(f"PYTHONPATH=. python scripts/continued_pretrain_mlm.py{extra}")
     if rc != 0: raise RuntimeError(f"mlm 失败 exit={rc}")
@@ -44,6 +78,10 @@ def step_mlm(smoke: bool) -> str:
     return str(out)
 
 def step_sft(smoke: bool, sft_model: str, force_mode: str | None) -> str:
+<<<<<<< HEAD
+=======
+    """M3b 步骤：运行 SFT 全参数微调，返回训练摘要路径。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     parts = ["PYTHONPATH=.", "python scripts/sft_full_finetune.py"]
     if smoke: parts.append("--smoke")
     if sft_model: parts += ["--model", sft_model]
@@ -53,6 +91,10 @@ def step_sft(smoke: bool, sft_model: str, force_mode: str | None) -> str:
     return str(ROOT/"models"/"sft_xiaoxing_v1"/"training_summary.json")
 
 def step_evaluate(force_judge: str | None) -> str:
+<<<<<<< HEAD
+=======
+    """M4 步骤：运行模型评估器，返回评估结果路径。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     parts = ["PYTHONPATH=.", "python scripts/evaluate_model.py"]
     if force_judge: parts += ["--force-judge-model", force_judge]
     rc = _cli(" ".join(parts))
@@ -66,6 +108,10 @@ def fetch_github_forks_via_mcp(max_forks: int) -> str | None:
              % max_forks)
     return None
 
+<<<<<<< HEAD
+=======
+# 步骤名 → 执行函数的映射表
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 STEP_FN: Dict[str, Callable[..., Any]] = {
     "discover":  lambda kw: step_discover(kw["max_forks"], fetch_github_forks_via_mcp(kw["max_forks"])),
     "integrate": lambda _k: step_integrate(),
@@ -76,6 +122,10 @@ STEP_FN: Dict[str, Callable[..., Any]] = {
 }
 
 def run(args) -> Dict[str, Any]:
+<<<<<<< HEAD
+=======
+    """按选定步骤顺序执行全流程，失败时写入报告并提示断点续跑。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     start_idx = ALL_STEPS.index(args.resume_from) if args.resume_from else 0
     steps_to_run = ALL_STEPS[start_idx:]
     result: Dict[str, Any] = {"started_at": datetime.now().isoformat(timespec="seconds"),
@@ -105,6 +155,10 @@ def run(args) -> Dict[str, Any]:
     return result
 
 def main():
+<<<<<<< HEAD
+=======
+    """命令行入口：解析参数、运行全流程并打印部署切换说明。"""
+>>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     ap = argparse.ArgumentParser()
     ap.add_argument("--max-forks", type=int, default=5)
     ap.add_argument("--smoke", action="store_true", help="极小数据子集 + 1 epoch + SIMULATION SFT 默认")

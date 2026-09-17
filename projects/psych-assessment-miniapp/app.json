@@ -1,0 +1,57 @@
+{
+  "pages": [
+    "pages/login/role-select",
+    "pages/login/teacher-pending",
+    "pages/student/task-hall",
+    "pages/student/answer",
+    "pages/student/my-records",
+    "pages/student/record-detail",
+    "pages/student/profile",
+    "pages/student/cache-mgr",
+    "pages/teacher/dashboard",
+    "pages/teacher/report-stat",
+    "pages/teacher/task-list",
+    "pages/teacher/task-create",
+    "pages/teacher/analysis",
+    "pages/teacher/feedback-detail",
+    "pages/teacher/settings",
+    "pages/teacher/class-manage",
+    "pages/teacher/binding-manage",
+    "pages/teacher/img-library",
+    "pages/teacher/status-tag",
+    "pages/teacher/ai-review",
+    "pages/teacher/student-history",
+    "pages/teacher/research-export",
+    "pages/admin/ops-overview",
+    "pages/admin/global-export",
+    "pages/admin/people-crisis",
+    "pages/admin/audit-ai"
+  ],
+  "window": {
+    "backgroundTextStyle": "light",
+    "navigationBarBackgroundColor": "#6366F1",
+    "navigationBarTitleText": "心语 · 心理测评",
+    "navigationBarTextStyle": "white",
+    "backgroundColor": "#F3F4F6"
+  },
+  "usingComponents": {
+    "mood-bar": "components/mood-bar/mood-bar",
+    "anon-avatar": "components/anon-avatar/anon-avatar",
+    "task-card": "components/task-card/task-card",
+    "warning-badge": "components/warning-badge/warning-badge",
+    "safe-area-bottom": "components/safe-area-bottom/safe-area-bottom",
+    "image-preview-grid": "components/image-preview-grid/image-preview-grid",
+    "review-status-capsule": "components/review-status-capsule/review-status-capsule",
+    "status-tag-chip": "components/status-tag-chip/status-tag-chip",
+    "ai-review-workarea": "components/ai-review-workarea/ai-review-workarea"
+  },
+  "sitemapLocation": "sitemap.json",
+  "style": "v2",
+  "lazyCodeLoading": "requiredComponents",
+  "permission": {
+    "scope.userLocation": { "desc": "" }
+  },
+  "requiredPrivateInfos": [],
+  "cloud": true,
+  "custom": true
+}

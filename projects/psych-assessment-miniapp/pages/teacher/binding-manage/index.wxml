@@ -1,0 +1,119 @@
+<!--pages/teacher/binding-manage/index.wxml-->
+<view class="page">
+  <!-- 顶部标题 -->
+  <view class="header-bar">
+    <view class="page-title">一对一学生绑定</view>
+    <view class="page-subtitle">
+      精确输入学生的 <text class="hl">#S 匿名编号</text> 进行单独绑定；
+      绑定后可对该学生打 <text class="hl">状态标签</text>（后续功能）
+    </view>
+  </view>
+
+  <!-- 状态提示条 -->
+  <view class="state-bar" wx:if="{{loading}}">加载中…</view>
+  <view class="state-bar state-err" wx:if="{{errorMsg}}">{{errorMsg}}{{errorCode ? '（' + errorCode + '）' : ''}}</view>
+
+  <!-- 绑定表单 -->
+  <view class="bind-form-card">
+    <view class="bf-title">🔗 新增绑定</view>
+    <view class="bf-desc">
+      请输入学生的 <text class="hl">#S 匿名编号</text>（精确匹配，6 位数字格式如 #S000001）；
+      填写绑定理由便于未来追溯（≤300 字）。
+    </view>
+
+    <view class="bf-row">
+      <view class="bf-label"><text class="required">*</text>学生匿名编号</view>
+      <input class="bf-input"
+             placeholder="例：#S000001（区分大小写，精确匹配）"
+             value="{{searchAnonymousNo}}"
+             bindinput="onSearchAnonymousNoInput"
+             maxlength="9"/>
+    </view>
+
+    <view class="bf-row">
+      <view class="bf-label"><text class="required">*</text>绑定理由</view>
+      <textarea class="bf-textarea"
+                placeholder="例如：家长同意后单独追踪 / 班主任转介个案 / 高危倾向持续关注…"
+                value="{{bindingReason}}"
+                bindinput="onBindingReasonInput"
+                maxlength="300"
+                auto-height></textarea>
+      <view class="reason-counter">
+        <text class="{{reasonLen > 300 ? 'over' : ''}}">{{reasonLen}}</text> / 300
+      </view>
+    </view>
+
+    <view class="bf-submit-btn btn-hover" bindtap="onCreateBinding">提交绑定</view>
+  </view>
+
+  <!-- Tab：当前有效 / 历史解绑 -->
+  <view class="tabs">
+    <view class="pill {{activeTab === 'active' ? 'pill-active' : ''}}"
+          bindtap="onSwitchTab" data-tab="active">
+      当前有效
+      <text class="count">{{activeCount}}</text>
+    </view>
+    <view class="pill {{activeTab === 'archived' ? 'pill-active' : ''}}"
+          bindtap="onSwitchTab" data-tab="archived">
+      历史解绑
+      <text class="count">{{archivedCount}}</text>
+    </view>
+  </view>
+
+  <!-- 列表：当前有效绑定 -->
+  <block wx:if="{{activeTab === 'active'}}">
+    <view class="section-title">
+      当前有效一对一绑定
+      <text class="sub">解绑即归档，保留全部追溯数据</text>
+    </view>
+    <view wx:if="{{activeList.length === 0 && !loading}}" class="empty-binding">
+      <text class="emoji">🔒</text>
+      目前暂无有效绑定
+      {"\n"}请在上方表单中输入学生匿名编号进行绑定
+    </view>
+    <block wx:for="{{activeList}}" wx:key="_id" wx:for-item="b">
+      <view class="binding-card">
+        <view class="bc-main">
+          <view class="bc-anon">{{b.studentAnonymousNo}}</view>
+          <view class="bc-reason" wx:if="{{b.reason}}">{{b.reason}}</view>
+          <view class="bc-meta">
+            <text class="bc-status-tag tag-active">有效</text>
+            绑定时间：{{b.createdAtText}}
+          </view>
+        </view>
+        <view class="bc-actions">
+          <view class="btn-unbind btn-hover"
+                data-binding-id="{{b._id}}"
+                data-student-anon="{{b.studentAnonymousNo}}"
+                bindtap="onRemoveBinding">解绑</view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <!-- 列表：历史解绑（归档） -->
+  <block wx:if="{{activeTab === 'archived'}}">
+    <view class="section-title">
+      历史解绑记录
+      <text class="sub">仅作追溯查阅，数据均已归档保留</text>
+    </view>
+    <view wx:if="{{archivedList.length === 0 && !loading}}" class="empty-binding">
+      <text class="emoji">📦</text>
+      暂无历史解绑记录
+    </view>
+    <block wx:for="{{archivedList}}" wx:key="_id" wx:for-item="b">
+      <view class="binding-card archived">
+        <view class="bc-main">
+          <view class="bc-anon">{{b.studentAnonymousNo}}</view>
+          <view class="bc-reason" wx:if="{{b.reason}}">{{b.reason}}</view>
+          <view class="bc-meta">
+            <text class="bc-status-tag tag-archived">已归档</text>
+            绑定：{{b.validFromText}} → 解绑：{{b.validUntilText}}
+          </view>
+        </view>
+      </view>
+    </block>
+  </block>
+
+  <safe-area-bottom></safe-area-bottom>
+</view>

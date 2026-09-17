@@ -379,6 +379,9 @@ GET /api/v1/risk/crisis/hotlines
 
 ## 家长端服务
 
+> 所有接口鉴权：`Authorization: Bearer {parentToken}`（role = PARENT）。
+> Java 代码源：`backend-java/src/main/java/com/starisle/controller/ParentController.java`
+
 ### 获取绑定的孩子列表
 
 ```http
@@ -389,7 +392,7 @@ Authorization: Bearer {token}
 ### 绑定孩子
 
 ```http
-POST /api/v1/parents/bind
+POST /api/v1/parents/children/bind
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -397,6 +400,33 @@ Content-Type: application/json
   "studentId": "student1",
   "relationship": "父亲"
 }
+```
+
+> **路径说明**（v1.9 修复）：此前文档误记为 `/api/v1/parents/bind` 或 `/api/v1/parents/children`，与 ParentController.java 实际实现不符，现已统一为 `POST /api/v1/parents/children/bind`。
+> **成功返回 200**：`{"bindingId": "xxx", "status": "PENDING_AUTHORIZE"}`
+> **失败返回 409**：重复绑定
+> **失败返回 400**：学生不存在
+
+### 学生授权绑定
+
+```http
+POST /api/v1/parents/children/authorize
+Authorization: Bearer {studentToken}
+Content-Type: application/json
+
+{
+  "bindingId": "xxx",
+  "authorized": true
+}
+```
+
+> **v1.5 补全**：学生端在收到绑定请求后必须显式授权（`authorized: true` 为绑定成功，false 为拒绝）；授权前家长端无法读取孩子的任何情绪数据。
+
+### 解除孩子绑定
+
+```http
+DELETE /api/v1/parents/children/{bindingId}
+Authorization: Bearer {token}
 ```
 
 ### 获取孩子情绪趋势
@@ -414,6 +444,20 @@ Authorization: Bearer {token}
 
 ```http
 GET /api/v1/parents/mood-summary?studentId=xxx
+Authorization: Bearer {token}
+```
+
+### 家长端告警列表 `v1.5新增`
+
+```http
+GET /api/v1/parents/alerts?studentId=xxx&page=0&size=20
+Authorization: Bearer {token}
+```
+
+### 家长端告警升级 `v1.5新增`（告警超时自动升级为教师协助）
+
+```http
+POST /api/v1/parents/alerts/{alertId}/escalate
 Authorization: Bearer {token}
 ```
 
@@ -490,21 +534,84 @@ Content-Type: application/json
 {
   "user_id": "student1",
   "content": "最近总是失眠，感觉很绝望",
-  "content_type": "chat"
+  "content_type": "chat",
+  "history": [
+    {"time_offset_min": -30, "text": "我有点不想活了", "category": "自杀倾向"},
+    {"time_offset_min": -60, "text": "心里闷得慌", "category": "焦虑烦躁"}
+  ],
+  "mood_history": [
+    {"date": "2026-08-25", "score": 3},
+    {"date": "2026-08-26", "score": 2},
+    {"date": "2026-08-27", "score": 1}
+  ]
 }
 ```
+
+> **多层级检测说明**：L1 关键词（28 类，v1.6扩充）→ L1.5 持续时间升级（同分类窗口次数加权）→ L1.6 心情历史负斜率升级 → L2 语义分析；然后 `积极词 + 孤立短语` 四层降级。v1.9 测试集准确率 = 100%。
 
 **响应**:
 ```json
 {
   "user_id": "student1",
-  "risk_level": "orange",
-  "confidence": 0.95,
+  "risk_level": "red",
+  "confidence": 0.98,
   "details": {
-    "keywords_detected": ["失眠", "绝望"],
-    "semantic_intent": "情绪低落",
-    "confidence": 0.92
+    "keywords_detected": ["失眠", "绝望", "不想活了"],
+    "l15_duration_hit": true,
+    "l16_mood_trend_hit": true,
+    "semantic_intent": "情绪低落+自杀意念",
+    "confidence": 0.96,
+    "applied_downgrades": 0
   }
+}
+```
+
+### 知识库 RAG `v2.0增强`
+
+```http
+POST /knowledge/search
+Content-Type: application/json
+
+{
+  "query": "如何应对考试焦虑",
+  "top_k": 5,
+  "source_repo_id": null
+}
+```
+
+```http
+GET /knowledge/stats
+```
+
+```http
+POST /knowledge/import
+Content-Type: application/json
+
+{
+  "entries": [
+    {"title": "README.md", "content": "...", "source_repo_id": "github/user/repo"}
+  ]
+}
+```
+
+> 去重策略：`(title, source_repo_id)` 二元组唯一，避免 Fork 文档重复注入。
+
+### 小星 Skill 健康状态 `v2.0新增`
+
+```http
+GET /skills/status
+```
+
+**响应**:
+```json
+{
+  "total": 6,
+  "available": 5,
+  "disabled_by_error": 1,
+  "skills": [
+    {"name": "CalculatorSkill", "status": "available", "error_count": 0, "last_error_at": null},
+    {"name": "MyForkCodeSkill", "status": "disabled_by_error", "error_count": 5, "last_error_at": "2026-08-29T08:00:00Z"}
+  ]
 }
 ```
 

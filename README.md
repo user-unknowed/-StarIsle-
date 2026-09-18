@@ -1,6 +1,6 @@
 # 星屿 StarIsle - 青少年心理健康AI陪伴应用
 
-> **版本**: v2.1（心理测评微信小程序增强版）
+> **版本**: v2.2（移动三端 Kotlin 迁移版）
 > **目标用户**: 12-18岁初高中生、教师及家长
 > **核心定位**: AI情绪成长伙伴，零压力的第一心理求助站
 
@@ -9,6 +9,14 @@
 「星屿」StarIsle 是专为12-18岁初高中生打造的AI心理健康应用，通过极简心情打卡和24/7 AI对话，为学生提供零压力的情绪支持。同时为教师提供心理守护协同工作台，为家长提供孩子情绪状态查看与AI心理咨询服务，实现家校共育。
 
 v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发，支持罗夏/TAT 自定义图片投射测评、AI 情绪分析、教师复核、匿名科研数据导出与管理员危机干预，所有 PII 默认匿名化处理，管理员 PII 访问需双因素认证。
+
+**v2.2 重大更新**：完成移动三端源代码从 Flutter/React 向 Kotlin + Jetpack Compose 的完整迁移，保持功能、业务逻辑与界面行为不变。
+- 学生端 `student-app/StarIsle-student-android/`（原 Flutter → Kotlin + Compose）
+- 教师端 `teacher-app/StarIsle-teacher-android/`（原 Flutter → Kotlin + Compose）
+- 家长端 `parent-app-android/`（原 React/TS → Kotlin + Compose）
+- 技术栈：Kotlin 1.9.25 + AGP 8.5.2 + Compose BOM 2024.09 + Hilt 2.51.1 + Room 2.6.1 + Retrofit 2.11.0 + WorkManager 2.9.1 + Navigation Compose 2.8.1
+- 构建验证：三端 APK 均成功生成，Android 模拟器（API 35）启动、UI 渲染、页面跳转、底部导航、文本输入全部通过测试，无运行时崩溃或 UI 异常
+- 原 Flutter/React 源码保留作为参考实现
 
 ## MVP核心功能
 
@@ -60,8 +68,10 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 ┌─────────────────────────────────────────────────────────────────────┐
 │                              客户端层                                 │
 │  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐  ┌────────────┐ │
-│  │ 学生端(Flutter)│  │ 教师端(Flutter)│  │  Web前端(React) │  │ 微信小程序  │ │
+│  │ 学生端(Kotlin)│  │ 教师端(Kotlin)│  │  家长端(Kotlin)│  │ 微信小程序  │ │
+│  │   v2.2迁移    │  │   v2.2迁移    │  │   v2.2迁移    │  │  (WXML)    │ │
 │  └──────┬──────┘  └──────┬──────┘  └──────┬──────┘  └─────┬──────┘ │
+│         │ Flutter 原实现保留作为参考                                       │
 └─────────┼────────────────┼────────────────┼────────────────┼─────────┘
           │                │                │                │
           ▼                ▼                ▼                ▼
@@ -95,15 +105,22 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 ### 技术栈详情
 | 层级 | 技术 | 版本 | 用途 |
 |------|------|------|------|
-| **Web前端** | React + TypeScript | 18.x / 5.8.x | 多端Web应用 |
+| **Web前端** | React + TypeScript | 18.x / 5.8.x | 多端Web应用（v2.2 起家长端亦由 Kotlin 迁移） |
 | **Web前端** | Vite | 6.3.x | 构建工具 |
 | **Web前端** | Zustand | 5.0.x | 状态管理 |
 | **Web前端** | React Router DOM | 7.3.x | 路由管理 |
 | **Web前端** | TailwindCSS | 3.4.x | 样式框架 |
 | **Web前端** | Lucide React | 0.511.x | 图标库 |
-| **原生前端** | Flutter | 3.x | 跨平台iOS/Android |
-| **原生前端** | Riverpod | - | 状态管理 |
-| **原生前端** | SQLCipher | - | 加密本地存储 |
+| **原生移动端** | Kotlin + Jetpack Compose | 1.9.25 / BOM 2024.09 | 三端 Android 实现 `v2.2新增` |
+| **原生移动端** | Hilt + KSP | 2.51.1 / 1.9.25-1.0.20 | 依赖注入 `v2.2新增` |
+| **原生移动端** | Room | 2.6.1 | 本地数据库（替代 sqflite_sqlcipher）`v2.2新增` |
+| **原生移动端** | Retrofit + OkHttp | 2.11.0 / 4.12.0 | HTTP 客户端 `v2.2新增` |
+| **原生移动端** | Navigation Compose | 2.8.1 | 路由导航 `v2.2新增` |
+| **原生移动端** | WorkManager | 2.9.1 | 后台任务 `v2.2新增` |
+| **原生移动端** | AGP + Gradle | 8.5.2 / 8.9 | 构建工具链 `v2.2新增` |
+| **原生前端（参考实现）** | Flutter | 3.x | 已迁移至 Kotlin，源码保留作为参考 |
+| **原生前端（参考实现）** | Riverpod | - | 已迁移至 Hilt + ViewModel |
+| **原生前端（参考实现）** | SQLCipher | - | 已迁移至 Room（暂未加密） |
 | **微信小程序** | WXML / WXSS / JavaScript | - | 心理测评反馈小程序 |
 | **微信小程序** | 微信云开发 | - | 云函数 / 云数据库 / 云存储 |
 | **后端服务** | Java + Spring Boot | 21 / 3.2.x | 核心业务逻辑 |
@@ -129,9 +146,12 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 | `server-services/backend/` | Go Gin | API网关（请求路由、负载均衡、统一认证入口） |
 | `server-services/ai-engine/` | Python FastAPI | AI对话引擎（情绪分析、风险检测、语义分析） |
 | `server-services/mcp-psych-assessment/` | TypeScript MCP SDK | 心理测评 MCP Server（6 Tool：任务/反馈/AI分析/复核/科研导出/PII访问）`v2.1新增` |
-| `web-frontend/` | React TypeScript | Web端多角色应用（学生/教师/家长） |
-| `student-app/` | Flutter | 学生端原生移动应用 |
-| `teacher-app/` | Flutter | 教师端原生移动应用 |
+| `web-frontend/` | React TypeScript | Web端多角色应用（学生/教师/家长，v2.2 后家长端亦由 Kotlin 实现） |
+| `student-app/StarIsle-student-android/` | Kotlin + Compose | 学生端 Android 原生应用（v2.2 迁移自 Flutter） |
+| `teacher-app/StarIsle-teacher-android/` | Kotlin + Compose | 教师端 Android 原生应用（v2.2 迁移自 Flutter） |
+| `parent-app-android/` | Kotlin + Compose | 家长端 Android 原生应用（v2.2 迁移自 React/TS） |
+| `student-app/StarIsle-student/` | Flutter（参考实现） | 学生端 Flutter 原始实现，v2.2 后保留作为参考 |
+| `teacher-app/StarIsle-teacher/` | Flutter（参考实现） | 教师端 Flutter 原始实现，v2.2 后保留作为参考 |
 | `projects/psych-assessment-miniapp/` | 微信小程序 + 云开发 | 心理测评反馈微信小程序（21页面 + 8云函数）`v2.1新增` |
 | `tokens/psych-healing/` | CSS Variables / Tailwind | 疗愈独立色板与样式 Token（与主仓三层桥接）`v2.1新增` |
 
@@ -269,7 +289,18 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 │       ├── tailwind.preset.js        # Tailwind 预设
 │       └── miniapp-app.wxss          # 小程序全局样式
 ├── student-app/                           # 学生端原生应用
-│   ├── StarIsle-student/             # Flutter应用
+│   ├── StarIsle-student-android/    # Kotlin + Compose Android 应用 `v2.2新增`
+│   │   ├── app/src/main/java/com/starisle/student/
+│   │   │   ├── ui/screens/           # 6 个 Compose 页面（Splash/Home/Chat/Explore/Profile/AiTools）
+│   │   │   ├── ui/viewmodel/         # StateFlow + ViewModel（替代 Riverpod）
+│   │   │   ├── data/db/              # Room 数据库（7 张表，替代 sqflite_sqlcipher）
+│   │   │   ├── util/                 # MaintenanceScheduler（WorkManager）/ StorageMonitor
+│   │   │   ├── theme/                # StarNightBlue / WarmOrange 品牌色
+│   │   │   ├── StarIsleStudentApp.kt # @HiltAndroidApp Application
+│   │   │   └── StarIsleApp.kt        # NavHost 路由
+│   │   ├── app/build.gradle.kts      # AGP 8.5.2 + Compose BOM 2024.09.02
+│   │   └── gradle/wrapper/           # Gradle 8.9
+│   ├── StarIsle-student/             # Flutter应用（参考实现，v2.2 起仅保留）
 │   │   ├── lib/                      # Dart源码
 │   │   │   ├── providers/            # Riverpod providers
 │   │   │   ├── screens/              # 页面组件
@@ -279,16 +310,32 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 │   │   └── pubspec.yaml              # Flutter依赖
 │   └── docs/                         # 学生端产品文档
 ├── teacher-app/                           # 教师端原生应用
-│   ├── StarIsle-teacher/             # Flutter应用
+│   ├── StarIsle-teacher-android/    # Kotlin + Compose Android 应用 `v2.2新增`
+│   │   ├── app/src/main/java/com/starisle/teacher/
+│   │   │   ├── ui/screens/           # 5 个 Compose 页面（Workbench/Students/Chat/Profile/AiTools）
+│   │   │   ├── data/models/          # TeacherRole/RiskLevel/ReportStatus/SymptomType 等数据模型
+│   │   │   ├── util/MaintenanceScheduler.kt # CoroutineWorker（WorkManager）
+│   │   │   ├── StarIsleTeacherApp.kt # @HiltAndroidApp + WorkManager Configuration.Provider
+│   │   │   └── StarIsleTeacherRoot.kt # 4 Tab NavigationBar + AI 工具覆盖层
+│   │   ├── app/build.gradle.kts      # 含 kotlin plugin.serialization
+│   │   └── gradle/wrapper/           # Gradle 8.9
+│   ├── StarIsle-teacher/             # Flutter应用（参考实现，v2.2 起仅保留）
 │   │   ├── lib/                      # Dart源码
 │   │   ├── assets/                   # 静态资源
 │   │   └── pubspec.yaml              # Flutter依赖
 │   └── docs/                         # 教师端产品文档
-├── parent-app/                           # 家长端组件（Web）
+├── parent-app/                           # 家长端组件（Web，参考实现）
 │   ├── src/
 │   │   ├── pages/parent/             # 家长端页面组件
 │   │   └── store/parentStore.ts      # 家长端状态管理
 │   └── 星屿-StarIsle-家长端APP-PRD.md # PRD文档
+├── parent-app-android/                   # 家长端 Kotlin + Compose Android 应用 `v2.2新增`
+│   └── app/src/main/java/com/starisle/parent/
+│       ├── ui/screens/              # 8 个 Compose 页面（Home/Chat/Profile/Children/Emergency/MoodDetail/EmergencyDetail/AlertDetail）
+│       ├── ui/viewmodel/            # StateFlow + ViewModel（替代 Zustand）
+│       ├── data/ws/                 # OkHttp WebSocket 实时对话（替代原生 WebSocket）
+│       ├── di/AppModule.kt          # Hilt @Module（OkHttp/Moshi/Retrofit/DataStore）
+│       └── StarIsleParentApp.kt     # @HiltAndroidApp Application
 ├── security-assessment/              # 安全评估文档
 │   ├── 00-归档索引.md                # 文档归档索引
 │   ├── 01-应用程序基本信息.md         # 应用基本信息

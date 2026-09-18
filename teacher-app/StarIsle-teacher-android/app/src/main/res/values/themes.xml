@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- 教师端 Material3 主题 -->
+    <style name="Theme.StarIsleTeacher" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/scaffold_bg_light</item>
+        <item name="android:statusBarColor">@color/star_night_blue</item>
+        <item name="android:windowLightStatusBar" tools:targetApi="m">false</item>
+    </style>
+</resources>

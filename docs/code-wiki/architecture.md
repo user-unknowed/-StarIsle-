@@ -8,8 +8,9 @@ StarIsle 采用经典的分层架构，分为**客户端层**、**服务端层**
 flowchart TB
     subgraph Frontend["客户端层"]
         A["Web 前端<br/>React + TypeScript"]
-        B["学生端 App<br/>Flutter"]
-        C["教师端 App<br/>Flutter"]
+        B["学生端 App<br/>Kotlin + Compose `v2.2`"]
+        C["教师端 App<br/>Kotlin + Compose `v2.2`"]
+        P["家长端 App<br/>Kotlin + Compose `v2.2`"]
         D["API 文档<br/>Electron"]
     end
 
@@ -29,8 +30,9 @@ flowchart TB
     end
 
     A -->|"REST / WS"| E
-    B -->|"REST / WS"| E
-    C -->|"REST / WS"| E
+    B -->|"Retrofit / OkHttp"| F
+    C -->|"Retrofit / OkHttp"| F
+    P -->|"Retrofit / OkHttp WebSocket"| F
     E -->|"路由转发"| F
     F -->|"HTTP"| G
     F --> H
@@ -39,6 +41,8 @@ flowchart TB
     G --> I
     G --> J
 ```
+
+> **v2.2 变更**：学生端 / 教师端 / 家长端三端移动 App 从 Flutter/React 迁移到 Kotlin + Jetpack Compose。客户端直连 backend-java（不经 Go 网关），原 Flutter/React 源码保留作为参考实现。
 
 ## 分层说明
 
@@ -49,8 +53,9 @@ flowchart TB
 | 客户端 | 技术栈 | 目标用户 | 核心功能 |
 |--------|--------|---------|---------|
 | Web 前端 | React 18 + TypeScript + Vite | 学生/教师/家长 | 情绪打卡、AI 对话、趋势分析 |
-| 学生端 App | Flutter + Riverpod | 学生 | 移动端心情打卡、AI 对话、冥想 |
-| 教师端 App | Flutter + Riverpod | 教师 | 班级状态、学生管理、告警处理 |
+| 学生端 App | **Kotlin + Compose + Hilt + Room** `v2.2迁移`<br/>原 Flutter + Riverpod（参考实现） | 学生 | 移动端心情打卡、AI 对话、冥想、紧急帮助、AI 工具中心 |
+| 教师端 App | **Kotlin + Compose + Hilt** `v2.2迁移`<br/>原 Flutter + Riverpod（参考实现） | 教师 | 班级状态、学生管理、告警处理、4 Tab 底部导航 |
+| 家长端 App | **Kotlin + Compose + Hilt + OkHttp WebSocket** `v2.2迁移`<br/>原 React/TS + Zustand（参考实现） | 家长 | 孩子情绪查看、AI 心理顾问对话、应急预案、情绪趋势 |
 | API 文档 | React + Electron | 开发者 | OpenAPI 可视化、接口测试 |
 
 ### 2. 网关层
@@ -164,7 +169,7 @@ flowchart LR
 
 - **传输层**: HTTPS/TLS 1.3 全程加密
 - **认证层**: JWT Token + BCrypt 密码哈希 + Spring Security 角色控制
-- **数据层**: AES-256-GCM 端到端加密、SQLCipher 本地加密存储
+- **数据层**: AES-256-GCM 端到端加密、SQLCipher 本地加密存储（v2.2 Kotlin 版暂用 Room，未加密，后续将接入 SQLCipher）
 - **供应链**: GitHub Actions SLSA Build Level 2 构建来源证明
 
 ## 部署架构
@@ -197,13 +202,19 @@ flowchart TB
 | 技术 | 选型理由 |
 |------|---------|
 | React + Vite | 现代化前端生态，快速 HMR，TypeScript 原生支持 |
-| Flutter | 一套代码覆盖 iOS/Android，适合资源有限的团队 |
+| Kotlin + Jetpack Compose `v2.2迁移` | Android 官方推荐，单语言覆盖 UI/逻辑/并发，编译时类型安全；声明式 UI 与原 Flutter 声明式范式接近，迁移成本低；Hilt/Room/Navigation 官方支持 |
+| Flutter（保留为参考实现） | 一套代码覆盖 iOS/Android，适合资源有限的团队；v2.2 后仅作为对照实现保留 |
 | Spring Boot | 成熟的企业级 Java 生态，安全、事务、JPA 开箱即用 |
 | Go + Gin | 高并发网关层，编译快、资源占用低 |
 | FastAPI | Python 异步高性能，AI/ML 生态无缝集成 |
 | PostgreSQL | 稳定的关系型数据库，支持复杂查询和 JSON 字段 |
 | MongoDB | 灵活存储聊天消息等非结构化数据 |
 | Redis | 会话缓存、热点数据、分布式锁 |
+| Hilt `v2.2新增` | Android 官方 DI 方案，编译时依赖图校验，替代 Riverpod/Zustand |
+| Room `v2.2新增` | Android 官方 ORM，编译时 SQL 校验，替代 sqflite_sqlcipher（暂未启用加密） |
+| WorkManager `v2.2新增` | Android 官方后台任务，替代 workmanager package，支持周期任务与约束 |
+| Navigation Compose `v2.2新增` | Android 官方导航，替代 Flutter Navigator / React Router，类型安全路由 |
+| Retrofit + OkHttp `v2.2新增` | Android 主流 HTTP 栈，替代 http package / fetch，原生支持 WebSocket |
 | PEFT（LoRA）`v2.0新增` | 大模型微调显存占用降低 90%+，适合单机 A100 |
 | Accelerate `v2.0新增` | 分布式训练/混合精度/CPU Offload，统一显存降级链 |
 | Datasets `v2.0新增` | HuggingFace 统一训练数据格式，支持多源拼接与去重 |

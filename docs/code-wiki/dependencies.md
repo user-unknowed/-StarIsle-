@@ -6,9 +6,12 @@
 flowchart TB
     subgraph Client["客户端"]
         WF["web-frontend"]
-        ST["学生端 Flutter"]
-        TE["教师端 Flutter"]
-        PA["家长端"]
+        STK["学生端 Kotlin<br/>`v2.2`"]
+        TEK["教师端 Kotlin<br/>`v2.2`"]
+        PAK["家长端 Kotlin<br/>`v2.2`"]
+        ST["学生端 Flutter<br/>（参考实现）"]
+        TE["教师端 Flutter<br/>（参考实现）"]
+        PA["家长端 Web 扩展"]
     end
 
     subgraph Gateway["网关层"]
@@ -27,8 +30,11 @@ flowchart TB
     end
 
     WF -->|"REST API<br/>WebSocket"| GO
-    ST -->|"REST API<br/>WebSocket"| GO
-    TE -->|"REST API<br/>WebSocket"| GO
+    STK -->|"Retrofit REST<br/>OkHttp WebSocket"| BJ
+    TEK -->|"Retrofit REST"| BJ
+    PAK -->|"Retrofit REST<br/>OkHttp WebSocket"| BJ
+    ST -.->|"REST API<br/>WebSocket（参考实现）"| GO
+    TE -.->|"REST API<br/>WebSocket（参考实现）"| GO
     PA -->|"REST API"| BJ
 
     GO -->|"路由转发"| BJ
@@ -59,7 +65,34 @@ flowchart TB
 | `ParentHome.tsx` | `GET /api/v1/parents/mood-trend` | backend-java |
 | `ParentChat.tsx` | `POST /api/v1/chat/message` | backend-java |
 
-### Flutter 学生端 (`student-app/StarIsle-student`)
+### Kotlin 学生端 (`student-app/StarIsle-student-android`) `v2.2新增`
+
+| Kotlin 组件 | 依赖 API | 说明 |
+|------------|---------|------|
+| `HomeViewModel.kt` | `POST /api/v1/mood/checkin` | 心情打卡 |
+| `ChatViewModel.kt` | `WebSocket /ws/chat/{userId}` | OkHttp 实时对话 |
+| `ChatViewModel.kt` | `POST /api/v1/chat/message` | HTTP 对话备选 |
+| `AiToolsViewModel.kt` | `GET /api/v1/content/meditations` | 冥想列表 |
+
+### Kotlin 教师端 (`teacher-app/StarIsle-teacher-android`) `v2.2新增`
+
+| Kotlin 组件 | 依赖 API | 说明 |
+|------------|---------|------|
+| `WorkbenchViewModel.kt` | `GET /api/v1/classroom/{id}/stats` | 班级统计 |
+| `StudentsViewModel.kt` | `GET /api/v1/classroom/{id}/students` | 学生列表 |
+| `ChatViewModel.kt` | `POST /api/v1/chat/teacher/message` | 教师 AI 对话 |
+
+### Kotlin 家长端 (`parent-app-android`) `v2.2新增`
+
+| Kotlin 组件 | 依赖 API | 说明 |
+|------------|---------|------|
+| `HomeViewModel.kt` | `GET /api/v1/parents/children` | 绑定孩子列表 |
+| `HomeViewModel.kt` | `GET /api/v1/parents/mood-trend` | 7/30/90 天情绪趋势 |
+| `HomeViewModel.kt` | `GET /api/v1/parents/mood-summary` | 情绪概览与 AI 建议 |
+| `ChatViewModel.kt` | `WebSocket /ws/chat/{userId}` | OkHttp 大星 AI 实时对话 |
+| `ChildrenViewModel.kt` | `POST /api/v1/parents/bind` | 绑定新孩子 |
+
+### Flutter 学生端 (`student-app/StarIsle-student`) `参考实现 v2.2`
 
 | Dart 组件 | 依赖 API | 说明 |
 |----------|---------|------|
@@ -68,7 +101,7 @@ flowchart TB
 | `chat_screen.dart` | `POST /api/v1/chat/message` | HTTP 对话备选 |
 | `ai_service.dart` | `GET /api/v1/content/meditations` | 冥想列表 |
 
-### Flutter 教师端 (`teacher-app/StarIsle-teacher`)
+### Flutter 教师端 (`teacher-app/StarIsle-teacher`) `参考实现 v2.2`
 
 | Dart 组件 | 依赖 API | 说明 |
 |----------|---------|------|
@@ -212,6 +245,7 @@ sequenceDiagram
 | `slsa-backend-java.yml` | backend-java Docker 镜像 | push / tags / release |
 | `slsa-ai-engine.yml` | ai-engine Docker 镜像 | push / tags / release |
 | `slsa-web-frontend.yml` | web-frontend 静态资源 + 镜像 | push / tags / release |
+| `kotlin-android.yml` `v2.2新增` | 三端 Kotlin APK（student / teacher / parent） | push / tags / release |
 
 ### 开发环境依赖关系
 
@@ -221,7 +255,8 @@ sequenceDiagram
 | backend-java | 无需外部依赖（使用 H2） | 开发环境默认使用 H2 内存数据库 |
 | backend-java（完整功能） | PostgreSQL + MongoDB + Redis | 需注释掉 application.yml 中的 autoconfigure exclude |
 | ai-engine | 无需外部依赖 | 需配置 MODEL_API_KEY 环境变量 |
-| Flutter App | backend-java | 需要真实后端提供 API |
+| Kotlin App `v2.2新增` | backend-java（可选） | 需要 Android Studio + JDK 17 + Android SDK 35，可 mock 数据独立开发 |
+| Flutter App | backend-java | 需要真实后端提供 API（参考实现，v2.2 起 Kotlin 端优先） |
 
 ## 第三方依赖总览
 
@@ -293,7 +328,7 @@ sequenceDiagram
 | gorm/driver/postgres | 1.5.4 | PostgreSQL 驱动 |
 | segmentio/kafka-go | 0.4.47 | Kafka |
 
-### Flutter (学生端/教师端)
+### Flutter (学生端/教师端) `参考实现 v2.2`
 
 | 依赖 | 用途 |
 |------|------|
@@ -304,3 +339,23 @@ sequenceDiagram
 | lottie / rive | 动画 |
 | fl_chart | 图表 |
 | workmanager | 后台任务 |
+
+### Gradle (Kotlin 三端 Android App) `v2.2新增`
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| androidx.compose BOM | 2024.09.02 | Compose UI 体系（material3 / ui / foundation / runtime） |
+| androidx.hilt | 2.51.1 | 依赖注入（+ hilt-navigation-compose） |
+| androidx.room | 2.6.1 | 本地数据库（+ runtime-ktx） |
+| retrofit | 2.11.0 | HTTP 客户端（+ converter-moshi） |
+| okhttp | 4.12.0 | WebSocket / 网络日志拦截器 |
+| androidx.navigation.compose | 2.8.1 | 路由导航 |
+| androidx.work | 2.9.1 | 后台任务（+ hilt-work） |
+| coil-compose | 2.7.0 | 图片加载 |
+| vico | 2.0.0-alpha.23 | 柱状图渲染（家长端） |
+| kotlinx-coroutines | 1.8.1 | 协程（android / core） |
+| moshi | 1.15.1 | JSON 解析（+ codegen KSP） |
+| AGP | 8.5.2 | Android Gradle Plugin |
+| Kotlin | 1.9.25 | Kotlin 编译器 |
+| KSP | 2.51.1-1.0.4 | Kotlin Symbol Processing（Room / Hilt / Moshi） |
+| Gradle | 8.9 | 构建工具 |

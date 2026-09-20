@@ -31,18 +31,6 @@ from contextlib import asynccontextmanager
 # 加载环境变量：从 .env 文件读取配置注入 os.environ
 load_dotenv()
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-def _autodiscover_skills():
-    import app.skills as spkg
-    found: List[BaseSkill] = []
-    for _finder, name, _ispkg in pkgutil.iter_modules(spkg.__path__):
-        if not (name.endswith("_adapter") or name.endswith("_skill")): continue
-        try: mod = importlib.import_module(f"app.skills.{name}")
-        except Exception as e: print(f"[AI-Engine] 跳过 {name}: {e}"); continue
-=======
 
 def _autodiscover_skills():
     """
@@ -64,35 +52,22 @@ def _autodiscover_skills():
         try: mod = importlib.import_module(f"app.skills.{name}")
         except Exception as e: print(f"[AI-Engine] 跳过 {name}: {e}"); continue
         # 遍历模块属性，收集 BaseSkill 的具体子类
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         for attr in dir(mod):
             obj = getattr(mod, attr)
             if (isinstance(obj, type) and issubclass(obj, BaseSkill)
                     and obj is not BaseSkill and not getattr(obj, "__abstractmethods__", None)):
-<<<<<<< HEAD
-=======
                 # 实例化技能，失败则记录但不中断发现流程
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
                 try: found.append(obj())
                 except Exception as e: print(f"[AI-Engine] 实例化 {attr} 失败: {e}")
     print(f"[AI-Engine] 技能自动发现: {len(found)} 个 -> {[s.name for s in found]}")
     return found
 
 
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-# 初始化服务
-chat_service = ChatService()
-risk_service = RiskDetectionService()
-emotion_service = EmotionAnalysisService()
-knowledge_service = KnowledgeService()
-=======
 # 初始化服务：在模块加载阶段创建各业务服务单例
 chat_service = ChatService()                # 对话生成服务
 risk_service = RiskDetectionService()      # 风险检测服务
 emotion_service = EmotionAnalysisService() # 情绪分析服务
 knowledge_service = KnowledgeService()     # 知识库管理服务
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -125,20 +100,11 @@ async def lifespan(app: FastAPI):
     # 打印当前知识库模式与文档数，便于确认加载状态
     stats = await knowledge_service.get_stats()
     print(f"[AI-Engine] 知识库模式: {stats.get('mode')}, 文档数: {stats.get('total_documents')}")
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
     # 自动发现技能并注入对话服务
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     skills = _autodiscover_skills()
     if skills and hasattr(chat_service, "set_skills"):
         chat_service.set_skills(skills)
         print(f"[AI-Engine] 已注入 {len(skills)} 个 Fork Skills: {[s.name for s in skills]}")
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     print("[AI-Engine] AI引擎启动完成，RAG增强已就绪")
 
     # yield 之前为启动逻辑，之后为关闭逻辑
@@ -492,12 +458,6 @@ async def get_knowledge_categories():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-@app.get("/skills/status")
-async def skills_status():
-=======
 @app.get("/skills/status")
 async def skills_status():
     """
@@ -508,15 +468,10 @@ async def skills_status():
     Returns:
         dict: 技能状态信息
     """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     if hasattr(chat_service, "skill_router"):
         return {"skills": chat_service.skill_router.status()}
     return {"skills": [], "error": "SkillRouter 未初始化"}
 
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 if __name__ == "__main__":
     # 直接运行时以 uvicorn 启动服务，监听 8000 端口
     import uvicorn

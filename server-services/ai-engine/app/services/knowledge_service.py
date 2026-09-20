@@ -575,14 +575,8 @@ class KnowledgeService:
             with open(json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-            # ---- 新增去重 begin ----
-=======
             # ---- 新增去重 begin ----
             # 按 (title, source) 去重，避免重复导入相同知识
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
             seen = set(); deduped = []
             for item in data:
                 k = (item.get("title"), item.get("source"))
@@ -592,11 +586,7 @@ class KnowledgeService:
             data = deduped
             # ---- 新增去重 end ----
 
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
             # 逐条构造 KnowledgeDocument 并批量写入
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
             docs = []
             for item in data:
                 doc = KnowledgeDocument(

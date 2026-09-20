@@ -21,24 +21,6 @@ class KnowledgeDocument(BaseModel):
     一条记录对应一条心理咨询技术知识，包含来源、分类、标签、
     核心内容、相关技术与适用问题等字段。
     """
-<<<<<<< HEAD
-    id: Optional[str] = None
-    title: str = Field(..., description="知识标题")
-    source: str = Field(..., description="来源书籍/文献")
-    author: Optional[str] = Field(None, description="作者")
-    category: str = Field(..., description="分类：认知行为疗法/精神分析/人本主义等")
-    tags: List[str] = Field(default_factory=list, description="标签关键词")
-    content: str = Field(..., description="知识核心内容/技术方法")
-    techniques: List[str] = Field(default_factory=list, description="相关咨询技术列表")
-    applicable_issues: List[str] = Field(default_factory=list, description="适用心理问题类型")
-<<<<<<< HEAD
-=======
-    source_repo_id: Optional[str] = Field(None,
-        description="来源GitHub fork仓库 owner/repo，M2b注入知识专用")
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-    created_at: Optional[datetime] = None
-    updated_at: Optional[datetime] = None
-=======
     id: Optional[str] = None                                                    # 文档唯一标识
     title: str = Field(..., description="知识标题")                              # 知识标题
     source: str = Field(..., description="来源书籍/文献")                       # 来源书籍/文献
@@ -52,7 +34,6 @@ class KnowledgeDocument(BaseModel):
         description="来源GitHub fork仓库 owner/repo，M2b注入知识专用")
     created_at: Optional[datetime] = None                                        # 创建时间
     updated_at: Optional[datetime] = None                                        # 更新时间
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 
 
 class KnowledgeSearchQuery(BaseModel):

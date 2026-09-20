@@ -224,6 +224,22 @@ def build_english_corpus():
                 if alpha_count > len(line) * 0.5:
                     sentences.append(line)
 
+    # 新增：注入他山科研爬取的英文摘要（青少年心理健康论文）
+    tashan_path = DATA_DIR / "tashan_corpora" / "abstracts_en.txt"
+    if tashan_path.exists():
+        tashan_count = 0
+        with open(tashan_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and len(line) > 20 and re.match(r"^[A-Za-z]", line):
+                    alpha_count = sum(1 for c in line if c.isalpha())
+                    if alpha_count > len(line) * 0.5:
+                        sentences.append(line)
+                        tashan_count += 1
+        print(f"[tashan] 注入 {tashan_count} 句英文摘要（来自 {tashan_path.name}）")
+    else:
+        print(f"[tashan] 跳过：{tashan_path} 不存在")
+
     # 补充 PRD 对齐句式
     sentences.extend(PRD_ALIGNED_EN)
 

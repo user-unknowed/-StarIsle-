@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-from typing import Any, Dict, List, Optional
-
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
 """
 star宝_system_prompt.py - 小星（星宝）System Prompt 生成器
 
@@ -19,7 +12,6 @@ star宝_system_prompt.py - 小星（星宝）System Prompt 生成器
 """
 from typing import Any, Dict, List, Optional
 
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 class Star宝SystemPrompt:
     """
     小星（星宝）的System Prompt生成器
@@ -143,25 +135,11 @@ class Star宝SystemPrompt:
 这种感觉不应该一个人扛。这里有一些人，他们比小星更厉害，能更好地帮到你。
 📞 12355 青少年服务热线
 📞 400-161-9995 希望24热线
-要不要试试打个电话？小星陪着你。"
-<<<<<<< HEAD
-<<<<<<< HEAD
-"""
-=======
-=======
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
-"""
+要不要试试打个电话？小星陪着你。"""
 
     def add_available_skills_context(self, available_skills_description: str,
                                       skill_predict: str,
                                       skill_results: str) -> str:
-<<<<<<< HEAD
-        parts = [s for s in (available_skills_description, skill_predict, skill_results)
-                 if s and s.strip()]
-        if not parts: return ""
-        return "\n\n" + "\n\n".join(p.rstrip() for p in parts)
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
         """
         将可用技能描述、技能预测与技能结果拼接为上下文片段。
 
@@ -180,4 +158,3 @@ class Star宝SystemPrompt:
         if not parts: return ""
         # 以双换行分隔各段，并在最前补双换行以与上文分隔
         return "\n\n" + "\n\n".join(p.rstrip() for p in parts)
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca

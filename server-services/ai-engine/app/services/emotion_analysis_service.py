@@ -9,7 +9,7 @@ emotion_analysis_service.py - 情绪分析服务（基于 BERT 的文本情感�
     - transformers：提供 text-classification pipeline
     - os：读取情绪模型名称配置
 """
-from typing import List
+from typing import List, Dict
 from transformers import pipeline
 import os
 

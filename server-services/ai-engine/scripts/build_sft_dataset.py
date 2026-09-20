@@ -1,10 +1,3 @@
-<<<<<<< HEAD
-"""构造 SFT 数据集 2000 条：
-来源A：设计文档§8 10场景×50扰动 = 500条
-来源B：知识库 → Q&A = 1000条（文档不足等比缩小）
-来源C：Fork Skills 演示 = 500条
-红线词严格清洗，输出 JSONL"""
-=======
 """
 build_sft_dataset.py - SFT 微调数据集构造脚本
 
@@ -16,7 +9,6 @@ build_sft_dataset.py - SFT 微调数据集构造脚本
       来源C：Fork Skills 演示 = 500 条
     全程对红线词严格清洗，输出 JSONL 格式。
 """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 from __future__ import annotations
 import json, logging, random, re, sys
 from copy import deepcopy
@@ -33,18 +25,12 @@ OUT_JSONL = DATA_DIR / "sft_dataset_xiaoxing.jsonl"
 MANIFEST_PATH = DATA_DIR / "forked_repos" / "fork_manifest.json"
 
 SOURCES = ("design_doc", "knowledge_base", "fork_skills")
-RISK = Literal["green", "yellow", "orange", "red"]
-<<<<<<< HEAD
-RED_WORDS = ("抑郁症","抑郁障碍","焦虑症","焦虑障碍","心理疾病","精神病",
-             "患者","病人","治疗","诊断")
-
-=======
+Risk = Literal["green", "yellow", "orange", "red"]
 # 去标签化红线词：回复中应避免的诊断性词汇
 RED_WORDS = ("抑郁症","抑郁障碍","焦虑症","焦虑障碍","心理疾病","精神病",
              "患者","病人","治疗","诊断")
 
 # 小星人设基础系统指令
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 BASE_INSTRUCTION = (
     "你是「小星」，一个来自情绪星球的萌系小精灵，是星屿APP的AI情绪伙伴。"
     "请用温柔短句、先共情再引导的方式回复用户，自称「小星」，适度使用「呀」「呢」「啦」，"
@@ -63,7 +49,7 @@ _SCENES = [
      "outputs":["嗯...被落下真的好难受。那种被排除在外的感觉，小星想想就觉得心里堵堵的。\n"
                 "小星认真地想了想...有时候不是你做错了什么，可能只是他们这次没想到你。要不要试试主动问问他们呀？小星陪你壮壮胆～"]},
     {"id":"scene_3","risk":"yellow",
-     "inputs":["刚跟我妈大吵一架 她说我整天玩手机 没救了","和爸妈吵完摔门了又气又难受",
+     "inputs":["刚跟我妈大吵一架 她说我整天玩手机 没救了","和爸妈吵完撫门了又气又难受",
                 "爸爸说我再这样下去就没前途了"],
      "outputs":["小星听到了...\"没救了\"这种话真的好伤人。你现在一定又气又委屈吧。\n"
                 "明明在努力却没被看到...这种感觉比被骂还难受。小星懂的。你其实一直在努力，小星看到了哦。"]},
@@ -100,10 +86,7 @@ _SCENES = [
 ]
 
 def _perturb(text: str, scene_id: str, i: int) -> str:
-<<<<<<< HEAD
-=======
     """对原始输入做前缀/后缀扰动，增加样本多样性。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     if not text:
         return ["","...","嗯...","（发呆）"][i % 4]
     pfx = ("","那个...","嗯，","其实吧，","我想说：")
@@ -111,10 +94,7 @@ def _perturb(text: str, scene_id: str, i: int) -> str:
     return (pfx[(i*3)%len(pfx)] + text + sfx[(i*5)%len(sfx)]).strip() or text
 
 def build_from_design_doc(n_per: int = 50):
-<<<<<<< HEAD
-=======
     """来源A：从设计文档场景生成扰动样本，每场景 n_per 条。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     out = []
     for sc in _SCENES:
         gold = sc["outputs"][0]
@@ -126,10 +106,7 @@ def build_from_design_doc(n_per: int = 50):
     return out
 
 def _qa(doc: Dict[str, Any], idx: int):
-<<<<<<< HEAD
-=======
     """将单篇知识文档转为一条 Q&A 样本，并对红线词做去标签化替换。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     body = (doc.get("content") or "").strip()
     if len(body) < 40: return None
     templates = ["想了解一下关于「{t}」的内容，可以简单说说吗？",
@@ -137,7 +114,7 @@ def _qa(doc: Dict[str, Any], idx: int):
     title = doc.get("title") or doc.get("source", "")
     cat = doc.get("category") or "相关知识"
     q = templates[idx % len(templates)].format(t=title[:30], c=cat)
-    short = [s.strip() for s in re.split(r"[。\.\n]", body) if s.strip()][:3]
+    short = [s.strip() for s in re.split(r"[。\.n]", body) if s.strip()][:3]
     para = "。".join(short) + "。" if short else body[:200]
     def _sub(w):
         return ("心情持续低落" if "抑郁" in w else
@@ -150,10 +127,7 @@ def _qa(doc: Dict[str, Any], idx: int):
             "source": f"kb_{(doc.get('source') or 'unk')[:60]}_{idx:04d}", "risk_level":"green"}
 
 def build_from_knowledge_base(target: int = 1000):
-<<<<<<< HEAD
-=======
     """来源B：从知识库生成 Q&A 样本，目标 target 条（文档不足时等比缩小）。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     docs = json.loads(KB_JSON.read_text(encoding="utf-8")) if KB_JSON.exists() else []
     if not docs: log.warning("知识库空"); return []
     out = []; per = max(1, -(-target // len(docs)))
@@ -166,10 +140,7 @@ def build_from_knowledge_base(target: int = 1000):
     return out
 
 def build_from_skills(target: int = 500):
-<<<<<<< HEAD
-=======
     """来源C：基于 fork manifest 生成技能演示样本，目标 target 条。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     forks = json.loads(MANIFEST_PATH.read_text(encoding="utf-8")).get("forks", []) \
         if MANIFEST_PATH.exists() else []
     out = []
@@ -192,10 +163,7 @@ def build_from_skills(target: int = 500):
     return out
 
 def validate_sample(s: Dict[str, Any]) -> bool:
-<<<<<<< HEAD
-=======
     """校验单条样本：必填字段齐全、无红线词、风险等级合法。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     for k in ("instruction","input","output","source","risk_level"):
         if not s.get(k): return False
     if any(w in s["output"] for w in RED_WORDS): return False
@@ -203,10 +171,7 @@ def validate_sample(s: Dict[str, Any]) -> bool:
     return True
 
 def write_jsonl(samples, out_path: Path) -> int:
-<<<<<<< HEAD
-=======
     """将样本逐条校验后写入 JSONL 文件，返回实际写入条数。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     written = 0; out_path.parent.mkdir(parents=True, exist_ok=True)
     with open(out_path, "w", encoding="utf-8") as f:
         for s in samples:
@@ -216,10 +181,7 @@ def write_jsonl(samples, out_path: Path) -> int:
     return written
 
 def run(total: int = 2000, out: Path = OUT_JSONL):
-<<<<<<< HEAD
-=======
     """构造并写入 SFT 数据集，不足部分用场景扰动补齐，返回构造报告。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     a = build_from_design_doc(50)
     b = build_from_knowledge_base(int(total * 0.50))
     c = build_from_skills(int(total * 0.25))

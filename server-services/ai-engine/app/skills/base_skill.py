@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-"""BaseSkill ABC — 包装 GitHub Fork 项目为小星可调度能力"""
-=======
 """
 base_skill.py - 技能基类 BaseSkill 抽象定义
 
@@ -12,18 +9,11 @@ base_skill.py - 技能基类 BaseSkill 抽象定义
     - abc：提供抽象基类与抽象方法支持
     - typing：提供类型注解
 """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List
 
 class BaseSkill(ABC):
-<<<<<<< HEAD
-    name: str = "unnamed_skill"
-    display_name: str = "未命名技能"
-    source_repo: str = ""
-    description: str = ""
-=======
     """
     技能抽象基类 — 包装 GitHub Fork 项目为小星可调度能力
 
@@ -34,14 +24,10 @@ class BaseSkill(ABC):
     display_name: str = "未命名技能"        # 展示名称
     source_repo: str = ""                  # 来源 GitHub fork 仓库 owner/repo
     description: str = ""                  # 技能描述
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 
     @abstractmethod
     def can_handle(self, message: str, context: List[Dict[str, Any]],
                    user_profile: Dict[str, Any]) -> float:
-<<<<<<< HEAD
-        """返回 [0,1] 匹配度；SkillRouter阈值0.6"""
-=======
         """
         判断当前技能对消息的匹配度。
 
@@ -53,18 +39,11 @@ class BaseSkill(ABC):
         Returns:
             float: [0,1] 匹配度；SkillRouter 阈值 0.6
         """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         ...
 
     @abstractmethod
     async def execute(self, message: str, context: List[Dict[str, Any]],
                       **kwargs: Any) -> Dict[str, Any]:
-<<<<<<< HEAD
-        """返回 {text, confidence, raw_data}"""
-        ...
-
-    def __repr__(self) -> str:
-=======
         """
         执行技能逻辑，返回能力结果。
 
@@ -85,5 +64,4 @@ class BaseSkill(ABC):
         Returns:
             str: 包含技能名与来源仓库的表示
         """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         return f"<Skill {self.name} src={self.source_repo}>"

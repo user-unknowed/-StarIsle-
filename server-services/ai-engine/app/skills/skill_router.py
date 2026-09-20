@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-"""Skill Router — can_handle打分 → execute注入 → 失败自动摘除"""
-=======
 """
 skill_router.py - 技能路由器（can_handle 打分 → execute 注入 → 失败摘除）
 
@@ -13,7 +10,6 @@ skill_router.py - 技能路由器（can_handle 打分 → execute 注入 → 失
     - .base_skill：技能抽象基类
     - dataclasses/logging：运行时状态结构与日志
 """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 from __future__ import annotations
 import logging
 from dataclasses import dataclass
@@ -21,28 +17,11 @@ from typing import Any, Dict, List
 from .base_skill import BaseSkill
 
 log = logging.getLogger(__name__)
-<<<<<<< HEAD
-=======
 # 技能激活阈值：can_handle 得分达到该值才真正执行
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 ACTIVATE_THRESHOLD = 0.6
 
 @dataclass
 class SkillRuntimeState:
-<<<<<<< HEAD
-    skill: BaseSkill
-    state: str = "active"     # active / disabled
-    activation_count: int = 0
-    error_count: int = 0
-    last_error: str = ""
-
-class SkillRouter:
-    def __init__(self, skills: List[BaseSkill]):
-        self._states: Dict[str, SkillRuntimeState] = {}
-        for s in skills: self.register(s)
-
-    def register(self, s: BaseSkill) -> None:
-=======
     """
     技能运行时状态
 
@@ -80,14 +59,11 @@ class SkillRouter:
             s: 待注册的技能实例
         """
         # 同名技能已存在时打印告警，随后覆盖
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         if s.name in self._states:
             log.warning("Skill %s already registered, overriding", s.name)
         self._states[s.name] = SkillRuntimeState(skill=s)
 
     def status(self) -> List[Dict[str, Any]]:
-<<<<<<< HEAD
-=======
         """
         返回所有技能的运行时状态摘要。
 
@@ -95,17 +71,12 @@ class SkillRouter:
             List[Dict[str, Any]]: 各技能的状态、调用次数与错误信息
         """
         # 将运行时状态序列化为前端可读的结构
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         return [{"name":v.skill.name,"display_name":v.skill.display_name,
                  "source_repo":v.skill.source_repo,"state":v.state,
                  "activation_count":v.activation_count,"error_count":v.error_count,
                  "last_error":v.last_error} for v in self._states.values()]
 
     def build_available_skills_description(self) -> str:
-<<<<<<< HEAD
-        active = [s for s in self._states.values() if s.state=="active"]
-        if not active: return ""
-=======
         """
         构造可用技能描述文本，注入 System Prompt 顶部。
 
@@ -116,7 +87,6 @@ class SkillRouter:
         active = [s for s in self._states.values() if s.state=="active"]
         if not active: return ""
         # 拼装可用能力列表，提示模型这些工具可调用
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         lines = ["【可用能力参考】",
                  "（以下为小星可自动调用的外部工具能力，结果仅作参考：）"]
         for s in active:
@@ -124,14 +94,6 @@ class SkillRouter:
         return "\n".join(lines) + "\n"
 
     def build_prompt_context(self, msg: str, ctx: List[Dict], up: Dict) -> str:
-<<<<<<< HEAD
-        parts: List[str] = []
-        for name, s in self._states.items():
-            if s.state != "active": continue
-            try: score = s.skill.can_handle(msg, ctx, up)
-            except Exception as e:
-                log.warning("can_handle %s failed: %s", name, e); score = 0
-=======
         """
         对消息做技能预判，构造预判上下文文本。
 
@@ -152,7 +114,6 @@ class SkillRouter:
             except Exception as e:
                 log.warning("can_handle %s failed: %s", name, e); score = 0
             # 达到阈值才列入预判
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
             if score >= ACTIVATE_THRESHOLD:
                 parts.append(f"· 可能激活「{s.skill.display_name}」(匹配度 {score:.2f})")
         if not parts: return ""
@@ -160,21 +121,6 @@ class SkillRouter:
 
     async def inject_for_chat(self, msg: str, ctx: List[Dict[str, Any]],
                               up: Dict[str, Any]) -> str:
-<<<<<<< HEAD
-        activated: List[str] = []
-        for name, s in list(self._states.items()):
-            if s.state != "active": continue
-            try: score = s.skill.can_handle(msg, ctx, up)
-            except Exception as e:
-                s.state="disabled"; s.error_count+=1; s.last_error=str(e); continue
-            if score < ACTIVATE_THRESHOLD: continue
-            try:
-                res = await s.skill.execute(msg, ctx, profile=up)
-                s.activation_count += 1
-                t, c = res.get("text") or "", res.get("confidence") or 0
-                activated.append(f"【{s.skill.display_name} 已激活(置信度{c:.2f})】\n{t}\n")
-            except Exception as e:
-=======
         """
         执行命中技能并拼装注入文本，失败技能自动摘除。
 
@@ -205,6 +151,5 @@ class SkillRouter:
                 activated.append(f"【{s.skill.display_name} 已激活(置信度{c:.2f})】\n{t}\n")
             except Exception as e:
                 # 执行失败摘除技能并记录错误
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
                 s.state="disabled"; s.error_count+=1; s.last_error=str(e)
         return "\n".join(activated)

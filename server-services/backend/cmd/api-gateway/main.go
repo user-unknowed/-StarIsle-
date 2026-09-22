@@ -33,7 +33,7 @@ func main() {
     router := gin.Default()
 
     // 中间件：按顺序注册跨域、日志、鉴权与限流四道全局中间件
-    router.Use(middleware.CORS())             // 跨域资源共享处理
+    router.Use(middleware.CORS(cfg.AllowedOrigins)) // 跨域资源共享处理
     router.Use(middleware.Logger())           // 请求日志记录
     router.Use(middleware.Authentication(cfg)) // JWT 身份认证
     router.Use(middleware.RateLimit(cfg))      // 限流保护

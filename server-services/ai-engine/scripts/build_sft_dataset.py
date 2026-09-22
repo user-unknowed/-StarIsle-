@@ -89,11 +89,11 @@ def _perturb(text: str, scene_id: str, i: int) -> str:
     """对原始输入做前缀/后缀扰动，增加样本多样性。"""
     if not text:
         return ["","...","嗯...","（发呆）"][i % 4]
-    pfx = ("","那个...","嗯，","其实吧，","我想说：","最近","就是","真的","唉，","有点")
-    sfx = ("","…","呜呜","唉","怎么办呢","呢","啊","好难","求帮忙","真的很烦")
+    pfx = ("","那个...","嗯，","其实吧，","我想说：")
+    sfx = ("","…","呜呜","唉","怎么办呢","呢")
     return (pfx[(i*3)%len(pfx)] + text + sfx[(i*5)%len(sfx)]).strip() or text
 
-def build_from_design_doc(n_per: int = 80):
+def build_from_design_doc(n_per: int = 50):
     """来源A：从设计文档场景生成扰动样本，每场景 n_per 条。"""
     out = []
     for sc in _SCENES:
@@ -180,9 +180,9 @@ def write_jsonl(samples, out_path: Path) -> int:
     log.info("Write %d samples -> %s", written, out_path)
     return written
 
-def run(total: int = 3000, out: Path = OUT_JSONL):
+def run(total: int = 2000, out: Path = OUT_JSONL):
     """构造并写入 SFT 数据集，不足部分用场景扰动补齐，返回构造报告。"""
-    a = build_from_design_doc(80)
+    a = build_from_design_doc(50)
     b = build_from_knowledge_base(int(total * 0.50))
     c = build_from_skills(int(total * 0.25))
     missing = max(0, total - (len(a)+len(b)+len(c)))

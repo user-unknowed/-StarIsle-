@@ -3,7 +3,7 @@ pretrain_word2vec.py - 中文 Word2Vec 预训练脚本
 
 所属模块：ai-engine/scripts
 功能简述：
-    基于 PRD 对齐的中文心理健康语料（chinese_corpus.txt），使用 jieba 分词后训练 Word2Vec 词向量，
+    基于清洗后的中文语料（combined_cleaned_text.txt），使用 jieba 分词后训练 Word2Vec 词向量，
     并通过相似词检索评估模型语义表示质量。
 依赖关系：
     - jieba：中文分词
@@ -27,16 +27,15 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 # 预训练超参数配置
-# v2.1.2: 扩展语料后调整 - vector_size 300→200, min_count 2→1, epochs 15→30, negative 5→10
 PRETRAIN_CONFIG = {
-    "vector_size": 200,
+    "vector_size": 300,
     "window": 5,
-    "min_count": 1,
+    "min_count": 3,
     "sg": 1,
     "hs": 0,
-    "negative": 10,
+    "negative": 5,
     "workers": 4,
-    "epochs": 30,
+    "epochs": 10,
     "seed": 42,
     "output_dir": "./models/pretrained_word2vec"
 }
@@ -65,7 +64,7 @@ def load_and_tokenize_data():
     """加载并使用 jieba 分词中文语料，返回句子（词列表）集合。"""
     logger.info("Loading and tokenizing data...")
 
-    combined_text_path = DATA_DIR / "chinese_corpus.txt"
+    combined_text_path = DATA_DIR / "combined_cleaned_text.txt"
 
     with open(combined_text_path, 'r', encoding='utf-8') as f:
         text = f.read()
@@ -104,8 +103,7 @@ def train_word2vec(sentences):
         workers=PRETRAIN_CONFIG["workers"],
         epochs=PRETRAIN_CONFIG["epochs"],
         seed=PRETRAIN_CONFIG["seed"],
-        callbacks=[epoch_logger],
-        compute_loss=True
+        callbacks=[epoch_logger]
     )
 
     logger.info("Training completed!")
@@ -136,15 +134,7 @@ def evaluate_model(model):
     """通过预设测试词检索相似词，评估模型语义表示质量。"""
     logger.info("Evaluating model...")
 
-    # PRD 核心词：心情打卡 5 档 + 风险检测 + 投射测评 + 功能词
-    test_words = [
-        # PRD 核心情绪/心理健康词
-        "抑郁", "焦虑", "情绪", "心理健康", "治疗", "症状",
-        # PRD 功能词
-        "心情", "放松", "压力", "青少年", "风险", "危机",
-        # PRD v2.1 投射测评
-        "罗夏", "投射",
-    ]
+    test_words = ["抑郁", "焦虑", "情绪", "心理健康", "治疗", "症状"]
     results = {}
 
     for word in test_words:

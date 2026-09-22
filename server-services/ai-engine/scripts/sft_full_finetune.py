@@ -1,16 +1,11 @@
 """M3b SFT 全参数微调 + 自动降级链 FULL→LoRA→CPU→SIMULATION
-基座默认本地路径 /workspace/.hf_cache/Qwen2-0.5B-Instruct（从 hf-mirror.com 下载）。
-SSL 阻断解决方案：huggingface.co SNI 被防火墙过滤，改用 hf-mirror.com 镜像 + 本地加载。"""
+基座默认 Qwen/Qwen-1_8B-Chat。"""
 from __future__ import annotations
 import argparse, gc, json, logging, math, os, random
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from typing import Any, Dict
-
-# 离线模式：避免 transformers 联网检查更新（SSL 已被阻断）
-os.environ.setdefault("HF_HUB_OFFLINE", "1")
-os.environ.setdefault("TRANSFORMERS_OFFLINE", "1")
 
 log = logging.getLogger("sft_ff")
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
@@ -160,8 +155,8 @@ def do_train(mode: TrainingMode, model_name: str, max_seq: int,
         num_train_epochs=epochs,
         fp16=kw.get("torch_dtype") == torch.float16,
         bf16=kw.get("torch_dtype") == torch.bfloat16,
-        logging_steps=5, save_strategy="epoch", eval_strategy="epoch",
-        weight_decay=0.1, warmup_steps=4,
+        logging_steps=5, save_strategy="epoch", evaluation_strategy="epoch",
+        weight_decay=0.1, warmup_ratio=0.05,
         seed=42, report_to="none", dataloader_num_workers=0,
         save_total_limit=2, load_best_model_at_end=False)
     coll = DataCollatorForLanguageModeling(tokenizer=tok, mlm=False)
@@ -189,7 +184,7 @@ def do_train(mode: TrainingMode, model_name: str, max_seq: int,
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--model", default=os.getenv("MODEL_NAME_SFT", "/workspace/.hf_cache/Qwen2-0.5B-Instruct"))
+    ap.add_argument("--model", default=os.getenv("MODEL_NAME_SFT", "Qwen/Qwen-1_8B-Chat"))
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--grad-acc", type=int, default=None)

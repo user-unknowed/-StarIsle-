@@ -7,5 +7,3 @@ server-services/ai-engine/models/sft_xiaoxing_v1/
 server-services/ai-engine/integration_report.json
 server-services/ai-engine/models/sft_xiaoxing_simulation/
 server-services/ai-engine/models/pretrained_mlm_simulation/
-.hf_cache/
-*.safetensors

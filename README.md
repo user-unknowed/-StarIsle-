@@ -107,7 +107,7 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 | **微信小程序** | WXML / WXSS / JavaScript | - | 心理测评反馈小程序 |
 | **微信小程序** | 微信云开发 | - | 云函数 / 云数据库 / 云存储 |
 | **后端服务** | Java + Spring Boot | 21 / 3.2.x | 核心业务逻辑 |
-| **API网关** | Go + Gin | 1.21 / 1.9.x | 统一入口与路由 |
+| **API网关** | Go + Gin | 1.21 / 1.9.x | BFF 网关：中间件层 + 透传代理 + 跨服务编排 |
 | **AI引擎** | Python + FastAPI | - / 0.108.x | AI对话与分析 |
 | **AI引擎** | Transformers + Torch | 4.36.x / 2.1.x | 情绪分析模型 |
 | **AI引擎** | LangChain | 0.1.x | LLM应用框架 |
@@ -126,7 +126,7 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 | 组件 | 技术栈 | 职责 |
 |------|--------|------|
 | `backend-java/` | Java Spring Boot | 核心业务服务（认证、用户管理、情绪数据、聊天、风险检测） |
-| `server-services/backend/` | Go Gin | API网关（请求路由、负载均衡、统一认证入口） |
+| `server-services/backend/` | Go Gin | BFF 网关（CORS/JWT/限流中间件、透传代理、对话/风险编排、AIMD 断路器） |
 | `server-services/ai-engine/` | Python FastAPI | AI对话引擎（情绪分析、风险检测、语义分析） |
 | `server-services/mcp-psych-assessment/` | TypeScript MCP SDK | 心理测评 MCP Server（6 Tool：任务/反馈/AI分析/复核/科研导出/PII访问）`v2.1新增` |
 | `web-frontend/` | React TypeScript | Web端多角色应用（学生/教师/家长） |
@@ -206,12 +206,14 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 │   │   ├── models/                   # 训练模型输出
 │   │   ├── dockerfile                # Docker构建配置
 │   │   └── requirements.txt          # Python依赖
-│   ├── backend/                      # API网关（Go）
+│   ├── backend/                      # BFF 网关（Go）
 │   │   ├── cmd/api-gateway/          # 命令入口
 │   │   ├── internal/
 │   │   │   ├── config/               # 配置管理
-│   │   │   ├── handlers/             # HTTP处理器
-│   │   │   └── routes/               # 路由配置
+│   │   │   ├── handlers/             # HTTP处理器（透传 + 编排）
+│   │   │   ├── middleware/           # 跨切面中间件（CORS/JWT/限流/日志）
+│   │   │   ├── routes/               # 路由配置
+│   │   │   └── service/              # 下游客户端（Java 反向代理 + AI HTTP 客户端 w/ AIMD 断路器）
 │   │   ├── dockerfile                # Docker构建配置
 │   │   └── go.mod                    # Go模块依赖
 │   ├── mcp-psych-assessment/         # 心理测评 MCP Server `v2.1新增`
@@ -485,9 +487,17 @@ node dist/index.js    # stdio MCP Server 启动
 ```bash
 cd server-services/backend
 go mod download
+
+# 环境变量（按需配置）
+export JAVA_BACKEND_URL=http://localhost:8081   # Java Spring Boot 后端地址
+export AI_SERVICE_URL=http://localhost:8000     # AI 引擎地址
+export JWT_SECRET=your-jwt-secret               # JWT 签名密钥
+
 go run cmd/api-gateway/main.go
 ```
 服务运行在 http://localhost:8080
+
+网关作为 BFF 层，将 CRUD 请求透传至 Java 后端，对话/风险等端点在 Go 层编排 AI 引擎与 Java 后端的协作。
 
 ### 学生端原生开发
 ```bash

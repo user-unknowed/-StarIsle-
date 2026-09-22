@@ -142,11 +142,13 @@ StarIsle 采用经典的分层架构，分为**客户端层**、**服务端层**
 
 #### 网关层
 
-统一入口，负责请求路由、认证鉴权、限流和日志。
+BFF 网关，负责跨切面中间件、透传代理与跨服务编排。
 
-- **技术**: Go 1.21 + Gin 1.9.x
-- **职责**: 统一认证入口（JWT 校验）、请求路由与负载均衡、CORS 跨域处理、速率限制
-- **注意**: 当前项目处于过渡期，`backend-java/`（Spring Boot）是主要开发版本，`server-services/backend/`（Go）作为 API 网关保留
+- **技术**: Go 1.21 + Gin 1.9.x + gorilla/websocket
+- **中间件层** (`internal/middleware/`): CORS 白名单、请求日志、JWT 鉴权（HS256/384/512）、基于 IP 的滑动窗口限流
+- **透传代理** (`internal/service/JavaClient`): users/mood/assessment/content/risk CRUD 端点通过 `httputil.ReverseProxy` 原样转发到 Java 后端
+- **跨服务编排**: chat/message 调 AI /chat 后异步持久化到 Java + 风险联动；risk/detect 调 AI /risk/check 后高危联动危机上报；WebSocket 逐条调 AI /chat + 心跳 + 异步持久化
+- **依赖韧性**: AI 客户端内置 AIMD 断路器（5 次连续失败→open→30s 冷却→halfOpen 探针→3 次成功→closed），按端点差异化超时预算（chat 5s / risk 3s / topics 2s）
 
 #### 服务端层
 

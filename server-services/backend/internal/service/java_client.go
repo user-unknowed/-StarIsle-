@@ -2,6 +2,10 @@
 package service
 
 import (
+	"bytes"
+	"context"
+	"encoding/json"
+	"fmt"
 	"net"
 	"net/http"
 	"net/http/httputil"
@@ -15,7 +19,9 @@ import (
 // 透传型 handler 使用 Proxy 方法将请求原样转发到 Java 后端，
 // 不引入业务逻辑。
 type JavaClient struct {
-	proxy *httputil.ReverseProxy
+	proxy     *httputil.ReverseProxy
+	targetURL *url.URL
+	client    *http.Client
 }
 
 // NewJavaClient 创建到 Java 后端的反向代理客户端。
@@ -43,22 +49,48 @@ func NewJavaClient(target string) *JavaClient {
 		Transport: transport,
 	}
 
-	return &JavaClient{proxy: proxy}
+	client := &http.Client{
+		Timeout:   5 * time.Second,
+		Transport: transport,
+	}
+
+	return &JavaClient{
+		proxy:     proxy,
+		targetURL: targetURL,
+		client:    client,
+	}
 }
 
-// Proxy 将 gin 上下文中的请求透传到 Java 后端的指定路径。
-// handler 调用时传入目标路径（如 "/api/v1/users/register"），
-// 方法、请求体、header 原样保留。
-func (jc *JavaClient) Proxy(c *gin.Context, targetPath string) {
-	c.Request.URL.Path = targetPath
+// Proxy 将当前请求原样透传到 Java 后端。
+// Go 路由路径与 Java 路由路径一致（均挂载在 /api/v1 下），
+// 因此不需要路径重写。
+func (jc *JavaClient) Proxy(c *gin.Context) {
 	jc.proxy.ServeHTTP(c.Writer, c.Request)
 }
 
 // Post 向 Java 后端发起 POST JSON 请求（用于异步持久化等编排场景）。
-// 超时固定为 3s，失败不阻塞调用方（编排 handler 在 goroutine 中调用）。
-func (jc *JavaClient) Post(targetPath string, body interface{}) error {
-	// 编排场景下 body 通常为 map[string]interface{}
-	// 实际 HTTP 调用通过 AIClient 中的 httpClient 统一执行
-	// 此处保留接口供 Phase 3 实现
+// 超时 5s，失败返回错误但不影响调用方（编排 handler 在 goroutine 中调用）。
+func (jc *JavaClient) Post(ctx context.Context, path string, body interface{}) error {
+	jsonBody, err := json.Marshal(body)
+	if err != nil {
+		return fmt.Errorf("序列化请求体失败: %w", err)
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		jc.targetURL.String()+path, bytes.NewReader(jsonBody))
+	if err != nil {
+		return err
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := jc.client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("Java 后端返回 %d", resp.StatusCode)
+	}
 	return nil
 }

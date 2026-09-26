@@ -1,7 +1,13 @@
 {
   "name": "starisle-api-docs",
   "private": true,
-  "version": "1.0.0",
+  "version": "0.0.0",
+  "description": "星屿 StarIsle API 文档工具",
+  "author": "StarIsle",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/user-unknowed/-StarIsle-.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -33,6 +39,7 @@
   "build": {
     "appId": "com.starisle.apidocs",
     "productName": "星屿API文档",
+    "copyright": "Copyright © 2026 StarIsle",
     "directories": {
       "output": "release"
     },
@@ -41,27 +48,35 @@
       "dist/**/*",
       "package.json"
     ],
-    "win": {
+    "linux": {
       "target": [
         {
-          "target": "nsis",
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "tar.gz",
           "arch": ["x64"]
         }
       ],
-      "icon": "public/icon.ico"
+      "category": "Development"
     },
-    "nsis": {
-      "oneClick": false,
-      "perMachine": true,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "shortcutName": "星屿API文档",
-      "uninstallDisplayName": "星屿API文档",
-      "uninstallDisplayName": "星屿API文档",
-      "installerIcon": "public/icon.ico",
-      "uninstallerIcon": "public/icon.ico",
-      "installerHeaderIcon": "public/icon.ico"
-    }
+    "win": {
+      "signAndEditExecutable": false,
+      "target": [
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64"]
+        }
+      ]
+    },
+    "asar": true,
+    "asarUnpack": [
+      "node_modules/**/*"
+    ]
   }
 }

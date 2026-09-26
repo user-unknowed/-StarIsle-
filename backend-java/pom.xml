@@ -13,7 +13,7 @@
     
     <groupId>com.starisle</groupId>
     <artifactId>starisle-backend</artifactId>
-    <version>1.0.0</version>
+    <version>0.0.0</version>
     <name>StarIsle Backend</name>
     <description>星屿青少年心理健康AI陪伴应用 - 后端服务</description>
     
@@ -117,6 +117,13 @@
             <version>8.4.0</version>
             <scope>runtime</scope>
         </dependency>
+
+        <!-- SQLite for local memory storage -->
+        <dependency>
+            <groupId>org.xerial</groupId>
+            <artifactId>sqlite-jdbc</artifactId>
+            <version>3.46.0.0</version>
+        </dependency>
     </dependencies>
     
     <build>
@@ -129,6 +136,13 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

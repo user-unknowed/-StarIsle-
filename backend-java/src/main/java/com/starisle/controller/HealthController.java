@@ -27,7 +27,7 @@ public class HealthController {
         return ResponseEntity.ok(Map.of(
             "status", "healthy",
             "service", "starisle-api",
-            "version", "1.0.0"
+            "version", "0.0.0"
         ));
     }
 }

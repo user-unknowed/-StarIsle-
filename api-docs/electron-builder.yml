@@ -11,26 +11,25 @@ files:
   - dist/**/*
   - package.json
 
-win:
-  icon: public/icon.svg
+linux:
   target:
-    - target: nsis
+    - target: AppImage
       arch:
         - x64
+    - target: tar.gz
+      arch:
+        - x64
+  category: Development
 
-nsis:
-  oneClick: false
-  perMachine: true
-  allowToChangeInstallationDirectory: true
-  createDesktopShortcut: true
-  createStartMenuShortcut: true
-  shortcutName: 星屿API文档
-  uninstallDisplayName: 星屿API文档
-  installerIcon: public/icon.svg
-  uninstallerIcon: public/icon.svg
-  installerHeaderIcon: public/icon.svg
-  language:
-    - 2052
+win:
+  signAndEditExecutable: false
+  target:
+    - target: portable
+      arch:
+        - x64
+    - target: zip
+      arch:
+        - x64
 
 asar: true
 asarUnpack:

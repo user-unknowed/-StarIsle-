@@ -1,0 +1,20 @@
+# Gradle
+.gradle/
+build/
+app/build/
+
+# Keystore (do not commit secrets)
+keystore/
+*.keystore
+*.jks
+
+# APK outputs
+dist/
+*.apk
+*.tar.gz
+*.zip
+
+# IDE
+.idea/
+*.iml
+local.properties

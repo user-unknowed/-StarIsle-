@@ -1,0 +1,8 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.StarIsle" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="colorPrimary">@color/starisle_primary</item>
+        <item name="colorPrimaryDark">@color/starisle_deep</item>
+        <item name="colorAccent">@color/starisle_primary</item>
+        <item name="android:windowBackground">@color/white</item>
+    </style>
+</resources>

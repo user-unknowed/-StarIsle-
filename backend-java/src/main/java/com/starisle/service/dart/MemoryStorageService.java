@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import jakarta.annotation.PostConstruct;
+import java.io.File;
 import java.security.SecureRandom;
 import java.sql.*;
 import java.util.Base64;
@@ -105,6 +106,12 @@ public class MemoryStorageService {
      */
     private Connection initDatabase() throws Exception {
         String dbFullPath = dbPath + "/" + dbName;
+
+        // 确保数据库目录存在
+        File dataDir = new File(dbPath);
+        if (!dataDir.exists()) {
+            dataDir.mkdirs();
+        }
 
         Connection conn = DriverManager.getConnection("jdbc:sqlite:" + dbFullPath);
 

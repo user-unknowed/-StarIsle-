@@ -11,8 +11,10 @@ import (
 
     "github.com/gin-gonic/gin"
     "starisle-backend/internal/config"
+    "starisle-backend/internal/handlers"
     "starisle-backend/internal/middleware"
     "starisle-backend/internal/routes"
+    "starisle-backend/internal/service"
 )
 
 // main 是程序入口函数，负责串联配置加载、中间件装配、路由注册与服务启动
@@ -33,10 +35,15 @@ func main() {
     router := gin.Default()
 
     // 中间件：按顺序注册跨域、日志、鉴权与限流四道全局中间件
-    router.Use(middleware.CORS())             // 跨域资源共享处理
+    router.Use(middleware.CORS(cfg.AllowedOrigins)) // 跨域资源共享处理
     router.Use(middleware.Logger())           // 请求日志记录
     router.Use(middleware.Authentication(cfg)) // JWT 身份认证
     router.Use(middleware.RateLimit(cfg))      // 限流保护
+
+    // 注入下游服务客户端到 handler 包
+    javaClient := service.NewJavaClient(cfg.JavaBackendURL)
+    aiClient := service.NewAIClient(cfg.AIServiceURL)
+    handlers.Init(javaClient, aiClient)
 
     // 注册路由：将各业务模块的路由组挂载到 v1 分组下
     routes.SetupRoutes(router, cfg)

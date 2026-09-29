@@ -13,7 +13,7 @@
     
     <groupId>com.starisle</groupId>
     <artifactId>starisle-backend</artifactId>
-    <version>1.0.0</version>
+    <version>0.0.0</version>
     <name>StarIsle Backend</name>
     <description>星屿青少年心理健康AI陪伴应用 - 后端服务</description>
     
@@ -124,6 +124,13 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>

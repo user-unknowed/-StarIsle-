@@ -10,15 +10,14 @@ import { ErrorBoundary } from './components/common/ErrorBoundary';
 import { EmergencyHelpButton } from './components/common/EmergencyHelpButton';
 import Login from './pages/Login';
 import StudentHome from './pages/student/StudentHome';
-import StudentChat from './pages/student/StudentChat';
+import StudentKnowledge from './pages/student/StudentKnowledge';
+import StudentCommunity from './pages/student/StudentCommunity';
 import StudentRelax from './pages/student/StudentRelax';
 import StudentProfile from './pages/student/StudentProfile';
 import TeacherHome from './pages/teacher/TeacherHome';
-import TeacherChat from './pages/teacher/TeacherChat';
 import TeacherRelax from './pages/teacher/TeacherRelax';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import ParentHome from './pages/parent/ParentHome';
-import ParentChat from './pages/parent/ParentChat';
 import ParentChildren from './pages/parent/ParentChildren';
 import ParentEmergency from './pages/parent/ParentEmergency';
 import ParentProfile from './pages/parent/ParentProfile';
@@ -107,10 +106,18 @@ export default function App() {
           }
         />
         <Route
-          path="/student/chat"
+          path="/student/knowledge"
           element={
             <ProtectedRoute requiredRole="student">
-              <StudentChat />
+              <StudentKnowledge />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/community"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <StudentCommunity />
             </ProtectedRoute>
           }
         />
@@ -141,14 +148,6 @@ export default function App() {
           }
         />
         <Route
-          path="/teacher/chat"
-          element={
-            <ProtectedRoute requiredRole="teacher">
-              <TeacherChat />
-            </ProtectedRoute>
-          }
-        />
-        <Route
           path="/teacher/relax"
           element={
             <ProtectedRoute requiredRole="teacher">
@@ -171,14 +170,6 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="parent">
               <ParentHome />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/parent/chat"
-          element={
-            <ProtectedRoute requiredRole="parent">
-              <ParentChat />
             </ProtectedRoute>
           }
         />

@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-"""Auto-generated Skill Adapter for Utkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health @ 2026-08-29T09:25:27"""
-=======
 """
 sentiment_analysis_mental_health_adapter.py - 心理健康情感分析技能适配器
 
@@ -8,7 +5,6 @@ sentiment_analysis_mental_health_adapter.py - 心理健康情感分析技能适�
 功能简述：
     包装 Utkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health 项目，提供基于 BERT/RoBERTa 的心理健康文本情感分类。
 """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 from __future__ import annotations
 from typing import Any, Dict, List
 from app.skills.base_skill import BaseSkill
@@ -16,14 +12,6 @@ from pathlib import Path
 import re
 
 class SentimentAnalysisMentalHealthSkill(BaseSkill):
-<<<<<<< HEAD
-    name = 'sentiment_analysis_mental_health_skill'
-    display_name = '开源能力:Sentiment_Analysis_Mental_Health'
-    source_repo = 'Utkarsh-Agrawal-17/Sentiment-Analysis-Mental-Health'
-    description = '心理健康文本情感分类模型(基于BERT/RoBERTa)'
-
-    def can_handle(self, message: str, context: List[Dict[str, Any]], user_profile: Dict[str, Any]) -> float:
-=======
     """
     心理健康情感分析技能 - 基于 BERT/RoBERTa 模型
 
@@ -46,14 +34,11 @@ class SentimentAnalysisMentalHealthSkill(BaseSkill):
         Returns:
             float: [0,1] 匹配度
         """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         msg = (message or "").lower(); kws = ['utkarsh', 'agrawal', 'sentiment', 'analysis', 'mental', 'health', '心理健康文本情感分类模型', '基于bert', 'roberta', 'python', 'emotion', '心理']
         hits = sum(1 for k in kws if k in msg)
         return 0.0 if hits == 0 else min(0.5 + 0.15 * hits, 0.95)
 
     async def execute(self, message: str, context: List[Dict[str, Any]], **kwargs: Any) -> Dict[str, Any]:
-<<<<<<< HEAD
-=======
         """
         执行技能，检索仓库 README 内容。
 
@@ -65,7 +50,6 @@ class SentimentAnalysisMentalHealthSkill(BaseSkill):
         Returns:
             Dict[str, Any]: 技能执行结果
         """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         readme = Path('/workspace/server-services/ai-engine/data/forked_repos/Sentiment-Analysis-Mental-Health/README.md')
         content = readme.read_text(encoding="utf-8", errors="ignore") if readme.exists() else ""
         lines = [ln.strip() for ln in re.split(r"[\n\.。]", content) if ln.strip()]

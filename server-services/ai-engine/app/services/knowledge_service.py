@@ -522,6 +522,131 @@ class KnowledgeService:
         
         return knowledge_context.strip()
 
+    async def recommend_for_user(self, user_id: str, context_hint: str = "") -> List[Dict]:
+        """
+        基于用户状态的个性化文章推荐。
+
+        结合用户最近打卡情绪、问卷结果、聊天关键词等上下文，
+        检索并推荐更贴合的心理科普文章。
+
+        Args:
+            user_id: 用户 ID
+            context_hint: 上下文提示文本（如最近情绪关键词）
+
+        Returns:
+            List[Dict]: 推荐文章列表（含标题、预览、分类、匹配原因）
+        """
+        # 构建检索查询：上下文提示 + 问题类型检测
+        query = context_hint
+        if not query:
+            query = "青少年 心理 成长"
+
+        issue_keywords = self._detect_issue_type(query)
+        if issue_keywords:
+            query = f"{query} {' '.join(issue_keywords)}"
+
+        results = await self.search_knowledge(query, top_k=5)
+
+        recommendations = []
+        for r in results:
+            doc = r.document
+            recommendations.append({
+                "id": doc.id,
+                "title": doc.title,
+                "source": doc.source,
+                "category": doc.category,
+                "content_preview": doc.content[:200],
+                "tags": doc.tags[:5],
+                "relevance_score": r.relevance_score,
+                "matched_keywords": r.matched_keywords,
+            })
+
+        # 若知识库为空，返回默认推荐
+        if not recommendations:
+            recommendations = self._get_default_recommendations()
+
+        return recommendations
+
+    def _get_default_recommendations(self) -> List[Dict]:
+        """
+        获取默认推荐文章（知识库为空或降级时使用）。
+
+        Returns:
+            List[Dict]: 默认推荐列表
+        """
+        return [
+            {
+                "id": "default_1",
+                "title": "当你感到难过时，可以试试这三件小事",
+                "source": "星屿心理科普",
+                "category": "情绪管理",
+                "content_preview": "难过是一种很正常的情绪。当它来临时，你可以试试：1. 给自己一个拥抱；2. 深呼吸三次；3. 找一个信任的人说说。小星会一直陪着你。",
+                "tags": ["情绪", "自我关怀", "日常"],
+                "relevance_score": 0.5,
+                "matched_keywords": [],
+            },
+            {
+                "id": "default_2",
+                "title": "如何和朋友好好相处",
+                "source": "星屿心理科普",
+                "category": "人际交往",
+                "content_preview": "好的人际关系需要互相尊重和理解。试着多倾听、少评判，表达自己的感受而不是指责对方。",
+                "tags": ["人际", "沟通", "友谊"],
+                "relevance_score": 0.5,
+                "matched_keywords": [],
+            },
+            {
+                "id": "default_3",
+                "title": "学习压力大？试试这几个小方法",
+                "source": "星屿心理科普",
+                "category": "学业压力",
+                "content_preview": "把大目标拆成小步骤，每完成一步就给自己一点鼓励。合理安排休息时间，效率反而更高。",
+                "tags": ["学业", "压力", "时间管理"],
+                "relevance_score": 0.5,
+                "matched_keywords": [],
+            },
+        ]
+
+    async def get_document(self, doc_id: str) -> Optional[Dict]:
+        """
+        根据 ID 获取知识文档详情。
+
+        Args:
+            doc_id: 文档 ID
+
+        Returns:
+            Optional[Dict]: 文档详情；不存在时返回 None
+        """
+        try:
+            if self._fallback_mode:
+                for d in self._in_memory_cache:
+                    if str(d.get("_id")) == doc_id or d.get("id") == doc_id:
+                        return {
+                            "id": str(d.get("_id", d.get("id"))),
+                            "title": d.get("title", ""),
+                            "source": d.get("source", ""),
+                            "category": d.get("category", ""),
+                            "content": d.get("content", ""),
+                            "tags": d.get("tags", []),
+                        }
+                return None
+            collection = self.db.get_collection(self.collection_name)
+            doc = collection.find_one({"_id": doc_id})
+            if not doc:
+                doc = collection.find_one({"_id": {"$oid": doc_id}})
+            if not doc:
+                return None
+            return {
+                "id": str(doc.get("_id")),
+                "title": doc.get("title", ""),
+                "source": doc.get("source", ""),
+                "category": doc.get("category", ""),
+                "content": doc.get("content", ""),
+                "tags": doc.get("tags", []),
+            }
+        except Exception:
+            return None
+
     def _detect_issue_type(self, message: str) -> List[str]:
         """
         检测用户消息中的心理问题类型。
@@ -575,14 +700,7 @@ class KnowledgeService:
             with open(json_path, 'r', encoding='utf-8') as f:
                 data = json.load(f)
             
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-            # ---- 新增去重 begin ----
-=======
-            # ---- 新增去重 begin ----
             # 按 (title, source) 去重，避免重复导入相同知识
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
             seen = set(); deduped = []
             for item in data:
                 k = (item.get("title"), item.get("source"))
@@ -590,13 +708,9 @@ class KnowledgeService:
                 seen.add(k); deduped.append(item)
             log.info("Knowledge dedup %d -> %d (by title+source)", len(data), len(deduped))
             data = deduped
-            # ---- 新增去重 end ----
+            # ---- 去重 end ----
 
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
             # 逐条构造 KnowledgeDocument 并批量写入
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
             docs = []
             for item in data:
                 doc = KnowledgeDocument(

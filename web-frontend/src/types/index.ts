@@ -31,16 +31,6 @@ export interface MoodRecord {
   createdAt: string;     // 创建时间
 }
 
-/** AI 对话消息 */
-export interface ChatMessage {
-  id: string;             // 消息 ID
-  userId: string;         // 用户 ID
-  content: string;        // 消息内容
-  role: 'user' | 'assistant'; // 角色：用户 / AI 助手
-  timestamp: string;     // 时间戳
-  riskLevel?: string;     // 风险等级（可选，AI 回复携带）
-}
-
 /** 通知实体 */
 export interface Notification {
   id: string;       // 通知 ID
@@ -106,13 +96,6 @@ export interface BreathingExercise {
   recommendedDuration: number; // 推荐时长（秒）
 }
 
-/** 话题卡片 */
-export interface TopicCard {
-  id: string;       // 话题 ID
-  title: string;     // 话题标题
-  category: string;  // 分类
-}
-
 /** 登录请求体 */
 export interface LoginRequest {
   username: string;   // 用户名
@@ -146,21 +129,6 @@ export interface MoodCheckinResponse {
   message: string;          // 结果消息
   checkinDate: string;      // 打卡日期
   continuousDays: number;    // 连续打卡天数
-}
-
-/** AI 对话请求体 */
-export interface ChatRequest {
-  userId: string;             // 用户 ID
-  message: string;             // 消息内容
-  context?: ChatMessage[];     // 上下文消息（可选）
-}
-
-/** AI 对话响应 */
-export interface ChatResponse {
-  response: string;            // AI 回复内容
-  riskLevel?: RiskLevelType;   // 风险等级（可选）
-  emotionTags?: string[];      // 情绪标签（可选）
-  responseTimeMs: number;       // 响应耗时（毫秒）
 }
 
 // ==================== 家长端类型 ====================

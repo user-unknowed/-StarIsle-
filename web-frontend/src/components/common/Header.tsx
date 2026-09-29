@@ -5,10 +5,9 @@
  */
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, MessageCircle, Music, User, LogOut, Menu, X, Bell, Star, Users, Siren } from 'lucide-react';
+import { Home, BookOpen, Users, Music, User, LogOut, Menu, X, Bell, Star, Siren } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../ui/Toast';
-import { AI_CHAT_ENABLED } from '../../config/features';
 
 /**
  * Header 组件属性
@@ -24,29 +23,27 @@ interface NavItem {
   path: string; // 路由路径
   icon: typeof Home; // 图标组件
   label: string; // 显示文案
-  disabled?: boolean; // 是否禁用（如 AI 对话未开放时）
 }
 
-// 学生端导航项：今日心情、聊一聊、放松一下、我的
+// 学生端导航项：今日心情、知识库、树人互助、放松一下、我的
 const studentNavItems: NavItem[] = [
   { path: '/student', icon: Home, label: '今日心情' },
-  { path: '/student/chat', icon: MessageCircle, label: '聊一聊', disabled: !AI_CHAT_ENABLED },
+  { path: '/student/knowledge', icon: BookOpen, label: '知识库' },
+  { path: '/student/community', icon: Users, label: '树人互助' },
   { path: '/student/relax', icon: Music, label: '放松一下' },
   { path: '/student/profile', icon: User, label: '我的' },
 ];
 
-// 教师端导航项：班级状态、想聊聊天、放松一下、我的
+// 教师端导航项：班级状态、放松一下、我的
 const teacherNavItems: NavItem[] = [
   { path: '/teacher', icon: Home, label: '班级状态' },
-  { path: '/teacher/chat', icon: MessageCircle, label: '想聊聊天', disabled: !AI_CHAT_ENABLED },
   { path: '/teacher/relax', icon: Music, label: '放松一下' },
   { path: '/teacher/profile', icon: User, label: '我的' },
 ];
 
-// 家长端导航项：孩子状态、AI顾问、我的孩子、应急中心、我的
+// 家长端导航项：孩子状态、我的孩子、应急中心、我的
 const parentNavItems: NavItem[] = [
   { path: '/parent', icon: Home, label: '孩子状态' },
-  { path: '/parent/chat', icon: MessageCircle, label: 'AI顾问', disabled: !AI_CHAT_ENABLED },
   { path: '/parent/children', icon: Users, label: '我的孩子' },
   { path: '/parent/emergency', icon: Siren, label: '应急中心' },
   { path: '/parent/profile', icon: User, label: '我的' },
@@ -108,14 +105,10 @@ export function Header({ role }: HeaderProps) {
   };
 
   /**
-   * 点击导航项：被禁用时给出提示，否则跳转并收起移动端菜单
+   * 点击导航项：跳转并收起移动端菜单
    * @param item - 被点击的导航项
    */
   const handleNavClick = (item: NavItem) => {
-    if (item.disabled) {
-      toast.info('AI 对话功能暂未开放，敬请期待');
-      return;
-    }
     navigate(item.path);
     setMobileMenuOpen(false);
   };
@@ -145,28 +138,19 @@ export function Header({ role }: HeaderProps) {
               const Icon = item.icon;
               // 当前路由是否匹配该项（高亮判断）
               const isActive = location.pathname === item.path;
-              const isDisabled = !!item.disabled;
               return (
                 <button
                   key={item.path}
                   onClick={() => handleNavClick(item)}
                   className={`relative flex items-center gap-2 px-3 py-2 rounded-xl transition-all duration-fast ${
-                    isDisabled
-                      ? 'text-gray-400 opacity-60 cursor-not-allowed'
-                      : isActive
-                        ? `${accent.active} text-white shadow-md`
-                        : `text-gray-600 ${accent.hover}`
+                    isActive
+                      ? `${accent.active} text-white shadow-md`
+                      : `text-gray-600 ${accent.hover}`
                   }`}
-                  aria-disabled={isDisabled}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium text-sm">{item.label}</span>
-                  {isDisabled && (
-                    <span className="ml-1 px-1.5 py-0.5 text-[10px] font-semibold rounded-full bg-gray-200 text-gray-500 leading-none">
-                      即将上线
-                    </span>
-                  )}
                 </button>
               );
             })}
@@ -211,28 +195,19 @@ export function Header({ role }: HeaderProps) {
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = location.pathname === item.path;
-              const isDisabled = !!item.disabled;
               return (
                 <button
                   key={item.path}
                   onClick={() => handleNavClick(item)}
                   className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-fast ${
-                    isDisabled
-                      ? 'text-gray-400 opacity-60 cursor-not-allowed'
-                      : isActive
-                        ? `${accent.active} text-white`
-                        : `text-gray-600 ${accent.hover}`
+                    isActive
+                      ? `${accent.active} text-white`
+                      : `text-gray-600 ${accent.hover}`
                   }`}
-                  aria-disabled={isDisabled}
                   aria-current={isActive ? 'page' : undefined}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="font-medium">{item.label}</span>
-                  {isDisabled && (
-                    <span className="ml-auto px-2 py-0.5 text-[10px] font-semibold rounded-full bg-gray-200 text-gray-500 leading-none">
-                      即将上线
-                    </span>
-                  )}
                 </button>
               );
             })}

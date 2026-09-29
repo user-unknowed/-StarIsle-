@@ -35,3 +35,23 @@ logs/
 **/build/
 **/node_modules/
 *.class
+
+# Python 缓存
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.venv/
+venv/
+env/
+
+# Android / Gradle
+.gradle/
+*.apk
+*.aab
+local.properties
+
+# 本地依赖与工具目录
+pylibs/
+.trae/

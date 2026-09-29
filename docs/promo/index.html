@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>星屿 StarIsle · 你的情绪星球，永远亮着灯</title>
-<meta name="description" content="星屿 StarIsle — 为 12-18 岁初高中生打造的青少年心理健康 AI 陪伴应用。三端联动（学生 / 教师 / 家长）、CBT 框架 AI 对话、危机响应、端到端加密、小星 Fork 集成训练流水线（MLM 预训练 + SFT 全参数微调 + 6 维 LLM-as-Judge 评估）。已通过 24/24 API 测试与 25/25 风险检测用例验证。">
+<meta name="description" content="星屿 StarIsle — 为 12-18 岁初高中生打造的青少年心理健康 AI 陪伴应用。三端联动（学生 / 教师 / 家长）、CBT 框架 AI 对话（App 端）、知识库与树人互助社区、危机响应、端到端加密、小星 Fork 集成训练流水线（MLM 预训练 + SFT 全参数微调 + 6 维 LLM-as-Judge 评估）。已通过 24/24 API 测试与 25/25 风险检测用例验证。">
 <meta name="theme-color" content="#6B7BFF">
 <style>
 :root {
@@ -447,10 +447,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   <div class="container">
     <div class="hero-inner">
       <div class="hero-content">
-        <div class="eyebrow hero-eyebrow reveal">青少年心理健康 AI 陪伴应用 · v2.0 小星形象增强版</div>
+        <div class="eyebrow hero-eyebrow reveal">青少年心理健康 AI 陪伴应用 · v2.2 Web 端去 AI 化重构</div>
         <h1 class="display-xl reveal" data-delay="1">你的<em>情绪星球</em><br>永远亮着灯</h1>
         <div class="hero-slogan reveal" data-delay="2">零压力的第一心理求助站</div>
-        <p class="lead hero-lead reveal" data-delay="3">为 12-18 岁初高中生打造的 AI 情绪成长伙伴。极简心情打卡 + 24/7 AI 对话 + 三端联动（学生 / 教师 / 家长）+ 危机响应 + 小星 Fork 集成训练流水线，让每一份情绪都被温柔接住。</p>
+        <p class="lead hero-lead reveal" data-delay="3">为 12-18 岁初高中生打造的 AI 情绪成长伙伴。极简心情打卡 + 24/7 AI 对话（App 端）+ 知识库与树人互助社区 + 三端联动（学生 / 教师 / 家长）+ 危机响应 + 小星 Fork 集成训练流水线，让每一份情绪都被温柔接住。</p>
         <div class="hero-cta-row reveal" data-delay="4">
           <a href="http://localhost:8080" class="btn btn--accent" id="trial-btn-hero">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
@@ -509,20 +509,20 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <article class="card user-card reveal" data-delay="1">
         <div class="age">12 — 18 岁 · 学生端</div>
         <h3>情绪的第一聆听者</h3>
-        <p>匿名注册，AI 星宝以 CBT 框架对话，5 档心情打卡，情绪测评 PHQ-9 映射。零压力、无评判。</p>
-        <ul><li>匿名注册与隐私保护</li><li>AI 星宝 24/7 在线对话</li><li>极简心情打卡 + 趋势回顾</li><li>冥想放松与紧急帮助</li></ul>
+        <p>匿名注册，AI 星宝以 CBT 框架对话（App 端），5 档心情打卡，知识库与树人互助社区，情绪测评 PHQ-9 映射。零压力、无评判。</p>
+        <ul><li>匿名注册与隐私保护</li><li>AI 星宝 24/7 在线对话（App）</li><li>知识库文章搜索 + 量表测评</li><li>树人互助求助社区</li><li>极简心情打卡 + 趋势回顾</li><li>冥想放松与紧急帮助</li></ul>
       </article>
       <article class="card user-card reveal" data-delay="2">
         <div class="age">学校心理教师 · 教师端</div>
         <h3>班级心理守护工作台</h3>
-        <p>工作台概览高风险告警，学生情绪趋势可视化，对话观察与介入干预，专业 AI 咨询辅助决策。</p>
-        <ul><li>高风险学生告警</li><li>班级情绪趋势图表</li><li>症状反馈与上报处理</li><li>对话观察与介入干预</li></ul>
+        <p>工作台概览高风险告警，学生情绪趋势可视化，对话观察与介入干预（App 端），专业 AI 咨询辅助决策。</p>
+        <ul><li>高风险学生告警</li><li>班级情绪趋势图表</li><li>症状反馈与上报处理</li><li>对话观察与介入干预（App）</li></ul>
       </article>
       <article class="card user-card reveal" data-delay="3">
         <div class="age">家长 · 家长端</div>
         <h3>家校共育的桥梁</h3>
-        <p>孩子情绪状态查看（7/30/90 天），AI 心理顾问「大星」对话，完整应急预案与告警超时升级。</p>
-        <ul><li>孩子情绪趋势分析</li><li>AI 心理顾问（大星）</li><li>完整应急预案流程</li><li>告警超时升级机制</li></ul>
+        <p>孩子情绪状态查看（7/30/90 天），AI 心理顾问「大星」对话（App 端），完整应急预案与告警超时升级。</p>
+        <ul><li>孩子情绪趋势分析</li><li>AI 心理顾问（大星，App）</li><li>完整应急预案流程</li><li>告警超时升级机制</li></ul>
       </article>
     </div>
   </div>
@@ -544,15 +544,18 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>匿名注册与隐私保护</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>极简心情打卡（5 档表情）</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 星宝对话（CBT 框架）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 星宝对话（CBT 框架，App）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>知识库文章搜索 + 量表测评</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>树人互助求助社区</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>情绪探索测评（PHQ-9 映射）</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>冥想放松音频</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>风险检测与危机响应</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>端到端加密通信</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>本地记忆存储管理</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 工具中心</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 工具中心（App）</li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>紧急帮助按钮<span class="badge">v1.5</span></li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>前端危机关键词检测<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>下载 App 推荐<span class="badge">v2.2</span></li>
           </ul>
         </div>
       </article>
@@ -566,9 +569,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>工作台概览与高风险告警</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>学生列表与情绪趋势查看</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>症状反馈与上报处理</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>对话观察与介入干预</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>对话观察与介入干预（App）</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>本地记忆存储管理</li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>紧急帮助按钮<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>下载 App 推荐<span class="badge">v2.2</span></li>
           </ul>
         </div>
       </article>
@@ -580,7 +584,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         <div class="end-card-body">
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>孩子情绪状态查看</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 心理顾问（大星）对话</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 心理顾问（大星，App）对话</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>情绪趋势分析（7/30/90 天）</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>应急预案与预警管理</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>心理健康知识库</li>
@@ -588,6 +592,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>孩子绑定与授权管理</li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>完整应急预案流程<span class="badge">v1.5+</span></li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>告警超时升级机制<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>下载 App 推荐<span class="badge">v2.2</span></li>
           </ul>
         </div>
       </article>
@@ -842,7 +847,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
     <div class="section-head reveal">
       <div class="eyebrow">版本演进</div>
       <h2 class="display-lg">从 MVP 到 100% 准确率</h2>
-      <p class="lead">9 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率。</p>
+      <p class="lead">12 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率，v2.2 Web 端去 AI 化并新增知识库与树人互助。</p>
     </div>
     <div class="version-timeline">
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.0 MVP</span><span class="ver-date">2026-06</span></div><h4>核心功能验证</h4><p>学生端 / 教师端基础功能上线，AI 对话与心情打卡核心闭环验证通过。</p></div>
@@ -855,6 +860,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.7 — v1.9</span><span class="ver-date">2026-08-09</span></div><h4>风险检测精准度优化至 100%</h4><p>三轮优化：关键词分层重构、积极词降级规则、社交孤立降级规则。准确率 80% → 100%（25/25 全部正确）。</p></div>
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.9.0</span><span class="ver-date">2026-08-10</span></div><h4>主干合并 · 版本发布</h4><p>主干分支合并，CI 全绿，CodeQL 6/6 pass，版本 tag v1.9.0 发布。</p></div>
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v2.0</span><span class="ver-date">2026-08-29</span></div><h4>小星形象增强 · GitHub Fork 三层集成</h4><p>新增 Skill Adapter 架构（BaseSkill + SkillRouter）+ Orchestrator 一键流水线（M1 Fork 发现 → M2 三层集成 → M3a MLM 预训练 → M3b SFT 全参数微调 → M4 6 维 LLM-as-Judge 评估 → M5 汇总报告）。支持 <code>--smoke</code> 无 GPU 仿真与 <code>--resume-from</code> 断点续跑。GPU 显存自动降级链（FULL → LoRA → CPU Offload → SIMULATION）。</p></div>
+      <div class="version-item reveal"><div class="ver-head"><span class="ver-num">v2.1</span><span class="ver-date">2026-09</span></div><h4>心理测评微信小程序</h4><p>罗夏/TAT 自定义图片投射测评、AI 情绪分析、教师复核、匿名科研数据导出与管理员危机干预，PII 默认匿名化。</p></div>
+      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v2.2</span><span class="ver-date">2026-09</span></div><h4>Web 端去 AI 化重构 · 知识库与树人互助</h4><p>Web 端移除三端 AI 对话入口与页面，新增「知识库」（文章搜索 + 量表测评）与「树人互助」（求助社区），与 App 端功能对齐；三端「我的」页新增「下载星屿 App」推荐卡片。AI 对话保留在 App（Flutter）端与微信小程序。</p></div>
     </div>
   </div>
 </section>

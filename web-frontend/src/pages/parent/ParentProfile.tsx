@@ -21,6 +21,9 @@ import {
   Edit3,
   Check,
   AlertCircle,
+  Smartphone,
+  Download,
+  QrCode,
 } from 'lucide-react';
 
 // 设置项配置：图标、标题、描述、是否默认开启
@@ -260,6 +263,58 @@ export default function ParentProfile() {
                 </div>
               );
             })}
+          </div>
+        </div>
+
+        {/* 下载 App 推荐 */}
+        <div className="bg-white rounded-3xl p-6 mb-6 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-[#F4A261] to-[#E76F51] rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden">
+            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full"></div>
+            <div className="absolute right-12 top-4 w-16 h-16 bg-white/10 rounded-full"></div>
+            <div className="relative flex flex-col sm:flex-row items-center gap-5">
+              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <Smartphone className="w-10 h-10 text-[#E76F51]" />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="text-xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                  <Download className="w-5 h-5" />
+                  下载星屿 App
+                </h3>
+                <p className="text-orange-100 text-sm mt-1">
+                  扫码下载移动端，实时关注孩子心理状态，接收紧急告警
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">孩子状态</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">紧急告警</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">心情记录</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="w-24 h-24 bg-white rounded-xl p-2 shadow-lg">
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <rect width="100" height="100" fill="white" />
+                    {Array.from({ length: 49 }).map((_, i) => {
+                      const row = Math.floor(i / 7);
+                      const col = i % 7;
+                      const seed = (row * 7 + col * 13 + row * col) % 3;
+                      if (seed === 0) {
+                        return <rect key={i} x={col * 14 + 2} y={row * 14 + 2} width="10" height="10" fill="#1f2937" />;
+                      }
+                      return null;
+                    })}
+                    <rect x="2" y="2" width="20" height="20" fill="none" stroke="#1f2937" strokeWidth="4" />
+                    <rect x="6" y="6" width="12" height="12" fill="#1f2937" />
+                    <rect x="78" y="2" width="20" height="20" fill="none" stroke="#1f2937" strokeWidth="4" />
+                    <rect x="82" y="6" width="12" height="12" fill="#1f2937" />
+                    <rect x="2" y="78" width="20" height="20" fill="none" stroke="#1f2937" strokeWidth="4" />
+                    <rect x="6" y="82" width="12" height="12" fill="#1f2937" />
+                  </svg>
+                </div>
+                <p className="text-xs text-orange-100 mt-1.5 flex items-center gap-1">
+                  <QrCode className="w-3 h-3" /> 扫码下载
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

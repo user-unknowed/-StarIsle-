@@ -9,7 +9,7 @@ import { useMoodStore } from '../../store/moodStore';
 import { Header } from '../../components/common/Header';
 import { Modal, Button } from '../../components/ui';
 import { assessmentApi } from '../../services/api';
-import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, ClipboardList, Loader2 } from 'lucide-react';
+import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, ClipboardList, Loader2, Smartphone, Download, QrCode } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
 
 // 快捷菜单项：图标、标题、徽章数（可选）
@@ -295,6 +295,69 @@ export default function StudentProfile() {
             >
               开始测评
             </Button>
+          </div>
+        </div>
+
+        {/* 下载 App 推荐 */}
+        <div className="bg-white rounded-3xl p-6 mb-8 shadow-lg overflow-hidden">
+          <div className="bg-gradient-to-r from-primary-500 to-secondary-600 rounded-2xl p-5 sm:p-6 text-white relative overflow-hidden">
+            <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/10 rounded-full"></div>
+            <div className="absolute right-12 top-4 w-16 h-16 bg-white/10 rounded-full"></div>
+            <div className="relative flex flex-col sm:flex-row items-center gap-5">
+              <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0">
+                <Smartphone className="w-10 h-10 text-primary-600" />
+              </div>
+              <div className="flex-1 text-center sm:text-left">
+                <h3 className="text-xl font-bold flex items-center justify-center sm:justify-start gap-2">
+                  <Download className="w-5 h-5" />
+                  下载星屿 App
+                </h3>
+                <p className="text-primary-100 text-sm mt-1">
+                  扫码下载移动端，随时随地记录心情、获取 AI 心理陪伴
+                </p>
+                <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">心情打卡</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">AI 心理陪伴</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">树人互助</span>
+                </div>
+              </div>
+              <div className="flex flex-col items-center flex-shrink-0">
+                <div className="w-24 h-24 bg-white rounded-xl p-2 shadow-lg">
+                  {/* 简易二维码占位图案 */}
+                  <svg viewBox="0 0 100 100" className="w-full h-full">
+                    <rect width="100" height="100" fill="white" />
+                    {Array.from({ length: 49 }).map((_, i) => {
+                      const row = Math.floor(i / 7);
+                      const col = i % 7;
+                      const seed = (row * 7 + col * 13 + row * col) % 3;
+                      if (seed === 0) {
+                        return (
+                          <rect
+                            key={i}
+                            x={col * 14 + 2}
+                            y={row * 14 + 2}
+                            width="10"
+                            height="10"
+                            fill="#1f2937"
+                          />
+                        );
+                      }
+                      return null;
+                    })}
+                    {/* 三个定位角 */}
+                    <rect x="2" y="2" width="20" height="20" fill="none" stroke="#1f2937" strokeWidth="4" />
+                    <rect x="6" y="6" width="12" height="12" fill="#1f2937" />
+                    <rect x="78" y="2" width="20" height="20" fill="none" stroke="#1f2937" strokeWidth="4" />
+                    <rect x="82" y="6" width="12" height="12" fill="#1f2937" />
+                    <rect x="2" y="78" width="20" height="20" fill="none" stroke="#1f2937" strokeWidth="4" />
+                    <rect x="6" y="82" width="12" height="12" fill="#1f2937" />
+                  </svg>
+                </div>
+                <p className="text-xs text-primary-100 mt-1.5 flex items-center gap-1">
+                  <QrCode className="w-3 h-3" /> 扫码下载
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 

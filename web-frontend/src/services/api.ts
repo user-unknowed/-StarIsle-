@@ -4,7 +4,7 @@
  *              包含认证、心情打卡、AI 对话、班级管理、知识库、家长端、风险检测、内容、测评、数据迁移与密钥管理。
  * @module web-frontend/services
  */
-import { get, post, del, ApiError } from './http';
+import { get, post, del } from './http';
 import type {
   User,
   LoginRequest,
@@ -13,10 +13,6 @@ import type {
   MoodRecord,
   MoodCheckinRequest,
   MoodCheckinResponse,
-  ChatMessage,
-  ChatRequest,
-  ChatResponse,
-  TopicCard,
   StudentWithMood,
   ClassStats,
   Alert,
@@ -116,41 +112,6 @@ export const moodApi = {
     get<{ continuousDays: number; averageMood: number }>(`/v1/mood/stats?userId=${userId}`),
 };
 
-// ==================== AI 对话模块（对接 /api/v1/chat） ====================
-
-/** AI 对话相关 API：发送消息、获取历史、获取话题卡片 */
-export const chatApi = {
-  /**
-   * 发送消息（对接 AI 引擎 /chat 接口）
-   * @param data - 对话请求体（含消息内容、用户 ID 等）
-   * @returns AI 回复
-   * @throws 消息超过 2000 字时抛出 ApiError
-   */
-  sendMessage: (data: ChatRequest) => {
-    // 前端预校验：消息长度限制 2000 字，避免无效请求
-    if (data.message.length > 2000) {
-      throw new ApiError('消息长度不能超过2000字', 400, 'MESSAGE_TOO_LONG');
-    }
-    return post<ChatResponse>('/v1/chat/message', data);
-  },
-
-  /**
-   * 获取对话历史
-   * @param userId - 用户 ID
-   * @param limit - 返回条数上限，默认 20
-   * @returns 历史消息列表
-   */
-  getHistory: (userId: string, limit = 20) =>
-    get<ChatMessage[]>(`/v1/chat/history/${userId}?limit=${limit}`),
-
-  /**
-   * 获取话题卡片（引导用户发起对话）
-   * @returns 话题卡片列表
-   */
-  getTopics: () =>
-    get<{ topics: TopicCard[] }>('/v1/chat/topics'),
-};
-
 // ==================== 班级管理模块（对接 /api/v1/classroom） ====================
 
 /** 班级管理相关 API：班级统计、学生列表、预警列表 */
@@ -224,6 +185,68 @@ export const knowledgeApi = {
    */
   getCategories: () =>
     get<{ categories: string[]; total_documents: number }>('/v1/knowledge/categories'),
+};
+
+// ==================== 社区模块（树人互助，对接 /api/v1/community） ====================
+
+/** 社区求助帖 */
+export interface CommunityPost {
+  id: string;              // 帖子 ID
+  userId: string;           // 发帖用户 ID
+  nickname: string;         // 发帖用户昵称
+  title: string;            // 标题
+  content: string;          // 内容
+  tags: string[];           // 标签数组
+  urgencyLevel: number;     // 紧急程度 1~3
+  replyCount: number;       // 回复数
+  createdAt: string;        // 创建时间
+}
+
+/** 社区回复 */
+export interface CommunityReply {
+  id: string;          // 回复 ID
+  postId: string;       // 帖子 ID
+  userId: string;       // 回复用户 ID
+  nickname: string;     // 回复用户昵称
+  content: string;      // 回复内容
+  createdAt: string;    // 创建时间
+}
+
+/** 社区 API：帖子列表、发帖、帖子详情、回复 */
+export const communityApi = {
+  /**
+   * 获取求助帖列表
+   * @param page - 页码
+   * @param pageSize - 每页条数
+   * @returns 帖子列表与总数
+   */
+  getPosts: (page = 1, pageSize = 20) =>
+    get<{ posts: CommunityPost[]; total: number }>(`/v1/community/posts?page=${page}&page_size=${pageSize}`),
+
+  /**
+   * 创建求助帖
+   * @param data - 帖子内容
+   * @returns 创建结果
+   */
+  createPost: (data: { userId: string; title: string; content: string; tags: string[]; urgencyLevel?: number }) =>
+    post<CommunityPost>('/v1/community/posts', data),
+
+  /**
+   * 获取帖子详情（含回复）
+   * @param postId - 帖子 ID
+   * @returns 帖子详情与回复列表
+   */
+  getPost: (postId: string) =>
+    get<{ post: CommunityPost; replies: CommunityReply[] }>(`/v1/community/posts/${postId}`),
+
+  /**
+   * 回复帖子
+   * @param postId - 帖子 ID
+   * @param data - 回复内容
+   * @returns 回复结果
+   */
+  replyPost: (postId: string, data: { userId: string; content: string }) =>
+    post<CommunityReply>(`/v1/community/posts/${postId}/reply`, data),
 };
 
 // ==================== 家长端模块（对接 /api/v1/parents） ====================

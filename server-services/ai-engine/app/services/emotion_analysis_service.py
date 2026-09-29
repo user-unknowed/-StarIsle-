@@ -9,9 +9,16 @@ emotion_analysis_service.py - 情绪分析服务（基于 BERT 的文本情感�
     - transformers：提供 text-classification pipeline
     - os：读取情绪模型名称配置
 """
-from typing import List
-from transformers import pipeline
+from typing import List, Dict
 import os
+
+# transformers 是可选依赖：未安装时降级为关键词匹配，保证服务可用
+try:
+    from transformers import pipeline
+    _TRANSFORMERS_AVAILABLE = True
+except Exception:
+    pipeline = None
+    _TRANSFORMERS_AVAILABLE = False
 
 class EmotionAnalysisService:
     """
@@ -28,19 +35,24 @@ class EmotionAnalysisService:
         从环境变量 EMOTION_MODEL 读取模型名（默认 bert-base-chinese），
         加载失败时将 classifier 置 None 并在分析时走降级路径。
         """
-        # 加载情绪分析模型
+        # 加载情绪分析模型（仅当 transformers 可用时）
         model_name = os.getenv("EMOTION_MODEL", "bert-base-chinese")
         
-        try:
-            # 构造文本分类 pipeline，返回所有标签得分
-            self.classifier = pipeline(
-                "text-classification",
-                model=model_name,
-                return_all_scores=True
-            )
-        except Exception as e:
-            # 模型加载失败时打印告警并降级为关键词匹配
-            print(f"Warning: Could not load emotion model: {e}")
+        if _TRANSFORMERS_AVAILABLE and pipeline is not None:
+            try:
+                # 构造文本分类 pipeline，返回所有标签得分
+                self.classifier = pipeline(
+                    "text-classification",
+                    model=model_name,
+                    return_all_scores=True
+                )
+            except Exception as e:
+                # 模型加载失败时打印告警并降级为关键词匹配
+                print(f"Warning: Could not load emotion model: {e}")
+                self.classifier = None
+        else:
+            # transformers 未安装，直接降级为关键词匹配
+            print("Info: transformers not available, emotion analysis using keyword fallback")
             self.classifier = None
         
         # 预定义情绪标签：覆盖青少年常见情绪状态

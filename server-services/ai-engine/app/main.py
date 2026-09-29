@@ -15,7 +15,7 @@ main.py - 星屿 AI 对话引擎 FastAPI 应用入口
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import List, Optional
+from typing import List, Dict, Optional
 import os
 from dotenv import load_dotenv
 import importlib
@@ -26,23 +26,16 @@ from app.services.chat_service import ChatService
 from app.services.risk_detection_service import RiskDetectionService
 from app.services.emotion_analysis_service import EmotionAnalysisService
 from app.services.knowledge_service import KnowledgeService
+from app.services.user_service import UserService
+from app.services.community_service import CommunityService
+from app.services.assessment_service import AssessmentService
+from app.services.submission_service import SubmissionService
+from app.services.emergency_service import EmergencyService
+from app.services.mood_service import MoodService
 from contextlib import asynccontextmanager
 
 # 加载环境变量：从 .env 文件读取配置注入 os.environ
 load_dotenv()
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-
-def _autodiscover_skills():
-    import app.skills as spkg
-    found: List[BaseSkill] = []
-    for _finder, name, _ispkg in pkgutil.iter_modules(spkg.__path__):
-        if not (name.endswith("_adapter") or name.endswith("_skill")): continue
-        try: mod = importlib.import_module(f"app.skills.{name}")
-        except Exception as e: print(f"[AI-Engine] 跳过 {name}: {e}"); continue
-=======
 
 def _autodiscover_skills():
     """
@@ -64,35 +57,29 @@ def _autodiscover_skills():
         try: mod = importlib.import_module(f"app.skills.{name}")
         except Exception as e: print(f"[AI-Engine] 跳过 {name}: {e}"); continue
         # 遍历模块属性，收集 BaseSkill 的具体子类
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         for attr in dir(mod):
             obj = getattr(mod, attr)
             if (isinstance(obj, type) and issubclass(obj, BaseSkill)
                     and obj is not BaseSkill and not getattr(obj, "__abstractmethods__", None)):
-<<<<<<< HEAD
-=======
                 # 实例化技能，失败则记录但不中断发现流程
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
                 try: found.append(obj())
                 except Exception as e: print(f"[AI-Engine] 实例化 {attr} 失败: {e}")
     print(f"[AI-Engine] 技能自动发现: {len(found)} 个 -> {[s.name for s in found]}")
     return found
 
 
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-# 初始化服务
-chat_service = ChatService()
-risk_service = RiskDetectionService()
-emotion_service = EmotionAnalysisService()
-knowledge_service = KnowledgeService()
-=======
 # 初始化服务：在模块加载阶段创建各业务服务单例
-chat_service = ChatService()                # 对话生成服务
+# 注意：knowledge_service 需在 chat_service 之前创建，以便注入共享实例
+knowledge_service = KnowledgeService()     # 知识库管理服务（单例）
+chat_service = ChatService(knowledge_service=knowledge_service)  # 对话生成服务
 risk_service = RiskDetectionService()      # 风险检测服务
 emotion_service = EmotionAnalysisService() # 情绪分析服务
-knowledge_service = KnowledgeService()     # 知识库管理服务
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
+user_service = UserService()               # 用户服务
+assessment_service = AssessmentService()   # 量表服务
+submission_service = SubmissionService()   # 投稿服务
+emergency_service = EmergencyService()     # 紧急求助服务
+mood_service = MoodService()               # 情绪打卡服务
+community_service = CommunityService(user_service)  # 社区服务
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -125,20 +112,11 @@ async def lifespan(app: FastAPI):
     # 打印当前知识库模式与文档数，便于确认加载状态
     stats = await knowledge_service.get_stats()
     print(f"[AI-Engine] 知识库模式: {stats.get('mode')}, 文档数: {stats.get('total_documents')}")
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-=======
     # 自动发现技能并注入对话服务
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     skills = _autodiscover_skills()
     if skills and hasattr(chat_service, "set_skills"):
         chat_service.set_skills(skills)
         print(f"[AI-Engine] 已注入 {len(skills)} 个 Fork Skills: {[s.name for s in skills]}")
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     print("[AI-Engine] AI引擎启动完成，RAG增强已就绪")
 
     # yield 之前为启动逻辑，之后为关闭逻辑
@@ -397,11 +375,12 @@ async def search_knowledge(request: KnowledgeSearchRequest):
             # 将每条结果转为前端可读的结构
             "results": [
                 {
+                    "id": r.document.id,
                     "title": r.document.title,
                     "source": r.document.source,
                     "category": r.document.category,
                     "content_preview": r.document.content[:200],
-                    "techniques": r.document.techniques[:5],
+                    "tags": r.document.tags[:5],
                     "score": r.relevance_score,
                     "matched_keywords": r.matched_keywords
                 }
@@ -492,12 +471,25 @@ async def get_knowledge_categories():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-@app.get("/skills/status")
-async def skills_status():
-=======
+@app.get("/knowledge/{doc_id}")
+async def get_knowledge_detail(doc_id: str):
+    """
+    获取知识文档详情。
+
+    Args:
+        doc_id: 文档 ID
+
+    Returns:
+        dict: 文档详情
+
+    Raises:
+        HTTPException: 文档不存在时返回 404
+    """
+    doc = await knowledge_service.get_document(doc_id)
+    if not doc:
+        raise HTTPException(status_code=404, detail="文档不存在")
+    return doc
+
 @app.get("/skills/status")
 async def skills_status():
     """
@@ -508,15 +500,292 @@ async def skills_status():
     Returns:
         dict: 技能状态信息
     """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     if hasattr(chat_service, "skill_router"):
         return {"skills": chat_service.skill_router.status()}
     return {"skills": [], "error": "SkillRouter 未初始化"}
 
-<<<<<<< HEAD
->>>>>>> parent of 598fd65 (docs: 为 StarIsle 平台多语言代码库补充中文文档注释 (#14))
-=======
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
+
+# ==================== 用户服务 API ====================
+
+class RegisterRequest(BaseModel):
+    username: str
+    nickname: str
+    password: str
+
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
+class UpdateProfileRequest(BaseModel):
+    nickname: Optional[str] = None
+
+class HelperApplyRequest(BaseModel):
+    real_name: str
+    qualification: str
+    description: str
+
+@app.post("/user/register")
+async def register(request: RegisterRequest):
+    """用户注册。"""
+    try:
+        result = user_service.register(request.username, request.nickname, request.password)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/user/login")
+async def login(request: LoginRequest):
+    """用户登录。"""
+    try:
+        result = user_service.login(request.username, request.password)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=401, detail=str(e))
+
+@app.get("/user/profile/{user_id}")
+async def get_profile(user_id: str):
+    """获取用户资料。"""
+    profile = user_service.get_profile(user_id)
+    if not profile:
+        raise HTTPException(status_code=404, detail="用户不存在")
+    return profile
+
+@app.put("/user/profile/{user_id}")
+async def update_profile(user_id: str, request: UpdateProfileRequest):
+    """更新用户资料。"""
+    return user_service.update_profile(user_id, request.nickname)
+
+@app.post("/user/helper/apply/{user_id}")
+async def apply_helper(user_id: str, request: HelperApplyRequest):
+    """提交帮帮者认证申请。"""
+    return user_service.apply_helper(user_id, request.real_name, request.qualification, request.description)
+
+@app.get("/user/helper/status/{user_id}")
+async def helper_status(user_id: str):
+    """查询帮帮者认证状态。"""
+    return user_service.get_helper_status(user_id)
+
+class HelperReviewRequest(BaseModel):
+    approved: bool
+    note: Optional[str] = ""
+
+@app.get("/admin/helper/applications")
+async def list_helper_applications():
+    """管理员：获取待审核的帮帮者申请列表。"""
+    return {"applications": user_service.list_helper_applications()}
+
+@app.post("/admin/helper/review/{user_id}")
+async def review_helper(user_id: str, request: HelperReviewRequest):
+    """管理员：审核帮帮者认证申请（通过/拒绝）。"""
+    return user_service.review_helper_application(user_id, request.approved, request.note or "")
+
+
+# ==================== 情绪打卡 API ====================
+
+class MoodCheckInRequest(BaseModel):
+    user_id: str
+    mood: str
+    intensity: int
+    note: Optional[str] = None
+
+@app.post("/mood/checkin")
+async def mood_checkin(request: MoodCheckInRequest):
+    """提交情绪打卡。"""
+    return mood_service.check_in(
+        request.user_id, request.mood, request.intensity, request.note
+    )
+
+@app.get("/mood/history/{user_id}")
+async def mood_history(user_id: str, limit: int = 30):
+    """获取情绪打卡历史。"""
+    return {"history": mood_service.get_history(user_id, limit)}
+
+
+# ==================== 社区服务 API ====================
+
+class CreatePostRequest(BaseModel):
+    user_id: str
+    title: str
+    content: str
+    tags: List[str] = []
+    urgency_level: int = 2
+
+class ReplyRequest(BaseModel):
+    user_id: str
+    content: str
+
+@app.post("/community/posts")
+async def create_post(request: CreatePostRequest):
+    """发布求助帖。"""
+    return community_service.create_post(
+        request.user_id, request.title, request.content, request.tags, request.urgency_level
+    )
+
+@app.get("/community/posts")
+async def list_posts(page: int = 1, page_size: int = 20):
+    """获取求助帖列表（按紧急等级倒序）。"""
+    return community_service.list_posts(page, page_size)
+
+@app.get("/community/posts/{post_id}")
+async def get_post(post_id: str):
+    """获取帖子详情（含回复）。"""
+    post = community_service.get_post(post_id)
+    if not post:
+        raise HTTPException(status_code=404, detail="帖子不存在")
+    return post
+
+@app.post("/community/posts/{post_id}/reply")
+async def reply_post(post_id: str, request: ReplyRequest):
+    """回复求助帖（仅已认证帮帮者）。"""
+    try:
+        return community_service.reply_post(post_id, request.user_id, request.content)
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+# ==================== 量表服务 API ====================
+
+class SubmitAssessmentRequest(BaseModel):
+    user_id: str
+    assessment_id: str
+    answers: List[Dict]
+
+@app.get("/assessments")
+async def list_assessments():
+    """获取所有可用量表列表。"""
+    return {"assessments": assessment_service.list_assessments()}
+
+@app.get("/assessments/{assessment_id}")
+async def get_assessment(assessment_id: str):
+    """获取指定量表详情（含题目与选项）。"""
+    asm = assessment_service.get_assessment(assessment_id)
+    if not asm:
+        raise HTTPException(status_code=404, detail="量表不存在")
+    return asm
+
+@app.post("/assessments/submit")
+async def submit_assessment(request: SubmitAssessmentRequest):
+    """提交量表答案并获取计分结果。"""
+    try:
+        return assessment_service.submit_assessment(
+            request.user_id, request.assessment_id, request.answers
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.get("/assessments/history/{user_id}")
+async def assessment_history(user_id: str, assessment_id: Optional[str] = None):
+    """获取用户量表答题历史。"""
+    return {"history": assessment_service.get_user_history(user_id, assessment_id)}
+
+
+# ==================== 投稿服务 API ====================
+
+class CreateSubmissionRequest(BaseModel):
+    user_id: str
+    title: str
+    content: str
+    submission_type: str = "article"
+    category: str = ""
+    tags: List[str] = []
+
+class ReviewRequest(BaseModel):
+    approved: bool
+    note: str = ""
+
+@app.post("/submissions")
+async def create_submission(request: CreateSubmissionRequest):
+    """创建投稿。"""
+    return submission_service.create_submission(
+        request.user_id, request.title, request.content,
+        request.submission_type, request.category, request.tags
+    )
+
+@app.get("/submissions/mine/{user_id}")
+async def my_submissions(user_id: str):
+    """获取我的投稿列表。"""
+    return {"submissions": submission_service.list_my_submissions(user_id)}
+
+@app.get("/submissions/pending")
+async def pending_submissions():
+    """获取待审核投稿（管理员）。"""
+    return {"submissions": submission_service.list_pending()}
+
+@app.post("/submissions/{submission_id}/review")
+async def review_submission(submission_id: str, request: ReviewRequest):
+    """审核投稿（管理员）。"""
+    return submission_service.review(submission_id, request.approved, request.note)
+
+
+# ==================== 紧急求助 API ====================
+
+class HelpRequestRequest(BaseModel):
+    user_id: str
+    reason: str = ""
+
+@app.get("/emergency/resources")
+async def emergency_resources():
+    """获取紧急求助资源列表。"""
+    return {"resources": emergency_service.get_resources()}
+
+@app.post("/emergency/help")
+async def request_help(request: HelpRequestRequest):
+    """记录一键求助并返回资源。"""
+    return emergency_service.record_help_request(request.user_id, request.reason)
+
+
+# ==================== 知识库推荐 API ====================
+
+@app.get("/knowledge/recommend/{user_id}")
+async def recommend_articles(user_id: str, context_hint: str = ""):
+    """
+    基于用户状态的个性化文章推荐（RAG 记忆增强）。
+
+    综合用户最近聊天记录、情绪打卡、问卷结果构建记忆上下文，
+    再通过 RAG 检索推荐更贴合的心理科普文章。
+    """
+    # 1. 收集用户聊天记忆（最近消息）
+    memory_parts = []
+    recent_msgs = chat_service.get_recent_messages(user_id, limit=8)
+    if recent_msgs:
+        memory_parts.append(" ".join(recent_msgs))
+
+    # 2. 收集情绪打卡记忆
+    try:
+        mood_history = mood_service.get_history(user_id, limit=10)
+        if mood_history:
+            mood_keywords = " ".join(
+                f"{m.get('mood','')} {m.get('note','')}" for m in mood_history
+            ).strip()
+            if mood_keywords:
+                memory_parts.append(mood_keywords)
+    except Exception:
+        pass
+
+    # 3. 收集问卷结果记忆
+    try:
+        asm_history = assessment_service.get_user_history(user_id)
+        if asm_history:
+            asm_keywords = " ".join(
+                f"{r.get('assessment_id','')} {r.get('level','')} {r.get('attention_direction','')}"
+                for r in asm_history[:5]
+            ).strip()
+            if asm_keywords:
+                memory_parts.append(asm_keywords)
+    except Exception:
+        pass
+
+    # 4. 组合外部 context_hint + 用户记忆
+    if context_hint:
+        memory_parts.insert(0, context_hint)
+    enriched_context = " ".join(memory_parts) if memory_parts else ""
+
+    recommendations = await knowledge_service.recommend_for_user(user_id, enriched_context)
+    return {"recommendations": recommendations, "memory_used": bool(enriched_context)}
+
+
 if __name__ == "__main__":
     # 直接运行时以 uvicorn 启动服务，监听 8000 端口
     import uvicorn

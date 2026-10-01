@@ -85,6 +85,27 @@ public class MigrationServiceTest {
     }
 
     /**
+     * 回归测试：非法表名（含 SQL 注入载荷）应被拒绝，
+     * 防止 calculateChecksum 中的 SQL 拼接注入漏洞。
+     */
+    @Test
+    @DisplayName("非法表名抛出异常，阻止 SQL 注入")
+    void testCalculateChecksumRejectsInvalidTableName() {
+        // SQL 注入载荷
+        assertThrows(IllegalArgumentException.class,
+                () -> migrationService.calculateChecksum("users; DROP TABLE users; --"));
+        assertThrows(IllegalArgumentException.class,
+                () -> migrationService.calculateChecksum("users UNION SELECT password_hash FROM users"));
+        // 非表白名单内的任意名称
+        assertThrows(IllegalArgumentException.class,
+                () -> migrationService.calculateChecksum("nonexistent_table"));
+        assertThrows(IllegalArgumentException.class,
+                () -> migrationService.calculateChecksum(null));
+        // 确保不会执行任何查询
+        verify(sourceJdbcTemplate, never()).queryForObject(anyString(), eq(Long.class));
+    }
+
+    /**
      * 测试所有表记录数一致时报告显示全部一致
      */
     @Test

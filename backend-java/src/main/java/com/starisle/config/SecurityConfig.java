@@ -72,6 +72,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/v1/assessment/questions/**").permitAll()
                 // WebSocket 端点放行（鉴权在连接参数中处理）
                 .requestMatchers("/ws/**").permitAll()
+                // 数据迁移与密钥管理接口仅允许 TEACHER 角色访问（运维级操作）
+                .requestMatchers("/api/migration/**").hasRole("TEACHER")
                 // 家长接口仅允许 PARENT 角色访问
                 .requestMatchers("/api/v1/parents/**").hasRole("PARENT")
                 // 用户接口允许学生、教师、家长访问

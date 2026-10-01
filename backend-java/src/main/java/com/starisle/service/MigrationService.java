@@ -70,6 +70,12 @@ public class MigrationService {
     /** 校验和计算所用的哈希算法 */
     private static final String HASH_ALGORITHM = "SHA-256";
 
+    /** 允许计算校验和的表白名单，防止 SQL 注入 */
+    private static final Set<String> ALLOWED_TABLES = Set.of(
+            "users", "mood_records", "chat_messages", "assessment_results",
+            "emergency_alerts", "parent_users", "parent_student_bindings"
+    );
+
     /**
      * 迁移全部业务数据
      * 依次迁移各业务表数据并累加迁移行数；任一异常将状态置为失败并抛出运行时异常。
@@ -414,6 +420,9 @@ public class MigrationService {
      * @return 十六进制校验和字符串
      */
     public String calculateChecksum(String tableName) {
+        if (tableName == null || !ALLOWED_TABLES.contains(tableName)) {
+            throw new IllegalArgumentException("Invalid table name: " + tableName);
+        }
         try {
             String query = "SELECT COALESCE(SUM(ABS(CRC32(CONCAT_WS('|', *)))), 0) FROM " + tableName;
             Long crc = sourceJdbcTemplate.queryForObject(query, Long.class);

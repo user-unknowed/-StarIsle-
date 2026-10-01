@@ -9,9 +9,11 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,9 +38,11 @@ public class KeyManagerServiceTest {
 
     /**
      * 测试前置初始化
+     * 注入主密钥字段（@Value 字段在 Mockito 测试中不会自动注入）。
      */
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(keyManagerService, "masterKey", "test-master-key-32-bytes-long!!");
     }
 
     /**
@@ -209,5 +213,72 @@ public class KeyManagerServiceTest {
 
         String nonExistentInfo = keyManagerService.getKeyInfo("nonexistent");
         assertTrue(nonExistentInfo.contains("not found"));
+    }
+
+    /**
+     * 回归测试：解密密文长度不足 IV 长度时应抛出 IllegalArgumentException，
+     * 而非 NegativeArraySizeException（避免未捕获的运行时崩溃）。
+     */
+    @Test
+    @DisplayName("解密过短密文抛出 IllegalArgumentException 而非 NegativeArraySizeException")
+    void testDecryptShortCiphertextThrowsIllegalArgument() {
+        // 向活动密钥缓存注入一个合法密钥，使解密能走到密文长度校验分支
+        String validKey = keyManagerService.generateNewKey();
+        java.util.Map<String, String> activeKeys =
+                (java.util.Map<String, String>) ReflectionTestUtils.getField(keyManagerService, "activeKeys");
+        activeKeys.put("v1", validKey);
+
+        // 构造一个 Base64 解码后不足 12 字节的密文主体
+        String shortPayload = Base64.getUrlEncoder().encodeToString(new byte[5]);
+        String shortCiphertext = "v1:" + shortPayload;
+
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class,
+                () -> keyManagerService.decrypt(shortCiphertext));
+        assertTrue(ex.getMessage().contains("too short"));
+    }
+
+    /**
+     * 回归测试：主密钥长度超过 32 字节时仍能正常加解密，
+     * 避免 SecretKeySpec 因密钥长度非法抛出 InvalidKeyException。
+     */
+    @Test
+    @DisplayName("主密钥超过 32 字节时加解密仍正常工作")
+    void testMasterKeyLongerThan32BytesWorks() throws Exception {
+        // 设置一个 40 字节的主密钥
+        ReflectionTestUtils.setField(keyManagerService, "masterKey",
+                "this-is-a-very-long-master-key-exceeding-32-bytes!");
+
+        // 生成密钥并加入活动缓存
+        String validKey = keyManagerService.generateNewKey();
+        java.util.Map<String, String> activeKeys =
+                (java.util.Map<String, String>) ReflectionTestUtils.getField(keyManagerService, "activeKeys");
+        activeKeys.put("v1", validKey);
+
+        String content = "sensitive mental health data";
+        String encrypted = keyManagerService.encrypt(content, "v1");
+        String decrypted = keyManagerService.decrypt(encrypted);
+
+        assertEquals(content, decrypted);
+    }
+
+    /**
+     * 回归测试：主密钥长度不足 32 字节时仍能正常加解密（补零对齐）。
+     */
+    @Test
+    @DisplayName("主密钥不足 32 字节时加解密仍正常工作")
+    void testMasterKeyShorterThan32BytesWorks() throws Exception {
+        // 设置一个 16 字节的主密钥
+        ReflectionTestUtils.setField(keyManagerService, "masterKey", "short-key-16byte");
+
+        String validKey = keyManagerService.generateNewKey();
+        java.util.Map<String, String> activeKeys =
+                (java.util.Map<String, String>) ReflectionTestUtils.getField(keyManagerService, "activeKeys");
+        activeKeys.put("v1", validKey);
+
+        String content = "sensitive mental health data";
+        String encrypted = keyManagerService.encrypt(content, "v1");
+        String decrypted = keyManagerService.decrypt(encrypted);
+
+        assertEquals(content, decrypted);
     }
 }

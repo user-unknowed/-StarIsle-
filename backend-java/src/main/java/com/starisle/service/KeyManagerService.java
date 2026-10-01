@@ -185,6 +185,9 @@ public class KeyManagerService {
         }
 
         byte[] combined = Base64.getUrlDecoder().decode(encodedData);
+        if (combined.length < GCM_IV_LENGTH) {
+            throw new IllegalArgumentException("Invalid encrypted content: too short");
+        }
 
         byte[] iv = new byte[GCM_IV_LENGTH];
         byte[] encryptedBytes = new byte[combined.length - GCM_IV_LENGTH];
@@ -330,20 +333,30 @@ public class KeyManagerService {
     }
 
     /**
+     * 将主密钥规范化为恰好 32 字节
+     * 不足 32 字节时尾部补零，超过 32 字节时截断，确保 AES-256 密钥长度合法。
+     *
+     * @param masterKey 主密钥字符串
+     * @return 32 字节密钥数组
+     */
+    private byte[] normalizeMasterKey(String masterKey) {
+        byte[] masterKeyBytes = masterKey.getBytes(StandardCharsets.UTF_8);
+        byte[] normalized = new byte[KEY_SIZE];
+        int copyLength = Math.min(masterKeyBytes.length, KEY_SIZE);
+        System.arraycopy(masterKeyBytes, 0, normalized, 0, copyLength);
+        return normalized;
+    }
+
+    /**
      * 使用主密钥加密密钥值
-     * 主密钥不足 32 字节时补零对齐。
+     * 主密钥经规范化为 32 字节后用于 AES-256 加密。
      *
      * @param keyValue 密钥明文值
      * @return Base64-URL 编码的加密密钥值
      * @throws Exception 当加密失败时抛出
      */
     private String encryptKeyWithMaster(String keyValue) throws Exception {
-        byte[] masterKeyBytes = masterKey.getBytes(StandardCharsets.UTF_8);
-        if (masterKeyBytes.length < KEY_SIZE) {
-            byte[] padded = new byte[KEY_SIZE];
-            System.arraycopy(masterKeyBytes, 0, padded, 0, masterKeyBytes.length);
-            masterKeyBytes = padded;
-        }
+        byte[] masterKeyBytes = normalizeMasterKey(masterKey);
 
         SecretKeySpec keySpec = new SecretKeySpec(masterKeyBytes, ALGORITHM);
 
@@ -374,14 +387,12 @@ public class KeyManagerService {
      * @throws Exception 当解密失败时抛出
      */
     private String decryptKeyWithMaster(String encryptedKey) throws Exception {
-        byte[] masterKeyBytes = masterKey.getBytes(StandardCharsets.UTF_8);
-        if (masterKeyBytes.length < KEY_SIZE) {
-            byte[] padded = new byte[KEY_SIZE];
-            System.arraycopy(masterKeyBytes, 0, padded, 0, masterKeyBytes.length);
-            masterKeyBytes = padded;
-        }
+        byte[] masterKeyBytes = normalizeMasterKey(masterKey);
 
         byte[] combined = Base64.getUrlDecoder().decode(encryptedKey);
+        if (combined.length < GCM_IV_LENGTH) {
+            throw new IllegalArgumentException("Invalid encrypted key: too short");
+        }
 
         byte[] iv = new byte[GCM_IV_LENGTH];
         byte[] encryptedBytes = new byte[combined.length - GCM_IV_LENGTH];

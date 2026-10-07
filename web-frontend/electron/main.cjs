@@ -20,7 +20,7 @@ function createWindow() {
     show: false,
   });
 
-  const isDev = process.env.NODE_ENV !== 'production';
+  const isDev = !app.isPackaged;
 
   if (isDev) {
     mainWindow.loadURL('http://localhost:5173');

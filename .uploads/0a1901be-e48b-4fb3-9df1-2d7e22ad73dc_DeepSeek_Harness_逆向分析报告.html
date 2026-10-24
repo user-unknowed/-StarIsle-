@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DeepSeek Harness 桌面端逆向分析报告</title>
+<style>
+  :root {
+    --bg: #fafafa;
+    --surface: #ffffff;
+    --text: #1a1a1a;
+    --text-secondary: #555;
+    --text-muted: #888;
+    --border: #e5e5e5;
+    --border-light: #f0f0f0;
+    --accent: #4f46e5;
+    --accent-light: #eef2ff;
+    --code-bg: #f6f8fa;
+    --code-text: #24292f;
+    --table-header: #f9fafb;
+    --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.7;
+    font-size: 15px;
+  }
+  .layout {
+    display: flex;
+    max-width: 1280px;
+    margin: 0 auto;
+  }
+  /* Sidebar TOC */
+  .sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+    padding: 32px 20px;
+    border-right: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .sidebar h2 {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    margin: 0 0 16px 0;
+  }
+  .toc { list-style: none; padding: 0; margin: 0; }
+  .toc li { margin: 2px 0; }
+  .toc a {
+    display: block;
+    padding: 5px 10px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    border-radius: 6px;
+    font-size: 13.5px;
+    transition: all 0.15s;
+  }
+  .toc a:hover { background: var(--accent-light); color: var(--accent); }
+  .toc > li > a { font-weight: 500; }
+  .toc .sub { padding-left: 16px; }
+  .toc .sub a { font-size: 12.5px; color: var(--text-muted); }
+  /* Main content */
+  .content {
+    flex: 1;
+    min-width: 0;
+    padding: 48px 56px 80px;
+    max-width: 860px;
+  }
+  .meta {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 40px;
+    padding: 16px 20px;
+    background: var(--accent-light);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent);
+  }
+  .meta p { margin: 2px 0; }
+  h1 {
+    font-size: 30px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+    letter-spacing: -0.02em;
+  }
+  h2 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 48px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    letter-spacing: -0.01em;
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+  h4 {
+    font-size: 15px;
+    font-weight: 600;
+    margin: 20px 0 8px;
+  }
+  p { margin: 10px 0; }
+  a { color: var(--accent); text-decoration: none; }
+  a:hover { text-decoration: underline; }
+  strong { font-weight: 600; }
+  /* Tables */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+    font-size: 14px;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  th, td {
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+  }
+  th {
+    background: var(--table-header);
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: #fafbfc; }
+  /* Code */
+  code {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+    background: var(--code-bg);
+    color: var(--code-text);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    margin: 16px 0;
+    line-height: 1.55;
+  }
+  pre code {
+    background: none;
+    padding: 0;
+    font-size: 13px;
+  }
+  /* Blockquote / callout */
+  blockquote {
+    margin: 16px 0;
+    padding: 12px 18px;
+    background: #fffbeb;
+    border-left: 3px solid #f59e0b;
+    border-radius: 0 6px 6px 0;
+    color: #78350f;
+  }
+  blockquote p { margin: 0; }
+  /* Lists */
+  ul, ol { padding-left: 22px; }
+  li { margin: 4px 0; }
+  /* Responsive */
+  @media (max-width: 900px) {
+    .layout { flex-direction: column; }
+    .sidebar {
+      width: 100%;
+      height: auto;
+      position: relative;
+      border-right: none;
+      border-bottom: 1px solid var(--border);
+    }
+    .content { padding: 24px 20px 60px; }
+    h1 { font-size: 24px; }
+    h2 { font-size: 19px; }
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+  <nav class="sidebar">
+    <h2>目录</h2>
+    <ul class="toc">
+      <li><a href="#overview">1. 概述</a></li>
+      <li><a href="#stack">2. 技术栈与架构</a></li>
+      <li><a href="#pe">3. PE 结构</a>
+        <ul class="sub">
+          <li><a href="#pe-installer">3.1 安装器</a></li>
+          <li><a href="#pe-main">3.2 主程序</a></li>
+        </ul>
+      </li>
+      <li><a href="#asar">4. ASAR 应用包</a></li>
+      <li><a href="#plugins">5. 插件系统</a></li>
+      <li><a href="#subsystems">6. 关键子系统</a>
+        <ul class="sub">
+          <li><a href="#llm">6.1 LLM 接入</a></li>
+          <li><a href="#search">6.2 联网搜索</a></li>
+          <li><a href="#account">6.3 账户认证</a></li>
+          <li><a href="#session">6.4 会话持久化</a></li>
+          <li><a href="#sandbox">6.5 沙箱策略</a></li>
+          <li><a href="#credentials">6.6 凭据管理</a></li>
+          <li><a href="#home">6.7 家目录与匿名 ID</a></li>
+          <li><a href="#main">6.8 Electron 主进程</a></li>
+        </ul>
+      </li>
+      <li><a href="#endpoints">7. 网络端点</a></li>
+      <li><a href="#security">8. 安全与隐私</a></li>
+      <li><a href="#evidence">9. 证据清单</a></li>
+      <li><a href="#limits">10. 局限性</a></li>
+    </ul>
+  </nav>
+
+  <main class="content">
+    <h1>DeepSeek Harness 桌面端逆向分析报告</h1>
+    <div class="meta">
+      <p><strong>目标版本</strong>：DeepSeek Harness v0.1.7-rc.2 (win-x64)</p>
+      <p><strong>分析日期</strong>：2026-10-18</p>
+      <p><strong>方法</strong>：PE 结构解析 + ASAR 解包 + 定向源码静态分析</p>
+    </div>
+
+    <h2 id="overview">1. 概述</h2>
+    <p>DeepSeek Harness（dsh）是 DeepSeek 推出的桌面端 AI Agent 运行环境。本次逆向目标为官方 Windows x64 安装包 <code>deepseek-harness-0.1.7-rc.2-win-x64.exe</code>（288 MB），来源 <code>https://download.deepseek.com/dsh-desk/bin/win-x64/</code>。</p>
+    <p><strong>核心结论</strong>：DeepSeek Harness 采用 <strong>Electron 外壳 + dsh Cordis 插件运行时</strong> 架构。Electron 主进程只负责窗口、托盘、自动更新、IPC 与 WebSocket 流式协议；所有业务能力（LLM、工具、沙箱、会话、账户、搜索等）均以 <strong>273 个 <code>@deepseek-ai/dsh-*</code> 插件</strong> 的形式通过 Cordis 内核动态加载。安装包捆绑了完整的 <strong>Node.js 24.18.1 + Python 3.12 + pnpm 11.7.0</strong> 运行时。</p>
+
+    <h2 id="stack">2. 技术栈与整体架构</h2>
+    <pre><code>┌─────────────────────────────────────────────────────────────┐
+│              DeepSeek Harness.exe (Electron)                │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  lib/main.js  (主进程)                                │  │
+│  │  - BrowserWindow / Tray / IPC / WebSocket 流         │  │
+│  │  - electron-updater 自动更新                         │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  dsh/  (Cordis 插件运行时 · 273 个 dsh-* 插件)        │  │
+│  │  dsh-llm-deepseek · dsh-tool-* · dsh-session-*       │  │
+│  │  dsh-sandbox-* · dsh-deepseek-account · dsh-web-*    │  │
+│  └───────────────────────────────────────────────────────┘  │
+│  ┌───────────────────────────────────────────────────────┐  │
+│  │  resources/runtime/  (Node 24 + Python 3.12 + pnpm)  │  │
+│  └───────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+    <table>
+      <thead><tr><th>层级</th><th>技术</th><th>版本 / 说明</th></tr></thead>
+      <tbody>
+        <tr><td>桌面壳</td><td>Electron</td><td>主程序 244 MB</td></tr>
+        <tr><td>插件内核</td><td>Cordis</td><td>@deepseek-ai/cordis 4.0.4</td></tr>
+        <tr><td>配置 Schema</td><td>Schemastery</td><td>3.18.4</td></tr>
+        <tr><td>运行时</td><td>Node.js</td><td>24.18.1（捆绑）</td></tr>
+        <tr><td>运行时</td><td>Python</td><td>3.12（捆绑）</td></tr>
+        <tr><td>自动更新</td><td>electron-updater</td><td>^6.8.9</td></tr>
+        <tr><td>流式协议</td><td>ws</td><td>^8.21.0</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="pe">3. PE 二进制结构分析</h2>
+    <h3 id="pe-installer">3.1 安装器（NSIS 存根）</h3>
+    <table>
+      <tbody>
+        <tr><th>文件</th><td>deepseek-harness-win-x64.exe</td></tr>
+        <tr><th>大小</th><td>288,245,480 字节 (≈275 MB)</td></tr>
+        <tr><th>架构</th><td>x86 (0x014C) — NSIS 32 位存根</td></tr>
+        <tr><th>节区数</th><td>5</td></tr>
+        <tr><th>导入</th><td>7 DLL / 165 函数</td></tr>
+        <tr><th>延迟导入</th><td>0</td></tr>
+        <tr><th>数字签名</th><td>有（13,288 字节证书）</td></tr>
+      </tbody>
+    </table>
+    <p>导入 DLL：KERNEL32 (67)、USER32 (63)、GDI32 (8)、SHELL32 (6)、ADVAPI32 (13)、COMCTL32 (4)、ole32 (4)。典型 NSIS 安装器，核心逻辑不在此二进制内。</p>
+
+    <h3 id="pe-main">3.2 主程序（Electron）</h3>
+    <table>
+      <tbody>
+        <tr><th>文件</th><td>DeepSeek Harness.exe</td></tr>
+        <tr><th>大小</th><td>244,481,512 字节 (≈233 MB)</td></tr>
+        <tr><th>架构</th><td>x64 PE32+ (0x8664)</td></tr>
+        <tr><th>时间戳</th><td>2026-08-24 15:25:04Z</td></tr>
+        <tr><th>节区数</th><td><strong>15</strong></td></tr>
+        <tr><th>导出函数</th><td><strong>3,241</strong>（V8 / Node.js C++ 符号）</td></tr>
+        <tr><th>静态导入</th><td>7 DLL / 537 函数</td></tr>
+        <tr><th>延迟导入</th><td>51 DLL / 746 函数</td></tr>
+        <tr><th>数字签名</th><td>有</td></tr>
+      </tbody>
+    </table>
+    <p><strong>节区</strong>：.text (191 MB)、.rdata (44 MB)、.data (2.7 MB)、.pdata (5.5 MB)、.rsrc、.reloc 及 Electron 特有节区（.eh_fram、LZMADEC、CPADinfo 等）。</p>
+    <p><strong>静态导入</strong>：KERNEL32 (409)、WS2_32 (54)、CRYPT32 (28)、WINMM (31)、ntdll (11)、VERSION (3)、DWrite (1)。</p>
+    <p><strong>延迟导入</strong>：ffmpeg (45)、USER32 (215)、GDI32 (95)、ADVAPI32 (83)、ole32 (32)、SHELL32 (24) 等 51 个 DLL。</p>
+    <p>3,241 个导出全部为 V8/Node mangled 符号，确认为 Chromium + V8 + Node 编译产物。应用层逻辑位于 ASAR 包。</p>
+
+    <h2 id="asar">4. ASAR 应用包结构</h2>
+    <p><code>resources/app.asar</code>（112 MB）解包后：</p>
+    <pre><code>asar_extract/
+├── package.json              # @deepseek-ai/dsh-desktop v0.1.7-rc.2
+├── lib/
+│   ├── main.js               # Electron 主进程（≈244 KB）
+│   ├── preload-*.cjs         # 各 preload 脚本
+│   └── welcome/
+├── renderer/                 # 渲染层
+└── dsh/                      # Cordis 插件运行时
+    ├── desktop-runtime.json  # 282 包 / 12319 文件
+    └── node_modules/@deepseek-ai/</code></pre>
+    <p>根 <code>package.json</code> 关键字段：App ID <code>com.deepseek.dsh</code>，更新源 <code>https://harness.deepseek.com</code>，认证 <code>anonymous</code>，构建 commit <code>c1275515</code>。</p>
+
+    <h2 id="plugins">5. 插件系统（Cordis）</h2>
+    <p><code>dsh/desktop-runtime.json</code> 声明 <strong>282 个共享包</strong>，其中 <strong>273 个为 <code>@deepseek-ai/dsh-*</code> 插件</strong>，5 个 Cordis 内核包。<code>files</code> 字段含 12,319 条 <code>{path, bytes, sha256, executable}</code> 记录，用于完整性校验。</p>
+    <table>
+      <thead><tr><th>子系统</th><th>代表插件</th></tr></thead>
+      <tbody>
+        <tr><td>LLM 接入</td><td>dsh-llm-deepseek, dsh-llm-deepseek-api-key, dsh-llm-pi-ai, dsh-llm-retry</td></tr>
+        <tr><td>Agent 循环</td><td>dsh-agent, dsh-agent-loop, dsh-agent-preset, dsh-subagent</td></tr>
+        <tr><td>工具</td><td>dsh-tool-bash/fs/web/pwsh/subagent/todo/workflow, dsh-mcp-client</td></tr>
+        <tr><td>沙箱/安全</td><td>dsh-sandbox-policy, dsh-sandbox-windows-acl, dsh-fs-sandbox, dsh-bash-sandbox</td></tr>
+        <tr><td>会话/存储</td><td>dsh-session-persistence-jsonl, dsh-session-query-sqlite, dsh-session-log-deepseek</td></tr>
+        <tr><td>账户/认证</td><td>dsh-deepseek-account, dsh-deepseek-account-platform, dsh-anonymous-user-id</td></tr>
+        <tr><td>Web/网络</td><td>dsh-web-fetch-http, dsh-web-search-deepseek, dsh-http-proxy</td></tr>
+        <tr><td>实验性</td><td>agent-team, speech-to-text (sensevoice), voice-input, auto-review</td></tr>
+        <tr><td>SDK/协议</td><td>dsh-sdk-protocol, dsh-sdk-jsonrpc-server, dsh-acp</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="subsystems">6. 关键子系统逆向</h2>
+
+    <h3 id="llm">6.1 LLM 接入层（dsh-llm-deepseek）</h3>
+    <table>
+      <tbody>
+        <tr><th>端点</th><td><code>https://api.deepseek.com/anthropic</code>（env: <code>DEEPSEEK_BASE_URL</code>）</td></tr>
+        <tr><th>协议</th><td>Anthropic Messages API（<code>anthropic-version: 2023-06-01</code>）</td></tr>
+        <tr><th>模型</th><td><code>deepseek-flash</code> (V41-Flash, text+image)、<code>deepseek-v4-pro</code></td></tr>
+        <tr><th>上下文</th><td>1,000,000 tokens</td></tr>
+        <tr><th>最大输出</th><td>256,000 tokens</td></tr>
+        <tr><th>推理强度</th><td>off / low / high / max（默认 high）</td></tr>
+      </tbody>
+    </table>
+    <p><strong>Files API</strong>：<code>{base}/v1/files</code>，单文件 ≤128 MiB，存储配额 25 GB / 10,000 文件，过期 1h~30d（默认 7d）。</p>
+    <p><strong>上传索引</strong>：<code>$DSH_HOME/llm-deepseek/files-v3.json</code>，命名空间 = SHA-256(baseURL + 认证头)，不持久化明文密钥。</p>
+    <p><strong>视觉计费</strong>：14px patch、3:1 下采样、单图 ≤1024 tokens；≥15 图时单边 ≤4096px；单请求 ≤600 图。</p>
+
+    <h3 id="search">6.2 联网搜索（dsh-web-search-deepseek）</h3>
+    <table>
+      <tbody>
+        <tr><th>端点</th><td><code>https://api.deepseek.com/anthropic/v1</code>（env: <code>DEEPSEEK_SEARCH_BASE_URL</code>）</td></tr>
+        <tr><th>模型</th><td><code>deepseek-v4-flash</code>，max_tokens 4096</td></tr>
+        <tr><th>工具</th><td><code>web_search_20250305</code>，max_uses 默认 5</td></tr>
+        <tr><th>API Key</th><td><code>DEEPSEEK_API_KEY</code></td></tr>
+        <tr><th>User-Agent</th><td><code>deepseek-harness/0.0.1</code></td></tr>
+      </tbody>
+    </table>
+    <p>同时发送 <code>x-api-key</code> 与 <code>authorization: Bearer</code> 头。响应从 <code>web_search_tool_result</code> 块提取结果并按 URL 去重。</p>
+
+    <h3 id="account">6.3 账户与认证</h3>
+    <table>
+      <thead><tr><th>端点</th><th>用途</th></tr></thead>
+      <tbody>
+        <tr><td><code>/auth-api/v0/dsh/&lt;method&gt;</code></td><td>DSH 平台方法</td></tr>
+        <tr><td><code>/auth-api/v0/users/current</code></td><td>当前用户</td></tr>
+        <tr><td><code>/auth-api/v0/users/logout</code></td><td>登出</td></tr>
+        <tr><td><code>/api/v0/users/get_unnotified_bonuses</code></td><td>未读奖励</td></tr>
+        <tr><td><code>/api/v0/users/ack_bonus_notified</code></td><td>确认奖励</td></tr>
+      </tbody>
+    </table>
+    <p>认证头：<code>x-dsh-auth-token: &lt;token&gt;</code>。HTTP 401 或 <code>code: 40003</code> 触发重新登录。登录经浏览器 loopback 回调。含平台奖励/钱包体系。</p>
+
+    <h3 id="session">6.4 会话持久化（dsh-session-persistence-jsonl）</h3>
+    <p><strong>格式</strong>：JSONL，支持 Zstandard 压缩（<code>.jsonl.zstd</code>）。</p>
+    <p><strong>路径</strong>：<code>&lt;root&gt;/&lt;project key&gt;/&lt;encoded session id&gt;/session.v&lt;N&gt;.jsonl[.zstd]</code></p>
+    <ul>
+      <li>project key 由 cwd 派生（分隔符→<code>-</code>，包裹 <code>--...--</code>）</li>
+      <li>session id 用 <code>~XXXX</code> 转义防路径穿越</li>
+      <li>当前格式版本 v4，内置 v0→v4 迁移链</li>
+    </ul>
+    <p><strong>跨进程写锁</strong>：Windows 用命名内核信号量 <code>Local\dsh-session-lock-&lt;sha256&gt;</code>；POSIX 用 <code>flock</code>。进程崩溃由内核自动释放，无超时。</p>
+    <p><strong>Windows 持久化</strong>：<code>MoveFileExW(..., MOVEFILE_WRITE_THROUGH)</code> 实现写入穿透。</p>
+
+    <h3 id="sandbox">6.5 沙箱策略（dsh-sandbox-policy）</h3>
+    <table>
+      <thead><tr><th>模式</th><th>行为</th></tr></thead>
+      <tbody>
+        <tr><td><code>read-only</code>（默认）</td><td>禁止任何文件修改</td></tr>
+        <tr><td><code>workspace-write</code></td><td>仅允许修改会话工作目录</td></tr>
+        <tr><td><code>danger-full-access</code></td><td>不限制文件修改</td></tr>
+      </tbody>
+    </table>
+    <p>解析优先级：显式批准 &gt; 会话 <code>sandbox/mode</code> 事件 &gt; 部署默认。工作区根 = 会话 cwd。</p>
+
+    <h3 id="credentials">6.6 凭据管理（dsh-credentials）</h3>
+    <ul>
+      <li><strong>CredentialRef</strong>：环境变量名（如 <code>DEEPSEEK_API_KEY</code>），层级 = 进程环境 → 提供者存储 → .env</li>
+      <li><strong>CredentialKey</strong>：<code>&lt;scope&gt;/&lt;id&gt;</code> 格式，<code>modifyRecord</code> 为唯一写入路径（读-决-替，加锁）</li>
+      <li>空值视为未配置；变更通过事件通知，监听器失败被隔离</li>
+    </ul>
+
+    <h3 id="home">6.7 家目录与匿名标识</h3>
+    <ul>
+      <li><strong>DSH Home</strong>：默认 <code>~/.dsh</code>，env <code>DSH_HOME</code> 可覆盖</li>
+      <li><strong>匿名用户 ID</strong>：<code>$DSH_HOME/.anonymous-user-id</code>，<code>crypto.randomUUID()</code> 生成，<strong>不</strong>派生自主机名/MAC/git remote</li>
+      <li>用途：遥测与反馈；删除文件后下次启动生成新 ID</li>
+    </ul>
+
+    <h3 id="main">6.8 Electron 主进程（lib/main.js）</h3>
+    <p><strong>IPC 通道</strong>：DESKTOP_IPC（boot, shortcuts, updates, locale...）、WELCOME_IPC（saveApiKey, start...）、MANDATORY_IPC、UPDATE_DIALOG_IPC、PLATFORM_IPC。</p>
+    <p><strong>流式协议</strong>：<code>ws</code> 连接 <code>${origin}${REMOTE_STREAM_MUX_PATH}</code>，来自 <code>@deepseek-ai/dsh-api-gateway/stream-protocol</code>。</p>
+    <p><strong>自动更新</strong>：<code>electron-updater</code>，源 <code>https://harness.deepseek.com</code>，anonymous 认证。</p>
+    <p><strong>捆绑运行时</strong>：Node → <code>resources/runtime/bin</code>，pnpm → <code>resources/runtime/pnpm/bin/pnpm.mjs</code>。</p>
+
+    <h2 id="endpoints">7. 网络端点清单</h2>
+    <table>
+      <thead><tr><th>端点</th><th>用途</th><th>认证</th></tr></thead>
+      <tbody>
+        <tr><td><code>https://api.deepseek.com/anthropic</code></td><td>LLM 对话</td><td>API Key</td></tr>
+        <tr><td><code>https://api.deepseek.com/anthropic/v1</code></td><td>联网搜索</td><td>API Key</td></tr>
+        <tr><td><code>{base}/v1/files</code></td><td>图片上传/管理</td><td>API Key</td></tr>
+        <tr><td><code>https://harness.deepseek.com</code></td><td>自动更新</td><td>anonymous</td></tr>
+        <tr><td><code>{platform}/auth-api/v0/*</code></td><td>账户/登录/登出</td><td>x-dsh-auth-token</td></tr>
+        <tr><td><code>{platform}/api/v0/users/*bonuses*</code></td><td>奖励/钱包</td><td>x-dsh-auth-token</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="security">8. 安全与隐私观察</h2>
+    <h4>设计良好的方面</h4>
+    <ul>
+      <li>沙箱默认 <code>read-only</code>，Agent 无法擅自改文件</li>
+      <li>配置只存环境变量名，不存密钥值</li>
+      <li>上传索引用哈希派生命名空间，不持久化明文密钥</li>
+      <li>匿名 UUID 与机器标识解耦</li>
+      <li>会话写锁崩溃自动释放、无超时，防止撕裂</li>
+      <li>Windows <code>MOVEFILE_WRITE_THROUGH</code> 确保持久性</li>
+      <li>HTTP 请求 <code>redirect: "error"</code>，防止凭据被重定向带出</li>
+    </ul>
+    <h4>需要关注的方面</h4>
+    <ul>
+      <li>存在 <code>danger-full-access</code> 完全关闭沙箱的模式</li>
+      <li><code>x-dsh-auth-token</code> 为长期凭据，泄露风险需关注</li>
+      <li>会话日志明文存储于 <code>~/.dsh</code>（zstd 压缩非加密）</li>
+      <li>自动更新 anonymous 认证，依赖 HTTPS + 代码签名</li>
+    </ul>
+
+    <h2 id="evidence">9. 证据清单</h2>
+    <table>
+      <thead><tr><th>证据</th><th>来源</th></tr></thead>
+      <tbody>
+        <tr><td>PE 结构（15 节区/3241 导出/537+746 导入）</td><td>harness_pe.json / harness_main_pe.json</td></tr>
+        <tr><td>版本、App ID、更新源</td><td>asar_extract/package.json</td></tr>
+        <tr><td>282 包 / 273 插件 / 12319 文件</td><td>dsh/desktop-runtime.json</td></tr>
+        <tr><td>LLM 端点、模型目录、Files API</td><td>dsh-llm-deepseek/lib/index.js</td></tr>
+        <tr><td>搜索端点、web_search 工具</td><td>dsh-web-search-deepseek/lib/index.js</td></tr>
+        <tr><td>账户端点、x-dsh-auth-token</td><td>dsh-deepseek-account-platform/lib/index.js</td></tr>
+        <tr><td>JSONL/zstd、Windows 信号量锁</td><td>dsh-session-persistence-jsonl/lib/index.js</td></tr>
+        <tr><td>沙箱三模式、默认 read-only</td><td>dsh-sandbox-policy/lib/index.js</td></tr>
+        <tr><td>凭据 ref/key 双空间</td><td>dsh-credentials/lib/index.js</td></tr>
+        <tr><td>~/.dsh 家目录、匿名 UUID</td><td>dsh-home-paths / dsh-anonymous-user-id</td></tr>
+        <tr><td>IPC、WebSocket 流、自动更新</td><td>lib/main.js</td></tr>
+      </tbody>
+    </table>
+
+    <h2 id="limits">10. 分析局限性</h2>
+    <ol>
+      <li>REA 全量分析产出 222 MB JSON 超出内存，改为定向读取关键插件，未覆盖全部 273 个插件。</li>
+      <li>未做动态抓包，端点均来自源码静态提取，运行时可能存在动态构造的 URL。</li>
+      <li><code>app.asar.unpacked/</code> 下原生 Node 模块未做 Ghidra 分析。</li>
+      <li>渲染层与 <code>dsh-client-ui-*</code> 前端逻辑未深入。</li>
+      <li>凭据具体持久化实现（是否加密）未追踪到底。</li>
+    </ol>
+
+    <blockquote><p>本报告基于静态逆向分析，仅供技术研究与架构理解之用。</p></blockquote>
+  </main>
+</div>
+</body>
+</html>

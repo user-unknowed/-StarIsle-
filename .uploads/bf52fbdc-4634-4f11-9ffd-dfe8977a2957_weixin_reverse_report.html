@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>微信 Windows 客户端逆向分析报告</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+    line-height: 1.75; color: #2c3e50; background: #fafbfc;
+    max-width: 920px; margin: 0 auto; padding: 48px 32px 96px;
+  }
+  h1 { font-size: 30px; font-weight: 600; letter-spacing: -0.5px; margin-bottom: 6px; color: #1a1a2e; }
+  .subtitle { color: #8a94a6; font-size: 14px; margin-bottom: 40px; }
+  .meta { display: flex; gap: 24px; flex-wrap: wrap; font-size: 13px; color: #5a6478;
+    border-top: 1px solid #e6eaf0; border-bottom: 1px solid #e6eaf0; padding: 14px 0; margin-bottom: 40px; }
+  h2 { font-size: 20px; font-weight: 600; margin: 48px 0 16px; color: #1a1a2e;
+    padding-bottom: 10px; border-bottom: 2px solid #e6eaf0; }
+  h3 { font-size: 16px; font-weight: 600; margin: 28px 0 10px; color: #2c3e50; }
+  p { margin: 12px 0; font-size: 14.5px; }
+  .card { background: #fff; border: 1px solid #e6eaf0; border-radius: 10px; padding: 22px 26px; margin: 18px 0; }
+  .kv { display: grid; grid-template-columns: 170px 1fr; gap: 8px 18px; font-size: 13.5px; }
+  .kv dt { color: #8a94a6; } .kv dd { color: #2c3e50; word-break: break-all; }
+  code { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12.5px;
+    background: #f1f4f9; padding: 1px 6px; border-radius: 4px; color: #c7254e; }
+  pre { background: #1e2430; color: #d5dbe7; padding: 16px 18px; border-radius: 8px;
+    overflow-x: auto; font-size: 12.5px; line-height: 1.6; margin: 14px 0; }
+  pre code { background: none; color: inherit; padding: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 14px 0; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid #e6eaf0; }
+  th { color: #8a94a6; font-weight: 500; background: #f7f9fb; }
+  .tag { display: inline-block; font-size: 11.5px; padding: 2px 10px; border-radius: 20px;
+    background: #eef4ff; color: #3b6fd4; margin: 2px 4px 2px 0; }
+  .tag.warn { background: #fff5e8; color: #c27c1c; }
+  .evidence { border-left: 3px solid #3b6fd4; background: #f5f8ff; padding: 12px 16px;
+    margin: 10px 0; font-size: 13px; border-radius: 0 6px 6px 0; }
+  .evidence .label { font-weight: 600; color: #3b6fd4; font-size: 12px; letter-spacing: 0.5px; }
+  .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin: 20px 0; }
+  .stat { background: #fff; border: 1px solid #e6eaf0; border-radius: 10px; padding: 18px; text-align: center; }
+  .stat .num { font-size: 26px; font-weight: 700; color: #1a1a2e; }
+  .stat .lbl { font-size: 12px; color: #8a94a6; margin-top: 4px; }
+  ul, ol { margin: 10px 0 10px 22px; font-size: 14px; }
+  li { margin: 6px 0; }
+  .footer { margin-top: 64px; padding-top: 20px; border-top: 1px solid #e6eaf0;
+    font-size: 12px; color: #a0a8b8; }
+  .mono { font-family: "JetBrains Mono", Consolas, monospace; font-size: 12.5px; }
+</style>
+</head>
+<body>
+
+<h1>微信 Windows 客户端逆向分析报告</h1>
+<div class="subtitle">WeChat (Weixin) 4.1.15.55 — 基于 Ghidra 12.1 与 PE 静态解析的二进制证据链分析</div>
+
+<div class="meta">
+  <span>分析日期：2026-10-17</span>
+  <span>分析工具：Ghidra 12.1.4 / 自研 PE 解析脚本 / PowerShell 字符串提取</span>
+  <span>目标路径：C:\Program Files\Tencent\Weixin</span>
+</div>
+
+<h2>一、结论摘要</h2>
+<div class="card">
+<p>本次分析针对微信 Windows 客户端 4.1.15.55 版（新架构）。该版本已从旧版 <code>WeChat.exe</code> 单体架构演进为 <strong>「启动器 + 巨型核心 DLL」</strong> 架构：</p>
+<ul>
+  <li><strong>Weixin.exe（3.0 MB）</strong>——轻量启动器，仅静态导入 KERNEL32，通过 11 个延迟加载 DLL 按需载入组件，Ghidra 识别出 7,080 个函数，入口为标准 CRT startup。</li>
+  <li><strong>Weixin.dll（194.8 MB）</strong>——承载全部业务逻辑的核心库，含 12 个节区（.text 达 119 MB，估算约 51 万个函数），117 个导出函数，内嵌 Qt 框架元数据节区。</li>
+  <li><strong>网络栈为 Chromium Cronet</strong>（导出命名空间 <code>mmcronet</code>，支持 HTTP/2、QUIC、Brotli），业务协议基于腾讯 Mars 框架与 Protobuf。</li>
+  <li>所有 .bin 组件（RadiumWMPF 412 MB、XPlayer、WeChatOcr、XEditor 等）实为 <strong>ZIP 容器</strong>（PK 魔数）。</li>
+  <li>两个主文件均携带<strong>有效的腾讯数字签名</strong>（CN=Tencent Technology (Shenzhen) Company Limited）。</li>
+</ul>
+</div>
+
+<div class="summary-grid">
+  <div class="stat"><div class="num">4.1.15.55</div><div class="lbl">产品版本</div></div>
+  <div class="stat"><div class="num">194.8 MB</div><div class="lbl">核心 DLL 体积</div></div>
+  <div class="stat"><div class="num">117</div><div class="lbl">DLL 导出函数</div></div>
+  <div class="stat"><div class="num">7,080</div><div class="lbl">启动器函数数（Ghidra）</div></div>
+  <div class="stat"><div class="num">~51 万</div><div class="lbl">核心库估算函数数</div></div>
+  <div class="stat"><div class="num">12</div><div class="lbl">DLL 节区数</div></div>
+</div>
+
+<h2>二、分析目标与方法</h2>
+<div class="card">
+<h3>2.1 目标文件</h3>
+<table>
+<tr><th>文件</th><th>大小</th><th>SHA256（前 16 位）</th><th>签名</th></tr>
+<tr><td class="mono">Weixin.exe</td><td>3,128,368 B</td><td class="mono">07684E183894A337</td><td><span class="tag">Valid / Tencent</span></td></tr>
+<tr><td class="mono">4.1.15.55\Weixin.dll</td><td>204,304,944 B</td><td class="mono">6FBBBA536B04C0A2</td><td><span class="tag">Valid / Tencent</span></td></tr>
+</table>
+
+<h3>2.2 方法链路</h3>
+<ol>
+  <li>注册表与桌面快捷方式定位安装路径（HKLM/HKCU Uninstall 项 + .lnk 解析）；</li>
+  <li>REA 工具链尝试 → Ghidra provider 因 Windows 提升令牌问题不可用 → 切换为 <strong>Ghidra headless 直接调用</strong> + 自研 PE 解析脚本；</li>
+  <li>手工解析 PE 结构：DOS/COFF/可选头、16 个数据目录、节区表、导入表、导出表、延迟加载表；</li>
+  <li>Ghidra headless 自动分析（58 秒完成 Weixin.exe 全量分析）+ Java postScript 导出函数清单与反编译；</li>
+  <li>对 195 MB 核心库做全量字符串提取（905,720 条 ASCII + 62,083 条 UTF-16LE），按 13 个功能关键词组采样取证。</li>
+</ol>
+</div>
+
+<h2>三、Weixin.exe（启动器）结构分析</h2>
+<div class="card">
+<h3>3.1 PE 头与安全特性</h3>
+<dl class="kv">
+  <dt>机器类型</dt><dd>x64（0x8664），PE32+</dd>
+  <dt>节区数</dt><dd>9 个</dd>
+  <dt>编译时间戳</dt><dd>2026-10-12 11:07:58 UTC</dd>
+  <dt>安全特性</dt><dd><span class="tag">ASLR</span><span class="tag">DEP/NX</span><span class="tag">CFG 控制流防护</span><span class="tag">High-Entropy VA</span></dd>
+  <dt>静态导入</dt><dd>仅 KERNEL32.dll（典型启动器特征）</dd>
+  <dt>延迟加载导入</dt><dd>11 个 DLL</dd>
+</dl>
+
+<div class="evidence">
+  <div class="label">依据</div>
+  PE 解析脚本输出 <code>weixin_exe_pe.json</code>：machine=0x8664、section_count=9、characteristics=0x2022（EXECUTABLE_IMAGE | LARGE_ADDRESS_AWARE）；DLLCharacteristics 含 DYNAMIC_BASE / NX_COMPAT / GUARD_CF / HIGH_ENTROPY_VA。
+</div>
+
+<h3>3.2 Ghidra 反编译结果</h3>
+<p>Ghidra headless 对 Weixin.exe 完成全量自动分析（58 秒），识别 <strong>7,080 个函数</strong>。入口点为标准 CRT 启动序列：</p>
+<pre><code>===== entry @ 1401cce00 =====
+void entry(void)
+{
+  __security_init_cookie();   // 栈保护 cookie 初始化
+  __scrt_common_main_seh();   // CRT 主启动例程
+  return;
+}</code></pre>
+
+<p>唯一导出函数 <code>GetHandleVerifier</code> 的反编译显示其采用<strong>自校验模式</strong>：先检查全局缓存，再通过 <code>GetModuleHandleW(NULL)</code> + <code>GetProcAddress</code> 解析自身导出，若解析结果与自身地址相同则调用验证回调——这是 Chromium 系（Base）handle verifier 的典型实现，用于调试期句柄泄漏检测。</p>
+
+<div class="evidence">
+  <div class="label">依据</div>
+  <code>ghidra_java_funcs.txt</code>（7,080 行函数地址/名称清单）、<code>ghidra_java_decomp.txt</code>（GetHandleVerifier 与 entry 的反编译输出）、<code>ghidra_weixin_exe4.log</code>（分析成功日志：Decompiler Switch Analysis 6.2s / x86 Constant Reference 11.1s / Stack 12.2s 等 24 个分析器全部通过）。
+</div>
+</div>
+
+<h2>四、Weixin.dll（核心业务库）结构分析</h2>
+<div class="card">
+<h3>4.1 节区布局（12 个节区）</h3>
+<table>
+<tr><th>节区</th><th>说明</th></tr>
+<tr><td class="mono">.text</td><td>119 MB 代码段——承载全部业务逻辑</td></tr>
+<tr><td class="mono">.pdata</td><td>6 MB 异常处理表（x64 每个 RUNTIME_FUNCTION 12 字节 → 约 51 万函数）</td></tr>
+<tr><td class="mono">.qtmetad / .qtmimed</td><td>Qt 框架元对象数据与 MIME 数据库——内嵌 Qt 的直接证据</td></tr>
+<tr><td class="mono">malloc_h</td><td>可执行标志的自定义堆节区（腾讯自研分配器）</td></tr>
+</table>
+
+<div class="evidence">
+  <div class="label">依据</div>
+  <code>weixin_dll_pe.json</code>：section_count=12，.text 虚拟大小 119 MB，.pdata 6 MB，存在 .qtmetad/.qtmimed 节区名；DLLCharacteristics 未含 GUARD_CF（核心库未开 CFG，仅启动器开启）。
+</div>
+
+<h3>4.2 导出函数（117 个）——网络栈即 Cronet</h3>
+<p>117 个导出中约 100 个属于 <code>mmcronet</code> C++ 命名空间（GCC/MSVC 混合 mangling），覆盖：</p>
+<ul>
+  <li><code>mmcronet::Engine</code> / <code>EngineParams</code>——Cronet 引擎生命周期，含 <code>SetEnableHttp2</code> / <code>SetEnableBrotli</code> / <code>SetEnableNetworkQualityEstimator</code> / <code>SetEnablePublicKeyPinningBypassForLocalTrustAnchors</code>；</li>
+  <li><code>mmcronet::Fetch</code> / <code>Request</code> / <code>FetchWith</code>——HTTP 请求原语；</li>
+  <li><code>TransferHandle</code> / <code>TransferOptions</code> / <code>TransferCallbacks</code>——大文件传输抽象（取消/暂停/进度/指标）；</li>
+  <li><code>RequestBody::FromBytes / FromFile / FromString / Multipart</code>——上传体构造。</li>
+</ul>
+<p>业务导出仅 5 个：<code>WeChatMain</code>（主入口）、<code>SetWeixinCallbackFunc</code>、<code>HostStartupExceptionReport</code>、<code>SetUseUserCA</code>（自定义 CA 开关）、<code>GetHandleVerifier</code>。</p>
+
+<div class="evidence">
+  <div class="label">依据</div>
+  <code>weixin_dll_exports.json</code>：export count=117，dll_name=Weixin.dll，函数名清单含上述全部符号。Cronet 为 Chromium 网络栈的移动端/嵌入式封装库，<code>CRONET-H1/H2/H3/UNK</code> 协议标识字符串亦在二进制中发现（偏移 0x 段，见字符串证据）。
+</div>
+
+<h3>4.3 延迟加载依赖（39 个）</h3>
+<p>延迟加载清单揭示了功能模块边界：</p>
+<table>
+<tr><th>类别</th><th>DLL</th></tr>
+<tr><td>跨进程框架</td><td class="mono">mmmojo_64.dll</td></tr>
+<tr><td>音视频会议</td><td class="mono">VoipEngine.dll / ConfSdk*.dll</td></tr>
+<tr><td>数据漫游/同步</td><td class="mono">roam_server.dll / roam_migration.dll</td></tr>
+<tr><td>网络</td><td class="mono">ilink_wrapper.dll / mmcronet.dll / WS2_32.dll</td></tr>
+<tr><td>渲染</td><td class="mono">libGLESv2.dll / libEGL.dll / d3d11.dll（ANGLE + D3D11）</td></tr>
+<tr><td>媒体</td><td class="mono">MFPlat.DLL / MF.dll（Media Foundation）</td></tr>
+</table>
+
+<div class="evidence">
+  <div class="label">依据</div>
+  <code>weixin_dll_pe.json</code> 延迟加载目录解析结果（delay_load_imports 数组，39 项）。
+</div>
+</div>
+
+<h2>五、字符串证据（195 MB 全量提取）</h2>
+<div class="card">
+<p>对 Weixin.dll 提取 905,720 条 ASCII + 62,083 条 UTF-16LE 字符串，按 13 组关键词采样，全部命中：</p>
+
+<h3>5.1 腾讯 Mars 移动基础库（推送/长连接）</h3>
+<pre><code>mars.smc
+mars.cdn.proto.DownloadedSizes / DownloadInfo / TaskStateInfo / FlowInfo
+E:\xwechat\agent\workspace\mars_win_llvm_2\mars-private\mars\protobuf\...</code></pre>
+<p>Mars 是腾讯开源的微信跨平台网络组件（STN 长连接 + SDT 网络诊断 + CDN 下载）。构建路径 <code>E:\xwechat\agent\workspace\mars_win_llvm_2\</code> 表明该版本使用 LLVM 工具链构建的 Mars 私有分支。</p>
+
+<h3>5.2 协议与序列化</h3>
+<pre><code>protobufs\micromsg\get_db_encrypt_info.pb.cc   ← 数据库加密信息协议
+protobufs\micromsg\base_type.pb.cc
+protobufs\xweb\include\wmpf_host.pb.cc          ← 小程序 WMPF 宿主协议
+protobufs\finderlive\finderlive_message.pb.cc   ← 视频号直播消息协议</pre></code></pre>
+
+<h3>5.3 域名与端点</h3>
+<pre><code>short.pay.weixin.qq.com                    ← 支付短连接
+https://channels.weixin.qq.com/shop/mchkf/ ← 视频号小店
+https://work.weixin.qq.com/kfid/           ← 企业微信客服
+rd.wechat.com/qrcode/confirm               ← 扫码登录确认
+usshort2.wechat.com                        ← 海外长连接
+tenpay.com / wx.tenpay.com / tenpay.wechatpay.cn  ← 财付通/微信支付</code></pre>
+
+<h3>5.4 存储与加密</h3>
+<pre><code>sqlite_master / sqlite_source_id           ← SQLite 嵌入式库
+aes_key / tp_aes_key / tp_thumb_aes_key    ← AES 密钥字段（含缩略图密钥）
+AES_128_L3                                 ← AES-128 加密档位标识
+filekey %_ aes_method:%_, aeskey:%_, aes_initial_iv:%_  ← 文件加密日志格式</code></pre>
+
+<h3>5.5 UI 与渲染</h3>
+<pre><code>E:\x\x_rel_t7_1\out\qt_win_release\include\QtCore\qarraydata.h
+E:\x\x_rel_t7_1\qt_uikit\utility\skia_convenience_utility.cc
+QT_DPI_ADJUSTMENT_POLICY                   ← Qt DPI 适配环境变量
+User-Agent: MicroMessenger Client
+MicroMessenger/7.0.20.1781(0x6700143B) WindowsWechat(0x63090a13)</code></pre>
+
+<div class="evidence">
+  <div class="label">依据</div>
+  <code>weixin_dll_strings.json</code>（13 组共 376 条采样命中，含文件偏移与编码标记 A/U）；提取脚本 <code>weixin_strings_fast.ps1</code> 采用 Latin1 单字节映射 + 正则扫描，保证字节偏移可回溯。
+</div>
+</div>
+
+<h2>六、组件清单（同目录二进制）</h2>
+<div class="card">
+<table>
+<tr><th>组件</th><th>大小</th><th>类型判定</th><th>推断功能</th></tr>
+<tr><td class="mono">RadiumWMPF.bin</td><td>412.7 MB</td><td>ZIP 容器（PK 头）</td><td>小程序运行时（WeChat Mini Program Framework）</td></tr>
+<tr><td class="mono">XPlayer.bin</td><td>63.4 MB</td><td>ZIP 容器</td><td>自研播放器内核</td></tr>
+<tr><td class="mono">WeChatOcr.bin</td><td>49.5 MB</td><td>ZIP 容器</td><td>OCR 模型与引擎</td></tr>
+<tr><td class="mono">WeChatUtility.bin</td><td>26.6 MB</td><td>ZIP 容器</td><td>工具集（图片/文档处理）</td></tr>
+<tr><td class="mono">XEditor.bin</td><td>23.5 MB</td><td>ZIP 容器</td><td>富文本编辑器</td></tr>
+<tr><td class="mono">VoipEngine.dll</td><td>19.9 MB</td><td>PE DLL</td><td>音视频通话引擎</td></tr>
+<tr><td class="mono">roam_server.dll</td><td>14.2 MB</td><td>PE DLL</td><td>聊天记录漫游服务</td></tr>
+<tr><td class="mono">ilink2.dll</td><td>10.6 MB</td><td>PE DLL</td><td>IoT/硬件互联（ilink 协议）</td></tr>
+<tr><td class="mono">mmcronet.dll</td><td>7.6 MB</td><td>PE DLL</td><td>Cronet 独立网络库副本</td></tr>
+<tr><td class="mono">crashpad_handler.exe</td><td>—</td><td>PE EXE</td><td>Chromium Crashpad 崩溃上报</td></tr>
+</table>
+<div class="evidence">
+  <div class="label">依据</div>
+  目录清单（Get-ChildItem）+ 魔数检测（全部 .bin 文件起始字节为 50 4B 即 "PK"）。
+</div>
+</div>
+
+<h2>七、架构推断（基于以上证据）</h2>
+<div class="card">
+<pre><code>Weixin.exe (启动器, 3 MB, CFG 开启)
+    │  延迟加载 11 DLL → 定位并调用
+    ▼
+Weixin.dll (核心库, 195 MB, ~51 万函数)
+    ├── WeChatMain() 主入口
+    ├── mmcronet::*      ──→ Chromium Cronet 网络栈 (HTTP/2, QUIC, Brotli)
+    ├── Mars (mars.cdn.proto.*, mars.smc) ──→ 长连接推送 + CDN 下载
+    ├── Protobuf (micromsg/wmpf_host/finderlive) ──→ 业务协议序列化
+    ├── SQLite + AES-128 ──→ 本地加密存储
+    ├── Qt (.qtmetad) + Skia + ANGLE ──→ UI 渲染管线
+    ├── mmmojo ──→ 跨进程组件框架
+    └── 按需加载: VoipEngine / XPlayer / WeChatOcr / RadiumWMPF(小程序)</code></pre>
+<p><strong>与旧版差异</strong>：4.x 新架构将原 WeChat.exe 单体拆分为启动器+核心库，主程序更名 Weixin.exe，网络栈从旧自研栈切换为 Chromium Cronet，UI 层引入 Qt 元对象系统（旧版为纯 Win32/DUI），小程序运行时 RadiumWMPF 独立为 412 MB 容器。</p>
+</div>
+
+<h2>八、局限性说明</h2>
+<div class="card">
+<ul>
+  <li>REA MCP 的 Ghidra provider 因 Windows 提升令牌对象所有权问题（Win32 5）在本机被拒，故采用 Ghidra headless 直接调用——分析引擎相同，仅交互层不同。</li>
+  <li>195 MB 核心库未做全量 Ghidra 反编译（预计数小时），函数数 51 万为 .pdata 节区推算值（6 MB ÷ 12 B/RUNTIME_FUNCTION）。</li>
+  <li>字符串证据为静态采样，未结合运行时行为验证；域名列表不代表完整网络端点集合。</li>
+  <li>本报告仅基于本机安装的二进制文件（版本 4.1.15.55），不构成对腾讯任何协议的完整还原。</li>
+</ul>
+</div>
+
+<div class="footer">
+  <p>证据文件：weixin_exe_pe.json / weixin_dll_pe.json / weixin_dll_exports.json / weixin_dll_strings.json / ghidra_java_funcs.txt / ghidra_java_decomp.txt / ghidra_weixin_exe4.log</p>
+  <p>分析链：large-file-mirror-download → Ghidra 12.1.4 headless → analyzeHeadless + Java postScript → PowerShell PE/string 解析</p>
+</div>
+
+</body>
+</html>

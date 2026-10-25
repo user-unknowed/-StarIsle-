@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Harness Console · 产品需求文档（PRD）</title>
+<style>
+  :root{
+    --ink:#1f2933; --ink-sub:#5b6472; --ink-faint:#8b93a1;
+    --accent:#4D6BFE; --accent-soft:#eef1ff;
+    --line:#e4e7ec; --bg:#ffffff; --panel:#f7f8fa;
+    --ok:#0f9d6e; --warn:#c7820a; --danger:#d64545;
+    --mono:"SF Mono","Cascadia Code",Consolas,"JetBrains Mono",monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    font-family:-apple-system,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:var(--ink); background:var(--bg); font-size:15px; line-height:1.75;
+  }
+  .doc{max-width:880px;margin:0 auto;padding:56px 32px 96px}
+  header.prd-head{border-bottom:1px solid var(--line);padding-bottom:28px;margin-bottom:36px}
+  .prd-head .kicker{color:var(--accent);font-weight:600;letter-spacing:.12em;font-size:12px;text-transform:uppercase}
+  .prd-head h1{font-size:30px;line-height:1.3;margin:8px 0 6px;font-weight:700}
+  .prd-head .sub{color:var(--ink-sub);font-size:14px}
+  table.meta{width:100%;border-collapse:collapse;margin-top:20px;font-size:13.5px}
+  table.meta th,table.meta td{border:1px solid var(--line);padding:8px 12px;text-align:left;vertical-align:top}
+  table.meta th{background:var(--panel);font-weight:600;width:110px;white-space:nowrap}
+  nav.toc{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:18px 22px;margin-bottom:44px}
+  nav.toc b{display:block;margin-bottom:8px;font-size:13px;color:var(--ink-sub);letter-spacing:.06em}
+  nav.toc ol{list-style:none;columns:2;column-gap:36px;font-size:14px}
+  nav.toc li{margin:4px 0;break-inside:avoid}
+  nav.toc a{color:var(--ink);text-decoration:none;border-bottom:1px dotted var(--ink-faint)}
+  nav.toc a:hover{color:var(--accent);border-color:var(--accent)}
+  h2{font-size:21px;margin:52px 0 14px;padding-top:10px;font-weight:700;scroll-margin-top:24px}
+  h2 .no{color:var(--accent);font-family:var(--mono);font-size:17px;margin-right:10px}
+  h3{font-size:16.5px;margin:26px 0 10px;font-weight:650}
+  p{margin:10px 0}
+  ul,ol{margin:10px 0 10px 1.4em}
+  li{margin:4px 0}
+  code{font-family:var(--mono);font-size:.88em;background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 5px;word-break:break-all}
+  .lede{color:var(--ink-sub);font-size:14.5px}
+  .chain{background:var(--panel);border-left:3px solid var(--accent);border-radius:0 8px 8px 0;padding:14px 18px;margin:16px 0;font-size:14px}
+  .chain p{margin:2px 0}
+  table.req{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+  table.req th,table.req td{border:1px solid var(--line);padding:9px 12px;text-align:left;vertical-align:top}
+  table.req th{background:var(--panel);font-weight:600;white-space:nowrap}
+  table.req td:first-child{font-family:var(--mono);font-size:12.5px;white-space:nowrap}
+  .badge{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:2px 9px;letter-spacing:.04em;vertical-align:1px}
+  .b-p0{background:#e8f7f1;color:var(--ok);border:1px solid #bfe8d8}
+  .b-p1{background:#f0f2f7;color:var(--ink-sub);border:1px solid var(--line)}
+  .ev{display:inline-block;font-family:var(--mono);font-size:11px;color:#3b4db1;background:var(--accent-soft);border:1px solid #d8deff;border-radius:4px;padding:0 6px;margin:0 2px;white-space:nowrap}
+  .tbd{background:#fdf6e3;border:1px solid #f0dfae;color:#8a6d1a;border-radius:4px;padding:0 6px;font-size:12.5px;white-space:nowrap}
+  .rule{background:#fbfcfd;border:1px solid var(--line);border-radius:8px;padding:12px 16px;margin:12px 0;font-size:14px}
+  .rule b.rid{color:var(--accent);font-family:var(--mono);margin-right:8px}
+  .glossary dt{font-weight:650;margin-top:12px}
+  .glossary dd{margin-left:0;color:var(--ink-sub);font-size:14px}
+  .demo-link{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);border:1px solid #d8deff;color:#3b4db1;border-radius:6px;padding:3px 10px;font-size:12.5px;text-decoration:none;font-weight:600}
+  .demo-link:hover{background:#e2e7ff}
+  .footer-note{margin-top:64px;padding-top:20px;border-top:1px solid var(--line);color:var(--ink-faint);font-size:12.5px}
+  @media (max-width:640px){ .doc{padding:36px 18px 72px} nav.toc ol{columns:1} h1{font-size:24px} }
+  @media print{ nav.toc{display:none} h2{page-break-after:avoid} table{page-break-inside:avoid} }
+</style>
+</head>
+<body>
+<div class="doc">
+
+<header class="prd-head">
+  <div class="kicker">Product Requirements Document</div>
+  <h1>Harness Console · Agent 运行时控制台</h1>
+  <div class="sub">把「配置 — 运行 — 观察 — 治理」四类动作收进同一个界面 · 概念原型 v0.1</div>
+  <table class="meta">
+    <tr><th>版本 / 状态</th><td>v0.1 · 草案（供评审）</td><th>日期</th><td>2026-10-25</td></tr>
+    <tr><th>交付形态</th><td>纯静态高保真交互原型（mock 数据、桩 API、无真实后端），随本 PRD 同目录交付</td><th>语言</th><td>中文</td></tr>
+    <tr><th>领域事实来源</th><td colspan="3">
+      <span class="ev">桌面报告 §n</span> = 《DeepSeek Harness 桌面端逆向分析报告》（v0.1.7-rc.2）；
+      <span class="ev">网页报告 §n</span> = 《DeepSeek 网页版逆向分析报告》（chat.deepseek.com，commit fd5d6ec3）。
+      报告为静态逆向快照，本 PRD 中所有运行时实值类信息若报告未采集，均标注 <span class="tbd">Assumption, TBD</span>。
+    </td></tr>
+  </table>
+</header>
+
+<nav class="toc">
+  <b>目录</b>
+  <ol>
+    <li><a href="#s1">1. 背景与目标</a></li>
+    <li><a href="#s2">2. 用户与产品契约</a></li>
+    <li><a href="#s3">3. 范围（P0 / P1）</a></li>
+    <li><a href="#s4">4. 对象与状态模型</a></li>
+    <li><a href="#s5">5. 功能需求</a></li>
+    <li><a href="#s5-1">5.1 会话控制台（FR-1）</a></li>
+    <li><a href="#s5-2">5.2 沙箱与审批（FR-2）</a></li>
+    <li><a href="#s5-3">5.3 凭据与端点（FR-3）</a></li>
+    <li><a href="#s5-4">5.4 运行时总览（FR-4）</a></li>
+    <li><a href="#s5-5">5.5 插件运行时（FR-5）</a></li>
+    <li><a href="#s6">6. 共享规则与例外</a></li>
+    <li><a href="#s7">7. 术语表</a></li>
+    <li><a href="#s8">8. 开放问题</a></li>
+  </ol>
+</nav>
+
+<!-- ================================================================ -->
+<h2 id="s1"><span class="no">01</span>背景与目标</h2>
+
+<p class="lede">本产品不是聊天应用，而是一个 <b>Agent 运行时的控制台</b>：它面向"运行一个本地 AI Agent"这件事本身，把通常散落在命令行参数、环境变量与日志文件里的运行时状态，变成可看、可配、可治理的界面。</p>
+
+<div class="chain">
+  <p><b>证据</b> —— 两份逆向报告共同刻画了一个 AI Agent 运行时的完整形态：<span class="ev">桌面报告 §1/§5</span> Electron 外壳 + Cordis 内核加载 273 个 <code>@deepseek-ai/dsh-*</code> 插件，捆绑 Node / Python / pnpm 本地执行环境；<span class="ev">桌面报告 §6.5</span> 沙箱默认 <code>read-only</code>，写文件需切模式或批准；<span class="ev">桌面报告 §6.6</span> 凭据只存环境变量引用、不存明文值；<span class="ev">网页报告 §5.3</span> 会话是树状结构（<code>parent_message_id</code>），补全请求携带 <code>thinking_enabled</code> / <code>search_enabled</code>；<span class="ev">网页报告 §5.1</span> 模型目录由服务端下发、客户端零硬编码。</p>
+  <p><b>受影响的用户与时刻</b> —— 开发者 / 评测者在配置与观察一次 Agent 会话时，需要同时面对命令行开关、env 变量、审批弹窗与会话日志文件，状态分散且不可见。</p>
+  <p><b>产品决策</b> —— 做一个 Web 形态的运行时控制台 <b>Harness Console</b>，把运行时的"配置—运行—观察—治理"四类动作收进同一个界面，并把这个运行时的设计初衷显性化：<b>本地优先、安全默认、插件化、可观测</b>。</p>
+  <p><b>期望的可观察结果</b> —— 一名用户从打开页面开始，能在不查阅任何文档的情况下走完"创建会话 → 配置参数 → 发起运行 → 观察流式输出与工具调用 → 处理审批 → 查看会话树分支"；并且界面上随时可见三类安全表达：沙箱默认只读、凭据永不显示明文、危险模式必须二次确认。</p>
+</div>
+
+<h2 id="s2"><span class="no">02</span>用户与产品契约</h2>
+
+<table class="req">
+  <tr><th style="width:130px">要素</th><th>定义</th></tr>
+  <tr><td>主用户</td><td>AI Agent 工具的<b>开发者与评测者</b>：熟悉命令行与 JSON 配置，需要一个统一的可视化面来配置、运行、观察一个 Harness 风格的 Agent 运行时。</td></tr>
+  <tr><td>触发</td><td>打开 Harness Console（浏览器 / 离线打开原型）。</td></tr>
+  <tr><td>核心任务</td><td>完成一次受控的 Agent 会话：从创建、配置、运行，到观察输出、处理审批、回看分支。</td></tr>
+  <tr><td>完成条件</td><td>上述核心任务在界面内闭环走通，无死路；每一步的运行时状态变化都在界面上有可见反馈。</td></tr>
+  <tr><td>信任底线</td><td>三条产品红线：① 凭据<b>永不显示明文</b>（掩码 + 只展示引用名）；② 沙箱<b>默认 read-only</b>；③ <code>danger-full-access</code> 必须经过后果确认。<span class="ev">桌面报告 §8</span></td></tr>
+  <tr><td>数据边界</td><td>原型阶段全部数据为本地 mock；界面上不出现"连接真实模型/API"的行为承诺。</td></tr>
+</table>
+
+<h2 id="s3"><span class="no">03</span>范围（P0 / P1）</h2>
+
+<p><b>入口条件</b>：运行时已就绪（原型中默认已就绪，总览页可见就绪状态）。</p>
+
+<table class="req">
+  <tr><th style="width:64px">级别</th><th style="width:170px">能力</th><th>覆盖的任务</th><th style="width:200px">原型页面</th></tr>
+  <tr><td><span class="badge b-p0">P0</span></td><td>会话控制台</td><td>创建会话、配置运行参数、发起运行、观察流式输出（思考 / 工具调用 / 搜索引用）、处理会话内审批、查看会话树与分支切换</td><td><a class="demo-link" href="index.html">原型 · 会话控制台</a></td></tr>
+  <tr><td><span class="badge b-p0">P0</span></td><td>沙箱与审批</td><td>三种沙箱模式查看与切换（含危险模式二次确认）、审批队列处理、策略文本预览</td><td><a class="demo-link" href="sandbox.html">原型 · 沙箱与审批</a></td></tr>
+  <tr><td><span class="badge b-p0">P0</span></td><td>凭据与端点</td><td>凭据引用 / 记录的查看（值掩码）、解析层级、变更事件；端点清单与配额</td><td><a class="demo-link" href="credentials.html">原型 · 凭据与端点</a></td></tr>
+  <tr><td><span class="badge b-p1">P1</span></td><td>运行时总览</td><td>运行时版本徽标、插件统计、会话存储统计、遥测开关、家目录与匿名标识</td><td><a class="demo-link" href="overview.html">原型 · 运行时总览</a></td></tr>
+  <tr><td><span class="badge b-p1">P1</span></td><td>插件运行时</td><td>插件分组浏览、搜索过滤、详情查看、启停（重启生效）</td><td><a class="demo-link" href="plugins.html">原型 · 插件运行时</a></td></tr>
+</table>
+
+<p><b>明确不做</b>（省略即无分歧的部分不再罗列；以下列出仅因容易产生预期分歧）：不登录、不联网请求任何真实服务、不做多用户与权限体系、不做移动端专属布局之外的响应式投入、不做真实的 PoW 计算与遥测上报。</p>
+
+<h2 id="s4"><span class="no">04</span>对象与状态模型</h2>
+
+<h3>4.1 核心对象</h3>
+<table class="req">
+  <tr><th style="width:150px">对象</th><th>关键字段</th><th>说明与出处</th></tr>
+  <tr><td>会话 Session</td><td><code>id</code>、<code>createdAt</code>、<code>cwd</code>、<code>isSeeded</code>、<code>delegationDepth</code>、<code>version</code>(v4)</td><td>会话头部字段沿用持久化格式定义；<code>cwd</code> 是沙箱工作区根。<span class="ev">桌面报告 §6.4</span></td></tr>
+  <tr><td>消息 Message</td><td><code>id</code>、<code>parentId</code>、<code>role</code>、<code>blocks[]</code>（思考 / 正文 / 工具调用 / 引用）</td><td>以 <code>parentId</code> 构成树；"重新生成"产生新分支。<span class="ev">网页报告 §5.3</span></td></tr>
+  <tr><td>模型 Model</td><td><code>model_type</code>、<code>name</code>、<code>enabled</code>、<code>switchable</code>、<code>show_model_name_in_session</code>、<code>contextWindow</code>、<code>modalities</code>、<code>maxOutput</code></td><td>目录字段沿用服务端热控配置结构；具体取值见 §5.1。<span class="ev">网页报告 §5.1</span> <span class="ev">桌面报告 §6.1</span></td></tr>
+  <tr><td>沙箱策略 SandboxPolicy</td><td><code>mode</code> ∈ read-only / workspace-write / danger-full-access、<code>workspaceRoot</code>、<code>policyText</code></td><td><span class="ev">桌面报告 §6.5</span></td></tr>
+  <tr><td>审批请求 Approval</td><td><code>id</code>、<code>tool</code>、<code>target</code>、<code>summary</code>、<code>status</code></td><td>由工具调用触发，结果回流会话。<span class="ev">桌面报告 §6.5</span>（解析优先级）</td></tr>
+  <tr><td>凭据 Credential</td><td>Ref：环境变量名 + 解析层级；Key：<code>&lt;scope&gt;/&lt;id&gt;</code> + 掩码值</td><td>双空间：引用（Ref）与记录（Key）。<span class="ev">桌面报告 §6.6</span></td></tr>
+  <tr><td>插件 Plugin</td><td><code>package</code>、<code>group</code>、<code>enabled</code>、<code>role</code></td><td>273 个 dsh-* 插件、10 个子系统分组。<span class="ev">桌面报告 §5</span></td></tr>
+</table>
+
+<h3>4.2 关键状态机</h3>
+<p><b>会话运行状态</b>：<code>idle → running → (awaiting_approval → running) → completed | failed</code>。运行中禁止再次发送；<code>awaiting_approval</code> 时消息流顶部出现阻塞条，审批完成后自动继续。</p>
+<p><b>审批状态</b>：<code>pending → approved | rejected</code>；<code>rejected</code> 后该工具调用在消息流中以失败块呈现，可重新发起。</p>
+<p><b>沙箱模式</b>：三值互斥；解析优先级为 <b>显式批准的模式 &gt; 会话级覆盖 &gt; 部署默认（read-only）</b>；切换以 <code>sandbox/mode</code> 事件追加到会话，重启后靠回放重建。<span class="ev">桌面报告 §6.5</span></p>
+
+<!-- ================================================================ -->
+<h2 id="s5"><span class="no">05</span>功能需求</h2>
+
+<h3 id="s5-1">5.1 FR-1 · 会话控制台 <span class="badge b-p0">P0</span></h3>
+<p><b>目的</b>：在单一界面完成 Agent 会话"创建 → 配置 → 运行 → 观察 → 分支"的闭环。<b>布局</b>：左侧会话列表；中部消息流（树状）；底部输入区（composer），其上为运行参数条。</p>
+
+<table class="req">
+  <tr><th style="width:80px">ID</th><th style="width:120px">能力</th><th>触发 → 处理 → 结果</th><th style="width:150px">规则与出处</th></tr>
+  <tr><td>FR-1.1</td><td>新建会话</td><td>点击"新建会话" → 生成会话头（id、createdAt、cwd 默认 <code>~/projects/demo</code>）→ 列表置顶新增项并进入空会话态（欢迎文案 + 示例提示词）</td><td>cwd 即沙箱工作区根；<span class="ev">桌面报告 §6.4</span></td></tr>
+  <tr><td>FR-1.2</td><td>运行参数配置</td><td>composer 上方参数条：模型选择、思考开关、搜索开关、推理强度、输出详略 → 修改即生效于下一次发送，并记录一次 <code>selected_model_switch</code> 风格的切换原因</td><td>字段定义见 FR-1.3；<span class="ev">网页报告 §5.2/§5.1</span></td></tr>
+  <tr><td>FR-1.3</td><td>参数字段</td><td>模型：<code>deepseek-flash</code>（默认，1M 上下文，text+image）、<code>deepseek-v4-pro</code>（1M 上下文，text）；推理强度：off / low / high / max，默认 high；输出详略：high / low；思考、搜索开关默认关；默认最大输出 256,000 tokens（展示于参数提示）</td><td><span class="ev">桌面报告 §6.1</span></td></tr>
+  <tr><td>FR-1.4</td><td>PoW 前置</td><td>点击发送 → 先展示三步进度（获取挑战 → 本地求解 → 提交）→ 完成后才开始流式回复；失败可重试</td><td><span class="ev">网页报告 §6.1</span>；进度时长为演示值 <span class="tbd">Assumption, TBD</span></td></tr>
+  <tr><td>FR-1.5</td><td>流式回复渲染</td><td>mock 流式：思考块（仅思考开启时，可折叠，灰色斜体）→ 工具调用块（如触发）→ 正文逐字输出；消息含模型名（受 <code>show_model_name_in_session</code> 控制）</td><td><span class="ev">桌面报告 §6.1</span> <span class="ev">网页报告 §5.1</span></td></tr>
+  <tr><td>FR-1.6</td><td>工具调用块</td><td>bash / fs / web_search 三类；块内展示命令或目标路径、执行状态；<code>web_search</code> 附结果卡片（url / title / page_age）与引用摘要（cited_text），按 URL 去重</td><td><span class="ev">桌面报告 §6.2</span></td></tr>
+  <tr><td>FR-1.7</td><td>写操作与审批联动</td><td>写请求先经沙箱裁决：workspace-write 且目标在工作区根内 → 直接执行；目标在工作区外 → 进入审批队列，消息流顶部出现阻塞条（跳转沙箱页处理）；read-only → 直接拒绝并说明原因（不经审批，见 FR-2.4）；拒绝后该块显示失败并说明</td><td>解析优先级见 §4.2；<span class="ev">桌面报告 §6.5</span></td></tr>
+  <tr><td>FR-1.8</td><td>会话树与分支</td><td>对任一 assistant 消息"重新生成" → 以其父消息为新分支起点，树状视图中并排展示分支，可点击切换当前分支；非当前分支内容折叠显示</td><td><span class="ev">网页报告 §5.3</span></td></tr>
+  <tr><td>FR-1.9</td><td>会话管理</td><td>会话列表：置顶最新活动、显示消息数与当前沙箱模式徽标；支持重命名；空列表展示空状态引导</td><td>—</td></tr>
+</table>
+
+<p><b>状态与例外</b>：流式中断（mock 超时场景）时消息尾部出现"空闲超时，可重试 / 新消息后继续"的操作条（对应 300,000 ms 空闲超时规则 R1）；运行中发送按钮禁用；PoW 失败提示重试；空会话有引导，不出现空白屏。</p>
+
+<h3 id="s5-2">5.2 FR-2 · 沙箱与审批 <span class="badge b-p0">P0</span></h3>
+<p><b>目的</b>：把"安全默认"变成看得见的治理面。<b>布局</b>：三张模式卡片 + 审批队列 + 策略文本预览 + 工作区根信息。</p>
+
+<table class="req">
+  <tr><th style="width:80px">ID</th><th style="width:120px">能力</th><th>触发 → 处理 → 结果</th><th style="width:150px">规则与出处</th></tr>
+  <tr><td>FR-2.1</td><td>模式查看与切换</td><td>三张卡片呈现当前模式（高亮）与两种备选；点击切换 → 写入会话级 <code>sandbox/mode</code> 覆盖事件 → 徽标全局更新（含会话页）</td><td><span class="ev">桌面报告 §6.5</span></td></tr>
+  <tr><td>FR-2.2</td><td>危险模式确认</td><td>选择 <code>danger-full-access</code> → 弹出二次确认：后果清单（任意文件可写、无审批拦截）→ 需勾选"我理解后果"后确认；取消则回退原模式</td><td>信任底线③；<span class="ev">桌面报告 §8</span></td></tr>
+  <tr><td>FR-2.3</td><td>风险对比可视化</td><td>卡片内以三档色（安全 / 受限 / 危险）与说明文案对比三模式的文件写权限、审批行为、适用场景</td><td>—</td></tr>
+  <tr><td>FR-2.4</td><td>审批队列</td><td>列表展示 pending 请求（工具、目标路径、内容摘要、所属会话）→ 批准 / 拒绝 → 状态变更并回流到会话消息流；read-only 模式下的写请求自动拒绝并附原因</td><td><span class="ev">桌面报告 §6.5</span></td></tr>
+  <tr><td>FR-2.5</td><td>策略文本预览</td><td>展示随模式变化的 <code>sandbox:policy</code> 注入文本，标注"该文本会注入系统提示上下文"</td><td><span class="ev">桌面报告 §6.5</span></td></tr>
+</table>
+
+<p><b>状态与例外</b>：审批长时间未处理保持 pending 且在导航上计数提醒；会话运行中切换模式即时生效但对进行中的运行需重发后体现；无 pending 时队列显示空状态。</p>
+
+<h3 id="s5-3">5.3 FR-3 · 凭据与端点 <span class="badge b-p0">P0</span></h3>
+<p><b>目的</b>：凭据"只存引用、永不明文"的可见化，以及端点与配额的集中查看。<span class="ev">桌面报告 §6.6/§7</span></p>
+
+<table class="req">
+  <tr><th style="width:80px">ID</th><th style="width:120px">能力</th><th>触发 → 处理 → 结果</th><th style="width:150px">规则与出处</th></tr>
+  <tr><td>FR-3.1</td><td>凭据引用（Ref）</td><td>列表展示环境变量引用（如 <code>DEEPSEEK_API_KEY</code>、<code>DEEPSEEK_BASE_URL</code>、<code>DEEPSEEK_SEARCH_BASE_URL</code>）与其解析层级命中情况（进程环境 → 提供者存储 → .env）；空值视为未配置并给出配置引导</td><td><span class="ev">桌面报告 §6.6</span></td></tr>
+  <tr><td>FR-3.2</td><td>凭据记录（Key）</td><td>列表展示 <code>&lt;scope&gt;/&lt;id&gt;</code> 记录（如 <code>llm-pi-ai/default</code>），值恒以掩码呈现（<code>sk-****…****</code>），不提供"查看明文"操作</td><td>信任底线①；<span class="ev">桌面报告 §6.6</span></td></tr>
+  <tr><td>FR-3.3</td><td>变更事件流</td><td>按时间倒序展示 <code>credentials/reference-updated</code>、<code>credentials/record-updated</code> 事件（对象、时间、来源）</td><td><span class="ev">桌面报告 §6.6</span></td></tr>
+  <tr><td>FR-3.4</td><td>端点清单</td><td>表格展示端点 / 用途 / 认证方式：LLM 对话、联网搜索、Files API、自动更新、账户平台等</td><td><span class="ev">桌面报告 §7</span> <span class="ev">网页报告 §7</span></td></tr>
+  <tr><td>FR-3.5</td><td>Files API 配额</td><td>卡片展示：单文件上限 128 MiB、每密钥 25 GB / 10,000 文件、默认过期 7 天（3,600 ~ 2,592,000 秒可调）</td><td><span class="ev">桌面报告 §6.1</span></td></tr>
+</table>
+
+<h3 id="s5-4">5.4 FR-4 · 运行时总览 <span class="badge b-p1">P1</span></h3>
+<p><b>目的</b>：打开即知"运行时是否就绪、由什么构成、数据落在哪"。<span class="ev">桌面报告 §1/§6.4/§6.7/§6.8</span></p>
+<table class="req">
+  <tr><th style="width:80px">ID</th><th style="width:120px">能力</th><th>内容与规则</th></tr>
+  <tr><td>FR-4.1</td><td>运行时徽标</td><td>Node 24.18.1 / Python 3.12 / pnpm 11.7.0 / Cordis 4.0.4，及运行时清单规模（282 共享包 / 12,319 文件）</td></tr>
+  <tr><td>FR-4.2</td><td>会话存储统计</td><td>JSONL 事件流、支持 zstd、格式版本 v4（迁移链 v0→v4）、跨进程写锁状态、200 ms 批处理落盘</td></tr>
+  <tr><td>FR-4.3</td><td>遥测开关</td><td><code>volcengine_enabled</code> 可切换；关闭态明确表达"SDK 不加载、不产生上报"；开关状态未知时显示"启动回调缓冲中（settlement）"的表达</td></tr>
+  <tr><td>FR-4.4</td><td>家目录与匿名标识</td><td>DSH 家目录 <code>~/.dsh</code>（可被 <code>DSH_HOME</code> 覆盖）、匿名用户 ID（UUID，删除后重新生成）</td></tr>
+  <tr><td>FR-4.5</td><td>端点健康</td><td>关键端点的连通状态徽标（mock：healthy / degraded / unreachable）</td></tr>
+</table>
+
+<h3 id="s5-5">5.5 FR-5 · 插件运行时 <span class="badge b-p1">P1</span></h3>
+<p><b>目的</b>：把 273 个插件的插件化架构变成可浏览、可检索的清单。<span class="ev">桌面报告 §5</span></p>
+<table class="req">
+  <tr><th style="width:80px">ID</th><th style="width:120px">能力</th><th>内容与规则</th></tr>
+  <tr><td>FR-5.1</td><td>分组浏览</td><td>按 10 个子系统分组：LLM 接入 / Agent 循环 / 工具 / 沙箱安全 / 会话存储 / 账户认证 / Web 网络 / 桌面宿主 / 实验性 / SDK 协议；显示各组计数</td></tr>
+  <tr><td>FR-5.2</td><td>搜索与过滤</td><td>关键词即时过滤包名与职责描述；可按分组、按状态（启用 / 停用）过滤</td></tr>
+  <tr><td>FR-5.3</td><td>详情抽屉</td><td>点击插件展示：完整包名、版本、分组、一句话职责、启停状态、依赖关系概述</td></tr>
+  <tr><td>FR-5.4</td><td>启停开关</td><td>切换后提示"重启运行时后生效"；停用关键插件（如 dsh-llm、dsh-session）时给出影响警告，默认全部启用</td></tr>
+</table>
+
+<!-- ================================================================ -->
+<h2 id="s6"><span class="no">06</span>共享规则与例外</h2>
+
+<div class="rule"><b class="rid">R1</b><b>流式空闲超时</b>：流式回复空闲超过 300,000 ms 判定超时，界面给出"重试 / 继续"操作；原型的演示超时为可触发的 mock 场景。<span class="ev">桌面报告 §6.1</span></div>
+<div class="rule"><b class="rid">R2</b><b>PoW 前置</b>：任何一次补全请求前必须完成 PoW（获取挑战 → 本地求解 → 提交），失败不发送请求并允许重试。<span class="ev">网页报告 §6.1</span></div>
+<div class="rule"><b class="rid">R3</b><b>审批事件回流</b>：审批的批准 / 拒绝结果以事件形式回流到所属会话的消息流与事件记录，两处状态保持一致。<span class="ev">桌面报告 §6.5</span></div>
+<div class="rule"><b class="rid">R4</b><b>模型热控表达</b>：模型目录视为"服务端下发"；<code>enabled=false</code> 的模型在选择器中禁选并注明"已下线"，<code>switchable=false</code> 时不可切换。<span class="ev">网页报告 §5.1</span></div>
+<div class="rule"><b class="rid">R5</b><b>遥测可禁用</b>：遥测开关关闭时不产生任何上报行为；此规则在总览页可见、可操作。<span class="ev">网页报告 §6.4</span></div>
+<div class="rule"><b class="rid">R6</b><b>mock 边界</b>：所有数据来自本地 mock 与桩 API；任何页面不得出现真实网络请求。接入点以桩函数形态预留，便于后续替换。</div>
+
+<h2 id="s7"><span class="no">07</span>术语表</h2>
+<dl class="glossary">
+  <dt>Harness / 运行时</dt><dd>承载 Agent 循环的本地运行环境：插件内核 + 工具执行（Node / Python）+ 会话持久化 + 沙箱。</dd>
+  <dt>Cordis 插件</dt><dd>运行时的能力单元；本产品语境下"插件"特指 dsh-* 插件包，如 <code>dsh-llm-deepseek</code>。</dd>
+  <dt>PoW（Proof of Work）</dt><dd>补全请求前的工作量证明挑战，客户端本地求解后随请求提交。</dd>
+  <dt>会话树 / 分支</dt><dd>消息以父子关系构成树；对历史消息重新生成会创建新分支，分支间可切换。</dd>
+  <dt>思考模式 / 推理强度</dt><dd>思考开关控制是否输出思考块；推理强度（off/low/high/max）控制思考深度。</dd>
+  <dt>verbosity</dt><dd>输出详略档位（high / low），影响重新生成时的输出风格。</dd>
+  <dt>沙箱三模式</dt><dd>read-only（默认，禁写）/ workspace-write（仅工作区内可写）/ danger-full-access（不限写）。</dd>
+  <dt>CredentialRef / CredentialKey</dt><dd>凭据的两种形态：环境变量引用（只存名）、作用域记录（<code>&lt;scope&gt;/&lt;id&gt;</code>）；两者都不展示明文值。</dd>
+  <dt>DSH Home</dt><dd>运行时家目录（默认 <code>~/.dsh</code>），存放会话、缓存与本地索引。</dd>
+  <dt>JSONL / zstd</dt><dd>会话持久化格式：每行一个事件；支持 Zstandard 压缩。</dd>
+</dl>
+
+<h2 id="s8"><span class="no">08</span>开放问题</h2>
+<ul>
+  <li><span class="tbd">Assumption, TBD</span> 登录后下发的 <code>model_configs</code> 实值未采集——目录内容（enabled / switchable / 展示名）为按报告结构的推演值，以真实下发为准。<span class="ev">网页报告 §11</span></li>
+  <li><span class="tbd">Assumption, TBD</span> PoW 难度参数属运行时行为，原型进度时长为演示值。</li>
+  <li><span class="tbd">Assumption, TBD</span> 凭据记录的持久化加密实现未确认（报告未追踪到提供者实现）——界面仅表达"掩码与只存引用"，不承诺存储细节。<span class="ev">桌面报告 §10</span></li>
+  <li><span class="tbd">Assumption, TBD</span> 会话 JSONL 事件类型全集基于格式迁移插件推断，未实际生成会话核对。<span class="ev">桌面报告 §10</span></li>
+</ul>
+
+<div class="footer-note">
+  Harness Console · 概念原型 PRD v0.1 · 2026-10-25 —— 领域事实引自《DeepSeek Harness 桌面端逆向分析报告》与《DeepSeek 网页版逆向分析报告》；本产品为独立概念设计，与 DeepSeek 官方无 affiliation。
+</div>
+
+</div>
+</body>
+</html>

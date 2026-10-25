@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>插件运行时 · Harness Console</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body data-page="plugins">
+<aside class="app-nav">
+  <div class="brand">
+    <svg class="brand-logo" viewBox="0 0 32 32" fill="none" aria-hidden="true"><rect x="3" y="3" width="17" height="17" rx="4" stroke="#4D6BFE" stroke-width="2"/><rect x="12" y="12" width="17" height="17" rx="4" stroke="#4D6BFE" stroke-opacity=".45" stroke-width="2"/><circle cx="10.5" cy="10.5" r="2" fill="#4D6BFE"/></svg>
+    <div class="brand-text"><b>Harness Console</b><span>Agent 运行时控制台 · 概念原型</span></div>
+  </div>
+  <nav class="nav-items">
+    <a href="index.html" data-nav="sessions"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg><span class="lbl">会话控制台</span></a>
+    <a href="overview.html" data-nav="overview"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span class="lbl">运行时总览</span></a>
+    <a href="sandbox.html" data-nav="sandbox"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg><span class="lbl">沙箱与审批</span><span class="nav-count" id="navPending">1</span></a>
+    <a href="plugins.html" data-nav="plugins"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19.439 7.85c-.049.322.059.648.289.878l1.568 1.568c.47.47.706 1.087.706 1.704s-.235 1.233-.706 1.704l-1.611 1.611a.98.98 0 0 1-.837.276c-.47-.07-.802-.48-.968-.925a2.501 2.501 0 1 0-3.214 3.214c.446.166.855.497.925.968a.979.979 0 0 1-.276.837l-1.61 1.61a2.404 2.404 0 0 1-1.705.707 2.402 2.402 0 0 1-1.704-.706l-1.568-1.568a1.026 1.026 0 0 0-.877-.29c-.493.074-.84.504-1.02.968a2.5 2.5 0 1 1-3.237-3.237c.464-.18.894-.527.967-1.02a1.026 1.026 0 0 0-.289-.877l-1.568-1.568A2.402 2.402 0 0 1 1.998 12c0-.617.236-1.234.706-1.704L4.23 8.77c.24-.24.581-.353.917-.303.515.077.877.528 1.073 1.01a2.5 2.5 0 1 0 3.259-3.259c-.482-.196-.933-.558-1.01-1.073a1.026 1.026 0 0 1 .303-.917l1.525-1.525A2.402 2.402 0 0 1 12 1.998c.617 0 1.234.236 1.704.706l1.568 1.568c.23.23.556.338.877.29.493-.074.84-.504 1.02-.968a2.5 2.5 0 1 1 3.237 3.237c-.464.18-.894.527-.967 1.02Z"/></svg><span class="lbl">插件运行时</span></a>
+    <a href="credentials.html" data-nav="credentials"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.586 17.414A2 2 0 0 0 2 18.828V21a1 1 0 0 0 1 1h3a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h1a1 1 0 0 0 1-1v-1a1 1 0 0 1 1-1h.172a2 2 0 0 0 1.414-.586l.814-.814a6.5 6.5 0 1 0-4-4z"/><circle cx="16.5" cy="7.5" r=".5" fill="currentColor"/></svg><span class="lbl">凭据与端点</span></a>
+  </nav>
+  <div class="nav-foot">
+    <div class="runtime-chip"><span class="dot dot-ok"></span><span>运行时就绪</span></div>
+    <div class="runtime-meta">Node 24.18.1 · Python 3.12<br>pnpm 11.7.0 · Cordis 4.0.4</div>
+  </div>
+</aside>
+<main class="app-content">
+  <div class="content-inner">
+
+<div class="page-head">
+  <div class="head-row">
+    <div>
+      <h1>插件运行时</h1>
+      <div class="sub">Cordis 内核动态装配 · 273 个 dsh-* 插件 · 启停为标记位，重启后生效（全部为本地 mock）</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <div class="searchbar" style="max-width:250px">
+        <span data-icon="search" data-size="14"></span>
+        <input id="plugSearch" class="input" type="text" placeholder="搜索包名或职责…">
+      </div>
+      <select id="groupFilter" class="select" style="width:150px">
+        <option value="">全部分组</option>
+      </select>
+      <select id="statusFilter" class="select" style="width:118px">
+        <option value="">全部状态</option>
+        <option value="on">启用</option>
+        <option value="off">停用</option>
+      </select>
+    </div>
+  </div>
+</div>
+
+<div class="stat-grid" style="margin-bottom:16px">
+  <div class="stat">
+    <div class="k"><span data-icon="puzzle" data-size="13"></span>dsh-* 插件</div>
+    <div class="v" id="statPlugins">-</div>
+    <div class="d">由 Cordis <span id="statCordis"></span> 动态装配</div>
+  </div>
+  <div class="stat">
+    <div class="k"><span data-icon="folder" data-size="13"></span>子系统分组</div>
+    <div class="v" id="statGroups">-</div>
+    <div class="d">覆盖 LLM / Agent / 工具 / 沙箱 / 会话等</div>
+  </div>
+  <div class="stat">
+    <div class="k"><span data-icon="database" data-size="13"></span>共享包</div>
+    <div class="v" id="statPkgs">-</div>
+    <div class="d">~/.dsh 运行时共享依赖</div>
+  </div>
+</div>
+
+<div id="groups"></div>
+
+<div id="coreModal" class="modal-overlay" style="display:none">
+  <div class="modal">
+    <h3><span data-icon="alert-triangle" data-size="18"></span>停用核心插件</h3>
+    <p id="coreModalText"></p>
+    <ul id="coreModalEffects"></ul>
+    <div class="modal-actions">
+      <button id="coreModalCancel" class="btn btn-ghost" type="button">取消</button>
+      <button id="coreModalOk" class="btn btn-danger" type="button">确认停用</button>
+    </div>
+  </div>
+</div>
+
+<div id="plugOverlay" class="drawer-overlay" style="display:none"></div>
+<aside id="plugDrawer" class="drawer" style="display:none" aria-label="插件详情">
+  <div class="drawer-head">
+    <h3 id="plugDrawerTitle" class="mono" style="word-break:break-all;font-size:14px"></h3>
+    <button id="plugDrawerClose" class="icon-btn" type="button" aria-label="关闭"><span data-icon="x" data-size="15"></span></button>
+  </div>
+  <div class="drawer-body">
+    <dl class="kv" id="plugDrawerKv"></dl>
+  </div>
+</aside>
+
+</div>
+</main>
+<script src="mock.js"></script>
+<script src="components.js"></script>
+<script src="api.js"></script>
+<script src="nav.js"></script>
+<script>
+// 页面脚本 · 插件运行时
+(function () {
+  "use strict";
+  var DB = window.DB, HCA = window.HCA;
+  var state = { q: "", group: "", status: "" };
+  var groupsEl = document.getElementById("groups");
+
+  /* 图标占位填充（静态部分） */
+  function fillIcons(root) {
+    var els = (root || document).querySelectorAll("[data-icon]");
+    for (var i = 0; i < els.length; i++) {
+      var el = els[i];
+      el.innerHTML = HCA.svgIcon(el.getAttribute("data-icon"), parseInt(el.getAttribute("data-size") || "16", 10));
+    }
+  }
+  fillIcons(document);
+
+  /* 头部统计取自 DB.runtime */
+  document.getElementById("statPlugins").textContent = DB.runtime.pluginsTotal;
+  document.getElementById("statGroups").textContent = DB.runtime.pluginGroups;
+  document.getElementById("statPkgs").textContent = DB.runtime.sharedPkgs;
+  document.getElementById("statCordis").textContent = DB.runtime.cordis;
+
+  /* 分组下拉选项 */
+  var groupFilter = document.getElementById("groupFilter");
+  DB.pluginGroups.forEach(function (g) {
+    var o = document.createElement("option");
+    o.value = g.id;
+    o.textContent = g.name;
+    groupFilter.appendChild(o);
+  });
+
+  function findPlugin(pkg) {
+    for (var i = 0; i < DB.pluginGroups.length; i++) {
+      var g = DB.pluginGroups[i];
+      for (var j = 0; j < g.plugins.length; j++) {
+        if (g.plugins[j].pkg === pkg) return { pl: g.plugins[j], g: g };
+      }
+    }
+    return null;
+  }
+
+  /* 核心插件停用影响 · 按组通用文案 */
+  var CORE_IMPACT = {
+    llm: "LLM 接入不可用，所有补全与联网搜索请求都无法发起",
+    agent: "Agent 循环停摆，会话编排与子代理派生失效",
+    tools: "对应工具从工具集移除，相关任务无法执行",
+    sandbox: "沙箱策略解析失效，写操作裁决将回退为拒绝",
+    session: "会话事件流无法持久化，历史记录与恢复能力受影响",
+    account: "账户态与凭据服务不可用，鉴权类请求失败",
+    web: "Web 抓取与搜索接入中断，引用类能力降级",
+    desktop: "宿主运行器停摆，窗口 / IPC / 自动更新能力失效",
+    experimental: "对应实验特性在重启后不可用",
+    sdk: "协议层中断，外部客户端无法接入运行时"
+  };
+
+  /* 渲染分组列表（叠加 搜索 + 分组 + 状态 三重过滤） */
+  function renderGroups() {
+    var q = state.q.trim().toLowerCase();
+    var html = "";
+    DB.pluginGroups.forEach(function (g) {
+      if (state.group && g.id !== state.group) return;
+      var list = g.plugins.filter(function (pl) {
+        if (state.status === "on" && pl.enabled === false) return false;
+        if (state.status === "off" && pl.enabled !== false) return false;
+        if (q && pl.pkg.toLowerCase().indexOf(q) < 0 && (pl.role || "").toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      });
+      if (!list.length) return;
+      html += '<div class="card" style="margin-bottom:14px">'
+        + '<div class="card-head"><div><h3>' + HCA.esc(g.name) + '</h3><div class="hint">' + HCA.esc(g.desc) + '</div></div>'
+        + '<span class="tag tag-muted">' + HCA.esc(g.count) + ' 个 · 展示 ' + list.length + ' 个</span></div>';
+      list.forEach(function (pl) {
+        var enabled = pl.enabled !== false;
+        html += '<div class="list-row" data-pkg="' + HCA.esc(pl.pkg) + '">'
+          + '<div style="flex:1;min-width:0">'
+          + '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">'
+          + '<span class="mono" style="font-weight:700;font-size:13px">' + HCA.esc(pl.pkg) + '</span>'
+          + (pl.core ? '<span class="tag tag-info">核心</span>' : '')
+          + '</div>'
+          + '<div style="font-size:12px;color:var(--text-sub);margin-top:3px">' + HCA.esc(pl.role || "") + '</div>'
+          + '</div>'
+          + '<span class="mono" style="font-size:12px;color:var(--text-sub);flex:none">' + HCA.esc(pl.ver) + '</span>'
+          + '<span style="font-size:11.5px;color:var(--text-faint);flex:none">deps ' + HCA.esc(pl.deps) + '</span>'
+          + '<label class="switch"><input type="checkbox" data-pkg="' + HCA.esc(pl.pkg) + '"' + (enabled ? " checked" : "") + ' aria-label="启停 ' + HCA.esc(pl.pkg) + '"><span class="track"></span></label>'
+          + '</div>';
+      });
+      html += '</div>';
+    });
+    if (!html) {
+      html = '<div class="empty"><span data-icon="search" data-size="34" style="display:inline-block"></span>'
+        + '<div class="t">没有匹配的插件</div><div>调整搜索词或筛选条件后重试</div></div>';
+    }
+    groupsEl.innerHTML = html;
+    fillIcons(groupsEl);
+    /* 开关点击 stopPropagation：不触发行点击（详情抽屉） */
+    var sws = groupsEl.querySelectorAll(".switch");
+    for (var i = 0; i < sws.length; i++) {
+      sws[i].addEventListener("click", function (e) { e.stopPropagation(); });
+    }
+  }
+
+  /* 行点击 → 详情抽屉（switch 区域已在上方被 stopPropagation 拦截，此处再兜底） */
+  groupsEl.addEventListener("click", function (ev) {
+    if (ev.target.closest(".switch")) return;
+    var row = ev.target.closest(".list-row");
+    if (row) openDrawer(row.getAttribute("data-pkg"));
+  });
+
+  /* 开关 change → 启停标记位 */
+  groupsEl.addEventListener("change", function (ev) {
+    var inp = ev.target;
+    if (!inp.matches || !inp.matches('input[type="checkbox"]')) return;
+    var found = findPlugin(inp.getAttribute("data-pkg"));
+    if (!found) return;
+    var enabled = inp.checked;
+    if (!enabled && found.pl.core) {
+      inp.checked = true; /* 视觉回滚，等待确认弹窗 */
+      openCoreModal(found);
+      return;
+    }
+    HCA.api.setPluginEnabled(found.pl.pkg, enabled);
+    HCA.toast(enabled ? "已启用 · 重启后生效" : "已标记停用 · 重启运行时后生效", enabled ? "ok" : "warn");
+    renderGroups();
+  });
+
+  /* ---------- 核心插件停用确认弹窗 ---------- */
+  var coreModal = document.getElementById("coreModal");
+  var pendingCore = null;
+
+  function openCoreModal(found) {
+    pendingCore = found;
+    document.getElementById("coreModalText").textContent =
+      found.pl.pkg + " 是运行时核心依赖，停用后相关能力在重启后不可用";
+    var ul = document.getElementById("coreModalEffects");
+    ul.innerHTML = "";
+    var li1 = document.createElement("li");
+    li1.textContent = CORE_IMPACT[found.g.id] || "该子系统在重启后不可用";
+    var li2 = document.createElement("li");
+    li2.textContent = "Cordis 装配图在重启时重算，依赖此插件的其他插件将无法加载";
+    ul.appendChild(li1);
+    ul.appendChild(li2);
+    coreModal.style.display = "";
+  }
+  function closeCoreModal() {
+    coreModal.style.display = "none";
+    pendingCore = null;
+  }
+  document.getElementById("coreModalCancel").addEventListener("click", closeCoreModal);
+  document.getElementById("coreModalOk").addEventListener("click", function () {
+    if (!pendingCore) return;
+    HCA.api.setPluginEnabled(pendingCore.pl.pkg, false);
+    closeCoreModal();
+    renderGroups();
+    HCA.toast("已标记停用 · 重启运行时后生效", "warn");
+  });
+
+  /* ---------- 详情抽屉 ---------- */
+  var plugOverlay = document.getElementById("plugOverlay");
+  var plugDrawer = document.getElementById("plugDrawer");
+  var drawerKv = document.getElementById("plugDrawerKv");
+  var drawerTitle = document.getElementById("plugDrawerTitle");
+
+  function kvRow(dtText, ddContent) {
+    var dt = document.createElement("dt");
+    dt.textContent = dtText;
+    var dd = document.createElement("dd");
+    if (typeof ddContent === "string") dd.textContent = ddContent;
+    else dd.appendChild(ddContent);
+    drawerKv.appendChild(dt);
+    drawerKv.appendChild(dd);
+  }
+
+  function openDrawer(pkg) {
+    var found = findPlugin(pkg);
+    if (!found) return;
+    var pl = found.pl, g = found.g;
+    var enabled = pl.enabled !== false;
+    drawerTitle.textContent = pl.pkg;
+    drawerKv.innerHTML = "";
+    kvRow("包名", pl.pkg);
+    kvRow("版本", pl.ver);
+    kvRow("分组", g.name);
+    kvRow("职责", pl.role || "—");
+    kvRow("依赖数", String(pl.deps));
+    var tag = document.createElement("span");
+    tag.className = "tag " + (enabled ? "tag-ok" : "tag-warn");
+    tag.textContent = enabled ? "启用" : "停用";
+    kvRow("状态", tag);
+    kvRow("启停说明", "标记位，重启 Cordis 运行时后生效");
+    plugOverlay.style.display = "";
+    plugDrawer.style.display = "";
+  }
+  function closeDrawer() {
+    plugOverlay.style.display = "none";
+    plugDrawer.style.display = "none";
+  }
+  plugOverlay.addEventListener("click", closeDrawer);
+  document.getElementById("plugDrawerClose").addEventListener("click", closeDrawer);
+
+  /* ---------- 筛选事件 ---------- */
+  document.getElementById("plugSearch").addEventListener("input", function (e) {
+    state.q = e.target.value;
+    renderGroups();
+  });
+  groupFilter.addEventListener("change", function (e) {
+    state.group = e.target.value;
+    renderGroups();
+  });
+  document.getElementById("statusFilter").addEventListener("change", function (e) {
+    state.status = e.target.value;
+    renderGroups();
+  });
+
+  renderGroups();
+})();
+</script>
+</body>
+</html>

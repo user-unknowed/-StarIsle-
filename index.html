@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>树苗的轻语 · little-trees-whiss — 把想说的话，留给需要的人</title>
+  <meta name="description" content="匿名写下你想对抑郁症患者说的话，经审核后展示在留言墙上，给黑夜中的人一点光。" />
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <!-- 星空背景 -->
+  <div class="sky" aria-hidden="true">
+    <div class="stars" id="stars"></div>
+    <div class="glow glow-1"></div>
+    <div class="glow glow-2"></div>
+  </div>
+
+  <main class="container">
+    <!-- 顶部标语 -->
+    <header class="hero">
+      <p class="hero-eyebrow">匿名留言墙 · little-trees-whiss</p>
+      <h1>树苗的轻语</h1>
+      <p class="hero-sub">每一句话，都是一座照亮黑夜的灯塔。写下你想对抑郁症患者说的话，留言完全匿名，经人工审核后会展示在下方留言墙上。</p>
+    </header>
+
+    <!-- 提交表单 -->
+    <section class="form-card" aria-label="提交留言">
+      <form id="message-form">
+        <label class="field">
+          <span class="field-label">称呼（选填，默认匿名）</span>
+          <input type="text" id="nickname" maxlength="20" placeholder="匿名" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span class="field-label">想对 TA 说的话</span>
+          <textarea id="content" maxlength="200" rows="5" placeholder="比如：没关系，慢慢来，我一直都在……" required></textarea>
+          <span class="char-count"><span id="char-count">0</span> / 200</span>
+        </label>
+        <button type="submit" id="submit-btn" class="btn-primary">送出这份心意</button>
+        <p class="form-tip" id="form-tip" role="status"></p>
+      </form>
+      <div class="hotline">
+        <span class="hotline-icon">☎</span>
+        如果你或身边的人正处于困境：全国心理援助热线 <strong>12356</strong>（24 小时）· 北京心理危机干预热线 <strong>010-82951332</strong>
+      </div>
+    </section>
+
+    <!-- 留言墙 -->
+    <section class="wall-section" aria-label="留言墙">
+      <div class="wall-header">
+        <h2>留言墙</h2>
+        <span class="wall-count" id="wall-count"></span>
+      </div>
+      <div class="wall" id="wall">
+        <div class="wall-loading" id="wall-loading">正在点亮星光…</div>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <p>内容由匿名用户提交并经人工审核展示 · 本页面不收集任何个人信息</p>
+      <p><a href="/admin" class="admin-link">审核入口</a></p>
+    </footer>
+  </main>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

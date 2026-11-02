@@ -140,11 +140,7 @@ export default function App() {
         />
         <Route
           path="/student/message-wall"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <MessageWall />
-            </ProtectedRoute>
-          }
+          element={<MessageWall />}
         />
 
         {/* ========== 教师端路由（需 teacher 角色） ========== */}

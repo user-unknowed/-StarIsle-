@@ -14,6 +14,7 @@ import StudentKnowledge from './pages/student/StudentKnowledge';
 import StudentCommunity from './pages/student/StudentCommunity';
 import StudentRelax from './pages/student/StudentRelax';
 import StudentProfile from './pages/student/StudentProfile';
+import MessageWall from './pages/student/MessageWall';
 import TeacherHome from './pages/teacher/TeacherHome';
 import TeacherRelax from './pages/teacher/TeacherRelax';
 import TeacherProfile from './pages/teacher/TeacherProfile';
@@ -134,6 +135,14 @@ export default function App() {
           element={
             <ProtectedRoute requiredRole="student">
               <StudentProfile />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/student/message-wall"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <MessageWall />
             </ProtectedRoute>
           }
         />

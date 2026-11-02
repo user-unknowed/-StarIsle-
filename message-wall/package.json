@@ -1,0 +1,26 @@
+{
+  "name": "starisle-message-wall",
+  "version": "1.0.0",
+  "description": "星屿·心声墙 — 收集人们对抑郁症患者想说的话（匿名提交 + 人工审核 + 留言墙展示）",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "mongodb": "^6.8.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.156.0"
+  },
+  "allowScripts": {
+    "esbuild@0.28.2": true,
+    "workerd@1.20261023.1": true
+  }
+}

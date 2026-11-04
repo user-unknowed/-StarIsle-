@@ -299,6 +299,41 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
 .version-item .ver-date { font-size: 12px; color: var(--c-text-soft); }
 .version-item h4 { font-family: var(--font-body); font-size: 16px; font-weight: 600; margin: 0; }
 .version-item p { font-size: 13px; color: var(--c-text-muted); line-height: 1.6; margin-top: 4px; }
+.version-item.has-child { margin-bottom: 24px; }
+.version-item .ver-tag {
+  font-family: var(--font-body); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; color: var(--c-primary-deep);
+  background: rgba(107, 123, 255, 0.10);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill); padding: 1px 8px; white-space: nowrap;
+}
+.version-item.major .ver-tag {
+  color: var(--c-accent-warm);
+  background: rgba(244, 162, 97, 0.12);
+  border-color: rgba(244, 162, 97, 0.28);
+}
+.version-subtree { position: relative; margin-top: 14px; padding-left: 22px; }
+.version-subtree::before {
+  content: ''; position: absolute; left: 6px; top: -4px; bottom: 12px; width: 1px;
+  background: linear-gradient(180deg, var(--c-accent), rgba(244, 162, 97, 0.20));
+}
+.version-subtree::after {
+  content: ''; position: absolute; left: 2px; top: 20px; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--c-accent);
+  box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.14);
+}
+.version-child {
+  padding: 16px 18px; border-radius: var(--r-md);
+  background: var(--c-surface-glass); border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
+}
+.version-child h4 { font-size: 15px; }
+.version-child p { font-size: 12.5px; }
+.version-child .ver-tag {
+  text-transform: none; letter-spacing: 0.04em;
+  background: rgba(107, 123, 255, 0.10);
+  color: var(--c-primary-deep); border-color: var(--c-border-strong);
+}
 .contact { text-align: center; padding: clamp(80px, 12vw, 140px) 0 100px; position: relative; overflow: hidden; }
 .contact::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(167, 139, 250, 0.18), transparent 70%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(244, 162, 97, 0.10), transparent 70%); z-index: -1; }
 .contact-slogan { font-family: var(--font-display); font-style: italic; font-size: clamp(28px, 4vw, 44px); font-weight: 500; background: linear-gradient(135deg, var(--c-primary-deep) 0%, var(--c-secondary) 50%, var(--c-accent) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 24px 0 32px; line-height: 1.3; }
@@ -398,6 +433,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   .pipeline-flow { grid-template-columns: repeat(2, 1fr); }
   .training-metrics { grid-template-columns: 1fr; }
   .degrade-chain { flex-direction: column; gap: 8px; }
+  .version-child { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -847,7 +883,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
     <div class="section-head reveal">
       <div class="eyebrow">版本演进</div>
       <h2 class="display-lg">从 MVP 到 100% 准确率</h2>
-      <p class="lead">12 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率，v2.2 Web 端去 AI 化并新增知识库与树人互助。</p>
+      <p class="lead">12 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率；v2.1 交付心理测评小程序，v2.2 作为其子标签完成 Web 端去 AI 化并新增知识库与树人互助。</p>
     </div>
     <div class="version-timeline">
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.0 MVP</span><span class="ver-date">2026-06</span></div><h4>核心功能验证</h4><p>学生端 / 教师端基础功能上线，AI 对话与心情打卡核心闭环验证通过。</p></div>
@@ -860,8 +896,18 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.7 — v1.9</span><span class="ver-date">2026-08-09</span></div><h4>风险检测精准度优化至 100%</h4><p>三轮优化：关键词分层重构、积极词降级规则、社交孤立降级规则。准确率 80% → 100%（25/25 全部正确）。</p></div>
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.9.0</span><span class="ver-date">2026-08-10</span></div><h4>主干合并 · 版本发布</h4><p>主干分支合并，CI 全绿，CodeQL 6/6 pass，版本 tag v1.9.0 发布。</p></div>
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v2.0</span><span class="ver-date">2026-08-29</span></div><h4>小星形象增强 · GitHub Fork 三层集成</h4><p>新增 Skill Adapter 架构（BaseSkill + SkillRouter）+ Orchestrator 一键流水线（M1 Fork 发现 → M2 三层集成 → M3a MLM 预训练 → M3b SFT 全参数微调 → M4 6 维 LLM-as-Judge 评估 → M5 汇总报告）。支持 <code>--smoke</code> 无 GPU 仿真与 <code>--resume-from</code> 断点续跑。GPU 显存自动降级链（FULL → LoRA → CPU Offload → SIMULATION）。</p></div>
-      <div class="version-item reveal"><div class="ver-head"><span class="ver-num">v2.1</span><span class="ver-date">2026-09</span></div><h4>心理测评微信小程序</h4><p>罗夏/TAT 自定义图片投射测评、AI 情绪分析、教师复核、匿名科研数据导出与管理员危机干预，PII 默认匿名化。</p></div>
-      <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v2.2</span><span class="ver-date">2026-09</span></div><h4>Web 端去 AI 化重构 · 知识库与树人互助</h4><p>Web 端移除三端 AI 对话入口与页面，新增「知识库」（文章搜索 + 量表测评）与「树人互助」（求助社区），与 App 端功能对齐；三端「我的」页新增「下载星屿 App」推荐卡片。AI 对话保留在 App（Flutter）端与微信小程序。</p></div>
+      <div class="version-item major reveal has-child">
+        <div class="ver-head"><span class="ver-num">v2.1</span><span class="ver-date">2026-09</span><span class="ver-tag">上一代版本</span></div>
+        <h4>心理测评微信小程序</h4>
+        <p>罗夏/TAT 自定义图片投射测评、AI 情绪分析、教师复核、匿名科研数据导出与管理员危机干预，PII 默认匿名化。</p>
+        <div class="version-subtree">
+          <div class="version-child reveal">
+            <div class="ver-head"><span class="ver-num">v2.2</span><span class="ver-date">2026-09</span><span class="ver-tag">子标签</span></div>
+            <h4>Web 端去 AI 化重构 · 知识库与树人互助</h4>
+            <p>Web 端移除三端 AI 对话入口与页面，新增「知识库」（文章搜索 + 量表测评）与「树人互助」（求助社区），与 App 端功能对齐；三端「我的」页新增「下载星屿 App」推荐卡片。AI 对话保留在 App（Flutter）端与微信小程序。</p>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </section>

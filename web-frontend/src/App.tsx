@@ -14,6 +14,7 @@ import StudentKnowledge from './pages/student/StudentKnowledge';
 import StudentCommunity from './pages/student/StudentCommunity';
 import StudentRelax from './pages/student/StudentRelax';
 import StudentProfile from './pages/student/StudentProfile';
+import MessageWall from './pages/student/MessageWall';
 import TeacherHome from './pages/teacher/TeacherHome';
 import TeacherRelax from './pages/teacher/TeacherRelax';
 import TeacherProfile from './pages/teacher/TeacherProfile';
@@ -136,6 +137,10 @@ export default function App() {
               <StudentProfile />
             </ProtectedRoute>
           }
+        />
+        <Route
+          path="/student/message-wall"
+          element={<MessageWall />}
         />
 
         {/* ========== 教师端路由（需 teacher 角色） ========== */}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>树苗的轻语 · 审核后台</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <style>
+    body { background: linear-gradient(175deg, #23263f 0%, #38425f 100%); }
+    .admin-wrap {
+      position: relative; z-index: 1;
+      max-width: 720px; margin: 0 auto; padding: 40px 20px 60px;
+    }
+    .admin-title { color: #fff; text-align: center; font-size: 24px; letter-spacing: 2px; margin-bottom: 28px; }
+    .admin-card {
+      background: var(--card-bg); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 26px 24px;
+    }
+    .login-form { max-width: 360px; margin: 0 auto; }
+    .login-form .btn-primary { margin-top: 6px; }
+    .login-tip { text-align: center; margin-top: 12px; font-size: 14px; min-height: 20px; }
+    .login-tip.err { color: #d76a5b; }
+
+    .admin-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .tabs { display: flex; gap: 8px; }
+    .tab {
+      border: none; border-radius: 999px; padding: 7px 18px;
+      font-size: 13px; cursor: pointer; background: rgba(255,255,255,0.14);
+      color: rgba(255,255,255,0.8); transition: background 0.15s;
+    }
+    .tab.active { background: var(--card-bg); color: var(--text); font-weight: 700; }
+    .btn-logout {
+      border: none; background: transparent; color: rgba(255,255,255,0.55);
+      font-size: 13px; cursor: pointer; text-decoration: underline;
+    }
+
+    .review-item {
+      background: var(--card-bg); border-radius: 14px;
+      padding: 18px; margin-bottom: 14px;
+      box-shadow: 0 6px 18px rgba(15,18,45,0.18);
+    }
+    .review-item.flagged { border-left: 4px solid #d76a5b; }
+    .review-meta { display: flex; gap: 10px; align-items: center; font-size: 12px; color: var(--text-soft); margin-bottom: 8px; flex-wrap: wrap; }
+    .flag-badge {
+      background: #fbe6e1; color: #c2503c; border-radius: 999px;
+      padding: 2px 10px; font-weight: 700; font-size: 11px;
+    }
+    .review-content { font-size: 15px; margin-bottom: 14px; word-break: break-word; }
+    .review-actions { display: flex; gap: 10px; }
+    .btn-sm {
+      border: none; border-radius: 10px; padding: 8px 18px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: opacity 0.15s;
+    }
+    .btn-sm:hover { opacity: 0.85; }
+    .btn-approve { background: #4fae84; color: #fff; }
+    .btn-reject { background: #e9a093; color: #fff; }
+    .btn-delete { background: #d8d5e2; color: #5d5a72; margin-left: auto; }
+    .admin-empty { text-align: center; color: rgba(255,255,255,0.6); padding: 48px 0; font-size: 14px; }
+    .back-link { display: block; text-align: center; margin-top: 24px; color: rgba(255,255,255,0.45); font-size: 13px; }
+    .back-link:hover { color: rgba(255,255,255,0.8); }
+  </style>
+</head>
+<body>
+  <div class="admin-wrap">
+    <h1 class="admin-title">树苗的轻语 · 审核后台</h1>
+
+    <!-- 登录 -->
+    <div class="admin-card" id="login-panel">
+      <form class="login-form" id="login-form">
+        <label class="field">
+          <span class="field-label">管理员密码</span>
+          <input type="password" id="password" placeholder="请输入密码" autocomplete="current-password" required />
+        </label>
+        <button type="submit" class="btn-primary">登 录</button>
+        <p class="login-tip" id="login-tip"></p>
+      </form>
+    </div>
+
+    <!-- 审核列表 -->
+    <div id="admin-panel" style="display:none;">
+      <div class="admin-top">
+        <div class="tabs">
+          <button class="tab active" data-status="pending">待审核</button>
+          <button class="tab" data-status="approved">已通过</button>
+          <button class="tab" data-status="rejected">已拒绝</button>
+        </div>
+        <button class="btn-logout" id="logout-btn">退出登录</button>
+      </div>
+      <div id="review-list"></div>
+    </div>
+
+    <a class="back-link" href="/">← 返回心声墙</a>
+  </div>
+
+  <script src="/js/config.js"></script>
+  <script src="/js/admin.js"></script>
+</body>
+</html>

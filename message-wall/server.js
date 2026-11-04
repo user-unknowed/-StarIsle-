@@ -3,6 +3,7 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto');
 const path = require('path');
+const csrf = require('lusca').csrf;
 const db = require('./lib/db');
 
 const app = express();
@@ -12,12 +13,21 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 // ---------- 中间件 ----------
 app.use(express.json({ limit: '16kb' }));
 app.use(cookieParser());
+app.use((req, res, next) => {
+  if (req.path === '/api/admin/login') req.isLogin = true;
+  next();
+});
+app.use(csrf());
+app.use((req, res, next) => {
+  res.setHeader('x-csrf-token', req.csrfToken());
+  next();
+});
 
 // CORS：允许静态托管域名（GitHub Pages 等）跨域调用 API
 app.use((req, res, next) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, x-csrf-token');
   if (req.method === 'OPTIONS') return res.sendStatus(204);
   next();
 });

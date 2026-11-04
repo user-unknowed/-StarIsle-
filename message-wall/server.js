@@ -175,7 +175,7 @@ app.get('/api/admin/messages', requireAdmin, async (req, res) => {
     await db.getDb();
     const list = await db
       .messages()
-      .find({ status })
+      .find({ status: { $eq: status } })
       .sort({ createdAt: -1 })
       .limit(500)
       .toArray();

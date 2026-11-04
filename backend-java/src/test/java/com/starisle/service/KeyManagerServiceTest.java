@@ -9,6 +9,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -36,9 +37,19 @@ public class KeyManagerServiceTest {
 
     /**
      * 测试前置初始化
+     * 注入测试用主密钥并准备一个可用的活动密钥版本。
      */
     @BeforeEach
     void setUp() {
+        ReflectionTestUtils.setField(keyManagerService, "masterKey", "0123456789abcdef0123456789abcdef");
+        keyManagerService.createKey("v1", keyManagerService.generateNewKey());
+
+        lenient().when(keyRepository.findTopByKeyTypeAndIsActiveTrueOrderByCreatedAtDesc("encryption"))
+                .thenReturn(Optional.of(EncryptionKey.builder()
+                        .keyVersion("v1")
+                        .keyType("encryption")
+                        .isActive(true)
+                        .build()));
     }
 
     /**

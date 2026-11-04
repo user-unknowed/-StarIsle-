@@ -5,7 +5,7 @@
     <view>
       <view class="page-title">状态标签管理</view>
       <view class="page-subtitle">
-        标签库维护 + 学生打标追溯；所有操作均 <text class="hl">匿名编号</text> 化，保留科研数据
+        教师自定义中性备注标签 + 学生打标追溯；无内置状态等级，所有操作均 <text class="hl">匿名编号</text> 化，保留科研数据
       </view>
     </view>
   </view>
@@ -19,7 +19,7 @@
     <view class="pill {{activeTab === 'library' ? 'pill-active' : ''}}"
           bindtap="onSwitchTab" data-tab="library">
       🏷️ 标签库
-      <text class="count">{{builtinList.length + customList.length}}</text>
+      <text class="count">{{customList.length}}</text>
     </view>
     <view class="pill {{activeTab === 'records' ? 'pill-active' : ''}}"
           bindtap="onSwitchTab" data-tab="records">
@@ -34,22 +34,7 @@
     <!-- 新建自定义标签 -->
     <view class="create-card btn-hover" bindtap="onOpenCreateForm">
       <view class="cc-title">+ 新建自定义标签</view>
-      <view class="cc-desc">系统内置 5 个状态枚举 + 教师自定义补充标签（仅本人可见）</view>
-    </view>
-
-    <!-- 系统内置标签 -->
-    <view class="section-title">
-      系统内置标签
-      <text class="sub">不可修改/删除，全体教师通用</text>
-    </view>
-    <view class="tags-grid">
-      <block wx:for="{{builtinList}}" wx:key="_id" wx:for-item="t">
-        <view class="tag-chip builtin-chip"
-              style="background: {{t.color}}; border-color: {{t.color}};">
-          <text class="chip-name">{{t.name}}</text>
-          <view class="chip-builtin-badge">内置</view>
-        </view>
-      </block>
+      <view class="cc-desc">仅教师自定义的中性备注标签（仅本人可见）；系统不设内置等级，学生默认无状态等级</view>
     </view>
 
     <!-- 教师自定义标签 -->
@@ -118,7 +103,7 @@
     <!-- 打标表单（选中学生后显示） -->
     <block wx:if="{{selectedStudentId}}">
       <view class="tag-form-card">
-        <view class="tf-title">✍️ 给学生打状态标签</view>
+        <view class="tf-title">✍️ 给学生添加备注标签</view>
 
         <view class="tf-sub-title">① 选择标签（可多选）</view>
         <view class="tags-grid">
@@ -129,15 +114,13 @@
                          border-color: {{t.color}};"
                   data-tag-id="{{t._id}}" bindtap="onToggleTagPick">
               <text class="chip-name">{{t.name}}</text>
-              <text class="chip-sub" wx:if="{{t.builtIn}}">内置</text>
-              <text class="chip-sub" wx:else>自定义</text>
             </view>
           </block>
         </view>
 
         <view class="tf-sub-title">② 打标理由（≤300 字 · 必填 · 追溯用）</view>
         <textarea class="tf-textarea"
-                  placeholder="例如：近期测评情绪分持续偏低 / 班主任反映厌学倾向 / 转介心理咨询前预打标…"
+                  placeholder="例如：近期测评情绪分持续偏低 / 班主任反映厌学倾向 / 转介心理咨询前备注…"
                   value="{{tagReason}}" bindinput="onTagReasonInput"
                   maxlength="300" auto-height></textarea>
         <view class="reason-counter">
@@ -163,7 +146,7 @@
       <view wx:if="{{snapshotList.length === 0 && !loading}}" class="empty-binding">
         <text class="emoji">📝</text>
         暂无打标记录
-        {"\n"}填写上方表单后即可为学生打状态标签
+        {"\n"}填写上方表单后即可为学生添加备注标签
       </view>
       <block wx:for="{{snapshotList}}" wx:key="_id" wx:for-item="s">
         <view class="snapshot-card sc-{{s.statusClass}}">

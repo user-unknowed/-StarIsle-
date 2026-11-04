@@ -27,9 +27,9 @@ var upgrader = websocket.Upgrader{
 }
 
 // SendMessage 编排型 handler：
-// 1. 调 AI 引擎 POST /chat 获取回复 + 风险等级
+// 1. 调 AI 引擎 POST /chat 获取回复 + 危机信号
 // 2. 异步 POST Java /api/v1/chat/message 持久化对话历史
-// 3. 若 risk_level 为 red/orange，异步触发危机上报
+// 3. 若 crisis 为 true，异步触发危机上报
 func SendMessage(c *gin.Context) {
 	var req service.ChatRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -54,25 +54,26 @@ func SendMessage(c *gin.Context) {
 		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 		defer cancel()
 		err := JavaCli.Post(ctx, "/api/v1/chat/message", map[string]interface{}{
-			"user_id":      req.UserId,
-			"message":      req.Message,
-			"response":     aiResp.Response,
-			"risk_level":   aiResp.RiskLevel,
-			"emotion_tags": aiResp.EmotionTags,
+			"user_id":           req.UserId,
+			"message":           req.Message,
+			"response":          aiResp.Response,
+			"crisis":            aiResp.Crisis,
+			"need_intervention": aiResp.NeedIntervention,
+			"emotion_tags":      aiResp.EmotionTags,
 		})
 		if err != nil {
 			log.Printf("[SendMessage] 持久化失败 user=%s: %v", req.UserId, err)
 		}
 	}()
 
-	// 3. 风险联动：高危时触发危机上报
-	if aiResp.RiskLevel == "red" || aiResp.RiskLevel == "orange" {
+	// 3. 风险联动：危机信号触发危机上报
+	if aiResp.Crisis {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			err := JavaCli.Post(ctx, "/api/v1/crisis/report", map[string]interface{}{
 				"user_id":      req.UserId,
-				"risk_level":   aiResp.RiskLevel,
+				"crisis":       true,
 				"trigger_type": "semantic",
 			})
 			if err != nil {
@@ -82,14 +83,15 @@ func SendMessage(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":        "消息发送成功",
-		"user_id":         req.UserId,
-		"response":        aiResp.Response,
-		"risk_level":      aiResp.RiskLevel,
-		"emotion_tags":    aiResp.EmotionTags,
-		"response_time":   aiResp.ResponseTimeMs,
-		"rag_enhanced":    aiResp.RagEnhanced,
-		"knowledge_mode":  aiResp.KnowledgeMode,
+		"message":           "消息发送成功",
+		"user_id":           req.UserId,
+		"response":          aiResp.Response,
+		"crisis":            aiResp.Crisis,
+		"need_intervention": aiResp.NeedIntervention,
+		"emotion_tags":      aiResp.EmotionTags,
+		"response_time":     aiResp.ResponseTimeMs,
+		"rag_enhanced":      aiResp.RagEnhanced,
+		"knowledge_mode":    aiResp.KnowledgeMode,
 	})
 }
 
@@ -162,22 +164,23 @@ func HandleWebSocket(c *gin.Context) {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			_ = JavaCli.Post(ctx, "/api/v1/chat/message", map[string]interface{}{
-				"user_id":      userId,
-				"message":      string(message),
-				"response":     aiResp.Response,
-				"risk_level":   aiResp.RiskLevel,
-				"emotion_tags": aiResp.EmotionTags,
+				"user_id":           userId,
+				"message":           string(message),
+				"response":          aiResp.Response,
+				"crisis":            aiResp.Crisis,
+				"need_intervention": aiResp.NeedIntervention,
+				"emotion_tags":      aiResp.EmotionTags,
 			})
 		}()
 
 		// 风险联动
-		if aiResp.RiskLevel == "red" || aiResp.RiskLevel == "orange" {
+		if aiResp.Crisis {
 			go func() {
 				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 				defer cancel()
 				_ = JavaCli.Post(ctx, "/api/v1/crisis/report", map[string]interface{}{
 					"user_id":      userId,
-					"risk_level":   aiResp.RiskLevel,
+					"crisis":       true,
 					"trigger_type": "semantic",
 				})
 			}()

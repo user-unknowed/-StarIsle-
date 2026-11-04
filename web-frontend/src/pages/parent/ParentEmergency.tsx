@@ -1,6 +1,6 @@
 /**
  * @file ParentEmergency.tsx
- * @description 家长端应急中心：展示紧急告警（含红色告警弹窗与二次确认）、按类型筛选应急资源、提供热线/医院导航
+ * @description 家长端应急中心：展示紧急告警（含告警弹窗与二次确认）、按类型筛选应急资源、提供热线/医院导航
  * @module web-frontend/pages/parent
  */
 import { useEffect, useState } from 'react';
@@ -25,60 +25,6 @@ const resourceTypeMeta: Record<string, { label: string; icon: typeof Phone; colo
   hotline: { label: '心理热线', icon: Phone, color: 'bg-red-100 text-red-600' },
   hospital: { label: '医疗机构', icon: Hospital, color: 'bg-orange-100 text-orange-600' },
   community: { label: '社区支持', icon: UsersIcon, color: 'bg-amber-100 text-amber-600' },
-};
-
-/**
- * 根据告警等级返回对应 Tailwind 配色（边框 + 背景）
- * @param level - 告警等级
- * @returns Tailwind 类名字符串
- */
-const getAlertColor = (level: string) => {
-  switch (level) {
-    case 'red':
-      return 'border-red-300 bg-red-50';
-    case 'orange':
-      return 'border-orange-300 bg-orange-50';
-    case 'yellow':
-      return 'border-yellow-300 bg-yellow-50';
-    default:
-      return 'border-green-300 bg-green-50';
-  }
-};
-
-/**
- * 根据告警等级返回徽章配色
- * @param level - 告警等级
- * @returns Tailwind 类名字符串
- */
-const getAlertBadge = (level: string) => {
-  switch (level) {
-    case 'red':
-      return 'bg-red-500 text-white';
-    case 'orange':
-      return 'bg-orange-500 text-white';
-    case 'yellow':
-      return 'bg-yellow-500 text-white';
-    default:
-      return 'bg-green-500 text-white';
-  }
-};
-
-/**
- * 根据告警等级返回中文标签
- * @param level - 告警等级
- * @returns 高风险/中风险/低风险/正常
- */
-const getAlertLabel = (level: string) => {
-  switch (level) {
-    case 'red':
-      return '高风险';
-    case 'orange':
-      return '中风险';
-    case 'yellow':
-      return '低风险';
-    default:
-      return '正常';
-  }
 };
 
 // 资源筛选类型：全部/热线/医院/社区
@@ -106,8 +52,8 @@ export default function ParentEmergency() {
   const [filter, setFilter] = useState<FilterType>('all');
   // 当前等待二次确认的告警 ID
   const [confirmingAlertId, setConfirmingAlertId] = useState<string | null>(null);
-  // 红色告警弹窗是否被用户「稍后处理」
-  const [redAlertDismissed, setRedAlertDismissed] = useState(false);
+  // 告警弹窗是否被用户「稍后处理」
+  const [alertDismissed, setAlertDismissed] = useState(false);
 
   // 进入页面拉取告警与资源列表
   useEffect(() => {
@@ -145,29 +91,29 @@ export default function ParentEmergency() {
   // 拆分告警为「待处理」与「已确认」两组
   const activeAlerts = emergencyAlerts.filter((a) => !a.confirmed);
   const confirmedAlerts = emergencyAlerts.filter((a) => a.confirmed);
-  // 是否存在未确认的红色告警（决定弹窗是否展示）
-  const hasUnconfirmedRed = activeAlerts.some(a => a.level === 'red');
+  // 是否存在未确认的紧急告警（决定弹窗是否展示）
+  const hasUnconfirmedAlert = activeAlerts.length > 0;
 
-  // 当无未确认红色告警时重置「稍后处理」状态，以便后续新告警可再次弹出
+  // 当无未确认告警时重置「稍后处理」状态，以便后续新告警可再次弹出
   useEffect(() => {
-    if (!hasUnconfirmedRed) {
-      setRedAlertDismissed(false);
+    if (!hasUnconfirmedAlert) {
+      setAlertDismissed(false);
     }
-  }, [hasUnconfirmedRed]);
+  }, [hasUnconfirmedAlert]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 via-white to-amber-50">
       <Modal
-        isOpen={hasUnconfirmedRed && !redAlertDismissed}
-        onClose={() => setRedAlertDismissed(true)}
+        isOpen={hasUnconfirmedAlert && !alertDismissed}
+        onClose={() => setAlertDismissed(true)}
         title="紧急告警"
         size="lg"
       >
         <div className="flex items-center gap-3 mb-4 text-red-600">
           <AlertTriangle className="w-8 h-8 flex-shrink-0" />
-          <p className="text-sm">检测到高风险信号，请立即确认处理</p>
+          <p className="text-sm">检测到紧急信号，请立即确认处理</p>
         </div>
-        {activeAlerts.filter(a => a.level === 'red').map(alert => (
+        {activeAlerts.map(alert => (
           <div key={alert.alertId} className="mb-4">
             <p className="text-gray-700 text-sm mb-3">{alert.reason}</p>
             <div className="bg-red-50 rounded-xl p-4 mb-4">
@@ -189,7 +135,7 @@ export default function ParentEmergency() {
             </div>
             <div className="flex gap-2">
               <button
-                onClick={() => setRedAlertDismissed(true)}
+                onClick={() => setAlertDismissed(true)}
                 className="flex-1 py-2.5 rounded-xl text-sm font-medium transition-colors bg-gray-100 text-gray-600 hover:bg-gray-200"
               >
                 稍后处理
@@ -258,13 +204,13 @@ export default function ParentEmergency() {
               {activeAlerts.map((alert) => (
                 <div
                   key={alert.alertId}
-                  className={`rounded-2xl p-5 shadow-lg border-2 ${getAlertColor(alert.level)}`}
+                  className="rounded-2xl p-5 shadow-lg border-2 border-red-300 bg-red-50"
                 >
                   <div className="flex items-start justify-between gap-3 flex-wrap">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getAlertBadge(alert.level)}`}>
-                          {getAlertLabel(alert.level)}
+                        <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-red-500 text-white">
+                          待确认
                         </span>
                         <span className="inline-flex items-center gap-1 text-xs text-gray-500">
                           <Clock className="w-3 h-3" />
@@ -273,16 +219,14 @@ export default function ParentEmergency() {
                       </div>
                       <p className="text-gray-700 text-sm">{alert.reason}</p>
                       <p className="text-xs text-gray-400 mt-1">孩子ID：{alert.studentId}</p>
-                      {alert.level === 'red' || alert.level === 'orange' ? (
-                        <div className="mt-3 p-3 bg-white/60 rounded-xl">
-                          <p className="text-xs font-medium text-gray-600 mb-1">建议行动：</p>
-                          <ul className="text-xs text-gray-500 space-y-0.5">
-                            {alert.level === 'red' && <li>确保孩子安全，拨打 12355 危机热线</li>}
-                            <li>联系学校心理老师或班主任</li>
-                            <li>关注孩子情绪变化，72小时内跟进</li>
-                          </ul>
-                        </div>
-                      ) : null}
+                      <div className="mt-3 p-3 bg-white/60 rounded-xl">
+                        <p className="text-xs font-medium text-gray-600 mb-1">建议行动：</p>
+                        <ul className="text-xs text-gray-500 space-y-0.5">
+                          <li>确保孩子安全，必要时拨打 12355 危机热线</li>
+                          <li>联系学校心理老师或班主任</li>
+                          <li>关注孩子情绪变化，72小时内跟进</li>
+                        </ul>
+                      </div>
                     </div>
                     <Button
                       size="sm"
@@ -304,9 +248,6 @@ export default function ParentEmergency() {
                   className="rounded-2xl p-5 shadow-sm border border-gray-200 bg-gray-50 opacity-75"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-gray-300 text-gray-600">
-                      {getAlertLabel(alert.level)}
-                    </span>
                     <span className="inline-flex items-center gap-1 text-xs text-green-600">
                       <CheckCircle className="w-3 h-3" />
                       已确认

@@ -75,7 +75,7 @@ public class AssessmentController {
      *
      * @HTTP GET /api/v1/assessment/result/{id}
      * @param id 结果 ID
-     * @return 测评结果，包括风险等级、建议与推荐
+     * @return 测评结果，包括得分、建议与推荐
      */
     @GetMapping("/result/{id}")
     public ResponseEntity<Map<String, Object>> getAssessmentResult(@PathVariable String id) {
@@ -83,7 +83,6 @@ public class AssessmentController {
         return ResponseEntity.ok(Map.of(
             "result_id", id,
             "total_score", 5,
-            "risk_level", "green",
             "description", "你最近的心情好像还不错呢！继续保持～",
             "suggestions", List.of(
                 "继续每天的心情打卡，观察情绪变化",

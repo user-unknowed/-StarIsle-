@@ -101,7 +101,7 @@ public class ParentService {
 
     /**
      * 绑定学生
-     * 校验家长与学生的绑定关系不存在后创建绑定记录，初始未授权、心情默认 3、风险等级绿色。
+     * 校验家长与学生的绑定关系不存在后创建绑定记录，初始未授权、心情默认 3。
      *
      * @param parentId         家长标识
      * @param studentId        学生标识
@@ -123,7 +123,6 @@ public class ParentService {
                 .bindType(bindType)
                 .authorized(false)
                 .latestMood(3)
-                .riskLevel("green")
                 .build());
     }
 
@@ -183,19 +182,17 @@ public class ParentService {
 
     /**
      * 更新心情状态
-     * 根据学生标识更新绑定的最新心情、风险等级与打卡日期。
+     * 根据学生标识更新绑定的最新心情与打卡日期。
      *
      * @param studentId   学生标识
      * @param moodLevel   心情等级
-     * @param riskLevel   风险等级
      * @param checkinDate 打卡日期
      */
     @Transactional
-    public void updateMoodStatus(String studentId, Integer moodLevel, String riskLevel, String checkinDate) {
+    public void updateMoodStatus(String studentId, Integer moodLevel, String checkinDate) {
         bindingRepository.findByStudentId(studentId)
                 .ifPresent(binding -> {
                     binding.setLatestMood(moodLevel);
-                    binding.setRiskLevel(riskLevel);
                     binding.setLastCheckinDate(checkinDate);
                     bindingRepository.save(binding);
                 });
@@ -203,21 +200,19 @@ public class ParentService {
 
     /**
      * 创建紧急预警
-     * 根据学生与家长标识、风险等级、触发来源与描述创建预警记录，初始状态为待处理。
+     * 根据学生与家长标识、触发来源与描述创建预警记录，初始状态为待处理。
      *
      * @param studentId    学生标识
      * @param parentId     家长标识
-     * @param riskLevel    风险等级
      * @param triggerSource 触发来源
      * @param description  预警描述
      * @return 创建的预警记录
      */
     @Transactional
-    public EmergencyAlert createAlert(String studentId, String parentId, String riskLevel, String triggerSource, String description) {
+    public EmergencyAlert createAlert(String studentId, String parentId, String triggerSource, String description) {
         return alertRepository.save(EmergencyAlert.builder()
                 .studentId(studentId)
                 .parentId(parentId)
-                .riskLevel(riskLevel)
                 .triggerSource(triggerSource)
                 .description(description)
                 .status("pending")

@@ -81,12 +81,11 @@ const mockChildMood: MoodRecord[] = [
   { id: 'cm7', userId: 'student1', moodLevel: 2, tags: ['睡眠'], checkinDate: '2026-07-14', createdAt: '2026-07-14T08:00:00Z' },
 ];
 
-// Mock 紧急告警（橙色级别，未确认）
-const mockAlerts: EmergencyAlert[] = [
+// Mock 紧急告警（未确认）
+export const mockAlerts: EmergencyAlert[] = [
   {
     alertId: 'alert_1',
     studentId: 'student1',
-    level: 'orange',
     reason: '连续 3 天心情低落，检测到「压力」「焦虑」等关键词',
     createdAt: '2026-07-14T10:00:00Z',
     confirmed: false,
@@ -360,7 +359,7 @@ export const useParentStore = create<ParentState>((set, get) => ({
         isLoading: false,
         isUsingMockData: false,
       });
-      // 检查红色告警是否超过 2 小时未确认
+      // 检查未确认告警是否超过 2 小时未确认
       get().checkAlertTimeout();
     } catch (error) {
       if (isDegradable(error)) {
@@ -406,15 +405,15 @@ export const useParentStore = create<ParentState>((set, get) => ({
   },
 
   /**
-   * 检查告警超时升级：红色告警超过 2 小时未确认则追加超时升级提示
+   * 检查告警超时升级：所有未确认告警超过 2 小时未确认则追加超时升级提示
    */
   checkAlertTimeout: () => {
     const alerts = get().emergencyAlerts;
     const now = Date.now();
     const TWO_HOURS = 2 * 60 * 60 * 1000;
     const updated = alerts.map(a => {
-      // 仅对红色未确认告警做超时升级
-      if (a.level === 'red' && !a.confirmed) {
+      // 对所有未确认告警做统一的超时升级
+      if (!a.confirmed) {
         const created = new Date(a.createdAt).getTime();
         if (now - created > TWO_HOURS) {
           return { ...a, reason: a.reason + ' [已超时升级：请心理组长介入]' };

@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * 测评结果实体
- * 对应 {@code assessment_results} 表，存储学生提交心理测评后的得分、风险等级与答案明细。
+ * 对应 {@code assessment_results} 表，存储学生提交心理测评后的得分与答案明细。
  */
 @Entity
 @Table(name = "assessment_results")
@@ -36,10 +36,6 @@ public class AssessmentResult {
     // 总得分
     @Column(name = "total_score", nullable = false)
     private Integer totalScore;
-
-    // 风险等级
-    @Column(name = "risk_level", nullable = false)
-    private String riskLevel;
 
     // 测评结果描述
     @Column(columnDefinition = "TEXT")

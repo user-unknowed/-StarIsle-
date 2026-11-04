@@ -62,8 +62,6 @@ export default function StudentProfile() {
     id?: string;
     total_score?: number;
     score?: number;
-    risk_level?: string;
-    level?: string;
     description?: string;
     suggestion?: string;
     suggestions?: string[];
@@ -154,13 +152,11 @@ export default function StudentProfile() {
         throw new Error('未返回结果ID');
       }
     } catch {
-      // 降级到 mock 结果：根据总分映射风险等级
+      // 降级到 mock 结果：根据总分生成示例结果
       setAssessmentSource('mock');
       const total = answers.reduce((a, b) => a + b, 0);
-      const level = total <= 2 ? 'green' : total <= 4 ? 'yellow' : total <= 6 ? 'orange' : 'red';
       setAssessmentResult({
         total_score: total,
-        risk_level: level,
         description: '（示例结果）根据你的作答，小星为你生成了初步评估。',
         suggestions: ['继续每天的心情打卡', '试试呼吸练习保持放松', '和小星聊聊最近的感受'],
       });
@@ -460,24 +456,10 @@ export default function StudentProfile() {
             {!assessmentLoading && assessmentResult && (
               <div className="space-y-4">
                 <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 rounded-2xl">
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-500">测评得分</span>
                     <span className="text-2xl font-bold text-purple-600">
                       {assessmentResult.total_score ?? assessmentResult.score ?? 0}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">风险等级</span>
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                      (assessmentResult.risk_level || assessmentResult.level) === 'green' ? 'bg-green-100 text-green-600' :
-                      (assessmentResult.risk_level || assessmentResult.level) === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
-                      (assessmentResult.risk_level || assessmentResult.level) === 'red' ? 'bg-red-100 text-red-600' :
-                      'bg-orange-100 text-orange-600'
-                    }`}>
-                      {(assessmentResult.risk_level || assessmentResult.level || 'green') === 'green' ? '正常' :
-                      (assessmentResult.risk_level || assessmentResult.level) === 'yellow' ? '低风险' :
-                      (assessmentResult.risk_level || assessmentResult.level) === 'red' ? '高风险' :
-                      '中风险'}
                     </span>
                   </div>
                 </div>

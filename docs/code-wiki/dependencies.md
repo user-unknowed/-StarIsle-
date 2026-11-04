@@ -179,16 +179,16 @@ sequenceDiagram
     Client->>BJ: POST /api/v1/chat/message
     BJ->>BJ: 权限校验（只能发自己的消息）
     BJ->>AI: POST /chat (message + context)
-    AI->>AI: L1 关键词风险检测
+    AI->>AI: L1 关键词危机检测
     AI->>AI: L2 语义情绪分析
     AI->>AI: 调用 DeepSeek API 生成回复
-    AI-->>BJ: response + risk_level + emotion_tags
+    AI-->>BJ: response + crisis + emotion_tags
     BJ->>PG: 保存聊天记录（加密存储）
     BJ->>MG: 保存对话上下文
-    alt risk_level == "red"
+    alt crisis == true
         BJ->>PG: 创建 EmergencyAlert
     end
-    BJ-->>Client: AI 回复 + 风险等级
+    BJ-->>Client: AI 回复 + 二值危机信号
 ```
 
 ## 构建与部署依赖

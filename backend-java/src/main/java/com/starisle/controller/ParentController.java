@@ -314,7 +314,6 @@ public class ParentController {
                 .authorized(binding.getAuthorized())
                 .authorizedAt(binding.getAuthorizedAt())
                 .latestMood(binding.getLatestMood())
-                .riskLevel(binding.getRiskLevel())
                 .lastCheckinDate(binding.getLastCheckinDate())
                 .createdAt(binding.getCreatedAt())
                 .build();
@@ -331,7 +330,6 @@ public class ParentController {
                 .id(alert.getId())
                 .studentId(alert.getStudentId())
                 .parentId(alert.getParentId())
-                .riskLevel(alert.getRiskLevel())
                 .status(alert.getStatus())
                 .triggerSource(alert.getTriggerSource())
                 .description(alert.getDescription())

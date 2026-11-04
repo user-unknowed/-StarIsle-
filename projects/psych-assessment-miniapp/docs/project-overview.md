@@ -34,7 +34,7 @@ g:\mental health\                  根目录（小程序项目根，可直接导
 │  │  ├─ student-history          学生历史反馈 10 条/页 + 情绪分条（5 维）+ 匿名卡片 0 真名
 │  │  ├─ binding-manage           特殊学生绑定 CRUD / 解绑触发 绑定审计 CSV 自动生成（runBindingArchive）
 │  │  ├─ ai-review                AI 审核列表（PENDING/APPROVED/ADJUSTED/REJECTED）+ 滑杆调整 + confirm 三字段（仅前端 UI 防误操作）
-│  │  └─ status-tag               标签库 CRUD（system 6 色只读 + 自定标签 ownerOpenid 过滤）/ 学生打标三道 scope
+│  │  └─ status-tag               标签库：无内置状态等级，仅教师自定义中性备注标签（ownerOpenid 隔离）/ 学生打标三道 scope
 │  │
 │  └─ admin\  (4 页)              超级管理员（方案 B）Admin 4 Tab（方案 B 独立席位 权限最大）
 │     ├─ ops-overview             全局 KPI 全校 4 卡片 + 7 日预警条形图 + TOP20 预警详情弹层（0 PII）
@@ -159,7 +159,7 @@ img-library 图库
  └─ 选中后 可「创建任务（含图）」→ 跳转 taskOperate.create + 指定图 ID
 
 status-tag 标签库
- └─ 创建标签 / 编辑 / 删除（system 标签只读）
+ └─ 无内置状态等级：仅教师自定义中性备注标签 创建 / 编辑 / 删除（仅本人可见）
  └─ 打标：去 student-history → 选学生 → 打标（三道 scope 检查）
 
 student-history 学生历史

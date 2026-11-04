@@ -1,5 +1,5 @@
 /// @file students_screen.dart
-/// @description 教师端学生页面，提供学生列表、学生详情（情绪趋势、风险时间线、上报记录、咨询历史）、
+/// @description 教师端学生页面，提供学生列表、学生详情（情绪趋势、上报记录、咨询历史）、
 ///              上报记录列表与症状反馈表单，按教师角色区分可见内容与操作。
 /// @module teacher-app/screens/students
 
@@ -97,7 +97,7 @@ class StudentListView extends ConsumerWidget {
     );
   }
 
-  /// 构建单个学生卡片，展示头像、姓名、风险等级、班级与最近状态。
+  /// 构建单个学生卡片，展示头像、姓名、二值状态、班级与最近状态。
   ///
   /// 参数：
   /// - [context]：构建上下文；
@@ -120,13 +120,13 @@ class StudentListView extends ConsumerWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: student.riskLevel.color.withOpacity(0.1),
+                  color: TeacherTheme.starNightBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(24),
                 ),
                 child: Center(
                   child: Text(
                     student.name.substring(0, 1),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: student.riskLevel.color),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: TeacherTheme.starNightBlue),
                   ),
                 ),
               ),
@@ -145,12 +145,16 @@ class StudentListView extends ConsumerWidget {
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: student.riskLevel.color.withOpacity(0.15),
+                            color: (student.hasAlert ? TeacherTheme.errorColor : Colors.grey).withValues(alpha: 0.15),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            student.riskLevel.label,
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: student.riskLevel.color),
+                            student.hasAlert ? '预警' : '平稳',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w500,
+                              color: student.hasAlert ? TeacherTheme.errorColor : Colors.grey,
+                            ),
                           ),
                         ),
                       ],
@@ -175,7 +179,7 @@ class StudentListView extends ConsumerWidget {
                   student.moodTrend != 0
                       ? Icon(
                           student.moodTrend > 0 ? Icons.trending_up : Icons.trending_down,
-                          color: student.moodTrend > 0 ? TeacherTheme.riskGreen : TeacherTheme.riskRed,
+                          color: student.moodTrend > 0 ? TeacherTheme.successColor : TeacherTheme.errorColor,
                           size: 18,
                         )
                       : const SizedBox(width: 24),
@@ -216,8 +220,6 @@ class StudentDetailScreen extends ConsumerWidget {
             const SizedBox(height: 20),
             if (teacherRole == TeacherRole.counselor) _buildEmotionalTrend(context),
             const SizedBox(height: 20),
-            _buildRiskTimeline(context),
-            const SizedBox(height: 20),
             if (teacherRole != TeacherRole.counselor) _buildMyReports(context, reports),
             if (teacherRole == TeacherRole.counselor) _buildConsultHistory(context),
           ],
@@ -238,7 +240,7 @@ class StudentDetailScreen extends ConsumerWidget {
   Widget _buildHeader(BuildContext context, Student student) {
     return Container(
       decoration: BoxDecoration(
-        color: student.riskLevel.color.withOpacity(0.1),
+        color: TeacherTheme.starNightBlue.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       padding: const EdgeInsets.all(20),
@@ -248,7 +250,7 @@ class StudentDetailScreen extends ConsumerWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: student.riskLevel.color,
+              color: TeacherTheme.starNightBlue,
               borderRadius: BorderRadius.circular(35),
             ),
             child: Center(
@@ -273,22 +275,16 @@ class StudentDetailScreen extends ConsumerWidget {
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 const SizedBox(height: 8),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: student.riskLevel.color,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        student.riskLevel.label,
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text('风险等级', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  ],
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: student.hasAlert ? TeacherTheme.errorColor : Colors.grey,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    student.hasAlert ? '预警' : '平稳',
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: Colors.white),
+                  ),
                 ),
               ],
             ),
@@ -343,73 +339,6 @@ class StudentDetailScreen extends ConsumerWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildRiskTimeline(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('风险等级时间线', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
-            const SizedBox(height: 12),
-            Column(
-              children: [
-                _buildTimelineItem(RiskLevel.green, '两周前', '状态平稳'),
-                _buildTimelineItem(RiskLevel.yellow, '一周前', '开始出现情绪波动'),
-                _buildTimelineItem(RiskLevel.orange, '3天前', '连续多天心情低落'),
-                _buildTimelineItem(RiskLevel.red, '1天前', '检测到自伤倾向', isCurrent: true),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// 构建单个时间线条目。
-  ///
-  /// 参数：
-  /// - [level]：该时间点的风险等级；
-  /// - [time]：时间描述；
-  /// - [description]：状态描述；
-  /// - [isCurrent]：是否为当前状态，用于高亮。
-  Widget _buildTimelineItem(RiskLevel level, String time, String description, {bool isCurrent = false}) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: level.color,
-              borderRadius: BorderRadius.circular(10),
-              border: isCurrent ? Border.all(color: Colors.white, width: 3) : null,
-              boxShadow: isCurrent ? [BoxShadow(color: level.color, blurRadius: 8)] : null,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Container(
-            width: 2,
-            height: 40,
-            color: Colors.grey[200],
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(time, style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                const SizedBox(height: 4),
-                Text(description, style: const TextStyle(fontSize: 14)),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
@@ -492,7 +421,7 @@ class StudentDetailScreen extends ConsumerWidget {
               children: [
                 _buildConsultItem('2026-06-28', '初步面谈', '了解基本情况，建立信任关系'),
                 _buildConsultItem('2026-06-25', '介入干预', '引导情绪表达，提供支持'),
-                _buildConsultItem('2026-06-22', '首次接触', '电话沟通，评估风险'),
+                _buildConsultItem('2026-06-22', '首次接触', '电话沟通，评估状态'),
               ],
             ),
           ],
@@ -520,10 +449,10 @@ class StudentDetailScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: TeacherTheme.starNightBlueLight.withOpacity(0.1),
+                  color: TeacherTheme.starNightBlueLight.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
-                child: Text(type, style: TextStyle(fontSize: 10, color: TeacherTheme.starNightBlueLight)),
+                child: Text(type, style: const TextStyle(fontSize: 10, color: TeacherTheme.starNightBlueLight)),
               ),
             ],
           ),
@@ -608,17 +537,18 @@ class ReportRecordsView extends ConsumerWidget {
                 const SizedBox(width: 8),
                 Text(report.className, style: const TextStyle(fontSize: 12, color: Colors.grey)),
                 const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                  decoration: BoxDecoration(
-                    color: report.riskLevel.color.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(4),
+                if (report.needsFollowUp)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: TeacherTheme.warningColor.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      '需跟进',
+                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: TeacherTheme.warningColor),
+                    ),
                   ),
-                  child: Text(
-                    report.riskLevel.label,
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: report.riskLevel.color),
-                  ),
-                ),
               ],
             ),
             const SizedBox(height: 8),
@@ -666,7 +596,7 @@ class ReportRecordsView extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: TeacherTheme.riskGreen.withOpacity(0.1),
+                  color: TeacherTheme.successColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -702,7 +632,7 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
   List<SymptomType> _selectedSymptoms = [];
   List<EmotionalExpression> _selectedEmotions = [];
   DurationType? _selectedDuration;
-  SeverityLevel? _selectedSeverity;
+  bool _needsFollowUp = false;
   String _description = '';
   bool _hasCommunicated = false;
   bool _hasContactedParent = false;
@@ -730,13 +660,6 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     (DurationType.oneToTwoWeeks, '1-2周'),
     (DurationType.twoToFourWeeks, '2-4周'),
     (DurationType.moreThan1Month, '>1月'),
-  ];
-
-  final severityOptions = [
-    (SeverityLevel.mildAttention, '轻微关注', RiskLevel.green),
-    (SeverityLevel.needAttention, '需要关注', RiskLevel.yellow),
-    (SeverityLevel.somewhatUrgent, '较为紧急', RiskLevel.orange),
-    (SeverityLevel.urgent, '紧急', RiskLevel.red),
   ];
 
   /// 提交报告，校验通过后提示并返回上一页。
@@ -792,7 +715,7 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
                 setState(() => _selectedDuration = type);
               }),
               const SizedBox(height: 20),
-              _buildSeveritySection(),
+              _buildFollowUpSection(),
               const SizedBox(height: 20),
               _buildDescriptionSection(),
               const SizedBox(height: 20),
@@ -896,21 +819,25 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
     );
   }
 
-  Widget _buildSeveritySection() {
+  Widget _buildFollowUpSection() {
+    final options = [
+      (true, '需要跟进'),
+      (false, '无需跟进'),
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('严重程度', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+        const Text('后续跟进', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
           runSpacing: 8,
-          children: severityOptions.map((opt) {
-            final isSelected = _selectedSeverity == opt.$1;
+          children: options.map((opt) {
+            final isSelected = _needsFollowUp == opt.$1;
             return ElevatedButton(
-              onPressed: () => setState(() => _selectedSeverity = opt.$1),
+              onPressed: () => setState(() => _needsFollowUp = opt.$1),
               style: ElevatedButton.styleFrom(
-                backgroundColor: isSelected ? opt.$3.color : Colors.grey[100],
+                backgroundColor: isSelected ? TeacherTheme.starNightBlue : Colors.grey[100],
                 foregroundColor: isSelected ? Colors.white : Colors.black,
                 elevation: 0,
               ),
@@ -918,19 +845,19 @@ class _SymptomReportScreenState extends ConsumerState<SymptomReportScreen> {
             );
           }).toList(),
         ),
-        if (_selectedSeverity != null && (_selectedSeverity == SeverityLevel.somewhatUrgent || _selectedSeverity == SeverityLevel.urgent))
+        if (_needsFollowUp)
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: TeacherTheme.riskRed.withOpacity(0.1),
+                color: TeacherTheme.warningColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: TeacherTheme.riskRed),
+                border: Border.all(color: TeacherTheme.warningColor),
               ),
               child: const Text(
-                '建议立即联系心理老师进行专业介入',
-                style: TextStyle(color: Color(0xFFEF5350), fontSize: 14),
+                '建议及时联系心理老师进行专业评估',
+                style: TextStyle(color: TeacherTheme.warningColor, fontSize: 14),
               ),
             ),
           ),

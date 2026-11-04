@@ -412,9 +412,6 @@ paths:
                       response_time:
                         type: integer
                         description: 响应耗时(ms)
-                      riskLevel:
-                        type: string
-                        enum: [green, yellow, orange, red]
 
   /api/v1/chat/history/{userId}:
     get:
@@ -490,8 +487,8 @@ paths:
   /api/v1/risk/detect:
     post:
       tags: [学生端]
-      summary: 风险检测
-      description: 对用户内容进行风险等级检测，返回风险等级、置信度和触发的关键词
+      summary: 危机信号检测
+      description: 对用户内容进行二值危机信号检测，返回是否存在危机信号、置信度和触发的关键词，不做等级划分
       security:
         - bearerAuth: []
       requestBody:
@@ -527,9 +524,9 @@ paths:
                     properties:
                       user_id:
                         type: string
-                      risk_level:
-                        type: string
-                        enum: [green, yellow, orange, red]
+                      crisis:
+                        type: boolean
+                        description: 是否检测到明确危机信号（二值，不做等级划分）
                       confidence:
                         type: number
                       triggered_keywords:
@@ -538,48 +535,7 @@ paths:
                           type: string
                       need_intervention:
                         type: boolean
-
-  /api/v1/risk/level/{userId}:
-    get:
-      tags: [学生端, 教师端]
-      summary: 获取用户风险等级
-      description: 查询用户当前风险等级及历史记录
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: userId
-          in: path
-          required: true
-          schema:
-            type: string
-      responses:
-        '200':
-          description: 获取成功
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  code:
-                    type: integer
-                  data:
-                    type: object
-                    properties:
-                      user_id:
-                        type: string
-                      current_risk_level:
-                        type: string
-                        enum: [green, yellow, orange, red]
-                      history:
-                        type: array
-                        items:
-                          type: object
-                          properties:
-                            date:
-                              type: string
-                              format: date
-                            level:
-                              type: string
+                        description: 是否需要人工干预（等于 crisis）
 
   /api/v1/risk/crisis/hotlines:
     get:
@@ -626,13 +582,10 @@ paths:
           application/json:
             schema:
               type: object
-              required: [userId, riskLevel]
+              required: [userId]
               properties:
                 userId:
                   type: string
-                riskLevel:
-                  type: string
-                  enum: [green, yellow, orange, red]
                 triggerType:
                   type: string
       responses:
@@ -649,8 +602,6 @@ paths:
                     type: object
                     properties:
                       user_id:
-                        type: string
-                      risk_level:
                         type: string
                       handled:
                         type: boolean
@@ -762,9 +713,6 @@ paths:
                     type: string
                   total_score:
                     type: integer
-                  risk_level:
-                    type: string
-                    enum: [green, yellow, orange, red]
                   description:
                     type: string
                   suggestions:
@@ -1500,15 +1448,12 @@ paths:
           application/json:
             schema:
               type: object
-              required: [studentId, parentId, riskLevel]
+              required: [studentId, parentId]
               properties:
                 studentId:
                   type: string
                 parentId:
                   type: string
-                riskLevel:
-                  type: string
-                  enum: [red, orange]
                 description:
                   type: string
       responses:
@@ -2133,9 +2078,6 @@ components:
         role:
           type: string
           enum: [user, assistant]
-        riskLevel:
-          type: string
-          enum: [green, yellow, orange, red]
         timestamp:
           type: string
           format: date-time
@@ -2153,11 +2095,9 @@ components:
           type: string
         latestMood:
           type: integer
-        riskLevel:
-          type: string
-          enum: [green, yellow, orange, red]
         alert:
           type: boolean
+          description: 是否存在需要关注的紧急预警
 
     ParentLoginResponse:
       type: object
@@ -2196,9 +2136,6 @@ components:
           format: date-time
         latestMood:
           type: integer
-        riskLevel:
-          type: string
-          enum: [green, yellow, orange, red]
         lastCheckinDate:
           type: string
         createdAt:
@@ -2214,9 +2151,6 @@ components:
           type: string
         parentId:
           type: string
-        riskLevel:
-          type: string
-          enum: [green, yellow, orange, red]
         status:
           type: string
         triggerSource:

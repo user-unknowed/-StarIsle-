@@ -77,7 +77,6 @@ const mockChildren: ChildBinding[] = [
     authorized: true,
     createdAt: '2026-06-01T00:00:00Z',
     latestMood: 4,
-    riskLevel: 'green',
     lastCheckinDate: '2026-07-15',
   },
 ];

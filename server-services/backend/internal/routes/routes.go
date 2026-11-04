@@ -62,11 +62,10 @@ func SetupRoutes(router *gin.Engine, cfg *config.Config) {
             contentGroup.GET("/breathing/:type", handlers.GetBreathingExercise) // 获取呼吸练习
         }
 
-        // 风险检测服务路由（内部调用）：风险检测与用户风险等级查询
+        // 风险检测服务路由（内部调用）：危机信号检测
         riskGroup := v1.Group("/risk")
         {
-            riskGroup.POST("/detect", handlers.DetectRisk)                  // 风险检测接口
-            riskGroup.GET("/level/:userId", handlers.GetUserRiskLevel)     // 获取用户风险等级
+            riskGroup.POST("/detect", handlers.DetectRisk)                  // 危机信号检测接口
         }
 
         // 危机资源路由：心理援助热线与危机事件上报

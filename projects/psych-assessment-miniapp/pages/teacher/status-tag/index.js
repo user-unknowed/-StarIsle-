@@ -1,7 +1,7 @@
 // pages/teacher/status-tag/index.js
 // 教师端 · 状态标签管理
-// Tab 1：标签库 — 内置 5 枚举（只读）+ 本人自定义标签（新建/编辑/删除）
-// Tab 2：打标记录 — 选择学生打标签 + 查看历史快照 + 撤销本人打标
+// Tab 1：标签库 — 仅本人自定义中性标签（新建/编辑/删除），无内置状态等级
+// Tab 2：打标记录 — 选择学生添加备注标签 + 查看历史快照 + 撤销本人打标
 
 var cloud = require('../../../utils/cloud.js');
 
@@ -25,7 +25,6 @@ Page({
     errorCode: '',
 
     // ===== Tab 1：标签库 =====
-    builtinList: [],
     customList: [],
     // 新建/编辑表单
     showTagForm: false,
@@ -92,8 +91,6 @@ Page({
       if (bindRes && bindRes.code !== 0) throw bindRes;
 
       var allTags = (tagsRes.data || []).slice();
-      var builtins = allTags.filter(function (t) { return t.builtIn === true; });
-      var customs  = allTags.filter(function (t) { return t.builtIn !== true; });
 
       // 本人有效绑定（学生下拉）
       var bindings = (bindRes.data || []).filter(function (b) {
@@ -108,8 +105,7 @@ Page({
       });
 
       that.setData({
-        builtinList: builtins,
-        customList: customs,
+        customList: allTags,
         availableTags: allTags,
         bindingList: bindings,
         bindingOptions: bindOpts,
@@ -284,7 +280,7 @@ Page({
     if (!tagId) return;
     wx.showModal({
       title: '删除标签「' + tagName + '」？',
-      content: '⚠️ 系统内置标签不可删。若该标签已用于历史打标，对应快照中的 tagId 将被标记为「tag_deleted:原ID」以保留科研追溯，删除不可恢复。',
+      content: '若该标签已用于历史打标，对应快照中的 tagId 将被标记为「tag_deleted:原ID」以保留科研追溯，删除不可恢复。',
       confirmText: '确认删除',
       confirmColor: '#DC2626',
       success: function (res) {

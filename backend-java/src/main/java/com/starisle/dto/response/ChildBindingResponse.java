@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
 
 /**
  * 孩子绑定响应 DTO
- * 用于家长端展示已绑定的学生信息，包括授权状态、最新心情、风险等级与最近打卡。
+ * 用于家长端展示已绑定的学生信息，包括授权状态、最新心情与最近打卡。
  */
 @Data
 @NoArgsConstructor
@@ -35,8 +35,6 @@ public class ChildBindingResponse {
     private LocalDateTime authorizedAt;
     // 最新心情等级
     private Integer latestMood;
-    // 风险等级
-    private String riskLevel;
     // 最近打卡日期
     private String lastCheckinDate;
     // 创建时间

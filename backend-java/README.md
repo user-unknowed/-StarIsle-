@@ -71,8 +71,8 @@ java -jar target/starisle-backend-1.0.0.jar
 - `GET /api/v1/content/breathing/{type}` - 获取呼吸练习
 
 ### 风险检测服务
-- `POST /api/v1/risk/detect` - 风险检测
-- `GET /api/v1/risk/level/{userId}` - 获取用户风险等级
+- `POST /api/v1/risk/detect` - 二值危机信号检测（不做等级划分）
+- `GET /api/v1/risk/crisis/hotlines` - 获取危机热线
 
 ### WebSocket
 - `ws://localhost:8080/ws/chat/{userId}` - 实时对话

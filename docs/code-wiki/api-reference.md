@@ -340,7 +340,8 @@ Content-Type: application/json
   "code": 200,
   "data": {
     "user_id": "student1",
-    "risk_level": "orange",
+    "crisis": false,
+    "need_intervention": false,
     "confidence": 0.95,
     "details": {
       "keywords_detected": ["失眠", "绝望"],
@@ -351,21 +352,7 @@ Content-Type: application/json
 }
 ```
 
-**风险等级说明**:
-
-| 等级 | 颜色 | 说明 | 处理措施 |
-|------|------|------|---------|
-| green | 绿色 | 正常 | 无 |
-| yellow | 黄色 | 轻微波动 | 记录观察 |
-| orange | 橙色 | 需关注 | 通知教师/家长 |
-| red | 红色 | 紧急 | 立即触发危机干预流程 |
-
-### 获取用户风险等级
-
-```http
-GET /api/v1/risk/level/{userId}
-Authorization: Bearer {token}
-```
+**说明**: 风险检测只输出二值危机信号 `crisis`（`need_intervention` 与之相同），不再划分绿/黄/橙/红等级，也不提供等级历史接口。
 
 ### 获取危机热线
 
@@ -519,7 +506,8 @@ Content-Type: application/json
 ```json
 {
   "response": "学习压力确实让人难受，想跟我聊聊具体是什么科目吗？",
-  "risk_level": "green",
+  "crisis": false,
+  "need_intervention": false,
   "emotion_tags": ["焦虑", "压力"],
   "response_time_ms": 1250
 }
@@ -547,18 +535,17 @@ Content-Type: application/json
 }
 ```
 
-> **多层级检测说明**：L1 关键词（28 类，v1.6扩充）→ L1.5 持续时间升级（同分类窗口次数加权）→ L1.6 心情历史负斜率升级 → L2 语义分析；然后 `积极词 + 孤立短语` 四层降级。v1.9 测试集准确率 = 100%。
+> **二值检测说明**：L1 关键词（28 类）命中明确危机词或 L2 语义分析识别自伤意图时输出 `crisis=true`；中危情绪表达不再升级为等级，也不根据心情历史天数升级。
 
 **响应**:
 ```json
 {
   "user_id": "student1",
-  "risk_level": "red",
+  "crisis": true,
+  "need_intervention": true,
   "confidence": 0.98,
   "details": {
     "keywords_detected": ["失眠", "绝望", "不想活了"],
-    "l15_duration_hit": true,
-    "l16_mood_trend_hit": true,
     "semantic_intent": "情绪低落+自杀意念",
     "confidence": 0.96,
     "applied_downgrades": 0

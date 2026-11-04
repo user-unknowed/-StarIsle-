@@ -1,53 +1,14 @@
 /**
  * @file TeacherHome.tsx
- * @description 教师端首页：班级状态总览（人数/平均心情/今日打卡/需关注）、心情分布、需关注学生列表（接入 riskApi）、学生表格
+ * @description 教师端首页：班级状态总览（人数/平均心情/今日打卡/需关注）、心情分布、需关注学生列表与学生表格
  * @module web-frontend/pages/teacher
  */
-import { Fragment, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useClassroomStore } from '../../store/classroomStore';
 import { Header } from '../../components/common/Header';
-import { riskApi } from '../../services/api';
-import { ApiError } from '../../services/http';
-import { BarChart3, AlertTriangle, Users, CheckCircle, TrendingUp, Eye, Download, Upload, ShieldAlert, Loader2 } from 'lucide-react';
+import { BarChart3, AlertTriangle, Users, CheckCircle, TrendingUp, Download, Upload } from 'lucide-react';
 import { useToast } from '../../components/ui/Toast';
-
-// 风险详情结构：等级、分数、原因、历史趋势、数据来源
-interface RiskDetail {
-  level: string;
-  score?: number;
-  reason?: string;
-  history?: Array<{ date: string; level: string }>;
-  source: 'api' | 'mock';
-}
-
-/**
- * 根据风险等级返回对应 Tailwind 配色
- * @param level - 风险等级
- * @returns Tailwind 类名字符串
- */
-const getRiskColor = (level: string | undefined) => {
-  switch (level) {
-    case 'red': return 'bg-danger-100 text-danger-600 border-danger-200';
-    case 'orange': return 'bg-warning-100 text-warning-600 border-warning-200';
-    case 'yellow': return 'bg-warning-50 text-warning-700 border-warning-200';
-    default: return 'bg-success-100 text-success-600 border-success-200';
-  }
-};
-
-/**
- * 根据风险等级返回中文标签
- * @param level - 风险等级
- * @returns 高风险/中风险/低风险/正常
- */
-const getRiskLabel = (level: string | undefined) => {
-  switch (level) {
-    case 'red': return '高风险';
-    case 'orange': return '中风险';
-    case 'yellow': return '低风险';
-    default: return '正常';
-  }
-};
 
 /**
  * 根据心情等级返回对应 emoji
@@ -74,131 +35,14 @@ export default function TeacherHome() {
   const { students, stats, fetchClassStats, fetchStudents } = useClassroomStore();
   const toast = useToast();
 
-  // 高风险告警接入 riskApi.getLevel
-  // 各学生风险详情（按学生ID为键）
-  const [riskDetails, setRiskDetails] = useState<Record<string, RiskDetail | null>>({});
-  // 当前正在加载风险详情的学生ID
-  const [riskLoadingId, setRiskLoadingId] = useState<string | null>(null);
-  // 当前展开风险详情的学生ID
-  const [expandedRiskId, setExpandedRiskId] = useState<string | null>(null);
   // 学生搜索关键字
   const [searchQuery, setSearchQuery] = useState('');
-
-  /**
-   * 拉取某学生风险详情：失败时降级使用学生列表中的风险等级与 mock 历史
-   * @param studentId - 学生ID
-   * @param fallbackLevel - 降级时使用的风险等级
-   */
-  const fetchRiskLevel = async (studentId: string, fallbackLevel?: string) => {
-    setRiskLoadingId(studentId);
-    try {
-      const data = await riskApi.getLevel(studentId);
-      setRiskDetails((prev) => ({
-        ...prev,
-        [studentId]: {
-          level: (data as { current_risk_level?: string; level?: string }).current_risk_level || data.level || fallbackLevel || 'green',
-          history: (data as { history?: Array<{ date: string; level: string }> }).history,
-          source: 'api',
-        },
-      }));
-    } catch (err) {
-      // 降级：使用学生列表中的风险等级
-      if (err instanceof ApiError) {
-        console.warn(`[TeacherHome] riskApi.getLevel 失败 (${err.status})，降级使用 mock`);
-      }
-      setRiskDetails((prev) => ({
-        ...prev,
-        [studentId]: {
-          level: fallbackLevel || 'green',
-          reason: '（后端不可用，展示学生列表风险等级）',
-          history: [
-            { date: '2026-07-12', level: fallbackLevel || 'green' },
-            { date: '2026-07-13', level: fallbackLevel || 'green' },
-            { date: '2026-07-14', level: fallbackLevel || 'green' },
-          ],
-          source: 'mock',
-        },
-      }));
-    } finally {
-      setRiskLoadingId(null);
-    }
-  };
-
-  /**
-   * 切换某学生风险详情的展开态，首次展开时拉取详情
-   * @param studentId - 学生ID
-   * @param fallbackLevel - 降级时使用的风险等级
-   */
-  const toggleRiskDetail = (studentId: string, fallbackLevel?: string) => {
-    // 再次点击同一学生则收起
-    if (expandedRiskId === studentId) {
-      setExpandedRiskId(null);
-      return;
-    }
-    setExpandedRiskId(studentId);
-    // 首次展开且无缓存数据时拉取
-    if (!riskDetails[studentId]) {
-      fetchRiskLevel(studentId, fallbackLevel);
-    }
-  };
 
   // 进入页面拉取班级统计与学生列表
   useEffect(() => {
     fetchClassStats('class1');
     fetchStudents('class1');
   }, [fetchClassStats, fetchStudents]);
-
-  /**
-   * 渲染风险详情：加载态/空态/详情（含历史趋势条）
-   * @param detail - 风险详情
-   * @param loading - 是否正在加载
-   * @returns JSX 元素
-   */
-  const renderRiskDetail = (detail: RiskDetail | null | undefined, loading: boolean) => {
-    if (loading) {
-      return (
-        <div className="flex items-center gap-2 text-gray-500 text-sm">
-          <Loader2 className="w-4 h-4 animate-spin" />
-          <span>加载风险详情中...</span>
-        </div>
-      );
-    }
-    if (!detail) {
-      return <p className="text-sm text-gray-500">暂无风险详情数据</p>;
-    }
-    return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2 flex-wrap">
-          <ShieldAlert className="w-4 h-4 text-gray-600" />
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium border ${getRiskColor(detail.level)}`}>
-            {getRiskLabel(detail.level)}
-          </span>
-          <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${detail.source === 'api' ? 'bg-success-100 text-success-700' : 'bg-gray-100 text-gray-600'}`}>
-            {detail.source === 'api' ? 'API 数据' : '示例数据'}
-          </span>
-        </div>
-        {detail.reason && (
-          <p className="text-sm text-gray-600">{detail.reason}</p>
-        )}
-        {detail.history && detail.history.length > 0 && (
-          <div>
-            <p className="text-xs text-gray-500 mb-2">历史趋势</p>
-            <div className="flex items-end gap-1">
-              {detail.history.map((h) => (
-                <div key={h.date} className="flex flex-col items-center gap-1">
-                  <div
-                    className={`w-8 h-8 rounded-md ${getRiskColor(h.level).split(' ')[0]}`}
-                    title={`${h.date} · ${getRiskLabel(h.level)}`}
-                  />
-                  <span className="text-[10px] text-gray-400">{h.date.slice(5)}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
 
   // 需关注学生（带 alert 标志）
   const alertStudents = students.filter(s => s.alert);
@@ -210,7 +54,7 @@ export default function TeacherHome() {
     { level: 4, count: students.filter(s => s.latestMood === 4).length, label: '还不错', color: 'bg-primary-500' },
     { level: 5, count: students.filter(s => s.latestMood === 5).length, label: '很开心', color: 'bg-success-500' },
   ];
-  // 按昵称或ID过滤学生
+  // 按昵称或ID过滤学生（不按任何等级排序或筛选）
   const filteredStudents = students.filter(
     s => s.nickname.includes(searchQuery) || s.id.includes(searchQuery)
   );
@@ -335,31 +179,20 @@ export default function TeacherHome() {
             {alertStudents.length > 0 ? (
               <div className="space-y-3">
                 {alertStudents.map((student) => (
-                  <div key={student.id} className="space-y-2">
-                    <div className={`flex items-center gap-4 p-4 rounded-xl border-2 ${getRiskColor(student.riskLevel)}`}>
-                      <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center text-xl">
-                        {student.nickname?.[0]}
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-bold">{student.nickname}</p>
-                        <p className="text-sm">最新心情：{getMoodEmoji(student.latestMood)}</p>
-                      </div>
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${student.riskLevel === 'red' ? 'bg-danger-200 text-danger-700' : student.riskLevel === 'orange' ? 'bg-warning-200 text-warning-700' : 'bg-warning-100 text-warning-700'}`}>
-                        {getRiskLabel(student.riskLevel)}
-                      </span>
-                      <button
-                        onClick={() => toggleRiskDetail(student.id, student.riskLevel)}
-                        aria-label={`查看 ${student.nickname} 的风险详情`}
-                        className="p-2 hover:bg-white/50 rounded-lg transition-colors"
-                      >
-                        <Eye className="w-5 h-5" />
-                      </button>
+                  <div
+                    key={student.id}
+                    className="flex items-center gap-4 p-4 rounded-xl border-2 border-danger-200 bg-danger-50"
+                  >
+                    <div className="w-12 h-12 bg-white/50 rounded-full flex items-center justify-center text-xl">
+                      {student.nickname?.[0]}
                     </div>
-                    {expandedRiskId === student.id && (
-                      <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                        {renderRiskDetail(riskDetails[student.id], riskLoadingId === student.id)}
-                      </div>
-                    )}
+                    <div className="flex-1">
+                      <p className="font-bold">{student.nickname}</p>
+                      <p className="text-sm">最新心情：{getMoodEmoji(student.latestMood)}</p>
+                    </div>
+                    <span className="px-3 py-1 rounded-full text-sm font-medium bg-white/70 text-gray-700">
+                      需关注
+                    </span>
                   </div>
                 ))}
               </div>
@@ -398,61 +231,35 @@ export default function TeacherHome() {
                 <tr className="border-b border-gray-200">
                   <th scope="col" className="text-left py-3 px-4 text-sm font-medium text-gray-600">学生姓名</th>
                   <th scope="col" className="text-center py-3 px-4 text-sm font-medium text-gray-600">最新心情</th>
-                  <th scope="col" className="text-center py-3 px-4 text-sm font-medium text-gray-600">风险等级</th>
                   <th scope="col" className="text-center py-3 px-4 text-sm font-medium text-gray-600">状态</th>
-                  <th scope="col" className="text-right py-3 px-4 text-sm font-medium text-gray-600">操作</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredStudents.map((student) => (
-                  <Fragment key={student.id}>
-                    <tr className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-4 px-4">
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                            <span className="text-sm font-medium">{student.nickname?.[0]}</span>
-                          </div>
-                          <span className="font-medium">{student.nickname}</span>
+                  <tr key={student.id} className="border-b border-gray-100 hover:bg-gray-50">
+                    <td className="py-4 px-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                          <span className="text-sm font-medium">{student.nickname?.[0]}</span>
                         </div>
-                      </td>
-                      <td className="text-center py-4 px-4 text-xl">{getMoodEmoji(student.latestMood)}</td>
-                      <td className="text-center py-4 px-4">
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${getRiskColor(student.riskLevel)}`}>
-                          {getRiskLabel(student.riskLevel)}
+                        <span className="font-medium">{student.nickname}</span>
+                      </div>
+                    </td>
+                    <td className="text-center py-4 px-4 text-xl">{getMoodEmoji(student.latestMood)}</td>
+                    <td className="text-center py-4 px-4">
+                      {student.alert ? (
+                        <span className="flex items-center justify-center gap-1 text-danger-600">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span className="text-sm">需关注</span>
                         </span>
-                      </td>
-                      <td className="text-center py-4 px-4">
-                        {student.alert ? (
-                          <span className="flex items-center justify-center gap-1 text-danger-600">
-                            <AlertTriangle className="w-4 h-4" />
-                            <span className="text-sm">需关注</span>
-                          </span>
-                        ) : (
-                          <span className="flex items-center justify-center gap-1 text-success-600">
-                            <CheckCircle className="w-4 h-4" />
-                            <span className="text-sm">正常</span>
-                          </span>
-                        )}
-                      </td>
-                      <td className="text-right py-4 px-4">
-                        <button
-                          onClick={() => toggleRiskDetail(student.id, student.riskLevel)}
-                          className="text-secondary-600 hover:text-secondary-800 font-medium"
-                        >
-                          查看详情
-                        </button>
-                      </td>
-                    </tr>
-                    {expandedRiskId === student.id && (
-                      <tr className="bg-gray-50">
-                        <td colSpan={5} className="px-4 py-4">
-                          <div className="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
-                            {renderRiskDetail(riskDetails[student.id], riskLoadingId === student.id)}
-                          </div>
-                        </td>
-                      </tr>
-                    )}
-                  </Fragment>
+                      ) : (
+                        <span className="flex items-center justify-center gap-1 text-success-600">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="text-sm">正常</span>
+                        </span>
+                      )}
+                    </td>
+                  </tr>
                 ))}
               </tbody>
             </table>

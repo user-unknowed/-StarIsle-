@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 /**
  * 家长-学生绑定关系实体
  * 对应 {@code parent_student_bindings} 表，记录家长与学生账号之间的绑定关系，
- * 包括绑定方式、授权状态以及学生的最新心情、风险等级等冗余信息。
+ * 包括绑定方式、授权状态以及学生的最新心情等冗余信息。
  */
 @Entity
 @Table(name = "parent_student_bindings")
@@ -59,11 +59,6 @@ public class ParentStudentBinding {
     @Column(name = "latest_mood")
     @Builder.Default
     private Integer latestMood = 3;
-
-    // 风险等级（冗余字段）
-    @Column(name = "risk_level")
-    @Builder.Default
-    private String riskLevel = "green";
 
     // 最近打卡日期
     @Column(name = "last_checkin_date")

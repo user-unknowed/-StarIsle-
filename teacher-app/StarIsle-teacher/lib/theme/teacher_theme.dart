@@ -1,5 +1,5 @@
 /// @file teacher_theme.dart
-/// @description 教师端 StarIsle Teacher 主题定义，集中维护品牌色、风险等级色、状态色
+/// @description 教师端 StarIsle Teacher 主题定义，集中维护品牌色、语义状态色
 ///              以及浅色/暗色 [ThemeData]，覆盖色彩方案、AppBar、卡片、按钮、文本与底部导航样式。
 /// @module teacher-app/theme
 
@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 
 /// 教师端主题配置类。
 ///
-/// 提供品牌色板、风险等级色、状态色，以及浅色主题 [lightTheme] 与暗色主题 [darkTheme]。
+/// 提供品牌色板、语义状态色，以及浅色主题 [lightTheme] 与暗色主题 [darkTheme]。
 class TeacherTheme {
   // === 星屿品牌色彩 ===
   static const Color starNightBlue = Color(0xFF2B3A67); // 主品牌色：星夜蓝
@@ -17,12 +17,6 @@ class TeacherTheme {
   static const Color lightGold = Color(0xFFFFE5A0); // 浅金色
   static const Color deepBluePurple = Color(0xFF1A1B3A); // 深蓝紫（背景/文本）
   static const Color palePink = Color(0xFFFFB5B5); // 淡粉色
-
-  // === 风险等级色彩 ===
-  static const Color riskGreen = Color(0xFF66BB6A); // 低风险：绿
-  static const Color riskYellow = Color(0xFFFFCA28); // 中低风险：黄
-  static const Color riskOrange = Color(0xFFFF9800); // 中高风险：橙
-  static const Color riskRed = Color(0xFFEF5350); // 高风险：红
 
   // === 状态语义色 ===
   static const Color successColor = Color(0xFF4CAF50); // 成功

@@ -3,7 +3,7 @@
 """
 心理测评反馈微信小程序 · 最终验收脚本 acceptance_check.py
 ----------------------------------------------------------
-对应 docs/test-cases-34.md T34 用例 · 源码级结构/合规 独立核查 37 断言
+对应 docs/test-cases-34.md T34 用例 · 源码级结构/合规 独立核查 39 断言
 执行后输出 PASS/FAIL/SKIP 汇总；0 FAIL = 源码结构/合规层 100% 通过（真机仅需跑 UI 交互 P1 类）。
 
 运行方式：
@@ -649,14 +649,64 @@ def a37():
     c3 = bool(re.search(r"harmony|鸿蒙|HarmonyNEXT|HarmonyOS", plat, re.I))
     return (c1 and c2 and c3, f"onUnload_forceReMask_P1={c1}; safe-area_P2={c2}; harmony_detect_P3={c3}")
 
+@CASE('A-38', '废除内置状态等级：statusOperate 无 BUILTIN_TAGS / 内置 5 档枚举，listStatusTags 仅返回教师自定义标签，自定义标签 CRUD 仍保留', 'T-P0')
+def a38():
+    cf = read(ROOT/'cloudfunctions/statusOperate/index.js')
+    # 1) 无内置枚举变量与内置 tagId
+    no_builtin_var = ('BUILTIN_TAGS' not in cf) and ('BUILTIN_TAG_IDS' not in cf)
+    no_builtin_ids = not re.search(r"builtin_(normal|monitoring|intervention|high_risk|referral_crisis)", cf)
+    no_level_names = not re.search(r"['\"]监测中['\"]|['\"]干预中['\"]|['\"]转介危机['\"]|name:\s*['\"]正常['\"]|['\"]高风险['\"]", cf)
+    # 2) listStatusTags 仅返回自定义标签
+    m = re.search(r"async\s+function\s+actionListStatusTags[\s\S]{0,600}?\n\}", cf)
+    body = m.group(0) if m else ''
+    only_custom = ('getOwnCustomTags' in body) and ('concat' not in body) and ('return ok(custom)' in body)
+    # 3) 自定义标签 CRUD / 打标动作仍在
+    actions_kept = all(re.search(r"case\s+['\"]" + n + r"['\"]", cf) for n in
+                       ['listStatusTags', 'createTag', 'updateTag', 'removeTag', 'tagStudent'])
+    # 4) 导出内置等级辅助为空
+    empty_levels = bool(re.search(r"_builtinStatusLevels\s*:\s*\[\s*\]", cf))
+    return (no_builtin_var and no_builtin_ids and no_level_names and only_custom and actions_kept and empty_levels,
+            f"no_BUILTIN_TAGS={no_builtin_var}; no_builtin_tagIds={no_builtin_ids}; no_level_names={no_level_names}; list_only_custom={only_custom}; custom_CRUD_kept={actions_kept}; builtin_levels_empty={empty_levels}")
+
+@CASE('A-39', '状态展示统一为中性：status-tag 无内置标签区/等级颜色；student-history/dashboard/ai-review/admin 无内置等级标识；快照仅保留生效/归档/撤销生命周期', 'T-P0')
+def a39():
+    st_js = read(ROOT/'pages/teacher/status-tag/index.js')
+    st_wxml = read(ROOT/'pages/teacher/status-tag/index.wxml')
+    st_wxss = read(ROOT/'pages/teacher/status-tag/index.wxss')
+    c1 = ('builtinList' not in st_js) and ('builtinList' not in st_wxml) and ('builtIn' not in st_js) and ('builtIn' not in st_wxml)
+    c2 = ('builtin-chip' not in st_wxml) and ('chip-builtin-badge' not in st_wxml) and ('builtin-chip' not in st_wxss) and ('chip-builtin-badge' not in st_wxss)
+    c3 = ('customList' in st_js) and ('availableTags' in st_js) and ('onToggleTagPick' in st_js)
+    # 页面不再引用内置等级 / 按等级排序筛选
+    page_files = [
+        'pages/teacher/student-history/index.js', 'pages/teacher/student-history/index.wxml',
+        'pages/teacher/dashboard/index.js', 'pages/teacher/dashboard/index.wxml',
+        'pages/teacher/ai-review/index.js', 'pages/teacher/ai-review/index.wxml',
+    ] + [p for p in [
+        'pages/admin/ops-overview/index.js','pages/admin/ops-overview/index.wxml',
+        'pages/admin/global-export/index.js','pages/admin/global-export/index.wxml',
+        'pages/admin/people-crisis/index.js','pages/admin/people-crisis/index.wxml',
+        'pages/admin/audit-ai/index.js','pages/admin/audit-ai/index.wxml',
+    ] if exists(ROOT/p)]
+    bad = []
+    for rel in page_files:
+        text = read(ROOT/rel)
+        if re.search(r"builtin_(normal|monitoring|intervention|high_risk|referral_crisis)", text) \
+           or re.search(r"['\"]监测中['\"]|['\"]干预中['\"]|['\"]转介危机['\"]", text) \
+           or re.search(r"statusLevelConfig|levelColorMap|sort.*statusLevel", text):
+            bad.append(rel)
+    # 快照三态为生命周期，不是等级
+    lifecycle_kept = ('statusText' in st_js) and ('生效中' in st_js) and ('已归档' in st_js) and ('撤销动作' in st_js)
+    return (c1 and c2 and c3 and len(bad) == 0 and lifecycle_kept,
+            f"no_builtin_list={c1}; no_builtin_styles={c2}; custom_tags_kept={c3}; pages_no_level_refs={len(bad)==0} bad={bad}; lifecycle_kept={lifecycle_kept}")
+
 # ======================== 主入口 ========================
 ALL_CASES = [
     a01,a02,a03,a04,a05,a06,a07,a08,a09,a10,a11,a12,a13,a14,
     a15,a16,a17,a18,a19,a20,a21,a22,a23,a24,a25,a26,a27,a28,
-    a29,a30,a31,a32,a33,a34,a35,a36,a37,
+    a29,a30,a31,a32,a33,a34,a35,a36,a37,a38,a39,
 ]
 print("\n" + "="*80)
-print(f"[验收开始] 心理测评反馈小程序 acceptance_check.py · 37 断言")
+print(f"[验收开始] 心理测评反馈小程序 acceptance_check.py · 39 断言")
 print("="*80 + "\n")
 for fn in ALL_CASES:
     fn()

@@ -336,12 +336,14 @@
       "avatar": "string",
       "ageGroup": "string",
       "latestMood": 1-5,
-      "riskLevel": "green | yellow | orange | red",
+      "crisis": false,
       "alert": false
     }
   ]
 }
 ```
+
+> 说明：`crisis` 为布尔值，表示是否检测到明确危机信号（二值，不做绿/黄/橙/红等级划分）。
 
 ### 6.3 获取学生详情
 
@@ -359,13 +361,15 @@
     "ageGroup": "string",
     "classId": "string",
     "latestMood": 1-5,
-    "riskLevel": "green | yellow | orange | red",
+    "crisis": false,
     "alert": false,
     "moodHistory": [],
     "alertHistory": []
   }
 }
 ```
+
+> 说明：`crisis` 为布尔值，表示是否检测到明确危机信号（二值，不做绿/黄/橙/红等级划分）。
 
 ## 7. 用户管理
 

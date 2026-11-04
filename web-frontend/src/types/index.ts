@@ -1,6 +1,6 @@
 /**
  * @file index.ts
- * @description 全局类型定义：包含用户、心情、对话、班级、家长端、风险、测评等核心业务实体的接口与类型，
+ * @description 全局类型定义：包含用户、心情、对话、班级、家长端、预警、测评等核心业务实体的接口与类型，
  *              供 services、store、pages 等模块复用。
  * @module web-frontend/types
  */
@@ -55,7 +55,6 @@ export interface Alert {
   id: string;         // 预警 ID
   classId: string;     // 班级 ID
   studentId: string;   // 学生 ID
-  riskLevel: string;   // 风险等级
   reason: string;      // 预警原因
   createdAt: string;   // 创建时间
   handled: boolean;    // 是否已处理
@@ -67,8 +66,7 @@ export interface StudentWithMood {
   nickname: string;         // 昵称
   avatar: string;           // 头像 URL
   latestMood?: number;       // 最近心情等级（可选）
-  riskLevel?: string;        // 风险等级（可选）
-  alert?: boolean;           // 是否告警（可选）
+  alert?: boolean;           // 是否紧急提醒（可选）
 }
 
 /** 班级统计 */
@@ -156,7 +154,6 @@ export interface ChildBinding {
 export interface EmergencyAlert {
   alertId: string;       // 告警 ID
   studentId: string;     // 学生 ID
-  level: RiskLevelType;  // 告警等级
   reason: string;         // 告警原因
   createdAt: string;      // 创建时间
   confirmed: boolean;     // 是否已确认
@@ -172,17 +169,6 @@ export interface EmergencyResource {
   phone: string;     // 电话
 }
 
-/** 风险等级类型：绿 / 黄 / 橙 / 红 */
-export type RiskLevelType = 'green' | 'yellow' | 'orange' | 'red';
-
-/** 风险等级评估结果 */
-export interface RiskLevel {
-  userId: string;     // 用户 ID
-  level: RiskLevelType; // 风险等级
-  score: number;       // 风险评分
-  reason: string;      // 评估原因
-}
-
 /** 测评题目 */
 export interface AssessmentQuestion {
   id: string;       // 题目 ID
@@ -195,7 +181,6 @@ export interface AssessmentResult {
   id: string;             // 结果 ID
   type: string;            // 测评类型
   score: number;            // 总分
-  risk_level: string;       // 风险等级
   description: string;      // 描述
   suggestions: string[];    // 建议列表
 }

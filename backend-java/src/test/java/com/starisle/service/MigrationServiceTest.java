@@ -284,7 +284,6 @@ public class MigrationServiceTest {
         messageRow.put("role", "user");
         messageRow.put("content", "Hello");
         messageRow.put("message_type", "text");
-        messageRow.put("risk_level", "green");
         messageRow.put("response_time_ms", 1500L);
         messageRow.put("created_at", LocalDateTime.now());
 

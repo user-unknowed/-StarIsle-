@@ -10,13 +10,13 @@ import java.util.Map;
 
 /**
  * 关键词管理器
- * 维护青少年心理健康场景下的风险关键词字典，支持按高、中、低风险分级匹配，
- * 用于文本风险初筛与分级预警。
+ * 维护青少年心理健康场景下的危机关键词字典，支持按分类匹配，
+ * 用于文本危机信号初筛（仅输出布尔信号，不做等级划分）。
  */
 @Component
 public class KeywordManager {
 
-    /** 关键词字典：风险等级 -> 分类 -> 关键词列表 */
+    /** 关键词字典：分类组 -> 分类 -> 关键词列表 */
     private final Map<String, Map<String, List<String>>> keywords;
 
     /**
@@ -29,11 +29,11 @@ public class KeywordManager {
 
     /**
      * 加载关键词字典
-     * 初始化高风险（自杀意念、自伤行为、绝望感）、
-     * 中风险（抑郁情绪、焦虑症状、睡眠问题、社交困扰）、
-     * 低风险（学业压力、人际关系、家庭矛盾）三级关键词。
+     * 初始化高危信号（自杀意念、自伤行为、绝望感）、
+     * 情绪困扰（抑郁情绪、焦虑症状、睡眠问题、社交困扰）、
+     * 压力事件（学业压力、人际关系、家庭矛盾）三类关键词。
      *
-     * @return 风险等级到分类关键词列表的映射
+     * @return 分类组到分类关键词列表的映射
      */
     private Map<String, Map<String, List<String>>> loadKeywords() {
         Map<String, Map<String, List<String>>> keywordMap = new HashMap<>();
@@ -62,64 +62,63 @@ public class KeywordManager {
 
     /**
      * 检查文本关键词命中情况
-     * 按高风险、中风险、低风险顺序逐级匹配，命中高级别后跳过低级别匹配，
-     * 返回最终风险等级、命中关键词与所属分类列表。
+     * 遍历全部关键词分类收集命中项，命中高危关键词时 highRisk 为 true，
+     * 不区分任何等级。
      *
      * @param content 待检查的文本内容
-     * @return 关键词检查结果
+     * @return 关键词检查结果，包含是否高危、是否命中、命中关键词与所属分类
      */
     public KeywordResult checkKeywords(String content) {
         List<String> matchedKeywords = new ArrayList<>();
-        String riskLevel = "low";
         List<String> categories = new ArrayList<>();
 
-        for (Map.Entry<String, List<String>> entry : keywords.get("high_risk").entrySet()) {
+        boolean highRisk = collectMatches("high_risk", content, matchedKeywords, categories);
+        collectMatches("medium_risk", content, matchedKeywords, categories);
+        collectMatches("low_risk", content, matchedKeywords, categories);
+
+        return new KeywordResult(highRisk, !matchedKeywords.isEmpty(), matchedKeywords, categories);
+    }
+
+    /**
+     * 收集某一分类组的命中关键词
+     *
+     * @param group           分类组标识
+     * @param content         待检查文本
+     * @param matchedKeywords 命中关键词列表（累加）
+     * @param categories      命中分类列表（累加）
+     * @return 该分类组是否存在命中
+     */
+    private boolean collectMatches(String group, String content, List<String> matchedKeywords, List<String> categories) {
+        boolean matched = false;
+        Map<String, List<String>> groupKeywords = keywords.get(group);
+        if (groupKeywords == null) {
+            return false;
+        }
+
+        for (Map.Entry<String, List<String>> entry : groupKeywords.entrySet()) {
             String category = entry.getKey();
             for (String keyword : entry.getValue()) {
                 if (content.contains(keyword)) {
                     matchedKeywords.add(keyword);
                     categories.add(category);
-                    riskLevel = "high";
+                    matched = true;
                 }
             }
         }
 
-        if ("low".equals(riskLevel)) {
-            for (Map.Entry<String, List<String>> entry : keywords.get("medium_risk").entrySet()) {
-                String category = entry.getKey();
-                for (String keyword : entry.getValue()) {
-                    if (content.contains(keyword)) {
-                        matchedKeywords.add(keyword);
-                        categories.add(category);
-                        riskLevel = "medium";
-                    }
-                }
-            }
-        }
-
-        if ("low".equals(riskLevel)) {
-            for (Map.Entry<String, List<String>> entry : keywords.get("low_risk").entrySet()) {
-                String category = entry.getKey();
-                for (String keyword : entry.getValue()) {
-                    if (content.contains(keyword)) {
-                        matchedKeywords.add(keyword);
-                        categories.add(category);
-                    }
-                }
-            }
-        }
-
-        return new KeywordResult(riskLevel, matchedKeywords, categories);
+        return matched;
     }
 
     /**
      * 关键词检查结果
-     * 封装文本检查后的风险等级、命中关键词列表与所属分类列表。
+     * 封装文本检查后是否命中高危关键词、是否命中关键词、命中关键词列表与所属分类列表。
      */
     @Data
     public static class KeywordResult {
-        /** 风险等级：high、medium、low */
-        private String riskLevel;
+        /** 是否命中高危危机关键词 */
+        private boolean highRisk;
+        /** 是否命中任意关键词 */
+        private boolean matched;
         /** 命中的关键词列表 */
         private List<String> matchedKeywords;
         /** 命中关键词所属的分类列表 */
@@ -128,12 +127,14 @@ public class KeywordManager {
         /**
          * 构造方法
          *
-         * @param riskLevel       风险等级
+         * @param highRisk        是否命中高危危机关键词
+         * @param matched         是否命中任意关键词
          * @param matchedKeywords 命中关键词列表
          * @param categories      分类列表
          */
-        public KeywordResult(String riskLevel, List<String> matchedKeywords, List<String> categories) {
-            this.riskLevel = riskLevel;
+        public KeywordResult(boolean highRisk, boolean matched, List<String> matchedKeywords, List<String> categories) {
+            this.highRisk = highRisk;
+            this.matched = matched;
             this.matchedKeywords = matchedKeywords;
             this.categories = categories;
         }

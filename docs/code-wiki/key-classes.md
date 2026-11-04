@@ -125,7 +125,7 @@
 | `User` | 基础用户实体（id, nickname, role, classId 等） |
 | `ParentUser` | 家长用户扩展 |
 | `MoodRecord` | 心情打卡记录（userId, moodLevel 1-5, tags, checkinDate） |
-| `ChatMessage` | 聊天消息（userId, content, role, riskLevel） |
+| `ChatMessage` | 聊天消息（userId, content, role, isCrisis） |
 | `AssessmentResult` | 测评结果 |
 | `ParentStudentBinding` | 家长-学生绑定关系 |
 | `EmergencyAlert` | 紧急预警记录 |

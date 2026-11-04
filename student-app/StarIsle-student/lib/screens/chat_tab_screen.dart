@@ -102,9 +102,9 @@ class _ChatScreenState extends State<ChatScreen> {
       setState(() {
         _messages.add({'role': 'ai', 'content': reply});
       });
-      // 检查是否有风险提示
-      if (response['risk_level'] != null && response['risk_level'] != 'safe') {
-        _showRiskNotice(response);
+      // 仅根据二值危机信号展示求助提示，不做等级划分
+      if (response['crisis'] == true) {
+        _showRiskNotice();
       }
     } catch (e) {
       setState(() {
@@ -131,23 +131,20 @@ class _ChatScreenState extends State<ChatScreen> {
     });
   }
 
-  void _showRiskNotice(Map<String, dynamic> response) {
-    final risk = response['risk_level'] ?? '';
-    if (risk == 'high' || risk == 'critical') {
-      showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('星宝很担心你'),
-          content: const Text('如果你正经历困难，请记得你不是一个人。可以拨打 12355 青少年服务热线或 400-161-9995 希望24热线寻求帮助。'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('我知道了'),
-            ),
-          ],
-        ),
-      );
-    }
+  void _showRiskNotice() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('星宝很担心你'),
+        content: const Text('如果你正经历困难，请记得你不是一个人。可以拨打 12355 青少年服务热线或 400-161-9995 希望24热线寻求帮助。'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('我知道了'),
+          ),
+        ],
+      ),
+    );
   }
 
   @override

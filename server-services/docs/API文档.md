@@ -137,8 +137,7 @@
 ### 1. 风险检测
 **POST** `/risk/detect`
 
-### 2. 获取用户风险等级
-**GET** `/risk/level/:userId`
+只返回二值危机信号 `crisis` / `need_intervention`，不再划分等级，也没有等级查询接口。
 
 ## 危机资源 API
 

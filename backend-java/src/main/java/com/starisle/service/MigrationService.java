@@ -192,7 +192,7 @@ public class MigrationService {
     @Transactional
     public long migrateChatMessages(MigrationResult result) {
         List<Map<String, Object>> sourceMessages = sourceJdbcTemplate.queryForList(
-                "SELECT id, user_id, role, content, message_type, risk_level, response_time_ms, created_at FROM chat_messages");
+                "SELECT id, user_id, role, content, message_type, response_time_ms, created_at FROM chat_messages");
 
         int migrated = 0;
         for (Map<String, Object> row : sourceMessages) {
@@ -203,7 +203,6 @@ public class MigrationService {
                         .role(getString(row, "role", "user"))
                         .content(getString(row, "content", ""))
                         .messageType(getString(row, "message_type"))
-                        .riskLevel(getString(row, "risk_level"))
                         .responseTimeMs(getLong(row, "response_time_ms"))
                         .createdAt(getLocalDateTime(row, "created_at"))
                         .build();
@@ -227,7 +226,7 @@ public class MigrationService {
     @Transactional
     public long migrateAssessmentResults(MigrationResult result) {
         List<Map<String, Object>> sourceResults = sourceJdbcTemplate.queryForList(
-                "SELECT id, user_id, type, total_score, risk_level, description, answers_json, created_at FROM assessment_results");
+                "SELECT id, user_id, type, total_score, description, answers_json, created_at FROM assessment_results");
 
         int migrated = 0;
         for (Map<String, Object> row : sourceResults) {
@@ -237,7 +236,6 @@ public class MigrationService {
                         .userId(getString(row, "user_id"))
                         .type(getString(row, "type", ""))
                         .totalScore(getInteger(row, "total_score", 0))
-                        .riskLevel(getString(row, "risk_level", "green"))
                         .description(getString(row, "description"))
                         .answersJson(getString(row, "answers_json"))
                         .createdAt(getLocalDateTime(row, "created_at"))
@@ -262,7 +260,7 @@ public class MigrationService {
     @Transactional
     public long migrateEmergencyAlerts(MigrationResult result) {
         List<Map<String, Object>> sourceAlerts = sourceJdbcTemplate.queryForList(
-                "SELECT id, student_id, parent_id, trigger_source, risk_level, status, confirmed_at, description, triggered_at, created_at FROM emergency_alerts");
+                "SELECT id, student_id, parent_id, trigger_source, status, confirmed_at, description, triggered_at, created_at FROM emergency_alerts");
 
         int migrated = 0;
         for (Map<String, Object> row : sourceAlerts) {
@@ -272,7 +270,6 @@ public class MigrationService {
                         .studentId(getString(row, "student_id"))
                         .parentId(getString(row, "parent_id"))
                         .triggerSource(getString(row, "trigger_source", "system"))
-                        .riskLevel(getString(row, "risk_level", "red"))
                         .status(getString(row, "status", "pending"))
                         .confirmedAt(getLocalDateTime(row, "confirmed_at"))
                         .description(getString(row, "description"))
@@ -336,7 +333,7 @@ public class MigrationService {
     public long migrateParentStudentBindings(MigrationResult result) {
         List<Map<String, Object>> sourceBindings = sourceJdbcTemplate.queryForList(
                 "SELECT id, parent_id, student_id, bind_type, authorized, authorized_at, " +
-                "student_nickname, student_avatar, latest_mood, risk_level, last_checkin_date, created_at, updated_at FROM parent_student_bindings");
+                "student_nickname, student_avatar, latest_mood, last_checkin_date, created_at, updated_at FROM parent_student_bindings");
 
         int migrated = 0;
         for (Map<String, Object> row : sourceBindings) {
@@ -351,7 +348,6 @@ public class MigrationService {
                         .studentNickname(getString(row, "student_nickname"))
                         .studentAvatar(getString(row, "student_avatar"))
                         .latestMood(getInteger(row, "latest_mood", 3))
-                        .riskLevel(getString(row, "risk_level", "green"))
                         .lastCheckinDate(getString(row, "last_checkin_date"))
                         .createdAt(getLocalDateTime(row, "created_at"))
                         .updatedAt(getLocalDateTime(row, "updated_at"))
@@ -559,6 +555,9 @@ public class MigrationService {
         if (value instanceof Timestamp) {
             return ((Timestamp) value).toLocalDateTime();
         }
+        if (value instanceof java.sql.Date sqlDate) {
+            return sqlDate.toLocalDate().atStartOfDay();
+        }
         if (value instanceof Date) {
             return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
         }
@@ -579,6 +578,9 @@ public class MigrationService {
         if (value instanceof LocalDate) return (LocalDate) value;
         if (value instanceof Timestamp) {
             return ((Timestamp) value).toLocalDateTime().toLocalDate();
+        }
+        if (value instanceof java.sql.Date sqlDate) {
+            return sqlDate.toLocalDate();
         }
         if (value instanceof Date) {
             return ((Date) value).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();

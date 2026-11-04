@@ -132,6 +132,10 @@ public class KeyManagerService {
      * @throws Exception 当密钥版本不存在或加密失败时抛出
      */
     public String encrypt(String content, String keyVersion) throws Exception {
+        if (content == null || content.isEmpty()) {
+            throw new IllegalArgumentException("Content cannot be null or empty");
+        }
+
         String key = activeKeys.get(keyVersion);
         if (key == null) {
             throw new RuntimeException("Key version not found: " + keyVersion);

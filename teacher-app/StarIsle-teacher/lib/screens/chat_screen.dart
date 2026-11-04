@@ -90,7 +90,7 @@ class CounselorChatListView extends ConsumerWidget {
     );
   }
 
-  /// 构建单个会话卡片，展示头像、姓名、最后消息、风险等级与时间。
+  /// 构建单个会话卡片，展示头像、姓名、最后消息与时间。
   ///
   /// 参数：
   /// - [context]：构建上下文；
@@ -114,13 +114,13 @@ class CounselorChatListView extends ConsumerWidget {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: session.riskLevel.color.withOpacity(0.1),
+                  color: TeacherTheme.starNightBlue.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(25),
                 ),
                 child: Center(
                   child: Text(
                     session.studentName.substring(0, 1),
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: session.riskLevel.color),
+                    style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: TeacherTheme.starNightBlue),
                   ),
                 ),
               ),
@@ -142,7 +142,7 @@ class CounselorChatListView extends ConsumerWidget {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                             decoration: BoxDecoration(
-                              color: TeacherTheme.warmOrange.withOpacity(0.15),
+                              color: TeacherTheme.warmOrange.withValues(alpha: 0.15),
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: const Text('介入中', style: TextStyle(fontSize: 10, color: TeacherTheme.warmOrange)),
@@ -164,26 +164,10 @@ class CounselorChatListView extends ConsumerWidget {
                   ],
                 ),
               ),
-              // 右侧：风险等级与时间
-              Column(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: session.riskLevel.color.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Text(
-                      session.riskLevel.label,
-                      style: TextStyle(fontSize: 10, fontWeight: FontWeight.w500, color: session.riskLevel.color),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    DateFormat('MM-dd HH:mm').format(session.lastActive),
-                    style: const TextStyle(fontSize: 10, color: Colors.grey),
-                  ),
-                ],
+              // 右侧：时间
+              Text(
+                DateFormat('MM-dd HH:mm').format(session.lastActive),
+                style: const TextStyle(fontSize: 10, color: Colors.grey),
               ),
             ],
           ),
@@ -320,7 +304,7 @@ class _ChatObservationScreenState extends ConsumerState<ChatObservationScreen> {
     );
   }
 
-  /// 构建单条消息气泡，区分教师/学生方向，并展示风险等级与策略提示。
+  /// 构建单条消息气泡，区分教师/学生方向，并展示危机标记与策略提示。
   ///
   /// 参数：
   /// - [context]：构建上下文；
@@ -372,18 +356,18 @@ class _ChatObservationScreenState extends ConsumerState<ChatObservationScreen> {
                           color: message.isTeacher ? Colors.white : Colors.black,
                         ),
                       ),
-                      // 风险等级标签
-                      if (message.riskLevel != null) ...[
+                      // 危机消息标记（二值，无等级）
+                      if (message.isCrisis) ...[
                         const SizedBox(height: 4),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                           decoration: BoxDecoration(
-                            color: message.riskLevel!.color.withOpacity(0.2),
+                            color: TeacherTheme.errorColor.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
-                          child: Text(
-                            message.riskLevel!.label,
-                            style: TextStyle(fontSize: 10, color: message.riskLevel!.color),
+                          child: const Text(
+                            '紧急',
+                            style: TextStyle(fontSize: 10, color: TeacherTheme.errorColor),
                           ),
                         ),
                       ],
@@ -467,7 +451,7 @@ class _ChatObservationScreenState extends ConsumerState<ChatObservationScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: TeacherTheme.warmOrange.withOpacity(0.1),
+              color: TeacherTheme.warmOrange.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Text(
@@ -617,14 +601,14 @@ class TeacherHelpChatView extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: request.isConnected ? TeacherTheme.riskGreen.withOpacity(0.1) : TeacherTheme.riskOrange.withOpacity(0.1),
+                    color: request.isConnected ? TeacherTheme.successColor.withValues(alpha: 0.1) : TeacherTheme.warningColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Text(
                     request.isConnected ? '已对接' : '等待中',
                     style: TextStyle(
                       fontSize: 12,
-                      color: request.isConnected ? TeacherTheme.riskGreen : TeacherTheme.riskOrange,
+                      color: request.isConnected ? TeacherTheme.successColor : TeacherTheme.warningColor,
                     ),
                   ),
                 ),
@@ -648,7 +632,7 @@ class TeacherHelpChatView extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: TeacherTheme.starNightBlueLight.withOpacity(0.1),
+                  color: TeacherTheme.starNightBlueLight.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Column(
@@ -742,7 +726,7 @@ class _SelfHelpRequestScreenState extends ConsumerState<SelfHelpRequestScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: TeacherTheme.warmOrange.withOpacity(0.1),
+                  color: TeacherTheme.warmOrange.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
@@ -834,7 +818,7 @@ class _SelfHelpRequestScreenState extends ConsumerState<SelfHelpRequestScreen> {
 
 /// 系统通知列表视图。
 ///
-/// 展示高风险告警、报告回执、授权请求与系统提示等通知项。
+/// 展示预警、报告回执、授权请求与系统提示等通知项。
 class SystemNotificationsView extends ConsumerWidget {
   /// 构造函数。
   const SystemNotificationsView({super.key});
@@ -847,7 +831,7 @@ class SystemNotificationsView extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final notifications = [
-      NotificationItem('高风险告警', '李小雨触发红色风险，已自动开放对话查看权限', DateTime.now().subtract(const Duration(hours: 1)), 'alert'),
+      NotificationItem('紧急预警', '李小雨触发紧急信号，已自动开放对话查看权限', DateTime.now().subtract(const Duration(hours: 1)), 'alert'),
       NotificationItem('报告回执', '王浩宇的症状反馈报告已处理完成', DateTime.now().subtract(const Duration(hours: 6)), 'report'),
       NotificationItem('授权请求', '周子涵发起对话观察授权请求', DateTime.now().subtract(const Duration(hours: 2)), 'auth'),
       NotificationItem('系统提示', '今日有3条待办事项需要处理', DateTime.now().subtract(const Duration(hours: 3)), 'system'),
@@ -882,7 +866,7 @@ class SystemNotificationsView extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: _getNotificationColor(item.type).withOpacity(0.1),
+                color: _getNotificationColor(item.type).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Center(
@@ -935,7 +919,7 @@ class SystemNotificationsView extends ConsumerWidget {
   /// 返回：对应 [Color]。
   Color _getNotificationColor(String type) {
     switch (type) {
-      case 'alert': return TeacherTheme.riskRed;
+      case 'alert': return TeacherTheme.errorColor;
       case 'report': return TeacherTheme.starNightBlueLight;
       case 'auth': return TeacherTheme.warmOrange;
       default: return Colors.grey;

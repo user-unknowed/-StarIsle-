@@ -1,6 +1,6 @@
 /**
  * @file classroomStore.ts
- * @description 班级管理 store：维护班级统计数据、学生列表（含最近心情与风险等级）、当前选中班级等，
+ * @description 班级管理 store：维护班级统计数据、学生列表（含最近心情）、当前选中班级等，
  *              为教师端首页/班级管理页提供数据。API 失败时降级到 mock 数据。
  * @module web-frontend/store
  */
@@ -22,16 +22,16 @@ interface ClassroomState {
   selectClass: (classId: string) => void;              // 切换班级
 }
 
-// Mock 学生列表（覆盖 red/orange/yellow/green 四种风险等级）
-const mockStudents: StudentWithMood[] = [
-  { id: 's1', nickname: '小明同学', avatar: '', latestMood: 2, riskLevel: 'yellow', alert: true },
-  { id: 's2', nickname: '小红同学', avatar: '', latestMood: 4, riskLevel: 'green', alert: false },
-  { id: 's3', nickname: '小刚同学', avatar: '', latestMood: 1, riskLevel: 'red', alert: true },
-  { id: 's4', nickname: '小丽同学', avatar: '', latestMood: 5, riskLevel: 'green', alert: false },
-  { id: 's5', nickname: '小华同学', avatar: '', latestMood: 3, riskLevel: 'green', alert: false },
-  { id: 's6', nickname: '小芳同学', avatar: '', latestMood: 2, riskLevel: 'orange', alert: true },
-  { id: 's7', nickname: '小强同学', avatar: '', latestMood: 4, riskLevel: 'green', alert: false },
-  { id: 's8', nickname: '小雪同学', avatar: '', latestMood: 5, riskLevel: 'green', alert: false },
+// Mock 学生列表（所有学生展示字段完全一致，不包含任何等级字段）
+export const mockStudents: StudentWithMood[] = [
+  { id: 's1', nickname: '小明同学', avatar: '', latestMood: 2, alert: true },
+  { id: 's2', nickname: '小红同学', avatar: '', latestMood: 4, alert: false },
+  { id: 's3', nickname: '小刚同学', avatar: '', latestMood: 1, alert: true },
+  { id: 's4', nickname: '小丽同学', avatar: '', latestMood: 5, alert: false },
+  { id: 's5', nickname: '小华同学', avatar: '', latestMood: 3, alert: false },
+  { id: 's6', nickname: '小芳同学', avatar: '', latestMood: 2, alert: true },
+  { id: 's7', nickname: '小强同学', avatar: '', latestMood: 4, alert: false },
+  { id: 's8', nickname: '小雪同学', avatar: '', latestMood: 5, alert: false },
 ];
 
 // Mock 班级统计

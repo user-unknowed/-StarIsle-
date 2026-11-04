@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
 
 /**
  * 紧急预警实体
- * 对应 {@code emergency_alerts} 表，当学生触发高风险信号时生成预警记录，
+ * 对应 {@code emergency_alerts} 表，当学生触发危机信号时生成预警记录，
  * 家长可在家长端确认该预警。
  */
 @Entity
@@ -38,11 +38,6 @@ public class EmergencyAlert {
     @Column(name = "trigger_source")
     @Builder.Default
     private String triggerSource = "system";
-
-    // 风险等级，默认红色
-    @Column(name = "risk_level", nullable = false)
-    @Builder.Default
-    private String riskLevel = "red";
 
     // 预警状态，默认待处理
     @Column(name = "status")

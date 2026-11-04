@@ -1,9 +1,9 @@
 """
-semantic_analyzer.py - 语义分析器（L2 语义级风险检测）
+semantic_analyzer.py - 语义分析器（L2 语义级危机检测）
 
 所属模块：ai-engine/app/models
 功能简述：
-    对用户文本进行意图识别与情绪强度分析，结合二者输出风险等级。
+    对用户文本进行意图识别与情绪强度分析，输出二值危机信号。
     MVP 阶段采用规则驱动的语义分析，后续可替换为深度学习模型。
 依赖关系：
     - os：读取环境变量中的置信度阈值配置
@@ -14,10 +14,10 @@ import os
 
 class SemanticAnalyzer:
     """
-    语义分析器 - L2语义级风险检测
+    语义分析器 - L2语义级危机检测
 
-    通过意图识别与情绪强度分析，输出风险等级、置信度、意图与强度，
-    作为风险检测服务 L1 关键词检测之后的第二层语义补充。
+    通过意图识别与情绪强度分析，输出 crisis、置信度、意图与强度，
+    作为危机检测服务 L1 关键词检测之后的第二层语义补充。
     """
     
     def __init__(self):
@@ -33,13 +33,13 @@ class SemanticAnalyzer:
     
     async def analyze(self, content: str) -> Dict:
         """
-        对文本进行语义分析，输出风险等级与意图强度。
+        对文本进行语义分析，输出二值危机信号与意图强度。
 
         Args:
             content: 待分析的文本
 
         Returns:
-            dict: 包含 risk_level、confidence、intent、intensity 的分析结果
+            dict: 包含 crisis、confidence、intent、intensity 的分析结果
         """
         # MVP阶段：使用规则+简单语义分析
         # 后续可替换为深度学习模型
@@ -50,11 +50,11 @@ class SemanticAnalyzer:
         # 2. 分析情绪强度：根据程度副词判断 mild/moderate/severe
         intensity = self._analyze_intensity(content)
 
-        # 3. 判断风险等级（v1.6 传入 content 用于积极词检测）
-        risk_level = self._calculate_risk(intent, intensity, content)
-        
+        # 3. 自伤意图即危机信号，不再按强度分级
+        crisis = intent == "self_harm"
+
         return {
-            "risk_level": risk_level,
+            "crisis": crisis,
             "confidence": 0.85,  # MVP阶段固定置信度
             "intent": intent,
             "intensity": intensity
@@ -70,17 +70,25 @@ class SemanticAnalyzer:
         Returns:
             str: 意图类型（self_harm / help_seeking / emotion_expression / casual_chat）
         """
-        # 自伤意念检测（v1.6 扩充）
-        self_harm_indicators = [
+        # 自伤意念检测（v1.6 扩充，v2.0 改为二值危机信号）
+        direct_self_harm_indicators = [
+            "自杀", "想死", "不想活", "自残", "割腕", "跳楼", "伤害自己",
+            "轻生", "结束生命", "了结", "一了百了"
+        ]
+        contextual_self_harm_indicators = [
             "不想", "结束", "消失", "解脱",
             "没有意义", "无所谓", "随便",
-            # v1.6 新增：基于 case_005 偏差
-            "轻生", "极端", "活着累", "活不下去", "了结", "一了百了"
+            "极端", "活着累", "活不下去"
         ]
 
-        for indicator in self_harm_indicators:
+        # 明确的自伤/轻生表达直接判定为自伤意图
+        for indicator in direct_self_harm_indicators:
             if indicator in content:
-                # 命中自伤关键词后进一步检查上下文，避免误判
+                return "self_harm"
+
+        for indicator in contextual_self_harm_indicators:
+            if indicator in content:
+                # 语境型表达进一步检查上下文，避免误判
                 if any(word in content for word in ["活着", "生命", "未来", "自己"]):
                     return "self_harm"
         
@@ -131,44 +139,3 @@ class SemanticAnalyzer:
         
         # 无强度副词则判为 mild
         return "mild"
-    
-    def _calculate_risk(self, intent: str, intensity: str, content: str = "") -> str:
-        """
-        根据意图与强度计算风险等级。
-
-        Args:
-            intent: 意图类型
-            intensity: 强度等级
-            content: 原文（v1.6 新增，用于积极词检测）
-
-        Returns:
-            str: 风险等级（green / yellow / orange / red）
-        """
-        # v1.6 积极词检测（降低 false positive）
-        positive_indicators = ["希望", "好起来", "帮帮我", "会好", "想好", "好多了"]
-
-        # 自伤意图按强度逐级提升风险等级
-        if intent == "self_harm":
-            if intensity == "severe":
-                return "red"
-            elif intensity == "moderate":
-                return "orange"
-            else:
-                return "yellow"
-
-        elif intent == "help_seeking":
-            # v1.6: 求助意图 + 积极词 → 降为 green（修复 case_017 偏差）
-            if content and any(word in content for word in positive_indicators):
-                return "green"
-            return "yellow"
-
-        elif intent == "emotion_expression":
-            # 情绪表达仅在高强度时升为 yellow
-            if intensity == "severe":
-                return "yellow"
-            else:
-                return "green"
-
-        else:
-            # 日常聊天默认安全
-            return "green"

@@ -22,7 +22,7 @@ final currentRoleProvider = Provider<TeacherRole>((ref) {
   return ref.watch(currentTeacherProvider).role;
 });
 
-/// 风险预警列表 Provider，由 [AlertsNotifier] 维护，初始化若干示例预警。
+/// 预警列表 Provider，由 [AlertsNotifier] 维护，初始化若干示例预警。
 final alertsProvider = StateNotifierProvider<AlertsNotifier, List<Alert>>((ref) {
   return AlertsNotifier([
     Alert(
@@ -30,7 +30,6 @@ final alertsProvider = StateNotifierProvider<AlertsNotifier, List<Alert>>((ref) 
       studentId: 's1',
       studentName: '李小雨',
       className: '高一(3)班',
-      riskLevel: RiskLevel.red,
       triggerReason: 'AI对话中检测到自伤倾向',
       triggeredAt: DateTime.now().subtract(const Duration(hours: 1)),
     ),
@@ -39,7 +38,6 @@ final alertsProvider = StateNotifierProvider<AlertsNotifier, List<Alert>>((ref) 
       studentId: 's2',
       studentName: '王浩宇',
       className: '高一(3)班',
-      riskLevel: RiskLevel.orange,
       triggerReason: '连续7天心情低落',
       triggeredAt: DateTime.now().subtract(const Duration(hours: 3)),
     ),
@@ -48,7 +46,6 @@ final alertsProvider = StateNotifierProvider<AlertsNotifier, List<Alert>>((ref) 
       studentId: 's3',
       studentName: '陈思琪',
       className: '高一(2)班',
-      riskLevel: RiskLevel.orange,
       triggerReason: '测评显示中度焦虑',
       triggeredAt: DateTime.now().subtract(const Duration(hours: 6)),
     ),
@@ -110,7 +107,7 @@ final todosProvider = StateNotifierProvider<TodosNotifier, List<TodoItem>>((ref)
     TodoItem(
       id: 'todo4',
       title: '观察学生对话',
-      description: '张婷婷 - 橙色风险',
+      description: '张婷婷 - 需要了解近况',
       deadline: DateTime.now().add(const Duration(hours: 8)),
       type: TodoType.observationTask,
       relatedId: 's4',
@@ -151,7 +148,7 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
       name: '李小雨',
       className: '高一(3)班',
       grade: 10,
-      riskLevel: RiskLevel.red,
+      hasAlert: true,
       lastStatusUpdate: DateTime.now().subtract(const Duration(hours: 1)),
       statusSummary: '情绪低落，有自伤倾向',
       moodTrend: -2,
@@ -161,7 +158,7 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
       name: '王浩宇',
       className: '高一(3)班',
       grade: 10,
-      riskLevel: RiskLevel.orange,
+      hasAlert: true,
       lastStatusUpdate: DateTime.now().subtract(const Duration(hours: 3)),
       statusSummary: '连续7天心情低落，睡眠不足',
       moodTrend: -1,
@@ -171,7 +168,7 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
       name: '张婷婷',
       className: '高一(3)班',
       grade: 10,
-      riskLevel: RiskLevel.orange,
+      hasAlert: true,
       lastStatusUpdate: DateTime.now().subtract(const Duration(hours: 5)),
       statusSummary: '焦虑，考试压力大',
       moodTrend: 0,
@@ -181,7 +178,7 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
       name: '刘畅',
       className: '高一(3)班',
       grade: 10,
-      riskLevel: RiskLevel.yellow,
+      hasAlert: false,
       lastStatusUpdate: DateTime.now().subtract(const Duration(hours: 8)),
       statusSummary: '最近比较沉默，社交活动减少',
       moodTrend: -1,
@@ -191,7 +188,7 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
       name: '孙悦',
       className: '高一(3)班',
       grade: 10,
-      riskLevel: RiskLevel.green,
+      hasAlert: false,
       lastStatusUpdate: DateTime.now().subtract(const Duration(hours: 12)),
       statusSummary: '状态平稳',
       moodTrend: 1,
@@ -201,7 +198,7 @@ final studentsProvider = StateNotifierProvider<StudentsNotifier, List<Student>>(
       name: '赵文博',
       className: '高一(3)班',
       grade: 10,
-      riskLevel: RiskLevel.green,
+      hasAlert: false,
       lastStatusUpdate: DateTime.now().subtract(const Duration(days: 1)),
       statusSummary: '状态良好',
       moodTrend: 2,
@@ -231,7 +228,7 @@ final reportsProvider = StateNotifierProvider<ReportsNotifier, List<SymptomRepor
       symptoms: [SymptomType.emotionalLow, SymptomType.sleepAbnormal],
       emotions: [EmotionalExpression.crying, EmotionalExpression.numb],
       duration: DurationType.oneToTwoWeeks,
-      severity: SeverityLevel.urgent,
+      needsFollowUp: true,
       description: '近两周情绪低落，上课注意力不集中，晚上失眠，有时会偷偷哭泣',
       hasCommunicated: true,
       hasContactedParent: false,
@@ -250,7 +247,7 @@ final reportsProvider = StateNotifierProvider<ReportsNotifier, List<SymptomRepor
       symptoms: [SymptomType.emotionalLow, SymptomType.academicDrop],
       emotions: [EmotionalExpression.numb],
       duration: DurationType.twoToFourWeeks,
-      severity: SeverityLevel.somewhatUrgent,
+      needsFollowUp: true,
       description: '连续两周成绩下滑明显，不愿与人交流',
       hasCommunicated: true,
       hasContactedParent: true,
@@ -271,7 +268,7 @@ final reportsProvider = StateNotifierProvider<ReportsNotifier, List<SymptomRepor
       symptoms: [SymptomType.anxious, SymptomType.academicDrop],
       emotions: [EmotionalExpression.anxious],
       duration: DurationType.oneToTwoWeeks,
-      severity: SeverityLevel.needAttention,
+      needsFollowUp: false,
       description: '期中考试临近，压力较大，担心考不好',
       hasCommunicated: false,
       hasContactedParent: false,
@@ -317,7 +314,6 @@ final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<St
       studentId: 's1',
       studentName: '李小雨',
       className: '高一(3)班',
-      riskLevel: RiskLevel.red,
       lastActive: DateTime.now().subtract(const Duration(hours: 1)),
       isIntervening: false,
       messages: [
@@ -336,7 +332,7 @@ final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<St
           isTeacher: false,
           content: '我觉得活着没什么意思...',
           sentAt: DateTime.now().subtract(const Duration(hours: 2)),
-          riskLevel: RiskLevel.red,
+          isCrisis: true,
         ),
         ChatMessage(
           id: 'm3',
@@ -354,7 +350,6 @@ final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<St
           isTeacher: false,
           content: '学习压力太大了，爸妈也不理解我...',
           sentAt: DateTime.now().subtract(const Duration(hours: 1)),
-          riskLevel: RiskLevel.orange,
         ),
       ],
     ),
@@ -363,7 +358,6 @@ final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<St
       studentId: 's2',
       studentName: '王浩宇',
       className: '高一(3)班',
-      riskLevel: RiskLevel.orange,
       lastActive: DateTime.now().subtract(const Duration(hours: 3)),
       isIntervening: true,
       messages: [
@@ -382,7 +376,6 @@ final chatSessionsProvider = StateNotifierProvider<ChatSessionsNotifier, List<St
           isTeacher: false,
           content: '不太好，每天都很累',
           sentAt: DateTime.now().subtract(const Duration(hours: 4)),
-          riskLevel: RiskLevel.yellow,
         ),
         ChatMessage(
           id: 'm7',
@@ -620,11 +613,11 @@ final knowledgeBaseProvider = StateNotifierProvider<KnowledgeBaseNotifier, List<
 ### 第三步：填写反馈表
 - 选择学生
 - 勾选行为表现和情绪表现
-- 选择持续时间和严重程度
+- 选择持续时间和是否需要跟进
 - 填写具体描述
 
 ### 第四步：提交报告
-- 系统会根据严重程度自动推送
+- 系统会根据跟进标记自动推送
 - 紧急情况立即联系心理老师
 
 ### 第五步：跟进回执
@@ -641,7 +634,7 @@ final knowledgeBaseProvider = StateNotifierProvider<KnowledgeBaseNotifier, List<
       content: '''## 危机干预技术手册
 
 ### 一、危机评估
-1. 评估危险等级
+1. 评估危机程度
 2. 确定干预方向
 3. 制定干预计划
 
@@ -669,22 +662,22 @@ final knowledgeBaseProvider = StateNotifierProvider<KnowledgeBaseNotifier, List<
       id: 'kb5',
       title: '危机处理SOP',
       category: '危机SOP',
-      summary: '高风险危机处理标准流程（心理老师专用）',
+      summary: '危机处理标准流程（心理老师专用）',
       content: '''## 危机处理SOP
 
-### 红色风险处理流程
+### 紧急信号处理流程
 1. 立即响应（30分钟内）
 2. 评估危机程度
 3. 启动安全协议
 4. 通知相关人员
 
-### 橙色风险处理流程
+### 需跟进情况处理流程
 1. 2小时内响应
 2. 安排面谈
 3. 制定干预计划
 4. 48小时内回访
 
-### 黄色风险处理流程
+### 常规关注流程
 1. 48小时内响应
 2. 关注状态变化
 3. 提供自助资源
@@ -721,7 +714,7 @@ final emotionalOverviewProvider = StateProvider<EmotionalOverview>((ref) {
       '不太好': 6,
       '很糟': 4,
     },
-    highRiskCount: 3,
+    alertCount: 3,
     updatedAt: DateTime.now(),
   );
 });

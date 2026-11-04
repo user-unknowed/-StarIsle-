@@ -33,8 +33,6 @@ interface AssessmentQuestion {
 interface AssessmentResultData {
   total_score?: number;
   score?: number;
-  risk_level?: string;
-  level?: string;
   description?: string;
   suggestion?: string;
   suggestions?: string[];
@@ -206,25 +204,13 @@ export default function StudentKnowledge() {
       // 降级 mock 结果
       setSource('mock');
       const total = ansArr.reduce((a, b) => a + b, 0);
-      const level = total <= 2 ? 'green' : total <= 4 ? 'yellow' : total <= 6 ? 'orange' : 'red';
       setResult({
         total_score: total,
-        risk_level: level,
         description: '（示例结果）根据你的作答，为你生成了初步评估。',
         suggestions: ['继续每天的心情打卡', '试试呼吸练习保持放松', '必要时寻求专业帮助'],
       });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const levelLabel = (lv?: string) => {
-    switch (lv) {
-      case 'green': return '正常';
-      case 'yellow': return '低风险';
-      case 'orange': return '中风险';
-      case 'red': return '高风险';
-      default: return '正常';
     }
   };
 
@@ -441,21 +427,10 @@ export default function StudentKnowledge() {
           {!loading && result && (
             <div className="space-y-4">
               <div className="p-4 bg-gradient-to-r from-primary-50 to-secondary-50 rounded-2xl">
-                <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-500">测评得分</span>
                   <span className="text-2xl font-bold text-primary-600">
                     {result.total_score ?? result.score ?? 0}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">风险等级</span>
-                  <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
-                    (result.risk_level || result.level) === 'green' ? 'bg-green-100 text-green-600' :
-                    (result.risk_level || result.level) === 'yellow' ? 'bg-yellow-100 text-yellow-600' :
-                    (result.risk_level || result.level) === 'red' ? 'bg-red-100 text-red-600' :
-                    'bg-orange-100 text-orange-600'
-                  }`}>
-                    {levelLabel(result.risk_level || result.level)}
                   </span>
                 </div>
               </div>

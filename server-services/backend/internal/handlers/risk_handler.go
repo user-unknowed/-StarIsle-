@@ -1,8 +1,8 @@
-// risk_handler.go - 风险检测与危机响应 HTTP 处理器
+// risk_handler.go - 危机信号检测与危机响应 HTTP 处理器
 //
 // 混合型 handler：
-//   - DetectRisk: 编排型 — 调 AI 引擎 /risk/check，高危时联动 Java 危机上报
-//   - GetUserRiskLevel, GetCrisisHotlines: 透传到 Java 后端
+//   - DetectRisk: 编排型 — 调 AI 引擎 /risk/check，危机信号为真时联动 Java 危机上报
+//   - GetCrisisHotlines: 透传到 Java 后端
 //   - ReportCrisis: 透传到 Java 后端
 package handlers
 
@@ -18,8 +18,8 @@ import (
 )
 
 // DetectRisk 编排型 handler：
-// 1. 调 AI 引擎 POST /risk/check 获取风险等级
-// 2. 若返回 red 或 orange，异步调 Java 后端 POST /api/v1/crisis/report 触发危机上报
+// 1. 调 AI 引擎 POST /risk/check 获取危机信号
+// 2. 若 crisis 为 true，异步调 Java 后端 POST /api/v1/crisis/report 触发危机上报
 func DetectRisk(c *gin.Context) {
 	var req service.RiskCheckRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -27,32 +27,30 @@ func DetectRisk(c *gin.Context) {
 		return
 	}
 
-	// 调 AI 引擎进行风险检测
+	// 调 AI 引擎进行危机信号检测
 	aiResp, err := AICli.CheckRisk(c.Request.Context(), &req)
 	if err != nil {
-		log.Printf("[DetectRisk] AI 风险检测失败 user=%s: %v", req.UserId, err)
-		// 降级：返回 green + 低置信度，不阻塞流程
+		log.Printf("[DetectRisk] AI 危机检测失败 user=%s: %v", req.UserId, err)
+		// 降级：返回非危机 + 低置信度，不阻塞流程
 		c.JSON(http.StatusOK, gin.H{
 			"user_id":            req.UserId,
-			"risk_level":         "green",
+			"crisis":             false,
+			"need_intervention":  false,
 			"confidence":         0.0,
 			"triggered_keywords": []string{},
-			"need_intervention":  false,
 			"degraded":           true,
 		})
 		return
 	}
 
-	needIntervention := aiResp.RiskLevel == "red" || aiResp.RiskLevel == "orange"
-
-	// 高危联动：异步触发危机上报
-	if needIntervention {
+	// 危机联动：异步触发危机上报
+	if aiResp.Crisis {
 		go func() {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 			err := JavaCli.Post(ctx, "/api/v1/crisis/report", map[string]interface{}{
 				"user_id":      req.UserId,
-				"risk_level":   aiResp.RiskLevel,
+				"crisis":       true,
 				"trigger_type": "semantic",
 				"content_type": req.ContentType,
 				"confidence":   aiResp.Confidence,
@@ -65,16 +63,11 @@ func DetectRisk(c *gin.Context) {
 
 	c.JSON(http.StatusOK, gin.H{
 		"user_id":            req.UserId,
-		"risk_level":         aiResp.RiskLevel,
-		"confidence":          aiResp.Confidence,
+		"crisis":             aiResp.Crisis,
+		"need_intervention":  aiResp.NeedIntervention,
+		"confidence":         aiResp.Confidence,
 		"triggered_keywords": []string{},
-		"need_intervention":  needIntervention,
 	})
-}
-
-// GetUserRiskLevel 透传到 Java 后端 GET /api/v1/risk/level/:userId
-func GetUserRiskLevel(c *gin.Context) {
-	JavaCli.Proxy(c)
 }
 
 // GetCrisisHotlines 透传到 Java 后端 GET /api/v1/crisis/hotlines

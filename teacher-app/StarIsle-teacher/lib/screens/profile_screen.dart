@@ -171,10 +171,10 @@ class ProfileScreen extends ConsumerWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                       decoration: BoxDecoration(
-                        color: TeacherTheme.riskOrange.withOpacity(0.1),
+                        color: TeacherTheme.warmOrange.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
-                      child: Text(tag, style: TextStyle(fontSize: 12, color: TeacherTheme.riskOrange)),
+                      child: Text(tag, style: TextStyle(fontSize: 12, color: TeacherTheme.warmOrange)),
                     )
                   ).toList(),
                 ),
@@ -255,11 +255,11 @@ class ProfileScreen extends ConsumerWidget {
   /// 返回：对应等级的 [Color]。
   Color _getMoodColor(int level) {
     switch (level) {
-      case 1: return TeacherTheme.riskRed;
-      case 2: return TeacherTheme.riskOrange;
-      case 3: return TeacherTheme.riskYellow;
+      case 1: return TeacherTheme.errorColor;
+      case 2: return TeacherTheme.warmOrange;
+      case 3: return TeacherTheme.warningColor;
       case 4: return TeacherTheme.starNightBlueLight;
-      case 5: return TeacherTheme.riskGreen;
+      case 5: return TeacherTheme.successColor;
       default: return Colors.grey[200]!;
     }
   }
@@ -282,7 +282,7 @@ class ProfileScreen extends ConsumerWidget {
   /// 返回：3 列 [GridView]。
   Widget _buildRelaxationSpace(BuildContext context) {
     final relaxationItems = [
-      RelaxationItem('捏泡泡纸', Icons.bubble_chart, TeacherTheme.riskGreen, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BubbleWrapGame()))),
+      RelaxationItem('捏泡泡纸', Icons.bubble_chart, TeacherTheme.successColor, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BubbleWrapGame()))),
       RelaxationItem('指尖陀螺', Icons.spinner, TeacherTheme.starNightBlue, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const FidgetSpinnerGame()))),
       RelaxationItem('涂色板', Icons.palette, TeacherTheme.warmOrange, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const ColoringBoardGame()))),
       RelaxationItem('白噪音', Icons.waves, TeacherTheme.starNightBlueLight, () => Navigator.push(context, MaterialPageRoute(builder: (_) => const WhiteNoiseGenerator()))),
@@ -383,12 +383,12 @@ class ProfileScreen extends ConsumerWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: request.isConnected ? TeacherTheme.riskGreen.withOpacity(0.1) : TeacherTheme.riskOrange.withOpacity(0.1),
+                  color: request.isConnected ? TeacherTheme.successColor.withOpacity(0.1) : TeacherTheme.warningColor.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(4),
                 ),
                 child: Text(
                   request.isConnected ? '已对接' : '等待中',
-                  style: TextStyle(fontSize: 10, color: request.isConnected ? TeacherTheme.riskGreen : TeacherTheme.riskOrange),
+                  style: TextStyle(fontSize: 10, color: request.isConnected ? TeacherTheme.successColor : TeacherTheme.warningColor),
                 ),
               ),
             ],
@@ -526,11 +526,11 @@ class ProfileScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 12),
         child: Row(
           children: [
-            Icon(icon, color: isDestructive ? TeacherTheme.riskRed : Colors.grey),
+            Icon(icon, color: isDestructive ? TeacherTheme.errorColor : Colors.grey),
             const SizedBox(width: 12),
             Text(
               title,
-              style: TextStyle(fontSize: 14, color: isDestructive ? TeacherTheme.riskRed : null),
+              style: TextStyle(fontSize: 14, color: isDestructive ? TeacherTheme.errorColor : null),
             ),
             const Spacer(),
             const Icon(Icons.chevron_right, color: Colors.grey),
@@ -820,10 +820,10 @@ class _ColoringBoardGameState extends State<ColoringBoardGame> {
     TeacherTheme.starNightBlue,
     TeacherTheme.starNightBlueLight,
     TeacherTheme.warmOrange,
-    TeacherTheme.riskRed,
-    TeacherTheme.riskOrange,
-    TeacherTheme.riskYellow,
-    TeacherTheme.riskGreen,
+    TeacherTheme.errorColor,
+    TeacherTheme.warmOrange,
+    TeacherTheme.warmOrangeLight,
+    TeacherTheme.successColor,
     Colors.purple,
     Colors.pink,
     Colors.grey,

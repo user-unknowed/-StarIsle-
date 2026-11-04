@@ -105,7 +105,6 @@ class MemoryStorageService {
         student_id TEXT NOT NULL,
         student_name TEXT NOT NULL,
         content TEXT NOT NULL,
-        risk_level TEXT,
         created_at INTEGER NOT NULL,
         updated_at INTEGER,
         expires_at INTEGER
@@ -119,7 +118,6 @@ class MemoryStorageService {
         student_name TEXT NOT NULL,
         symptoms TEXT NOT NULL,
         report_type TEXT NOT NULL,
-        severity INTEGER,
         created_at INTEGER NOT NULL,
         expires_at INTEGER
       )
@@ -131,7 +129,6 @@ class MemoryStorageService {
         student_id TEXT NOT NULL,
         student_name TEXT NOT NULL,
         class_name TEXT,
-        risk_level TEXT NOT NULL,
         trigger_reason TEXT NOT NULL,
         resolved INTEGER DEFAULT 0,
         resolved_at INTEGER,
@@ -201,7 +198,6 @@ class MemoryStorageService {
     ''');
 
     await db.execute('CREATE INDEX idx_observation_student ON observation_notes(student_id)');
-    await db.execute('CREATE INDEX idx_alerts_risk ON alerts(risk_level)');
     await db.execute('CREATE INDEX idx_todo_priority ON todo_items(priority)');
   }
 

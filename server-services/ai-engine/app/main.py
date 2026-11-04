@@ -150,13 +150,22 @@ class ChatRequest(BaseModel):
     user_profile: Optional[dict] = {}         # 用户画像信息
 
 class ChatResponse(BaseModel):
-    """对话响应模型，返回AI回复及风险/情绪/RAG增强等附加信息"""
+    """对话响应模型，返回AI回复及危机/情绪/RAG增强等附加信息"""
     response: str                             # AI 生成的回复文本
-    risk_level: str                            # 风险等级
+    crisis: bool                              # 是否命中危机信号
+    need_intervention: bool                   # 是否需要人工干预（与 crisis 同源）
     emotion_tags: List[str]                    # 情绪标签列表
     response_time_ms: int                      # 响应耗时（毫秒）
     rag_enhanced: bool = False                 # 是否启用 RAG 知识增强
     knowledge_mode: str = "unknown"            # 知识库模式
+
+class RiskDetectionResponse(BaseModel):
+    """危机检测响应模型，返回二值危机信号与检测明细"""
+    user_id: str                               # 用户唯一标识
+    crisis: bool                               # 是否命中危机信号
+    need_intervention: bool                    # 是否需要人工干预（与 crisis 同源）
+    confidence: float                          # 判定置信度
+    details: dict                              # 命中关键词、意图、置信度与来源
 
 class RiskCheckRequest(BaseModel):
     """风险检测请求模型，用于对内容进行风险评估"""
@@ -191,10 +200,10 @@ async def chat(request: ChatRequest):
         request: 对话请求，包含用户ID、消息、上下文与用户画像
 
     Returns:
-        ChatResponse: 包含回复文本、风险等级、情绪标签与响应耗时
+        ChatResponse: 包含回复文本、危机信号、情绪标签与响应耗时
 
     Raises:
-        HTTPException: 当对话生成或风险检测失败时返回 500
+        HTTPException: 当对话生成或危机检测失败时返回 500
     """
     try:
         # 生成对话回复（含RAG知识增强）
@@ -205,8 +214,8 @@ async def chat(request: ChatRequest):
             user_profile=request.user_profile
         )
         
-        # 实时风险检测：对用户消息进行风险评估
-        risk_level = await risk_service.detect_risk(
+        # 实时危机检测：对用户消息进行二值危机判定
+        crisis = await risk_service.detect_risk(
             user_id=request.user_id,
             content=request.message
         )
@@ -217,7 +226,8 @@ async def chat(request: ChatRequest):
         # 组装响应，附带 RAG 增强与知识库模式标记
         return ChatResponse(
             response=response["content"],
-            risk_level=risk_level,
+            crisis=crisis,
+            need_intervention=crisis,
             emotion_tags=emotion_tags,
             response_time_ms=response["response_time_ms"],
             rag_enhanced=response.get("rag_enhanced", False),
@@ -228,33 +238,36 @@ async def chat(request: ChatRequest):
         # 任意环节异常均返回 500，并携带错误详情
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/risk/check")
+@app.post("/risk/check", response_model=RiskDetectionResponse)
 async def check_risk(request: RiskCheckRequest):
     """
-    风险检测接口 - L1关键词 + L2语义分析
+    危机检测接口 - L1关键词 + L2语义分析
 
     Args:
-        request: 风险检测请求，包含用户ID与待检测内容
+        request: 危机检测请求，包含用户ID与待检测内容
 
     Returns:
-        dict: 风险等级、置信度与检测细节
+        RiskDetectionResponse: 二值危机信号、置信度与检测明细
 
     Raises:
         HTTPException: 检测失败时返回 500
     """
     try:
-        # 调用风险检测服务获取风险等级
-        result = await risk_service.detect_risk(
+        # 调用危机检测服务获取二值危机信号
+        crisis = await risk_service.detect_risk(
             user_id=request.user_id,
             content=request.content
         )
-        
-        return {
-            "user_id": request.user_id,
-            "risk_level": result,
-            "confidence": 0.95,
-            "details": await risk_service.get_detection_details(request.content)
-        }
+
+        details = await risk_service.get_detection_details(request.content)
+
+        return RiskDetectionResponse(
+            user_id=request.user_id,
+            crisis=crisis,
+            need_intervention=crisis,
+            confidence=details.get("confidence", 0.0),
+            details=details
+        )
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

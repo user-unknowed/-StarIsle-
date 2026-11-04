@@ -1,6 +1,6 @@
 /**
  * @file ParentHome.tsx
- * @description 家长端首页，展示孩子情绪状态、趋势图、风险等级及紧急告警/AI 顾问/孩子管理入口
+ * @description 家长端首页，展示孩子情绪状态、趋势图及紧急告警/AI 顾问/孩子管理入口
  * @module web-frontend/pages/parent
  */
 import { useEffect, useState } from 'react';
@@ -35,42 +35,6 @@ const moodEmojis: Record<number, string> = {
  */
 const getMoodEmoji = (level: number | undefined) =>
   level ? moodEmojis[level] || '😐' : '❓';
-
-/**
- * 根据风险等级返回对应 Tailwind 类名（背景/文字/边框配色）
- * @param level - 风险等级：red/orange/yellow/green
- * @returns Tailwind 类名字符串
- */
-const getRiskColor = (level: string | undefined) => {
-  switch (level) {
-    case 'red':
-      return 'bg-red-100 text-red-600 border-red-200';
-    case 'orange':
-      return 'bg-orange-100 text-orange-600 border-orange-200';
-    case 'yellow':
-      return 'bg-yellow-100 text-yellow-600 border-yellow-200';
-    default:
-      return 'bg-green-100 text-green-600 border-green-200';
-  }
-};
-
-/**
- * 根据风险等级返回中文标签
- * @param level - 风险等级
- * @returns 高风险/中风险/低风险/正常
- */
-const getRiskLabel = (level: string | undefined) => {
-  switch (level) {
-    case 'red':
-      return '高风险';
-    case 'orange':
-      return '中风险';
-    case 'yellow':
-      return '低风险';
-    default:
-      return '正常';
-  }
-};
 
 // 趋势图时间范围类型：7天/30天/90天
 type RangeKey = 7 | 30 | 90;
@@ -121,8 +85,8 @@ export default function ParentHome() {
   const continuousDays = childMood.length;
   // 第一条未确认告警作为活跃告警
   const activeAlert = emergencyAlerts.find((a) => !a.confirmed);
-  // 风险等级：取活跃告警等级，无则默认正常
-  const riskLevel = activeAlert?.level || 'green';
+  // 是否存在未确认的紧急提醒
+  const hasActiveAlert = Boolean(activeAlert);
 
   /**
    * 选择某个孩子作为当前查看对象
@@ -207,14 +171,14 @@ export default function ParentHome() {
             </div>
           </div>
 
-          <div className={`rounded-2xl p-5 shadow-lg border-2 ${getRiskColor(riskLevel)}`}>
+          <div className={`rounded-2xl p-5 shadow-lg border-2 ${hasActiveAlert ? 'bg-red-50 text-red-600 border-red-200' : 'bg-white text-gray-800 border-gray-200'}`}>
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/50 rounded-xl flex items-center justify-center">
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${hasActiveAlert ? 'bg-white/50' : 'bg-gray-100'}`}>
                 <AlertTriangle className="w-6 h-6" />
               </div>
               <div>
-                <p className="text-sm opacity-80">风险等级</p>
-                <p className="text-2xl font-bold">{getRiskLabel(riskLevel)}</p>
+                <p className="text-sm opacity-80">紧急提醒</p>
+                <p className="text-2xl font-bold">{hasActiveAlert ? '待确认' : '暂无'}</p>
               </div>
             </div>
           </div>

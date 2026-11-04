@@ -56,7 +56,6 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     role VARCHAR(20) NOT NULL,
     content TEXT NOT NULL,
     message_type VARCHAR(50),
-    risk_level VARCHAR(20),
     response_time_ms BIGINT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_chat_messages_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -70,14 +69,12 @@ CREATE TABLE IF NOT EXISTS assessment_results (
     user_id CHAR(36) NOT NULL,
     type VARCHAR(50) NOT NULL,
     total_score INT NOT NULL,
-    risk_level VARCHAR(20) NOT NULL,
     description TEXT,
     answers_json TEXT,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     CONSTRAINT fk_assessment_results_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 CREATE INDEX IF NOT EXISTS idx_assessment_results_user_id ON assessment_results(user_id);
-CREATE INDEX IF NOT EXISTS idx_assessment_results_risk_level ON assessment_results(risk_level);
 
 -- 紧急资源表
 CREATE TABLE IF NOT EXISTS emergency_resources (
@@ -99,7 +96,6 @@ CREATE TABLE IF NOT EXISTS emergency_alerts (
     student_id CHAR(36) NOT NULL,
     parent_id CHAR(36) NOT NULL,
     trigger_source VARCHAR(50) NOT NULL DEFAULT 'system',
-    risk_level VARCHAR(20) NOT NULL DEFAULT 'red',
     status VARCHAR(20) NOT NULL DEFAULT 'pending',
     confirmed_at TIMESTAMP,
     description VARCHAR(500),
@@ -137,7 +133,6 @@ CREATE TABLE IF NOT EXISTS parent_student_bindings (
     student_nickname VARCHAR(50),
     student_avatar VARCHAR(255),
     latest_mood SMALLINT NOT NULL DEFAULT 3,
-    risk_level VARCHAR(20) NOT NULL DEFAULT 'green',
     last_checkin_date DATE,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,

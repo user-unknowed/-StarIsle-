@@ -3,10 +3,10 @@
  *
  * 状态打标云函数 — 9 个动作 dispatch（switch action）
  *
- *  动作 1: listStatusTags          — teacher(approved) 本人标签 + 系统内置 5 枚举
+ *  动作 1: listStatusTags          — teacher(approved) 仅返回本人自定义中性标签（无内置等级）
  *  动作 2: createTag               — teacher(approved) 创建自定义标签
  *  动作 3: updateTag               — teacher(approved) 修改自定义标签
- *  动作 4: removeTag               — teacher(approved) 删除自定义标签（内置不可删）
+ *  动作 4: removeTag               — teacher(approved) 删除自定义标签
  *  动作 5: tagStudent              — teacher(approved) 打学生标签 → 写 status_snapshots
  *  动作 6: untagStudent            — teacher(approved) 撤销标签（validUntil=now，写新快照）
  *  动作 7: listSnapshotsByStudent  — teacher(approved) 按学生查快照列表
@@ -90,15 +90,7 @@ var fail = _resp.fail;
 // status_tags 集合名（collectionNames.js 中未列出，使用字符串常量）
 var STATUS_TAGS = 'status_tags';
 
-// ========== 系统内置 5 个枚举标签 ==========
-var BUILTIN_TAGS = [
-  { _id: 'builtin_normal',        name: '正常',     color: 'emerald', builtIn: true, teacherId: null },
-  { _id: 'builtin_monitoring',    name: '监测中',   color: 'cyan',    builtIn: true, teacherId: null },
-  { _id: 'builtin_intervention',  name: '干预中',   color: 'amber',   builtIn: true, teacherId: null },
-  { _id: 'builtin_high_risk',     name: '高风险',   color: 'rose',    builtIn: true, teacherId: null },
-  { _id: 'builtin_referral_crisis', name: '转介危机', color: 'indigo',  builtIn: true, teacherId: null }
-];
-var BUILTIN_TAG_IDS = BUILTIN_TAGS.map(function (t) { return t._id; });
+// 无内置状态等级：status_tags 仅存教师自定义的中性备注标签。
 
 // ========== color 白名单校验 ==========
 var COLOR_PRESET_MAP = {
@@ -135,41 +127,29 @@ async function getOwnCustomTags(teacherId) {
       _id: t._id,
       name: t.name,
       color: t.color,
-      builtIn: false,
       teacherId: t.teacherId
     };
   });
 }
 
-// ========== 工具：按 tagIds 批量查标签（用于 scope 校验 ③） ==========
+// ========== 工具：按 tagIds 批量查教师自定义标签（用于 scope 校验 ③） ==========
 async function getTagsByIds(tagIds) {
   if (!tagIds || !tagIds.length) return [];
-  var builtin = BUILTIN_TAGS.filter(function (t) {
-    return tagIds.indexOf(t._id) >= 0;
-  });
-  var customIds = tagIds.filter(function (id) {
-    return BUILTIN_TAG_IDS.indexOf(id) < 0;
-  });
-  var customs = [];
-  if (customIds.length) {
-    var cmd = db.command;
-    try {
-      var res = await db.collection(STATUS_TAGS)
-        .where({ _id: cmd.in(customIds) })
-        .limit(customIds.length)
-        .get();
-      customs = (res.data || []).map(function (t) {
-        return {
-          _id: t._id,
-          name: t.name,
-          color: t.color,
-          builtIn: false,
-          teacherId: t.teacherId
-        };
-      });
-    } catch (e) { customs = []; }
-  }
-  return builtin.concat(customs);
+  var cmd = db.command;
+  try {
+    var res = await db.collection(STATUS_TAGS)
+      .where({ _id: cmd.in(tagIds) })
+      .limit(tagIds.length)
+      .get();
+    return (res.data || []).map(function (t) {
+      return {
+        _id: t._id,
+        name: t.name,
+        color: t.color,
+        teacherId: t.teacherId
+      };
+    });
+  } catch (e) { return []; }
 }
 
 // ========== 工具：Date → YYYYMMDD ==========
@@ -193,12 +173,11 @@ function csvCell(v) {
 
 // ============================================================
 // 动作 1: listStatusTags — teacher(approved)
-// 返回：教师本人自定义标签 + 系统内置 5 枚举标签
+// 返回：教师本人自定义中性标签（无内置状态等级）
 // ============================================================
 async function actionListStatusTags(ctx, user, event) {
   var custom = await getOwnCustomTags(ctx.OPENID);
-  var all = BUILTIN_TAGS.slice().concat(custom);
-  return ok(all);
+  return ok(custom);
 }
 
 // ============================================================
@@ -236,7 +215,6 @@ async function actionCreateTag(ctx, user, event) {
       teacherAnonymousNo: user.anonymousNo || '',
       name: name,
       color: normColor,
-      builtIn: false,
       createdAt: now,
       updatedAt: now
     }
@@ -257,9 +235,6 @@ async function actionUpdateTag(ctx, user, event) {
   var color = event.color !== undefined ? String(event.color).trim() : null;
 
   if (!tagId) return fail(400, 'tagId 缺失');
-  if (BUILTIN_TAG_IDS.indexOf(tagId) >= 0) {
-    return fail(403, '系统内置标签不可修改');
-  }
 
   // owner 校验
   var tagsCol = db.collection(STATUS_TAGS);
@@ -310,15 +285,12 @@ async function actionUpdateTag(ctx, user, event) {
 
 // ============================================================
 // 动作 4: removeTag — teacher(approved) 删除自定义标签
-// 内置标签不允许删；已有快照引用该 tagId 时 → 快照 tagId 改为 tag_deleted:oldTagId
+// 已有快照引用该 tagId 时 → 快照 tagId 改为 tag_deleted:oldTagId
 // ============================================================
 async function actionRemoveTag(ctx, user, event) {
   event = event || {};
   var tagId = String(event.tagId || '').trim();
   if (!tagId) return fail(400, 'tagId 缺失');
-  if (BUILTIN_TAG_IDS.indexOf(tagId) >= 0) {
-    return fail(403, '系统内置标签不可删除');
-  }
 
   // owner 校验
   var tagsCol = db.collection(STATUS_TAGS);
@@ -417,7 +389,7 @@ async function actionTagStudent(ctx, user, event) {
     }
   }
 
-  // ③ tagIds 越权校验：每个 tag 必须是 builtIn 或 teacherId==本人
+  // ③ tagIds 越权校验：每个 tag 必须是本人自定义标签
   var tagsFound = await getTagsByIds(tagIds);
   var foundIds = tagsFound.map(function (t) { return t._id; });
   for (var ti = 0; ti < tagIds.length; ti++) {
@@ -427,11 +399,11 @@ async function actionTagStudent(ctx, user, event) {
       return fail(403, '标签越权：不允许使用已删除标签作为新打标');
     }
     if (foundIds.indexOf(tid) < 0) {
-      return fail(403, '标签越权：非本人或内置标签 → ' + String(tid));
+      return fail(403, '标签越权：非本人标签 → ' + String(tid));
     }
     var theTag = tagsFound.find(function (t) { return t._id === tid; });
-    if (theTag && !theTag.builtIn && theTag.teacherId !== ctx.OPENID) {
-      return fail(403, '标签越权：非本人或内置标签 → ' + String(tid));
+    if (theTag && theTag.teacherId !== ctx.OPENID) {
+      return fail(403, '标签越权：非本人标签 → ' + String(tid));
     }
   }
 
@@ -877,7 +849,7 @@ Object.assign(exports, {
     'exportSnapshotsAuditCSV',
     'runBindingArchive'
   ],
-  _BUILTIN_TAGS: BUILTIN_TAGS,
+  _builtinStatusLevels: [],  // 无内置状态等级，仅教师自定义标签
   _isValidColor: isValidColor,
   _normalizeColor: normalizeColor
 });

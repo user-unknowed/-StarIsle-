@@ -32,7 +32,6 @@ CREATE TABLE assessment_results (
     assessment_type VARCHAR(50) NOT NULL, -- 'emotional' / 'stress' / 'relationship'
     total_score INTEGER NOT NULL,
     answers TEXT NOT NULL, -- JSON格式的答案
-    risk_level VARCHAR(20) NOT NULL CHECK (risk_level IN ('green', 'yellow', 'orange', 'red')),
     result_text TEXT NOT NULL, -- 结果描述
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -51,18 +50,6 @@ CREATE TABLE meditation_contents (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
--- 风险记录表
-CREATE TABLE risk_records (
-    record_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    user_id UUID NOT NULL REFERENCES users(user_id),
-    risk_level VARCHAR(20) NOT NULL CHECK (risk_level IN ('green', 'yellow', 'orange', 'red')),
-    trigger_source VARCHAR(50) NOT NULL, -- 'keyword' / 'semantic' / 'assessment'
-    detected_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    action_taken TEXT, -- 采取的干预措施
-    resolved BOOLEAN DEFAULT FALSE,
-    resolved_at TIMESTAMP WITH TIME ZONE
-);
-
 -- 紧急联系人表
 CREATE TABLE emergency_contacts (
     contact_id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -78,7 +65,6 @@ CREATE TABLE emergency_contacts (
 CREATE INDEX idx_users_nickname ON users(nickname);
 CREATE INDEX idx_mood_checkins_user_date ON mood_checkins(user_id, checkin_date);
 CREATE INDEX idx_assessment_results_user ON assessment_results(user_id);
-CREATE INDEX idx_risk_records_user ON risk_records(user_id);
 
 -- 插入初始冥想内容
 INSERT INTO meditation_contents (title, description, duration_minutes, category, audio_url, script) VALUES

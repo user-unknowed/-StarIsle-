@@ -7,7 +7,8 @@ import java.util.List;
 
 /**
  * 语义分析器
- * 检测文本意图、情感强度与风险等级，支持自伤倾向识别与求助意图判断。
+ * 检测文本意图与情感强度，支持自伤倾向识别与求助意图判断，
+ * 仅输出布尔危机信号，不做风险等级划分。
  */
 @Service
 public class SemanticAnalyzer {
@@ -19,17 +20,17 @@ public class SemanticAnalyzer {
     
     /**
      * 分析文本语义
-     * 综合意图检测、强度分析与风险计算生成分析结果。
+     * 综合意图检测与强度分析生成分析结果。
      *
      * @param content 待分析文本
-     * @return 语义分析结果，包含风险等级、置信度、意图与强度
+     * @return 语义分析结果，包含危机信号、置信度、意图与强度
      */
     public SemanticAnalysisResult analyze(String content) {
         String intent = detectIntent(content);
         String intensity = analyzeIntensity(content);
-        String riskLevel = calculateRisk(intent, intensity);
+        boolean crisis = "self_harm".equals(intent);
         
-        return new SemanticAnalysisResult(riskLevel, 0.85, intent, intensity);
+        return new SemanticAnalysisResult(crisis, 0.85, intent, intensity);
     }
     
     /**
@@ -102,43 +103,13 @@ public class SemanticAnalyzer {
     }
     
     /**
-     * 计算风险等级
-     * 根据意图与强度组合计算风险等级：自伤意图按强度升级至红/橙/黄，求助意图固定黄，情绪表达按强度黄/绿，闲聊为绿。
-     *
-     * @param intent    文本意图
-     * @param intensity 情感强度
-     * @return 风险等级（red/orange/yellow/green）
-     */
-    private String calculateRisk(String intent, String intensity) {
-        if ("self_harm".equals(intent)) {
-            if ("severe".equals(intensity)) {
-                return "red";
-            } else if ("moderate".equals(intensity)) {
-                return "orange";
-            } else {
-                return "yellow";
-            }
-        } else if ("help_seeking".equals(intent)) {
-            return "yellow";
-        } else if ("emotion_expression".equals(intent)) {
-            if ("severe".equals(intensity)) {
-                return "yellow";
-            } else {
-                return "green";
-            }
-        } else {
-            return "green";
-        }
-    }
-    
-    /**
      * 语义分析结果
-     * 封装风险等级、置信度、意图与强度信息。
+     * 封装危机信号、置信度、意图与强度信息。
      */
     @Data
     public static class SemanticAnalysisResult {
-        /** 风险等级：red、orange、yellow、green */
-        private String riskLevel;
+        /** 是否存在自伤危机信号 */
+        private boolean crisis;
         /** 分析置信度，0-1 之间 */
         private double confidence;
         /** 识别的意图标识 */
@@ -149,13 +120,13 @@ public class SemanticAnalyzer {
         /**
          * 构造方法
          *
-         * @param riskLevel  风险等级
+         * @param crisis     是否存在自伤危机信号
          * @param confidence 置信度
          * @param intent     意图
          * @param intensity  强度
          */
-        public SemanticAnalysisResult(String riskLevel, double confidence, String intent, String intensity) {
-            this.riskLevel = riskLevel;
+        public SemanticAnalysisResult(boolean crisis, double confidence, String intent, String intensity) {
+            this.crisis = crisis;
             this.confidence = confidence;
             this.intent = intent;
             this.intensity = intensity;

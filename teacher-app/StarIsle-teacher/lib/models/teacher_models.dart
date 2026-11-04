@@ -1,7 +1,7 @@
 /// @file teacher_models.dart
 /// @description 教师端核心数据模型定义，包含教师、学生、症状报告、预警、待办、聊天会话、
 ///              心情记录、自助请求、知识库、干预记录、情绪概览与授权请求等数据结构，
-///              以及风险等级、报告状态等枚举及其扩展方法，是教师端业务逻辑与状态管理的基础。
+///              以及报告状态等枚举及其扩展方法，是教师端业务逻辑与状态管理的基础。
 /// @module teacher-app/models
 
 import 'package:flutter/foundation.dart';
@@ -14,16 +14,6 @@ enum TeacherRole {
   homeroomTeacher, // 班主任
   subjectTeacher, // 科任老师
   counselor, // 心理老师
-}
-
-/// 风险等级枚举。
-///
-/// 描述学生当前心理风险严重程度，从绿色（轻微）到红色（紧急）递增。
-enum RiskLevel {
-  green, // 轻微关注
-  yellow, // 需要关注
-  orange, // 较为紧急
-  red, // 紧急
 }
 
 /// 报告处理状态枚举。
@@ -62,57 +52,12 @@ enum EmotionalExpression {
 
 /// 症状持续时长枚举。
 ///
-/// 标识症状持续的时间区间，用于评估严重程度。
+/// 标识症状持续的时间区间。
 enum DurationType {
   lessThan1Week, // 不足 1 周
   oneToTwoWeeks, // 1-2 周
   twoToFourWeeks, // 2-4 周
   moreThan1Month, // 超过 1 个月
-}
-
-/// 严重程度枚举。
-///
-/// 对应风险等级，用于在报告中对症状进行分级评估。
-enum SeverityLevel {
-  mildAttention, // 轻微关注
-  needAttention, // 需要关注
-  somewhatUrgent, // 较为紧急
-  urgent, // 紧急
-}
-
-/// [RiskLevel] 扩展方法。
-///
-/// 为风险等级提供中文标签、展示颜色与 Emoji，便于在 UI 中统一渲染。
-extension RiskLevelExtension on RiskLevel {
-  /// 风险等级对应的中文标签。
-  String get label {
-    switch (this) {
-      case RiskLevel.green: return '轻微关注';
-      case RiskLevel.yellow: return '需要关注';
-      case RiskLevel.orange: return '较为紧急';
-      case RiskLevel.red: return '紧急';
-    }
-  }
-
-  /// 风险等级对应的展示颜色。
-  Color get color {
-    switch (this) {
-      case RiskLevel.green: return const Color(0xFF66BB6A);
-      case RiskLevel.yellow: return const Color(0xFFFFCA28);
-      case RiskLevel.orange: return const Color(0xFFFF9800);
-      case RiskLevel.red: return const Color(0xFFEF5350);
-    }
-  }
-
-  /// 风险等级对应的 Emoji 图标。
-  String get emoji {
-    switch (this) {
-      case RiskLevel.green: return '🟢';
-      case RiskLevel.yellow: return '🟡';
-      case RiskLevel.orange: return '🟠';
-      case RiskLevel.red: return '🔴';
-    }
-  }
 }
 
 /// [ReportStatus] 扩展方法。
@@ -193,7 +138,7 @@ class Teacher {
 
 /// 学生信息模型。
 ///
-/// 用于在教师端展示学生概览状态，包含风险等级与最近状态摘要。
+/// 用于在教师端展示学生概览状态，包含紧急信号与最近状态摘要。
 class Student {
   /// 学生唯一标识，未传入时自动生成 UUID。
   final String id;
@@ -207,8 +152,8 @@ class Student {
   /// 年级。
   final int grade;
 
-  /// 当前风险等级。
-  final RiskLevel riskLevel;
+  /// 是否存在紧急信号（二值状态，不区分等级）。
+  final bool hasAlert;
 
   /// 最近状态更新时间。
   final DateTime lastStatusUpdate;
@@ -226,7 +171,8 @@ class Student {
   ///
   /// 参数：
   /// - [id]：可选标识，缺省时自动生成 UUID；
-  /// - [name]、[className]、[grade]、[riskLevel]、[lastStatusUpdate]、[statusSummary]：必填字段；
+  /// - [name]、[className]、[grade]、[lastStatusUpdate]、[statusSummary]：必填字段；
+  /// - [hasAlert]：是否存在紧急信号，默认 false；
   /// - [hasRealIdentity]：是否实名，默认 true；
   /// - [moodTrend]：心情趋势，默认 0。
   Student({
@@ -234,9 +180,9 @@ class Student {
     required this.name,
     required this.className,
     required this.grade,
-    required this.riskLevel,
     required this.lastStatusUpdate,
     required this.statusSummary,
+    this.hasAlert = false,
     this.hasRealIdentity = true,
     this.moodTrend = 0,
   }) : id = id ?? const Uuid().v4();
@@ -273,8 +219,8 @@ class SymptomReport {
   /// 症状持续时长。
   final DurationType duration;
 
-  /// 严重程度。
-  final SeverityLevel severity;
+  /// 是否需要后续跟进（二值标记，不区分等级）。
+  final bool needsFollowUp;
 
   /// 详细描述。
   final String description;
@@ -308,7 +254,8 @@ class SymptomReport {
   /// 参数：
   /// - [id]：可选标识，缺省时自动生成 UUID；
   /// - [studentId]、[studentName]、[className]、[reporterId]、[reporterName]、[symptoms]、[emotions]、
-  ///   [duration]、[severity]、[description]、[hasCommunicated]、[hasContactedParent]、[submittedAt]、[status]：必填字段；
+  ///   [duration]、[description]、[hasCommunicated]、[hasContactedParent]、[submittedAt]、[status]：必填字段；
+  /// - [needsFollowUp]：是否需要后续跟进，默认 false；
   /// - [assigneeId]、[assigneeName]、[processingOpinion]、[processedAt]：可选处理信息。
   SymptomReport({
     String? id,
@@ -320,32 +267,22 @@ class SymptomReport {
     required this.symptoms,
     required this.emotions,
     required this.duration,
-    required this.severity,
     required this.description,
     required this.hasCommunicated,
     required this.hasContactedParent,
     required this.submittedAt,
     required this.status,
+    this.needsFollowUp = false,
     this.assigneeId,
     this.assigneeName,
     this.processingOpinion,
     this.processedAt,
   }) : id = id ?? const Uuid().v4();
-
-  /// 根据严重程度推导出的风险等级。
-  RiskLevel get riskLevel {
-    switch (severity) {
-      case SeverityLevel.mildAttention: return RiskLevel.green;
-      case SeverityLevel.needAttention: return RiskLevel.yellow;
-      case SeverityLevel.somewhatUrgent: return RiskLevel.orange;
-      case SeverityLevel.urgent: return RiskLevel.red;
-    }
-  }
 }
 
 /// 预警信息模型。
 ///
-/// 当学生触发风险阈值时生成的预警记录，用于教师及时跟进处理。
+/// 当系统检测到紧急信号时生成的预警记录，用于教师及时跟进处理。
 class Alert {
   /// 预警唯一标识，未传入时自动生成 UUID。
   final String id;
@@ -358,9 +295,6 @@ class Alert {
 
   /// 班级名称。
   final String className;
-
-  /// 风险等级。
-  final RiskLevel riskLevel;
 
   /// 触发原因描述。
   final String triggerReason;
@@ -375,14 +309,13 @@ class Alert {
   ///
   /// 参数：
   /// - [id]：可选标识，缺省时自动生成 UUID；
-  /// - [studentId]、[studentName]、[className]、[riskLevel]、[triggerReason]、[triggeredAt]：必填字段；
+  /// - [studentId]、[studentName]、[className]、[triggerReason]、[triggeredAt]：必填字段；
   /// - [isRead]：是否已读，默认 false。
   Alert({
     String? id,
     required this.studentId,
     required this.studentName,
     required this.className,
-    required this.riskLevel,
     required this.triggerReason,
     required this.triggeredAt,
     this.isRead = false,
@@ -444,7 +377,7 @@ enum TodoType {
 
 /// 聊天消息模型。
 ///
-/// 表示教师与学生对话中的单条消息，可附带风险等级与策略提示信息。
+/// 表示教师与学生对话中的单条消息，可附带紧急标记与策略提示信息。
 class ChatMessage {
   /// 消息唯一标识，未传入时自动生成 UUID。
   final String id;
@@ -464,8 +397,8 @@ class ChatMessage {
   /// 发送时间。
   final DateTime sentAt;
 
-  /// 关联的风险等级，可为空。
-  final RiskLevel? riskLevel;
+  /// 是否为危机消息（二值紧急标记，不区分等级）。
+  final bool isCrisis;
 
   /// AI 策略提示，可为空。
   final String? strategyHint;
@@ -475,7 +408,8 @@ class ChatMessage {
   /// 参数：
   /// - [id]：可选标识，缺省时自动生成 UUID；
   /// - [senderId]、[senderName]、[isTeacher]、[content]、[sentAt]：必填字段；
-  /// - [riskLevel]、[strategyHint]：可选项。
+  /// - [isCrisis]：是否危机消息，默认 false；
+  /// - [strategyHint]：策略提示，可为空。
   ChatMessage({
     String? id,
     required this.senderId,
@@ -483,7 +417,7 @@ class ChatMessage {
     required this.isTeacher,
     required this.content,
     required this.sentAt,
-    this.riskLevel,
+    this.isCrisis = false,
     this.strategyHint,
   }) : id = id ?? const Uuid().v4();
 }
@@ -504,9 +438,6 @@ class StudentChatSession {
   /// 班级名称。
   final String className;
 
-  /// 学生当前风险等级。
-  final RiskLevel riskLevel;
-
   /// 最近活跃时间。
   final DateTime lastActive;
 
@@ -520,14 +451,13 @@ class StudentChatSession {
   ///
   /// 参数：
   /// - [id]：可选标识，缺省时自动生成 UUID；
-  /// - [studentId]、[studentName]、[className]、[riskLevel]、[lastActive]、[messages]：必填字段；
+  /// - [studentId]、[studentName]、[className]、[lastActive]、[messages]：必填字段；
   /// - [isIntervening]：是否干预中，默认 false。
   StudentChatSession({
     String? id,
     required this.studentId,
     required this.studentName,
     required this.className,
-    required this.riskLevel,
     required this.lastActive,
     this.isIntervening = false,
     required this.messages,
@@ -694,7 +624,7 @@ class KnowledgeBaseItem {
 
 /// 干预记录模型。
 ///
-/// 记录心理老师对学生进行的干预过程信息，包含起止时间、消息量与前后风险等级变化。
+/// 记录心理老师对学生进行的干预过程信息，包含起止时间、消息量与干预总结。
 class InterventionRecord {
   /// 记录唯一标识，未传入时自动生成 UUID。
   final String id;
@@ -723,12 +653,6 @@ class InterventionRecord {
   /// 干预总结。
   final String interventionSummary;
 
-  /// 干预前风险等级。
-  final RiskLevel beforeRiskLevel;
-
-  /// 干预后风险等级。
-  final RiskLevel afterRiskLevel;
-
   /// 是否需要后续跟进。
   final bool needsFollowup;
 
@@ -740,7 +664,7 @@ class InterventionRecord {
   /// 参数：
   /// - [id]：可选标识，缺省时自动生成 UUID；
   /// - [studentId]、[studentName]、[counselorId]、[counselorName]、[startTime]、[endTime]、
-  ///   [messageCount]、[interventionSummary]、[beforeRiskLevel]、[afterRiskLevel]：必填字段；
+  ///   [messageCount]、[interventionSummary]：必填字段；
   /// - [needsFollowup]：是否需要跟进，默认 false；
   /// - [followupPlan]：跟进计划，可选项。
   InterventionRecord({
@@ -753,8 +677,6 @@ class InterventionRecord {
     required this.endTime,
     required this.messageCount,
     required this.interventionSummary,
-    required this.beforeRiskLevel,
-    required this.afterRiskLevel,
     this.needsFollowup = false,
     this.followupPlan,
   }) : id = id ?? const Uuid().v4();
@@ -776,8 +698,8 @@ class EmotionalOverview {
   /// 心情分布，键为心情标签，值为对应人数。
   final Map<String, int> moodDistribution;
 
-  /// 高风险学生数。
-  final int highRiskCount;
+  /// 存在紧急信号的学生数（不区分等级）。
+  final int alertCount;
 
   /// 更新时间。
   final DateTime updatedAt;
@@ -785,13 +707,13 @@ class EmotionalOverview {
   /// 构造情绪概览实例。
   ///
   /// 参数：
-  /// - [className]、[totalStudents]、[averageMood]、[moodDistribution]、[highRiskCount]、[updatedAt]：必填字段。
+  /// - [className]、[totalStudents]、[averageMood]、[moodDistribution]、[alertCount]、[updatedAt]：必填字段。
   EmotionalOverview({
     required this.className,
     required this.totalStudents,
     required this.averageMood,
     required this.moodDistribution,
-    required this.highRiskCount,
+    required this.alertCount,
     required this.updatedAt,
   });
 }

@@ -8,7 +8,7 @@ import { useAuthStore } from '../../store/authStore';
 import { useClassroomStore } from '../../store/classroomStore';
 import { Header } from '../../components/common/Header';
 import { useToast } from '../../components/ui/Toast';
-import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, Shield, Users, Download, Upload, Smartphone, QrCode } from 'lucide-react';
+import { User, Settings, Bell, BookOpen, Calendar, Edit3, Check, LogOut, Mail, Phone, Globe, Shield, Download, Upload, Smartphone, QrCode } from 'lucide-react';
 
 // 快捷菜单项：图标、标题、徽章数（可选）
 const menuItems = [
@@ -26,12 +26,12 @@ const settingsItems = [
   { icon: Phone, label: '隐私设置', description: '管理数据隐私和权限' },
 ];
 
-// 权限初始配置：班级管理、学生数据、数据导入导出、风险预警、专业咨询
+// 权限初始配置：班级管理、学生数据、数据导入导出、紧急提醒、专业咨询
 const initialPermissions = [
   { id: 'class-management', name: '班级管理', description: '管理班级信息和学生名单', enabled: true },
-  { id: 'student-data', name: '学生数据查看', description: '查看学生心情数据和风险评估', enabled: true },
+  { id: 'student-data', name: '学生数据查看', description: '查看学生心情数据和情绪记录', enabled: true },
   { id: 'data-io', name: '数据导入导出', description: '导入导出学生数据和报告', enabled: true },
-  { id: 'risk-alert', name: '风险预警管理', description: '管理风险预警和关注名单', enabled: true },
+  { id: 'risk-alert', name: '紧急提醒', description: '管理紧急提醒和关注名单', enabled: true },
   { id: 'consult', name: '专业咨询', description: '使用专业心理咨询助手', enabled: true },
 ];
 
@@ -262,7 +262,7 @@ export default function TeacherProfile() {
                 </p>
                 <div className="flex flex-wrap gap-2 mt-3 justify-center sm:justify-start">
                   <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">班级状态</span>
-                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">风险预警</span>
+                  <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">紧急提醒</span>
                   <span className="px-2.5 py-1 bg-white/20 rounded-full text-xs">数据统计</span>
                 </div>
               </div>

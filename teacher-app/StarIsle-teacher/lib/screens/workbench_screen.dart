@@ -1,5 +1,5 @@
 /// @file workbench_screen.dart
-/// @description 教师端工作台页面，聚合身份卡片、今日概览统计、高风险告警、快捷操作、
+/// @description 教师端工作台页面，聚合身份卡片、今日概览统计、预警提醒、快捷操作、
 ///              待办事项与班级情绪概览，按教师角色区分统计口径与可见操作。
 /// @module teacher-app/screens/workbench
 
@@ -33,8 +33,8 @@ class WorkbenchScreen extends ConsumerWidget {
     final reports = ref.watch(reportsProvider);
     final emotionalOverview = ref.watch(emotionalOverviewProvider);
 
-    // 仅展示红/橙高风险告警
-    final highRiskAlerts = alerts.where((a) => a.riskLevel == RiskLevel.red || a.riskLevel == RiskLevel.orange).toList();
+    // 统一展示全部预警，不区分等级
+    final activeAlerts = alerts.toList();
     // 仅展示未完成待办
     final pendingTodos = todos.where((t) => !t.isCompleted).toList();
 
@@ -62,10 +62,10 @@ class WorkbenchScreen extends ConsumerWidget {
             _buildIdentityCard(context, teacher),
             const SizedBox(height: 20),
             // 今日概览统计
-            _buildOverviewCard(context, teacherRole, reportCount, processedCount, highRiskAlerts.length, pendingTodos.length),
+            _buildOverviewCard(context, teacherRole, reportCount, processedCount, activeAlerts.length, pendingTodos.length),
             const SizedBox(height: 20),
-            // 高风险告警（存在时展示）
-            if (highRiskAlerts.isNotEmpty) _buildAlertsSection(context, highRiskAlerts, ref),
+            // 预警提醒（存在时展示）
+            if (activeAlerts.isNotEmpty) _buildAlertsSection(context, activeAlerts, ref),
             const SizedBox(height: 20),
             // 快捷操作入口
             _buildQuickActions(context, teacherRole),
@@ -176,10 +176,10 @@ class WorkbenchScreen extends ConsumerWidget {
                 ),
                 _buildStatCard(
                   context,
-                  '高风险告警',
+                  '预警提醒',
                   '${alertCount} 条',
                   Icons.warning,
-                  alertCount > 0 ? TeacherTheme.riskRed : TeacherTheme.riskYellow,
+                  alertCount > 0 ? TeacherTheme.warningColor : Colors.grey,
                 ),
                 _buildStatCard(
                   context,
@@ -193,7 +193,7 @@ class WorkbenchScreen extends ConsumerWidget {
                   role == TeacherRole.counselor ? '已处理' : '已接收回执',
                   '${processedCount} 条',
                   Icons.done_all,
-                  TeacherTheme.riskGreen,
+                  TeacherTheme.successColor,
                 ),
               ],
             ),
@@ -241,7 +241,7 @@ class WorkbenchScreen extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          '高风险告警',
+          '预警提醒',
           style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
         const SizedBox(height: 12),
@@ -257,7 +257,7 @@ class WorkbenchScreen extends ConsumerWidget {
     );
   }
 
-  /// 构建单个高风险告警卡片，展示学生、班级、触发原因与时间。
+  /// 构建单个预警卡片，展示学生、班级、触发原因与时间。
   ///
   /// 参数：
   /// - [context]：构建上下文；
@@ -265,7 +265,6 @@ class WorkbenchScreen extends ConsumerWidget {
   /// - [ref]：Riverpod [WidgetRef]。
   Widget _buildAlertCard(BuildContext context, Alert alert, WidgetRef ref) {
     return Card(
-      color: alert.riskLevel == RiskLevel.red ? const Color(0xFFFFEBEE) : const Color(0xFFFFF8E1),
       margin: const EdgeInsets.only(bottom: 8),
       child: Padding(
         padding: const EdgeInsets.all(12),
@@ -275,12 +274,12 @@ class WorkbenchScreen extends ConsumerWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: alert.riskLevel.color,
+                color: TeacherTheme.warningColor,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Center(
+              child: const Center(
                 child: Icon(
-                  alert.riskLevel == RiskLevel.red ? Icons.error : Icons.warning,
+                  Icons.warning,
                   color: Colors.white,
                   size: 20,
                 ),
@@ -317,10 +316,6 @@ class WorkbenchScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            Text(
-              alert.riskLevel.label,
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: alert.riskLevel.color),
-            ),
           ],
         ),
       ),
@@ -334,7 +329,7 @@ class WorkbenchScreen extends ConsumerWidget {
       }),
       QuickAction('我要找人聊聊', Icons.chat, TeacherTheme.warmOrange, () {}),
       if (role == TeacherRole.counselor)
-        QuickAction('观察对话', Icons.visibility, TeacherTheme.riskGreen, () {
+        QuickAction('观察对话', Icons.visibility, TeacherTheme.successColor, () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const ChatScreen()));
         }),
       QuickAction('舒压一下', Icons.waves, TeacherTheme.starNightBlueLight, () {}),
@@ -492,7 +487,7 @@ class WorkbenchScreen extends ConsumerWidget {
     }
   }
 
-  /// 构建班级情绪概览卡片，含平均心情、总人数、高风险人数与情绪分布条。
+  /// 构建班级情绪概览卡片，含平均心情、总人数、预警人数与情绪分布条。
   ///
   /// 参数：
   /// - [context]：构建上下文；
@@ -554,8 +549,8 @@ class WorkbenchScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Text('高风险：', style: TextStyle(fontSize: 12, color: Colors.grey)),
-                          Text('${overview.highRiskCount}人', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: TeacherTheme.riskRed)),
+                          const Text('预警：', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                          Text('${overview.alertCount}人', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: TeacherTheme.warningColor)),
                         ],
                       ),
                     ],
@@ -609,11 +604,11 @@ class WorkbenchScreen extends ConsumerWidget {
 
   Color _getMoodColor(String mood) {
     switch (mood) {
-      case '很糟': return TeacherTheme.riskRed;
-      case '不太好': return TeacherTheme.riskOrange;
-      case '一般': return TeacherTheme.riskYellow;
+      case '很糟': return TeacherTheme.errorColor;
+      case '不太好': return TeacherTheme.warmOrange;
+      case '一般': return TeacherTheme.warningColor;
       case '不错': return TeacherTheme.starNightBlueLight;
-      case '很棒': return TeacherTheme.riskGreen;
+      case '很棒': return TeacherTheme.successColor;
       default: return Colors.grey;
     }
   }

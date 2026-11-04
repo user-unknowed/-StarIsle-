@@ -74,21 +74,6 @@ export default function ParentProfile() {
     navigate('/');
   };
 
-  /**
-   * 根据风险等级返回对应的圆点背景色 Tailwind 类名。
-   *
-   * @param level - 风险等级字符串。
-   * @returns 对应颜色的 Tailwind 类名。
-   */
-  const getRiskColor = (level: string | undefined) => {
-    switch (level) {
-      case 'red': return 'bg-red-500';
-      case 'orange': return 'bg-orange-500';
-      case 'yellow': return 'bg-yellow-500';
-      default: return 'bg-green-500';
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
       <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
@@ -156,7 +141,6 @@ export default function ParentProfile() {
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
                       <span className="font-medium text-gray-800">{child.studentNickname}</span>
-                      <div className={`w-2 h-2 rounded-full ${getRiskColor(child.riskLevel)}`}></div>
                     </div>
                     <div className="flex items-center gap-3 text-sm text-gray-500">
                       <span>{child.authorized ? '已授权' : '未授权'}</span>

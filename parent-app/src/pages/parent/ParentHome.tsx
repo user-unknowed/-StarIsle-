@@ -12,64 +12,6 @@ import { useParentStore } from '../../store/parentStore';
 import { Heart, MessageCircle, BookOpen, TrendingUp, AlertTriangle, Clock, ChevronRight, User, Sparkles } from 'lucide-react';
 
 /**
- * 根据风险等级返回对应的圆点背景色 Tailwind 类名。
- *
- * @param level - 风险等级字符串。
- * @returns 对应颜色的 Tailwind 类名。
- */
-const getRiskColor = (level: string | undefined) => {
-  switch (level) {
-    case 'red': return 'bg-red-500';
-    case 'orange': return 'bg-orange-500';
-    case 'yellow': return 'bg-yellow-500';
-    default: return 'bg-green-500';
-  }
-};
-
-/**
- * 根据风险等级返回对应的中文标签。
- *
- * @param level - 风险等级字符串。
- * @returns 对应的中文标签。
- */
-const getRiskLabel = (level: string | undefined) => {
-  switch (level) {
-    case 'red': return '紧急';
-    case 'orange': return '需关注';
-    case 'yellow': return '注意';
-    default: return '正常';
-  }
-};
-
-/**
- * 根据风险等级返回对应的卡片背景与边框 Tailwind 类名。
- *
- * @param level - 风险等级字符串。
- * @returns 对应的 Tailwind 类名。
- */
-const getRiskBgColor = (level: string | undefined) => {
-  switch (level) {
-    case 'red': return 'bg-red-50 border-red-200';
-    case 'orange': return 'bg-orange-50 border-orange-200';
-    default: return 'bg-green-50 border-green-200';
-  }
-};
-
-/**
- * 根据风险等级返回对应的文本颜色 Tailwind 类名。
- *
- * @param level - 风险等级字符串。
- * @returns 对应的 Tailwind 类名。
- */
-const getRiskTextColor = (level: string | undefined) => {
-  switch (level) {
-    case 'red': return 'text-red-600';
-    case 'orange': return 'text-orange-600';
-    default: return 'text-green-600';
-  }
-};
-
-/**
  * 根据心情等级返回对应的 Emoji。
  *
  * @param level - 心情等级（1-5），未定义时返回问号。
@@ -202,16 +144,12 @@ export default function ParentHome() {
                 <div className="flex-1">
                   <div className="flex items-center gap-2 mb-1">
                     <span className="font-bold text-lg text-gray-800">{currentChild.studentNickname}</span>
-                    <div className={`w-3 h-3 rounded-full ${getRiskColor(currentChild.riskLevel)} animate-pulse`}></div>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-gray-600">
                       最新心情：{getMoodEmoji(currentChild.latestMood)} {getMoodLabel(currentChild.latestMood)}
                     </span>
                   </div>
-                </div>
-                <div className={`px-3 py-1 rounded-full text-xs font-medium ${getRiskBgColor(currentChild.riskLevel)} ${getRiskTextColor(currentChild.riskLevel)}`}>
-                  {getRiskLabel(currentChild.riskLevel)}
                 </div>
               </div>
               

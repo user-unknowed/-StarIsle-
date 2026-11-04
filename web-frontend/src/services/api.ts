@@ -20,7 +20,6 @@ import type {
   ChildBinding,
   EmergencyAlert,
   EmergencyResource,
-  RiskLevel,
   AssessmentQuestion,
   AssessmentResult,
 } from '../types';
@@ -386,10 +385,9 @@ export interface RiskDetectRequest {
   contentType?: string; // 可选内容类型
 }
 
-/** 风险检测响应（含风险等级、置信度、触发关键词、是否需干预） */
+/** 风险检测响应（含置信度、触发关键词、是否需干预） */
 export interface RiskDetectResponse {
   user_id: string;             // 用户 ID
-  risk_level: string;          // 风险等级
   confidence: number;          // 置信度 0~1
   triggered_keywords: string[];// 触发的关键词
   need_intervention: boolean;  // 是否需要人工干预
@@ -398,11 +396,10 @@ export interface RiskDetectResponse {
 /** 危机事件上报请求体 */
 export interface CrisisReportRequest {
   userId: string;       // 用户 ID
-  riskLevel: string;    // 风险等级
   triggerType?: string; // 可选触发类型
 }
 
-/** 风险检测 API：文本风险检测、风险等级查询、危机热线、危机上报 */
+/** 风险检测 API：文本风险检测、危机热线、危机上报 */
 export const riskApi = {
   /**
    * 风险文本检测
@@ -415,14 +412,6 @@ export const riskApi = {
       content: data.content,
       contentType: data.contentType,
     }),
-
-  /**
-   * 获取用户风险等级及历史
-   * @param userId - 用户 ID
-   * @returns 当前风险等级与历史变化
-   */
-  getLevel: (userId: string) =>
-    get<RiskLevel & { history: Array<{ date: string; level: string }> }>(`/v1/risk/level/${userId}`),
 
   /**
    * 获取危机干预热线
@@ -439,9 +428,8 @@ export const riskApi = {
    * @returns 上报结果（是否已处理）
    */
   reportCrisis: (data: CrisisReportRequest) =>
-    post<{ user_id: string; risk_level: string; handled: boolean }>('/v1/risk/crisis/report', {
+    post<{ user_id: string; handled: boolean }>('/v1/risk/crisis/report', {
       userId: data.userId,
-      riskLevel: data.riskLevel,
       triggerType: data.triggerType,
     }),
 };

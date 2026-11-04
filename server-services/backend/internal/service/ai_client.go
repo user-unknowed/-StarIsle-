@@ -60,12 +60,13 @@ type ChatRequest struct {
 
 // ChatResponse 对应 AI 引擎的 /chat 端点响应体
 type ChatResponse struct {
-	Response      string   `json:"response"`
-	RiskLevel     string   `json:"risk_level"`
-	EmotionTags   []string `json:"emotion_tags"`
-	ResponseTimeMs int     `json:"response_time_ms"`
-	RagEnhanced   bool     `json:"rag_enhanced"`
-	KnowledgeMode string  `json:"knowledge_mode"`
+	Response         string   `json:"response"`
+	Crisis           bool     `json:"crisis"`
+	NeedIntervention bool     `json:"need_intervention"`
+	EmotionTags      []string `json:"emotion_tags"`
+	ResponseTimeMs   int      `json:"response_time_ms"`
+	RagEnhanced      bool     `json:"rag_enhanced"`
+	KnowledgeMode    string   `json:"knowledge_mode"`
 }
 
 // RiskCheckRequest 对应 AI 引擎 /risk/check 请求体
@@ -77,9 +78,10 @@ type RiskCheckRequest struct {
 
 // RiskCheckResponse 对应 AI 引擎 /risk/check 响应体
 type RiskCheckResponse struct {
-	UserId    string  `json:"user_id"`
-	RiskLevel string  `json:"risk_level"`
-	Confidence float64 `json:"confidence"`
+	UserId           string  `json:"user_id"`
+	Crisis           bool    `json:"crisis"`
+	NeedIntervention bool    `json:"need_intervention"`
+	Confidence       float64 `json:"confidence"`
 }
 
 // TopicCard 话题卡片

@@ -5,7 +5,7 @@
  */
 import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { Home, BookOpen, Users, Music, User, LogOut, Menu, X, Bell, Star, Siren } from 'lucide-react';
+import { Home, BookOpen, Users, Music, User, LogOut, Menu, X, Bell, Star, Siren, Sprout } from 'lucide-react';
 import { useAuthStore } from '../../store/authStore';
 import { useToast } from '../ui/Toast';
 
@@ -25,11 +25,12 @@ interface NavItem {
   label: string; // 显示文案
 }
 
-// 学生端导航项：今日心情、知识库、树人互助、放松一下、我的
+// 学生端导航项：今日心情、知识库、树人互助、树苗的轻语、放松一下、我的
 const studentNavItems: NavItem[] = [
   { path: '/student', icon: Home, label: '今日心情' },
   { path: '/student/knowledge', icon: BookOpen, label: '知识库' },
   { path: '/student/community', icon: Users, label: '树人互助' },
+  { path: '/student/message-wall', icon: Sprout, label: '树苗的轻语' },
   { path: '/student/relax', icon: Music, label: '放松一下' },
   { path: '/student/profile', icon: User, label: '我的' },
 ];

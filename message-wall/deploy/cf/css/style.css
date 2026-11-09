@@ -1,0 +1,290 @@
+/* ============ 星屿·心声墙 ============ */
+:root {
+  --bg-top: #1b1e3a;
+  --bg-bottom: #2d3a5f;
+  --card-bg: rgba(255, 255, 255, 0.94);
+  --accent: #f5b8a9;
+  --accent-deep: #e88f7d;
+  --lavender: #b7a6e3;
+  --star: #ffe9c7;
+  --text: #3d3a52;
+  --text-soft: #7a7694;
+  --radius: 18px;
+  --shadow: 0 10px 30px rgba(15, 18, 45, 0.25);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  font-family: "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  background: linear-gradient(175deg, var(--bg-top) 0%, var(--bg-bottom) 55%, #46557e 100%);
+  color: var(--text);
+  min-height: 100vh;
+  line-height: 1.7;
+}
+
+/* ---------- 星空背景 ---------- */
+.sky {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.stars { position: absolute; inset: 0; }
+
+.star-dot {
+  position: absolute;
+  border-radius: 50%;
+  background: var(--star);
+  opacity: 0.7;
+  animation: twinkle 3s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 0.25; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.1); }
+}
+
+.glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.35;
+}
+
+.glow-1 {
+  width: 480px; height: 480px;
+  background: #6d5fae;
+  top: -140px; right: -100px;
+}
+
+.glow-2 {
+  width: 400px; height: 400px;
+  background: #e88f7d;
+  bottom: -160px; left: -120px;
+  opacity: 0.22;
+}
+
+/* ---------- 布局 ---------- */
+.container {
+  position: relative;
+  z-index: 1;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 56px 20px 48px;
+}
+
+/* ---------- 顶部 ---------- */
+.hero { text-align: center; color: #fff; margin-bottom: 36px; }
+
+.hero-eyebrow {
+  display: inline-block;
+  font-size: 13px;
+  letter-spacing: 3px;
+  color: var(--star);
+  border: 1px solid rgba(255, 233, 199, 0.35);
+  border-radius: 999px;
+  padding: 5px 18px;
+  margin-bottom: 22px;
+}
+
+.hero h1 {
+  font-size: clamp(28px, 5.5vw, 42px);
+  font-weight: 700;
+  letter-spacing: 1px;
+  line-height: 1.35;
+  text-shadow: 0 2px 24px rgba(0, 0, 0, 0.35);
+}
+
+.hero-sub {
+  margin-top: 16px;
+  font-size: 15px;
+  color: rgba(255, 255, 255, 0.75);
+  max-width: 480px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ---------- 表单卡片 ---------- */
+.form-card {
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 28px 26px 22px;
+  margin-bottom: 44px;
+}
+
+.field { display: block; margin-bottom: 18px; }
+
+.field-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+input[type="text"],
+textarea {
+  width: 100%;
+  border: 1.5px solid #e3e0ef;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 15px;
+  font-family: inherit;
+  color: var(--text);
+  background: #faf9fc;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+input[type="text"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--lavender);
+  box-shadow: 0 0 0 3px rgba(183, 166, 227, 0.22);
+}
+
+textarea { resize: vertical; min-height: 110px; }
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-soft);
+  margin-top: 6px;
+}
+
+.btn-primary {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #fff;
+  background: linear-gradient(120deg, var(--accent-deep), var(--lavender));
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+  box-shadow: 0 8px 20px rgba(232, 143, 125, 0.35);
+}
+
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 12px 26px rgba(232, 143, 125, 0.45); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.form-tip {
+  margin-top: 14px;
+  font-size: 14px;
+  text-align: center;
+  min-height: 20px;
+}
+
+.form-tip.ok { color: #3f9d6e; }
+.form-tip.err { color: #d76a5b; }
+
+.hotline {
+  margin-top: 18px;
+  padding: 12px 14px;
+  background: #fdf3ef;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  font-size: 13px;
+  color: #9c6a5e;
+}
+
+.hotline strong { color: #c25b48; }
+
+/* ---------- 留言墙 ---------- */
+.wall-section { margin-bottom: 40px; }
+
+.wall-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  color: #fff;
+  margin-bottom: 20px;
+}
+
+.wall-header h2 { font-size: 22px; letter-spacing: 2px; }
+
+.wall-count { font-size: 13px; color: rgba(255, 255, 255, 0.6); }
+
+.wall {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.wall-loading {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.65);
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.wall-empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.65);
+  padding: 40px 0;
+  font-size: 14px;
+}
+
+.card {
+  background: var(--card-bg);
+  border-radius: 16px;
+  padding: 20px 18px;
+  box-shadow: 0 6px 18px rgba(15, 18, 45, 0.18);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: rise 0.5s ease both;
+}
+
+@keyframes rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.card-content { font-size: 15px; word-break: break-word; flex: 1; }
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-soft);
+}
+
+.card-nickname {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: var(--accent-deep);
+}
+
+.card-nickname::before { content: "✦"; font-size: 10px; }
+
+/* ---------- 页脚 ---------- */
+.footer {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.45);
+  font-size: 12px;
+  margin-top: 20px;
+}
+
+.admin-link { color: rgba(255, 255, 255, 0.45); text-decoration: underline; }
+.admin-link:hover { color: rgba(255, 255, 255, 0.8); }
+
+/* ---------- 响应式 ---------- */
+@media (max-width: 520px) {
+  .container { padding-top: 40px; }
+  .form-card { padding: 22px 18px 18px; }
+  .wall { grid-template-columns: 1fr; }
+}

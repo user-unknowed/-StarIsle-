@@ -4,8 +4,9 @@
  * @module web-frontend/pages
  */
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useAuthStore, LoginMethod } from '../store/authStore';
-import { Star, User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Phone, Apple, Sparkles, ChevronLeft } from 'lucide-react';
+import { Star, User, Lock, Eye, EyeOff, ArrowRight, MessageCircle, Phone, Apple, Sparkles, ChevronLeft, Sprout } from 'lucide-react';
 import { Button, Input, Modal } from '../components/ui';
 
 /**
@@ -327,6 +328,15 @@ export default function Login() {
             </button>
           </div>
         </div>
+
+        {/* 公开入口：无需登录访问「树苗的轻语」留言墙 */}
+        <Link
+          to="/student/message-wall"
+          className="mt-4 flex items-center justify-center gap-2 w-full py-3 rounded-xl bg-white/15 hover:bg-white/25 border border-white/30 text-white font-medium backdrop-blur-sm transition-all"
+        >
+          <Sprout className="w-5 h-5" />
+          无需登录，进入「树苗的轻语」留言墙
+        </Link>
 
         {/* 页脚版权 */}
         <p className="text-center text-white/80 text-sm mt-6">

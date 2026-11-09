@@ -1,4 +1,7 @@
-name: Deploy to GitHub Pages
+name: Build StarIsleONweb
+
+# GitHub Pages 站点固定发布宣传页（docs/promo，见 deploy-promo.yml）。
+# 本工作流仅做前端构建校验并上传制品，不再部署 Pages，避免覆盖宣传页。
 
 on:
   push:
@@ -54,15 +57,3 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           path: ./web-frontend/dist
-
-  deploy:
-    name: Deploy to GitHub Pages
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4

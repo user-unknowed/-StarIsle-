@@ -1,0 +1,41 @@
+{
+  "name": "ima 复刻版",
+  "short_name": "ima",
+  "description": "ima.copilot 复刻版前端：对话 / 知识库 / 笔记 / 发现 / 设置，零依赖、离线可用。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "./index.html",
+  "scope": "./",
+  "id": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "any",
+  "background_color": "#101011",
+  "theme_color": "#101011",
+  "categories": ["productivity", "utilities"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "新建对话", "short_name": "对话", "url": "./index.html#chat" },
+    { "name": "知识库检索", "short_name": "知识库", "url": "./index.html#kb" },
+    { "name": "记笔记", "short_name": "笔记", "url": "./index.html#notes" }
+  ]
+}

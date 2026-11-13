@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="星屿">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#8b9cff"/>
+      <stop offset="1" stop-color="#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="512" height="512" rx="112" fill="url(#g)"/>
+  <path d="M256 96l27.6 61.4 68.4 8.6-50.2 48.6 12.3 68.6L256 249.6l-58.1 33.6 12.3-68.6-50.2-48.6 68.4-8.6z"
+        fill="#fff" opacity=".96"/>
+  <circle cx="256" cy="352" r="14" fill="#fff" opacity=".85"/>
+  <circle cx="196" cy="392" r="9" fill="#fff" opacity=".6"/>
+  <circle cx="316" cy="392" r="9" fill="#fff" opacity=".6"/>
+</svg>

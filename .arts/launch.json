@@ -1,0 +1,19 @@
+{
+    "configurations": [
+        {
+            "request": "launch",
+            "type": "javadbg",
+            "name": "StarIsleApplication",
+            "__internal_id": "a53f76c6-7427-4df1-af2a-1d8d96310aac",
+            "temporary": false,
+            "verbose": false,
+            "allowMany": false,
+            "mainClass": {
+                "name": "com.starisle.StarIsleApplication",
+                "sourcePath": "${workspaceFolder}/backend-java/src/main/java/com/starisle/StarIsleApplication.java",
+                "shell": "internal-console",
+                "skipBuild": false
+            }
+        }
+    ]
+}

@@ -1,0 +1,16 @@
+{
+  "name": "星屿 StarIsle",
+  "short_name": "星屿",
+  "description": "学生 / 教师 / 家长三端心理守护空间",
+  "lang": "zh-CN",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f7f8fc",
+  "theme_color": "#6b7bff",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "maskable" }
+  ]
+}

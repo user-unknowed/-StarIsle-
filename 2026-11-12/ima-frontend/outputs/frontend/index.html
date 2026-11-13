@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#101011" />
+  <meta name="color-scheme" content="dark light" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="ima" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="description" content="ima 复刻版 · 零依赖静态前端（对话 / 知识库 / 笔记 / 发现 / 设置）" />
+  <title>ima 复刻版</title>
+  <link rel="manifest" href="./manifest.webmanifest" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
+  <link rel="stylesheet" href="./assets/app.css" />
+</head>
+<body>
+  <!-- 图标集：内联 SVG symbol，零网络请求 -->
+  <svg class="sprite" aria-hidden="true" focusable="false">
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-8.5 8.5 8.6 8.6 0 0 1-3.8-.9L3 21l1.9-5.7A8.5 8.5 0 1 1 21 11.5z"/></symbol>
+    <symbol id="i-book" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></symbol>
+    <symbol id="i-note" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6M8 13h8M8 17h5"/></symbol>
+    <symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></symbol>
+    <symbol id="i-gear" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M3.6 7l2.6 1.5M17.8 15.5l2.6 1.5M3.6 17l2.6-1.5M17.8 8.5L20.4 7"/></symbol>
+    <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></symbol>
+    <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.3A8.6 8.6 0 1 1 9.7 3.5a6.8 6.8 0 0 0 10.8 10.8z"/></symbol>
+    <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    <symbol id="i-upload" viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+    <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M16.5 16.5L21 21"/></symbol>
+    <symbol id="i-send" viewBox="0 0 24 24"><path d="M21 3L10 14"/><path d="M21 3l-7 18-4-7-7-4z"/></symbol>
+    <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></symbol>
+    <symbol id="i-install" viewBox="0 0 24 24"><path d="M12 3v10M8 9l4 4 4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></symbol>
+    <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+    <symbol id="i-refresh" viewBox="0 0 24 24"><path d="M20 11a8 8 0 1 0-2.3 5.7"/><path d="M20 4v7h-7"/></symbol>
+    <symbol id="i-close" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 2H7a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7z"/><path d="M14 2v5h5"/></symbol>
+    <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M18.5 15.5l.8 2.2 2.2.8-2.2.8-.8 2.2-.8-2.2-2.2-.8 2.2-.8z"/></symbol>
+  </svg>
+
+  <div class="app" id="app">
+    <!-- 桌面 / 平板左侧导航；<760px 时隐藏，改用底部 Tab -->
+    <aside class="rail" id="rail">
+      <div class="brand">
+        <span class="logo" aria-hidden="true">ima</span>
+        <span class="brand-text">ima 复刻版</span>
+      </div>
+      <button class="rail-new" id="btnRailNew" type="button">
+        <svg class="ic"><use href="#i-plus"/></svg><span>新建对话</span>
+      </button>
+      <nav class="rail-nav" aria-label="主导航">
+        <button class="rail-btn" type="button" data-view="chat"><svg class="ic"><use href="#i-chat"/></svg><span>对话</span></button>
+        <button class="rail-btn" type="button" data-view="kb"><svg class="ic"><use href="#i-book"/></svg><span>知识库</span></button>
+        <button class="rail-btn" type="button" data-view="notes"><svg class="ic"><use href="#i-note"/></svg><span>笔记</span></button>
+        <button class="rail-btn" type="button" data-view="discover"><svg class="ic"><use href="#i-compass"/></svg><span>发现</span></button>
+        <button class="rail-btn" type="button" data-view="settings"><svg class="ic"><use href="#i-gear"/></svg><span>设置</span></button>
+      </nav>
+      <div class="rail-foot" id="railFoot">
+        <span class="dot" aria-hidden="true"></span><span id="railStatus">连接中…</span>
+      </div>
+    </aside>
+
+    <div class="main">
+      <header class="topbar">
+        <button class="icon-btn only-narrow" id="btnSessions" type="button" aria-label="会话列表" aria-expanded="false">
+          <svg class="ic"><use href="#i-menu"/></svg>
+        </button>
+        <div class="titles">
+          <h1 id="pageTitle">对话</h1>
+          <p id="pageSub">正在连接本地服务…</p>
+        </div>
+        <div class="top-actions">
+          <span class="mode-chip" id="modeChip" title="数据来源">连接中</span>
+          <button class="icon-btn" id="btnTheme" type="button" aria-label="切换深浅主题">
+            <svg class="ic"><use href="#i-sun"/></svg>
+          </button>
+        </div>
+      </header>
+
+      <main class="views" id="views">
+        <!-- ============ 对话 ============ -->
+        <section class="view active" id="view-chat">
+          <div class="chat-layout">
+            <aside class="session-pane" id="sessionPane" aria-label="会话列表">
+              <div class="pane-head">
+                <span class="pane-label">会话</span>
+                <button class="btn ghost xs" id="btnNewSession" type="button">＋ 新建</button>
+              </div>
+              <div class="sessions" id="sessionList"></div>
+            </aside>
+
+            <section class="conv">
+              <div class="conv-head">
+                <div class="conv-title-wrap">
+                  <h2 id="convTitle">新对话</h2>
+                  <p id="convSub">本地知识库增强 · 不联网</p>
+                </div>
+                <button class="icon-btn sm only-narrow" id="btnSessions2" type="button" aria-label="打开会话列表">
+                  <svg class="ic"><use href="#i-menu"/></svg>
+                </button>
+              </div>
+              <div class="messages" id="messages" aria-live="polite" aria-relevant="additions"></div>
+              <div class="composer">
+                <label class="sr-only" for="input">消息输入框</label>
+                <textarea id="input" rows="1" placeholder="问点什么…（Enter 发送 / Shift+Enter 换行）"></textarea>
+                <button class="send" id="btnSend" type="button" aria-label="发送消息">
+                  <svg class="ic"><use href="#i-send"/></svg>
+                </button>
+              </div>
+            </section>
+            <div class="scrim" id="scrim" tabindex="-1"></div>
+          </div>
+        </section>
+
+        <!-- ============ 知识库 ============ -->
+        <section class="view" id="view-kb">
+          <div class="stack">
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <h3>本机资料</h3>
+                  <p id="kbStats">—</p>
+                </div>
+                <div class="row">
+                  <button class="btn" id="btnUpload" type="button">
+                    <svg class="ic"><use href="#i-upload"/></svg>导入文件
+                  </button>
+                  <input type="file" id="fileInput" hidden multiple
+                         accept=".txt,.md,.markdown,.csv,.json,.html,.htm,.log,.kt,.java,.py,.js,.ts,.xml,.yml,.yaml" />
+                  <button class="btn ghost" id="btnKbClear" type="button">清空</button>
+                </div>
+              </div>
+              <div class="docs" id="kbDocs"></div>
+              <p class="hint">支持纯文本类文件（txt / md / csv / json / html / 代码），单文件 8MB 内，按约 600 字切块并建立本地索引；与桌面端共用同一份数据。PDF、Word、EPUB 需要额外解析器，本版只做占位提示。</p>
+            </div>
+
+            <div class="card">
+              <div class="card-head">
+                <h3>片段检索</h3>
+                <span class="badge">中文 bigram + IDF</span>
+              </div>
+              <form class="search" id="kbSearchForm">
+                <svg class="ic"><use href="#i-search"/></svg>
+                <input id="kbQuery" placeholder="输入关键词，回车检索" autocomplete="off" />
+                <button class="btn sm" type="submit">检索</button>
+              </form>
+              <div class="hits" id="kbHits"><div class="empty sm">还没有检索</div></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 笔记 ============ -->
+        <section class="view" id="view-notes">
+          <div class="notes-layout" id="notesLayout">
+            <div class="note-list" id="noteList"></div>
+            <div class="note-edit">
+              <div class="note-bar">
+                <input id="noteTitle" placeholder="笔记标题" autocomplete="off" />
+                <div class="row">
+                  <button class="btn ghost xs" id="btnNoteNew" type="button">新建</button>
+                  <button class="btn ghost xs" id="btnNotePreview" type="button" aria-pressed="false">预览</button>
+                  <button class="btn xs" id="btnNoteSave" type="button">保存</button>
+                  <button class="icon-btn sm danger" id="btnNoteDel" type="button" aria-label="删除笔记">
+                    <svg class="ic"><use href="#i-trash"/></svg>
+                  </button>
+                </div>
+              </div>
+              <div class="note-body">
+                <textarea id="noteBody" placeholder="# 标题&#10;&#10;开始书写…" spellcheck="false"></textarea>
+                <div class="note-preview md" id="notePreview" hidden></div>
+              </div>
+              <div class="note-status"><span id="noteStatus">—</span></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============ 发现 ============ -->
+        <section class="view" id="view-discover">
+          <div class="stack">
+            <div class="card">
+              <div class="card-head">
+                <div>
+                  <h3>内置模块清单</h3>
+                  <p>来自 ima.copilot 2.6.17 的 24 个 MV3 扩展实测清点，标注本复刻工程的实现状态。</p>
+                </div>
+                <div class="chips" id="catalogFilter">
+                  <button class="chip active" type="button" data-state="all">全部</button>
+                  <button class="chip" type="button" data-state="已实装">已实装</button>
+                  <button class="chip" type="button" data-state="部分实装">部分实装</button>
+                  <button class="chip" type="button" data-state="占位">占位</button>
+                </div>
+              </div>
+            </div>
+            <div class="grid" id="catalogGrid"></div>
+          </div>
+        </section>
+
+        <!-- ============ 设置 ============ -->
+        <section class="view" id="view-settings">
+          <div class="stack">
+            <div class="card">
+              <h3>外观</h3>
+              <label class="switch-row">
+                <span>暗色主题</span>
+                <input type="checkbox" class="switch" id="swDark" checked />
+              </label>
+              <p class="hint">主题写回服务端 / 本地演示数据，桌面端、手机端保持一致。</p>
+            </div>
+
+            <div class="card">
+              <h3>运行信息</h3>
+              <dl class="kv">
+                <div><dt>引擎</dt><dd id="stEngine">—</dd></div>
+                <div><dt>数据目录</dt><dd id="stData">—</dd></div>
+                <div><dt>会话 / 笔记</dt><dd id="stCounts">—</dd></div>
+                <div><dt>知识库</dt><dd id="stKb">—</dd></div>
+                <div><dt>数据来源</dt><dd id="stSource">—</dd></div>
+                <div><dt>版本</dt><dd id="stVersion">—</dd></div>
+              </dl>
+              <div class="row"><button class="btn ghost sm" id="btnReload" type="button">
+                <svg class="ic"><use href="#i-refresh"/></svg>重新连接 / 刷新状态
+              </button></div>
+            </div>
+
+            <div class="card">
+              <h3>添加到主屏幕</h3>
+              <p class="hint">浏览器菜单里选「安装应用 / 添加到主屏幕」可全屏无地址栏运行。静态外壳由 Service Worker 缓存，断网也能打开界面；数据仍来自本机服务，服务不在时进入本地演示数据。</p>
+              <div class="row"><button class="btn ghost" id="btnInstall" type="button">
+                <svg class="ic"><use href="#i-install"/></svg>安装 / 添加
+              </button></div>
+            </div>
+
+            <div class="card">
+              <h3>前端接入</h3>
+              <p class="hint">本前端为纯静态、零第三方依赖。挂载方式：把本目录覆盖到 <code>app/src/main/resources/mobile/</code>（零改动 Kotlin），或按设计文档方案 B 用 <code>/v2/</code> 前缀映射，桌面端与移动端即可共用同一套 API。</p>
+            </div>
+
+            <div class="card danger-zone">
+              <h3>危险操作</h3>
+              <p class="hint">清空所有会话、笔记与知识库，不可恢复。桌面端会同步生效。</p>
+              <div class="row"><button class="btn danger" id="btnReset" type="button">重置全部数据</button></div>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <nav class="tabbar" id="tabbar" aria-label="底部导航">
+        <button type="button" data-view="chat" class="active"><svg class="ic"><use href="#i-chat"/></svg><span>对话</span></button>
+        <button type="button" data-view="kb"><svg class="ic"><use href="#i-book"/></svg><span>知识库</span></button>
+        <button type="button" data-view="notes"><svg class="ic"><use href="#i-note"/></svg><span>笔记</span></button>
+        <button type="button" data-view="discover"><svg class="ic"><use href="#i-compass"/></svg><span>发现</span></button>
+        <button type="button" data-view="settings"><svg class="ic"><use href="#i-gear"/></svg><span>设置</span></button>
+      </nav>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <dialog class="dlg" id="dlg">
+    <form method="dialog">
+      <h3 id="dlgTitle">确认</h3>
+      <p id="dlgText"></p>
+      <div class="dlg-actions">
+        <button class="btn ghost" value="cancel" type="submit">取消</button>
+        <button class="btn danger" id="dlgOk" value="ok" type="submit">确定</button>
+      </div>
+    </form>
+  </dialog>
+
+  <script src="./assets/md.js"></script>
+  <script src="./assets/app.js"></script>
+</body>
+</html>

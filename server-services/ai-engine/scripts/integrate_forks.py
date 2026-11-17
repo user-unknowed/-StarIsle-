@@ -134,7 +134,7 @@ def build_knowledge_docs_from_repo(meta: Dict[str, Any]) -> List[Dict[str, Any]]
     src = rm.read_text(encoding="utf-8", errors="ignore") if rm.exists() else meta.get("description") or ""
     docs: List[Dict[str, Any]] = []
     for i, chunk in enumerate(_split(src)):
-        docs.append({"id": f"github-{rid.replace('/','-')}-{i}",
+        docs.append({"id": f"github-{rid.replace('/', '-')}-{i}",
                      "title": f"[{rid}] {meta.get('description','README')[:30]}",
                      "source": f"github:{rid}#README.md:chunk{i}",
                      "author": None, "category": "GitHub开源项目",

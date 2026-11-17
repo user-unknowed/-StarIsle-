@@ -145,6 +145,7 @@ class ChatResponse(BaseModel):
     response_time_ms: int                      # 响应耗时（毫秒）
     rag_enhanced: bool = False                 # 是否启用 RAG 知识增强
     knowledge_mode: str = "unknown"            # 知识库模式
+    model: str = ""                            # 实际使用的模型（本地路径或 API 模型名）
 
 class RiskCheckRequest(BaseModel):
     """风险检测请求模型，用于对内容进行风险评估"""
@@ -209,7 +210,8 @@ async def chat(request: ChatRequest):
             emotion_tags=emotion_tags,
             response_time_ms=response["response_time_ms"],
             rag_enhanced=response.get("rag_enhanced", False),
-            knowledge_mode=response.get("knowledge_mode", "unknown")
+            knowledge_mode=response.get("knowledge_mode", "unknown"),
+            model=response.get("model") or getattr(chat_service, "model_name", "")
         )
         
     except Exception as e:

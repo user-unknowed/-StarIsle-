@@ -13,6 +13,7 @@
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
         android:theme="@style/Theme.StarIsleStudent"
+        android:usesCleartextTraffic="true"
         tools:targetApi="33"
         xmlns:tools="http://schemas.android.com/tools">
 

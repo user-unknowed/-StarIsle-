@@ -3,6 +3,7 @@ package com.starisle.parent.data.repo
 import com.starisle.parent.data.api.AuthorizeChildRequest
 import com.starisle.parent.data.api.BindChildRequest
 import com.starisle.parent.data.api.ParentApiService
+import com.starisle.parent.data.models.ApiEnvelope
 import com.starisle.parent.data.models.ChildBinding
 import com.starisle.parent.data.models.EmergencyAlert
 import com.starisle.parent.data.models.EmergencyResource
@@ -151,25 +152,49 @@ class ParentRepository @Inject constructor(
 
     val defaultNotificationSettings = NotificationSettings()
 
-    // ---------- API 调用（带 mock 降级） ----------
+    // ---------- API 调用（网关 {code,message,data} 信封解包） ----------
+
+    /** code 非 2xx 或缺少 data 视为失败，抛出带后端 message 的异常。 */
+    private fun <T> ApiEnvelope<T>.unwrap(): T {
+        val resultCode = code
+        if (resultCode != null && resultCode !in 200..299) {
+            throw IllegalStateException(message ?: "请求失败（code=$resultCode）")
+        }
+        return data ?: throw IllegalStateException("响应缺少 data")
+    }
+
+    /** 允许 data 为 null（例如当前没有紧急告警）。 */
+    private fun <T> ApiEnvelope<T>.unwrapOrNull(): T? {
+        if (code != null && code !in 200..299) return null
+        return data
+    }
 
     suspend fun fetchProfile(): Result<ParentUser> = runCatching {
         delay(300)
-        runCatching { api.getMe() }.getOrElse { mockParentProfile }
+        runCatching {
+            api.getMe().unwrap().let { resp ->
+                ParentUser(
+                    id = resp.userId,
+                    nickname = resp.nickname,
+                    phone = resp.phone,
+                    avatar = resp.avatar
+                )
+            }
+        }.getOrElse { mockParentProfile }
     }
 
     suspend fun fetchChildren(): Result<List<ChildBinding>> = runCatching {
         delay(300)
-        runCatching { api.listChildren() }.getOrElse { mockChildren }
+        runCatching { api.listChildren().unwrap() }.getOrElse { mockChildren }
     }
 
     suspend fun fetchChildMood(bindingId: String, days: Int = 7): Result<List<MoodRecord>> = runCatching {
         delay(300)
-        runCatching { api.getChildMood(bindingId, days) }.getOrElse { mockChildMood }
+        runCatching { api.getChildMood(bindingId, days).unwrap() }.getOrElse { mockChildMood }
     }
 
     suspend fun bindChild(request: BindChildRequest): Result<ChildBinding> = runCatching {
-        runCatching { api.bindStudent(request) }.getOrElse {
+        runCatching { api.bindStudent(request).unwrap() }.getOrElse {
             ChildBinding(
                 bindingId = "binding_${System.currentTimeMillis()}",
                 studentId = request.studentId,
@@ -181,41 +206,30 @@ class ParentRepository @Inject constructor(
     }
 
     suspend fun authorizeChild(bindingId: String): Result<ChildBinding> = runCatching {
-        runCatching { api.authorizeChild(bindingId, AuthorizeChildRequest()) }.getOrElse {
-            // mock：本地标记为已授权由 ViewModel 处理
-            throw IllegalStateException("mock authorize")
-        }
+        api.authorizeChild(bindingId, AuthorizeChildRequest()).unwrap()
     }
 
     suspend fun unbindChild(bindingId: String): Result<Unit> = runCatching {
-        runCatching { api.unbindChild(bindingId) }
+        api.unbindChild(bindingId).unwrap()
+        Unit
     }
 
     suspend fun fetchAlerts(): Result<List<EmergencyAlert>> = runCatching {
         delay(300)
-        runCatching { api.getEmergencyAlert() }.getOrNull()?.let { listOf(it) } ?: mockAlerts
+        api.getEmergencyAlert().unwrapOrNull()?.let { listOf(it) } ?: emptyList()
     }
 
     suspend fun confirmAlert(alertId: String): Result<EmergencyAlert> = runCatching {
-        runCatching { api.confirmAlert(alertId) }.getOrElse {
-            EmergencyAlert(
-                alertId = alertId,
-                studentId = "",
-                level = "orange",
-                reason = "",
-                createdAt = "",
-                confirmed = true,
-                confirmedAt = java.time.Instant.now().toString(),
-                status = "confirmed"
-            )
-        }
+        api.confirmAlert(alertId).unwrap()
     }
 
     suspend fun fetchResources(type: String? = null): Result<List<EmergencyResource>> = runCatching {
         delay(300)
-        val data = runCatching {
-            if (type != null) api.getResourcesByType(type) else api.getEmergencyResources()
-        }.getOrNull() ?: mockEmergencyResources
+        val data = if (type != null) {
+            api.getResourcesByType(type).unwrap()
+        } else {
+            api.getEmergencyResources().unwrap()
+        }
         if (type != null) data.filter { it.type == type } else data
     }
 

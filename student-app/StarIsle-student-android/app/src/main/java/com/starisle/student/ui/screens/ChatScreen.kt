@@ -10,6 +10,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -42,6 +44,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -49,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import android.provider.Settings
 import com.starisle.student.data.api.ChatUiMessage
 import com.starisle.student.theme.StarNightBlue
 import com.starisle.student.theme.WarmOrange
@@ -72,19 +76,63 @@ fun ChatScreen(
     var input by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
     val keyboard = LocalSoftwareKeyboardController.current
+    val context = LocalContext.current
+
+    // 设备级用户标识：供 ai-engine 归档情绪记录，无需登录
+    val deviceUserId = remember {
+        val androidId = Settings.Secure.getString(
+            context.contentResolver,
+            Settings.Secure.ANDROID_ID,
+        )
+        "android-" + (androidId ?: UUID.randomUUID().toString())
+    }
+
+    val isSending by viewModel.chatSending.collectAsStateWithLifecycle()
+    val reply by viewModel.chatReply.collectAsStateWithLifecycle()
+    val chatError by viewModel.chatError.collectAsStateWithLifecycle()
 
     LaunchedEffect(messages.size) {
+        val extra = if (isSending) 1 else 0
         if (messages.isNotEmpty()) {
-            listState.animateScrollToItem(messages.size - 1)
+            listState.animateScrollToItem((messages.size - 1 + extra).coerceAtLeast(0))
         }
     }
 
-    val aiState by viewModel.state.collectAsStateWithLifecycle()
+    // 模型回复到达后追加到消息列表
+    LaunchedEffect(reply?.seq) {
+        reply?.let { r ->
+            messages.add(
+                ChatUiMessage(
+                    id = UUID.randomUUID().toString(),
+                    senderId = "xiaoxing",
+                    senderName = "小星",
+                    content = r.content,
+                    sentAt = System.currentTimeMillis(),
+                    isUser = false,
+                )
+            )
+        }
+    }
 
-    // 自动回复占位：发送后 AI 简单 echo（接入真实 Chat 后端时替换为调用 AiRepository）
+    // 请求失败时给出明确提示，而不是静默无响应
+    LaunchedEffect(chatError) {
+        chatError?.let { err ->
+            messages.add(
+                ChatUiMessage(
+                    id = UUID.randomUUID().toString(),
+                    senderId = "system",
+                    senderName = "系统",
+                    content = "小星暂时没能连上服务器，请检查手机与电脑是否在同一网络：$err",
+                    sentAt = System.currentTimeMillis(),
+                    isUser = false,
+                )
+            )
+        }
+    }
+
     fun sendMessage() {
         val text = input.trim()
-        if (text.isEmpty()) return
+        if (text.isEmpty() || isSending) return
 
         val userMessage = ChatUiMessage(
             id = UUID.randomUUID().toString(),
@@ -98,7 +146,7 @@ fun ChatScreen(
         input = ""
         keyboard?.hide()
 
-        // 危机关键词检测：触发紧急帮助（此处仅占位提示）
+        // 危机关键词检测：命中时先给出紧急帮助，再交由模型继续共情
         if (crisisKeywords.any { text.contains(it) }) {
             messages.add(
                 ChatUiMessage(
@@ -110,20 +158,10 @@ fun ChatScreen(
                     isUser = false,
                 )
             )
-            return
         }
 
-        // 临时 echo 回复占位
-        messages.add(
-            ChatUiMessage(
-                id = UUID.randomUUID().toString(),
-                senderId = "xiaoxing",
-                senderName = "小星",
-                content = "我在这里陪你。你刚刚说：$text",
-                sentAt = System.currentTimeMillis(),
-                isUser = false,
-            )
-        )
+        // 调用本地训练模型（ai-engine /chat）
+        viewModel.sendChatMessage(deviceUserId, text)
     }
 
     Scaffold(
@@ -145,6 +183,7 @@ fun ChatScreen(
         bottomBar = {
             ChatInputBar(
                 input = input,
+                enabled = !isSending,
                 onInputChange = { input = it },
                 onSend = { sendMessage() },
             )
@@ -165,6 +204,30 @@ fun ChatScreen(
                     items(messages) { msg ->
                         MessageBubble(message = msg)
                     }
+                    if (isSending) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.Start,
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .background(WarmOrange.copy(alpha = 0.2f), RoundedCornerShape(16.dp))
+                                        .padding(horizontal = 14.dp, vertical = 10.dp),
+                                ) {
+                                    Row(verticalAlignment = Alignment.CenterVertically) {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier.size(14.dp),
+                                            strokeWidth = 2.dp,
+                                            color = WarmOrange,
+                                        )
+                                        Spacer(Modifier.width(8.dp))
+                                        Text("小星正在思考…", color = MaterialTheme.colorScheme.onSurface)
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -174,6 +237,7 @@ fun ChatScreen(
 @Composable
 private fun ChatInputBar(
     input: String,
+    enabled: Boolean,
     onInputChange: (String) -> Unit,
     onSend: () -> Unit,
 ) {
@@ -197,6 +261,7 @@ private fun ChatInputBar(
         Spacer(Modifier.padding(horizontal = 4.dp))
         IconButton(
             onClick = onSend,
+            enabled = enabled,
             colors = IconButtonDefaults.iconButtonColors(
                 containerColor = StarNightBlue,
                 contentColor = Color.White,

@@ -29,13 +29,9 @@ class AiViewModel @Inject constructor(
     val parentTopics get() = repo.parentTopics
 
     fun fetchHistory(userId: String) = viewModelScope.launch {
+        // 只展示网关返回的真实历史，不再用示例消息填充
         val history = repo.fetchHistory(userId)
-        // mock 兜底
-        val data = if (history.isEmpty()) listOf(
-            ChatMessage("msg1", userId, "大星你好，我想问问关于孩子情绪的问题", "user", "2026-07-15T10:00:00Z"),
-            ChatMessage("msg2", userId, "你好呀！大星在这里陪着你。慢慢来，一切都会好起来的。关于孩子的情绪，大星很愿意听听你的想法。", "assistant", "2026-07-15T10:01:00Z")
-        ) else history
-        _state.update { it.copy(messages = data) }
+        _state.update { it.copy(messages = history) }
     }
 
     /**
@@ -76,16 +72,6 @@ class AiViewModel @Inject constructor(
                     timestamp = Instant.now().toString(),
                     riskLevel = "red"
                 )
-                is AiRepository.ChatResult.Fallback -> {
-                    _state.update { it.copy(isUsingMock = true) }
-                    ChatMessage(
-                        id = "a-${System.currentTimeMillis()}",
-                        userId = userId,
-                        content = result.reply,
-                        role = "assistant",
-                        timestamp = Instant.now().toString()
-                    )
-                }
                 is AiRepository.ChatResult.Error -> {
                     _state.update { it.copy(isTyping = false, error = result.message) }
                     return@launch
@@ -120,12 +106,12 @@ class AiViewModel @Inject constructor(
 
     fun updateInput(text: String) = _state.update { it.copy(inputDraft = text) }
     fun clearInput() = _state.update { it.copy(inputDraft = "") }
+    fun clearError() = _state.update { it.copy(error = null) }
 }
 
 data class AiState(
     val messages: List<ChatMessage> = emptyList(),
     val inputDraft: String = "",
     val isTyping: Boolean = false,
-    val isUsingMock: Boolean = false,
     val error: String? = null
 )

@@ -3,10 +3,11 @@ build_sft_dataset.py - SFT 微调数据集构造脚本
 
 所属模块：ai-engine/scripts
 功能简述：
-    构造 2000 条 SFT（监督微调）数据集，来源三部分：
+    构造 2000 条 SFT（监督微调）数据集，来源四部分：
       来源A：设计文档§8 的 10 场景×50 扰动 = 500 条
       来源B：知识库 → Q&A = 1000 条（文档不足时等比缩小）
       来源C：Fork Skills 演示 = 500 条
+      来源D：独立 mental_health_kb（L0/L1）→ Q&A，L2/L3 跳过
     全程对红线词严格清洗，输出 JSONL 格式。
 """
 from __future__ import annotations
@@ -23,6 +24,9 @@ DATA_DIR = ROOT / "data"
 KB_JSON = DATA_DIR / "knowledge_base.json"
 OUT_JSONL = DATA_DIR / "sft_dataset_xiaoxing.jsonl"
 MANIFEST_PATH = DATA_DIR / "forked_repos" / "fork_manifest.json"
+# 独立心理健康知识库（与 knowledge_base.json 分离，避免污染受 Git 跟踪的数据）
+MH_KB_DIR = ROOT.parent.parent / "mental_health_kb"
+MH_KB_DETAIL_FILES = ("articles.json", "methods.json")
 
 SOURCES = ("design_doc", "knowledge_base", "fork_skills")
 RISK = Literal["green", "yellow", "orange", "red"]
@@ -105,6 +109,17 @@ def build_from_design_doc(n_per: int = 50):
                         "source": f"{sc['id']}_aug_{i:03d}", "risk_level": sc["risk"]})
     return out
 
+def _desensitize(text: str) -> str:
+    """把红线词替换成去标签化说法，供知识库类样本复用。"""
+    def _sub(w):
+        return ("心情持续低落" if "抑郁" in w else
+                "心里紧紧张张的" if "焦虑" in w else
+                "专业人士" if w in ("患者", "病人") else
+                "专业帮助" if w in ("治疗", "诊断") else "心里的不舒服")
+    for w in RED_WORDS:
+        text = text.replace(w, _sub(w))
+    return text
+
 def _qa(doc: Dict[str, Any], idx: int):
     """将单篇知识文档转为一条 Q&A 样本，并对红线词做去标签化替换。"""
     body = (doc.get("content") or "").strip()
@@ -116,12 +131,7 @@ def _qa(doc: Dict[str, Any], idx: int):
     q = templates[idx % len(templates)].format(t=title[:30], c=cat)
     short = [s.strip() for s in re.split(r"[。\.\n]", body) if s.strip()][:3]
     para = "。".join(short) + "。" if short else body[:200]
-    def _sub(w):
-        return ("心情持续低落" if "抑郁" in w else
-                "心里紧紧张张的" if "焦虑" in w else
-                "专业人士" if w in ("患者","病人") else
-                "专业帮助" if w in ("治疗","诊断") else "心里的不舒服")
-    for w in RED_WORDS: para = para.replace(w, _sub(w))
+    para = _desensitize(para)
     a = f"嗯...小星翻了翻书，看到一段关于「{title[:20]}」的分享哦～\n{para}\n小星觉得这只是参考，你的感受才是最重要的呀。"
     return {"instruction": BASE_INSTRUCTION,"input": q, "output": a,
             "source": f"kb_{(doc.get('source') or 'unk')[:60]}_{idx:04d}", "risk_level":"green"}
@@ -137,6 +147,54 @@ def build_from_knowledge_base(target: int = 1000):
             s = _qa(d, i*100 + j)
             if s: out.append(s)
         if len(out) >= target: break
+    return out
+
+def _load_mental_health_kb() -> List[Dict[str, Any]]:
+    """读取独立知识库的详情条目；缺目录或缺文件时返回空列表，不阻断主流程。"""
+    if not MH_KB_DIR.is_dir():
+        return []
+    docs: List[Dict[str, Any]] = []
+    for name in MH_KB_DETAIL_FILES:
+        p = MH_KB_DIR / name
+        if p.exists():
+            docs.extend(json.loads(p.read_text(encoding="utf-8")).get("entries", []))
+    return sorted(docs, key=lambda d: d.get("id", ""))
+
+def build_from_mental_health_kb(target: int = 160):
+    """来源D：从 mental_health_kb 生成 Q&A；只取 L0/L1，L2/L3 一律跳过。
+
+    L3 内容按知识库硬规则只用于识别与转介，不能生成自助答复，因此不进入训练样本。
+    """
+    docs = _load_mental_health_kb()
+    if not docs:
+        log.warning("mental_health_kb 不存在或为空，跳过来源D")
+        return []
+    out = []
+    for det in docs:
+        if len(out) >= target: break
+        if det.get("risk_level") not in ("L0", "L1"): continue
+        title = (det.get("title") or "").strip()
+        if not title: continue
+        help_hint = _desensitize((det.get("when_to_seek_help") or "").strip())
+        if det.get("type") == "method":
+            steps = det.get("steps") or []
+            if not steps: continue
+            body = "；".join(steps[:6])
+            q = f"想试试「{title[:20]}」，具体怎么做呀？"
+            a = (f"嗯...小星把「{title[:20]}」的步骤整理好啦～\n{_desensitize(body)}。\n"
+                 f"这些步骤来自{det.get('source_org', '公开资料')}，小星只是转述哦。"
+                 + (f"\n如果{help_hint}" if help_hint else ""))
+        else:
+            content = det.get("summary", "")
+            points = det.get("key_points") or []
+            if points: content = content + "\n" + "；".join(points[:4])
+            s = _qa({"title": title, "source": det.get("source_org", ""),
+                     "category": "心理健康资料", "content": content}, len(out))
+            if not s: continue
+            a = s["output"] + (f"\n如果{help_hint}" if help_hint else "")
+            q = s["input"]
+        out.append({"instruction": BASE_INSTRUCTION, "input": q, "output": a,
+                    "source": f"mhkb_{det['id']}", "risk_level": "green"})
     return out
 
 def build_from_skills(target: int = 500):
@@ -185,7 +243,8 @@ def run(total: int = 2000, out: Path = OUT_JSONL):
     a = build_from_design_doc(50)
     b = build_from_knowledge_base(int(total * 0.50))
     c = build_from_skills(int(total * 0.25))
-    missing = max(0, total - (len(a)+len(b)+len(c)))
+    d = build_from_mental_health_kb()
+    missing = max(0, total - (len(a)+len(b)+len(c)+len(d)))
     extra = []
     if missing:
         rng = random.Random(42); pool = deepcopy(_SCENES)
@@ -196,9 +255,10 @@ def run(total: int = 2000, out: Path = OUT_JSONL):
             extra.append({"instruction": BASE_INSTRUCTION, "input": inp,
                           "output": rng.choice(sc["outputs"]),
                           "source": f"{sc['id']}_extra_{k:04d}", "risk_level": sc["risk"]})
-    wr = write_jsonl(a + b + c + extra, out)
+    wr = write_jsonl(a + b + c + d + extra, out)
     rep = {"design_doc":len(a),"knowledge_base":len(b),"fork_skills":len(c),
-           "extra_pad":len(extra),"total_written":wr,"output_jsonl":str(out)}
+           "mental_health_kb":len(d),"extra_pad":len(extra),
+           "total_written":wr,"output_jsonl":str(out)}
     (DATA_DIR / "sft_dataset_report.json").write_text(json.dumps(rep, ensure_ascii=False, indent=2), encoding="utf-8")
     return rep
 

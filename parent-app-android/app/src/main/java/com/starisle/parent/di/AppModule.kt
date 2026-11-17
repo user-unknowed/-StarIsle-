@@ -3,6 +3,7 @@ package com.starisle.parent.di
 import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
@@ -13,6 +14,8 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -33,8 +36,15 @@ import javax.inject.Singleton
 @InstallIn(SingletonComponent::class)
 object AppModule {
 
-    private const val BASE_URL = "http://10.0.2.2:8080/"
+    /**
+     * 网关基地址：模拟器用 10.0.2.2 映射开发机；真机需改为开发机局域网 IP（如 http://192.168.31.122:8081/api/）。
+     * 路径必须以 /api/ 结尾，接口方法不得再以 / 开头，否则会覆盖该 path 段。
+     */
+    private const val BASE_URL = "http://10.0.2.2:8081/api/"
     private const val DATASTORE_NAME = "starisle_parent_prefs"
+
+    /** 登录 Token 的 DataStore key（与 AuthViewModel 写入的 key 名保持一致） */
+    private val TOKEN_KEY = stringPreferencesKey("token")
 
     /**
      * Moshi JSON 解析器（与 web-frontend 一致：Kotlin 反射 + 数据类）。
@@ -58,11 +68,24 @@ object AppModule {
      */
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttpClient(dataStore: DataStore<Preferences>): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
-        .readTimeout(10, TimeUnit.SECONDS)
-        .writeTimeout(10, TimeUnit.SECONDS)
+        // 本地 SFT 模型单次推理约 20-30s，读超时必须放宽，否则必然超时
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
         .pingInterval(30, TimeUnit.SECONDS)
+        // 鉴权拦截器：从 DataStore 读取登录 Token 并注入 Authorization
+        .addInterceptor(Interceptor { chain ->
+            val token = runBlocking { dataStore.data.first()[TOKEN_KEY] }
+            val request = if (token.isNullOrBlank()) {
+                chain.request()
+            } else {
+                chain.request().newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            }
+            chain.proceed(request)
+        })
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         })

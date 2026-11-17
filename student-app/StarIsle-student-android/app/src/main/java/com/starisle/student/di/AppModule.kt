@@ -2,7 +2,9 @@ package com.starisle.student.di
 
 import android.content.Context
 import com.starisle.student.data.api.AiApiService
+import com.starisle.student.data.api.LocalChatApiService
 import com.starisle.student.data.api.RetrofitFactory
+import com.starisle.student.data.api.ServerConfig
 import com.starisle.student.data.db.MemoryDao
 import com.starisle.student.data.db.MemoryDatabase
 import com.starisle.student.data.db.MemoryStorageService
@@ -35,10 +37,19 @@ object AppModule {
     fun provideAiApiService(): AiApiService =
         RetrofitFactory.createAi("https://open.bigmodel.cn/api/paas/v4/")
 
+    /** 本地模型对话服务：基地址在每次请求时按当前配置解析，支持应用内改地址后即时生效 */
     @Provides
     @Singleton
-    fun provideAiRepository(apiService: AiApiService): AiRepository =
-        AiRepository(apiService)
+    fun provideLocalChatApiService(): LocalChatApiService =
+        RetrofitFactory.createLocalChat(ServerConfig.DEFAULT_AI_BASE_URL)
+
+    @Provides
+    @Singleton
+    fun provideAiRepository(
+        apiService: AiApiService,
+        localChatApiService: LocalChatApiService,
+        @ApplicationContext context: Context,
+    ): AiRepository = AiRepository(apiService, localChatApiService, context)
 
     @Provides
     @Singleton

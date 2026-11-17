@@ -25,7 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,6 +40,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -45,6 +48,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -61,6 +66,7 @@ import com.starisle.parent.theme.Warm500
 import com.starisle.parent.theme.Warm600
 import com.starisle.parent.ui.components.EmergencyHelpButton
 import com.starisle.parent.ui.viewmodel.AiViewModel
+import com.starisle.parent.ui.viewmodel.AuthState
 import com.starisle.parent.ui.viewmodel.AuthViewModel
 
 /**
@@ -75,7 +81,18 @@ fun ChatScreen(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val listState = rememberLazyListState()
 
-    val userId = auth.userId ?: "parent1"
+    val authSnapshot = auth
+    if (authSnapshot.userId == null) {
+        AuthGate(
+            state = authSnapshot,
+            onLogin = { phone, password -> authViewModel.login(phone, password) },
+            onRegister = { phone, password, nickname ->
+                authViewModel.register(phone, password, nickname)
+            }
+        )
+        return
+    }
+    val userId = authSnapshot.userId
     LaunchedEffect(userId) { viewModel.fetchHistory(userId) }
     LaunchedEffect(state.messages.size) {
         if (state.messages.isNotEmpty()) {
@@ -107,18 +124,6 @@ fun ChatScreen(
                         Text("大星在这里陪着你",
                             color = Color.White.copy(alpha = 0.9f), fontSize = 12.sp)
                     }
-                }
-            }
-
-            if (state.isUsingMock) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(AlertYellow500.copy(alpha = 0.15f))
-                        .padding(8.dp)
-                ) {
-                    Text("后端未连接，当前为示例回复",
-                        color = Color(0xFF92400E), fontSize = 11.sp)
                 }
             }
 
@@ -213,7 +218,7 @@ fun ChatScreen(
     if (state.error != null) {
         AlertDialog(
             onDismissRequest = {},
-            confirmButton = { TextButton(onClick = { viewModel.clearInput() }) { Text("知道了") } },
+            confirmButton = { TextButton(onClick = { viewModel.clearError() }) { Text("知道了") } },
             title = { Text("提示") },
             text = { Text(state.error ?: "") }
         )
@@ -351,6 +356,104 @@ private fun MessageBubble(message: ChatMessage, userNickname: String) {
                 Box(contentAlignment = Alignment.Center) {
                     Text(userNickname.firstOrNull()?.toString() ?: "P",
                         color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 未登录时的入口：手机号 / 密码 / 昵称 + 登录或注册。
+ * 登录成功后 AuthViewModel 写入 DataStore，OkHttp 拦截器自动带上 Authorization。
+ */
+@Composable
+private fun AuthGate(
+    state: AuthState,
+    onLogin: (String, String) -> Unit,
+    onRegister: (String, String, String) -> Unit
+) {
+    var phone by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var nickname by remember { mutableStateOf("") }
+    var isRegister by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Brush.verticalGradient(listOf(Warm400, Color.White))),
+        contentAlignment = Alignment.Center
+    ) {
+        Card(
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
+            shape = RoundedCornerShape(20.dp)
+        ) {
+            Column(Modifier.padding(20.dp)) {
+                Text("家长登录", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(6.dp))
+                Text("登录后即可和「大星」对话",
+                    fontSize = 12.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Spacer(Modifier.height(20.dp))
+
+                OutlinedTextField(
+                    value = phone,
+                    onValueChange = { phone = it },
+                    label = { Text("手机号") },
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(12.dp))
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it },
+                    label = { Text("密码") },
+                    singleLine = true,
+                    visualTransformation = PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                if (isRegister) {
+                    Spacer(Modifier.height(12.dp))
+                    OutlinedTextField(
+                        value = nickname,
+                        onValueChange = { nickname = it },
+                        label = { Text("昵称") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+
+                val error = state.error
+                if (error != null) {
+                    Spacer(Modifier.height(12.dp))
+                    Text(error, color = AlertRed500, fontSize = 12.sp)
+                }
+
+                Spacer(Modifier.height(20.dp))
+                Button(
+                    onClick = {
+                        val p = phone.trim()
+                        if (isRegister) {
+                            onRegister(p, password, nickname.trim().ifBlank { "家长" })
+                        } else {
+                            onLogin(p, password)
+                        }
+                    },
+                    enabled = !state.isLoading && phone.isNotBlank() && password.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    if (state.isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(18.dp),
+                            strokeWidth = 2.dp,
+                            color = Color.White
+                        )
+                    } else {
+                        Text(if (isRegister) "注册并登录" else "登录")
+                    }
+                }
+                TextButton(onClick = { isRegister = !isRegister }) {
+                    Text(if (isRegister) "已有账号？去登录" else "没有账号？注册")
                 }
             }
         }

@@ -64,6 +64,9 @@ public class SecurityConfig {
                 .requestMatchers("/health").permitAll()
                 .requestMatchers("/api/v1/users/register").permitAll()
                 .requestMatchers("/api/v1/users/login").permitAll()
+                // 前端认证契约（/api/v1/auth）放行登录与注册
+                .requestMatchers("/api/v1/auth/login").permitAll()
+                .requestMatchers("/api/v1/auth/register").permitAll()
                 .requestMatchers("/api/v1/parents/register").permitAll()
                 .requestMatchers("/api/v1/parents/login").permitAll()
                 .requestMatchers("/api/v1/risk/crisis/hotlines").permitAll()

@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Book
+import androidx.compose.material.icons.filled.Cloud
 import androidx.compose.material.icons.filled.DarkMode
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.HelpOutline
@@ -26,15 +27,22 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Security
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,12 +50,22 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.starisle.student.theme.StarNightBlue
+import com.starisle.student.ui.viewmodel.AiViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileScreen(navController: NavController? = null) {
+fun ProfileScreen(
+    navController: NavController? = null,
+    viewModel: AiViewModel = hiltViewModel(),
+) {
+    val serverUrl by viewModel.serverUrl.collectAsStateWithLifecycle()
+    var showServerDialog by remember { mutableStateOf(false) }
+    var draftUrl by remember { mutableStateOf(serverUrl) }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -165,6 +183,50 @@ fun ProfileScreen(navController: NavController? = null) {
                     }
                 }
             }
+            // 本地模型服务配置
+            item {
+                ProfileEntryCard(
+                    icon = Icons.Filled.Cloud,
+                    title = "AI 服务地址",
+                    subtitle = serverUrl,
+                    onClick = {
+                        draftUrl = serverUrl
+                        showServerDialog = true
+                    },
+                )
+            }
+        }
+
+        if (showServerDialog) {
+            AlertDialog(
+                onDismissRequest = { showServerDialog = false },
+                title = { Text("AI 服务地址") },
+                text = {
+                    Column {
+                        Text(
+                            "填写运行本地模型服务的电脑地址，手机需与电脑处于同一局域网。",
+                            fontSize = 12.sp,
+                            color = Color.Gray,
+                        )
+                        Spacer(Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = draftUrl,
+                            onValueChange = { draftUrl = it },
+                            singleLine = true,
+                            label = { Text("如 http://192.168.31.122:8000/") },
+                        )
+                    }
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        viewModel.updateServerUrl(draftUrl)
+                        showServerDialog = false
+                    }) { Text("保存") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showServerDialog = false }) { Text("取消") }
+                },
+            )
         }
     }
 }

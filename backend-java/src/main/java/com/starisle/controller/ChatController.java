@@ -79,11 +79,15 @@ public class ChatController {
             request.getUserProfile()
         );
 
-        // 返回响应耗时等基础信息
-        return ResponseEntity.ok(ApiResponse.success("消息发送成功", Map.of(
-            "user_id", request.getUserId(),
-            "response_time", response.getResponseTimeMs()
-        )));
+        // 返回前端 ChatResponse 约定的 camelCase 字段（必须包含回复正文 response）
+        Map<String, Object> data = new java.util.HashMap<>();
+        data.put("userId", request.getUserId());
+        data.put("response", response.getContent());
+        data.put("riskLevel", response.getRiskLevel() == null ? "green" : response.getRiskLevel());
+        data.put("emotionTags", response.getEmotionTags() == null ? List.of() : response.getEmotionTags());
+        data.put("responseTimeMs", response.getResponseTimeMs());
+        data.put("model", response.getModel() == null ? "" : response.getModel());
+        return ResponseEntity.ok(ApiResponse.success("消息发送成功", data));
     }
 
     /**

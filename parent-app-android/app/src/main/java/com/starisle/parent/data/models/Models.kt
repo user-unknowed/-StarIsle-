@@ -147,14 +147,17 @@ data class NotificationSettings(
 
 /**
  * 登录响应
+ *
+ * 注意：/v1/parents/me 不返回 token（登录/注册才返回），因此 token 必须可空，
+ * 否则 Moshi 在解析 /me 响应时会抛 JsonDataException。
  */
 @JsonClass(generateAdapter = true)
 data class ParentLoginResponse(
     val userId: String,
     val nickname: String,
-    val phone: String,
+    val phone: String? = null,
     val avatar: String? = null,
-    val token: String
+    val token: String? = null
 )
 
 /**

@@ -9,6 +9,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.starisle.parent.data.api.LoginRequest
 import com.starisle.parent.data.api.ParentApiService
+import com.starisle.parent.data.api.RegisterRequest
+import com.starisle.parent.data.models.ParentLoginResponse
 import com.starisle.parent.data.models.ParentUser
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -57,14 +59,19 @@ class AuthViewModel @Inject constructor(
 
     fun login(phone: String, password: String, onSuccess: () -> Unit = {}, onError: (String) -> Unit = {}) = viewModelScope.launch {
         _state.update { it.copy(isLoading = true, error = null) }
-        runCatching { api.login(LoginRequest(phone, password)) }
+        runCatching {
+            val envelope = api.login(LoginRequest(phone, password))
+            // 注册接口成功返回 201，登录返回 200，统一按 2xx 判定
+            val code = envelope.code ?: 200
+            if (code !in 200..299) {
+                throw IllegalStateException(envelope.message ?: "登录失败（code=$code）")
+            }
+            val payload = envelope.data ?: throw IllegalStateException("登录响应缺少 data")
+            if (payload.token.isNullOrBlank()) throw IllegalStateException("登录响应缺少 token")
+            payload
+        }
             .onSuccess { resp ->
-                dataStore.edit { p ->
-                    p[TOKEN_KEY] = resp.token
-                    p[USER_ID_KEY] = resp.userId
-                    p[NICKNAME_KEY] = resp.nickname
-                    p[PHONE_KEY] = resp.phone
-                }
+                saveSession(resp)
                 _state.update {
                     it.copy(
                         isLoading = false,
@@ -85,6 +92,63 @@ class AuthViewModel @Inject constructor(
                 _state.update { it.copy(isLoading = false, error = e.message ?: "登录失败") }
                 onError(e.message ?: "登录失败")
             }
+    }
+
+    /**
+     * 家长注册：成功后直接写入登录态（与后端 /v1/parents/register 行为一致）。
+     */
+    fun register(
+        phone: String,
+        password: String,
+        nickname: String,
+        onSuccess: () -> Unit = {},
+        onError: (String) -> Unit = {}
+    ) = viewModelScope.launch {
+        _state.update { it.copy(isLoading = true, error = null) }
+        runCatching {
+            val envelope = api.register(RegisterRequest(phone, password, nickname))
+            val code = envelope.code ?: 200
+            if (code !in 200..299) {
+                throw IllegalStateException(envelope.message ?: "注册失败（code=$code）")
+            }
+            val payload = envelope.data ?: throw IllegalStateException("注册响应缺少 data")
+            if (payload.token.isNullOrBlank()) throw IllegalStateException("注册响应缺少 token")
+            payload
+        }
+            .onSuccess { resp ->
+                saveSession(resp)
+                _state.update {
+                    it.copy(
+                        isLoading = false,
+                        isLoggedIn = true,
+                        token = resp.token,
+                        userId = resp.userId,
+                        user = ParentUser(
+                            id = resp.userId,
+                            nickname = resp.nickname,
+                            phone = resp.phone,
+                            avatar = resp.avatar
+                        )
+                    )
+                }
+                onSuccess()
+            }
+            .onFailure { e ->
+                _state.update { it.copy(isLoading = false, error = e.message ?: "注册失败") }
+                onError(e.message ?: "注册失败")
+            }
+    }
+
+    /** 持久化登录态，供 OkHttp 鉴权拦截器读取 token */
+    private suspend fun saveSession(resp: ParentLoginResponse) {
+        val token = resp.token?.takeIf { it.isNotBlank() }
+            ?: throw IllegalStateException("登录响应缺少 token")
+        dataStore.edit { p ->
+            p[TOKEN_KEY] = token
+            p[USER_ID_KEY] = resp.userId
+            p[NICKNAME_KEY] = resp.nickname
+            p[PHONE_KEY] = resp.phone.orEmpty()
+        }
     }
 
     fun logout() = viewModelScope.launch {

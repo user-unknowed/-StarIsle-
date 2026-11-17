@@ -15,6 +15,7 @@ chat_service.py - AI 对话服务（CBT 框架 + RAG 知识增强）
     - app.skills：技能三段注入
 """
 import os
+from pathlib import Path
 from typing import List, Dict, Optional
 try:
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -49,11 +50,24 @@ class ChatService:
         # 加载大模型（MVP阶段可使用API调用）
         self.model_name = os.getenv("MODEL_NAME", "deepseek-ai/deepseek-chat")
         self.api_key = os.getenv("MODEL_API_KEY")
-        
+        self.device = "cpu"
+
         # 如果本地部署，加载模型
         if os.getenv("USE_LOCAL_MODEL") == "true":
+            # 默认指向本仓库 SFT 微调产物（相对 ai-engine 根目录）
+            default_local = str(Path(__file__).resolve().parents[2]
+                                / "models" / "sft_xiaoxing_v1" / "final_model")
+            self.model_name = os.getenv("MODEL_NAME") or default_local
+            if not os.path.isdir(self.model_name):
+                raise RuntimeError(f"本地模型目录不存在: {self.model_name}")
+            use_cuda = torch is not None and torch.cuda.is_available()
+            self.device = "cuda" if use_cuda else "cpu"
+            dtype = torch.float16 if use_cuda else torch.float32
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
+            if self.tokenizer.pad_token is None:
+                self.tokenizer.pad_token = self.tokenizer.eos_token
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name, torch_dtype=dtype).to(self.device).eval()
         else:
             # 使用API调用：构造 OpenAI 兼容客户端，指向国产模型服务
             from openai import OpenAI
@@ -187,6 +201,38 @@ class ChatService:
         
         return response.choices[0].message.content
     
+    def _build_local_prompt(self, messages: List[Dict]) -> str:
+        """
+        用 tokenizer 的 chat template 构造本地模型输入。
+
+        优先使用 apply_chat_template；老模型/无模板时回退到 ChatML 手写格式。
+        """
+        try:
+            return self.tokenizer.apply_chat_template(
+                messages, tokenize=False, add_generation_prompt=True)
+        except Exception:
+            buf = "".join(
+                f"<|im_start|>{m['role']}\n{m['content']}<|im_end|>\n" for m in messages)
+            return buf + "<|im_start|>assistant\n"
+
+    def _generate_sync(self, prompt: str) -> str:
+        """同步推理（阻塞），由 _generate_local 放到线程池执行。"""
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+        with torch.no_grad():
+            outputs = self.model.generate(
+                **inputs,
+                max_new_tokens=200,
+                do_sample=True,
+                temperature=0.7,
+                top_p=0.9,
+                repetition_penalty=1.05,
+                pad_token_id=self.tokenizer.pad_token_id,
+                eos_token_id=self.tokenizer.eos_token_id,
+            )
+        # 只解码新生成的 token，避免把整段 prompt 混进回复
+        new_tokens = outputs[0][inputs["input_ids"].shape[-1]:]
+        return self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+
     async def _generate_local(self, messages: List[Dict]) -> str:
         """
         本地模型推理。
@@ -197,23 +243,7 @@ class ChatService:
         Returns:
             str: 模型生成的回复文本
         """
-        # TODO: 实现本地模型推理逻辑
-        # 应用聊天模板构造模型输入
-        prompt = self.tokenizer.apply_chat_template(messages, tokenize=False)
-        
-        # 对输入文本做分词，返回 PyTorch 张量
-        inputs = self.tokenizer(prompt, return_tensors="pt")
-        
-        # 在无梯度上下文中执行采样生成
-        with torch.no_grad():
-            outputs = self.model.generate(
-                inputs.input_ids,
-                max_new_tokens=200,
-                temperature=0.7,
-                top_p=0.9,
-                do_sample=True
-            )
-        
-        # 解码输出张量为文本，跳过特殊 token
-        response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return response
+        import asyncio
+        prompt = self._build_local_prompt(messages)
+        # 放到线程池，避免阻塞 FastAPI 事件循环
+        return await asyncio.to_thread(self._generate_sync, prompt)

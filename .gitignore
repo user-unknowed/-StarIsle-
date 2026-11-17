@@ -29,9 +29,39 @@ Desktop.ini
 logs/
 *.pid
 
+# 本机私有训练数据（含个人健康信息，禁止提交/上传）
+server-services/ai-engine/data/private/
+mental_health_kb/
+
+# 本机训练环境与产出（体积大，禁止提交）
+.starisle-train/
+.tmp-emulator/
+server-services/ai-engine/models/sft_xiaoxing_v1/
+server-services/ai-engine/models/sft_xiaoxing_v1_SIMULATION/
+
 # 构建产物
 **/target/
 **/dist/
 **/build/
 **/node_modules/
 *.class
+
+# 签名密钥与本地签名配置（严禁提交）
+*.jks
+*.keystore
+keystore.properties
+.tmp-keys/
+
+# 本机运行数据与临时目录
+backend-java/data/
+.tmp-*/
+.preferences/
+**/.preferences/
+message-wall/
+
+# Python / Gradle 本地缓存
+__pycache__/
+*.pyc
+.gradle/
+local.properties
+pylibs/

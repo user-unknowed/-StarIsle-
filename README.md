@@ -16,6 +16,7 @@ v2.1 新增「心理测评反馈微信小程序」模块，基于微信云开发
 - 家长端 `parent-app-android/`（原 React/TS → Kotlin + Compose）
 - 技术栈：Kotlin 1.9.25 + AGP 8.5.2 + Compose BOM 2024.09 + Hilt 2.51.1 + Room 2.6.1 + Retrofit 2.11.0 + WorkManager 2.9.1 + Navigation Compose 2.8.1
 - 构建验证：三端 APK 均成功生成，Android 模拟器（API 35）启动、UI 渲染、页面跳转、底部导航、文本输入全部通过测试，无运行时崩溃或 UI 异常
+- 家长端 AI 对话已接通真实模型：`http://<gateway>:8081/api/v1/chat/message` → ai-engine `/chat` → 本地 SFT `final_model`；补齐登录鉴权（Bearer）、`{code,message,data}` 信封解析与长耗时推理超时设置，失败时如实报错不再使用 mock 文案
 - 原 Flutter/React 源码保留作为参考实现
 
 ## MVP核心功能
@@ -448,7 +449,9 @@ server-services/mcp-psych-assessment/src/index.ts
 ### 环境要求
 | 组件 | 最低版本 | 说明 |
 |------|---------|------|
-| Flutter SDK | 3.0 | 原生端开发 |
+| Android SDK | 35 | Android 三端构建（compileSdk 35 / minSdk 24） |
+| JDK | 17 | Android Gradle 构建（AGP 8.5.2 / Gradle 8.9） |
+| Flutter SDK | 3.0 | 仅原 Flutter 源码（v2.2 起为参考实现） |
 | Node.js | 18.0.0 | Web前端 / MCP Server 开发 |
 | 微信开发者工具 | 1.06+ | 微信小程序开发 `v2.1新增` |
 | Java JDK | 21 | 后端服务开发 |
@@ -481,7 +484,7 @@ cd backend-java
 mvn clean compile
 mvn spring-boot:run
 ```
-服务运行在 http://localhost:8080
+服务运行在 http://localhost:8081（网关统一响应 `{code,message,data}`；家长端/学生端 AI 对话走 `POST /api/v1/chat/message`，由网关转发至 ai-engine `http://localhost:8000/chat`）
 
 ### AI引擎启动
 ```bash
@@ -536,19 +539,38 @@ go run cmd/api-gateway/main.go
 ```
 服务运行在 http://localhost:8080
 
-### 学生端原生开发
+### Android 三端构建（Kotlin + Compose）
+
+| 应用 | 目录 | applicationId |
+|------|------|---------------|
+| 学生端 | `student-app/StarIsle-student-android/` | `com.starisle.student` |
+| 教师端 | `teacher-app/StarIsle-teacher-android/` | `com.starisle.teacher` |
+| 家长端 | `parent-app-android/` | `com.starisle.parent` |
+
 ```bash
-cd student-app/StarIsle-student
-flutter pub get
-flutter run
+export JAVA_HOME=/path/to/jdk17        # Windows: $env:JAVA_HOME='C:\...\jdk-17'
+export ANDROID_HOME=/path/to/Android/Sdk
+export ANDROID_SDK_ROOT=$ANDROID_HOME
+
+# 调试包
+gradle -p parent-app-android assembleDebug
+# 发布包（未签名，产物 app-release-unsigned.apk）
+gradle -p parent-app-android assembleRelease
 ```
 
-### 教师端原生开发
+签名（keystore 不入库，`*.jks`/`keystore.properties` 已在 `.gitignore` 中）：
+
 ```bash
-cd teacher-app/StarIsle-teacher
-flutter pub get
-flutter run
+zipalign -f -p 4 app-release-unsigned.apk app-release-aligned.apk
+apksigner sign --ks starisle-release.jks --ks-key-alias starisle \
+  --out StarIsle-parent-android-release.apk app-release-aligned.apk
+apksigner verify --print-certs StarIsle-parent-android-release.apk
 ```
+
+安装包统一放在 `dist/`（该目录被 `.gitignore` 忽略，发布时作为 GitHub Release 资产上传）：
+`StarIsle-student-android-release.apk`、`StarIsle-teacher-android-release.apk`、`StarIsle-parent-android-release.apk`。
+
+> 本机联调：模拟器用 `10.0.2.2` 映射宿主机；家长端 `BASE_URL` 为 `http://10.0.2.2:8081/api/`，真机需改为开发机局域网 IP（清文本 HTTP 已在 manifest 中允许）。
 
 ## 登录测试账号
 

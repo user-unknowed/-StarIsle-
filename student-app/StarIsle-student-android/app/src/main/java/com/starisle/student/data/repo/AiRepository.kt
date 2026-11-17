@@ -3,7 +3,12 @@ package com.starisle.student.data.repo
 import com.starisle.student.data.api.AiApiService
 import com.starisle.student.data.api.ChatCompletionRequest
 import com.starisle.student.data.api.ChatMessage
-import javax.inject.Inject
+import com.starisle.student.data.api.LocalChatApiService
+import com.starisle.student.data.api.LocalChatRequest
+import com.starisle.student.data.api.LocalChatResponse
+import com.starisle.student.data.api.LocalChatTurn
+import com.starisle.student.data.api.ServerConfig
+import android.content.Context
 import javax.inject.Singleton
 
 /**
@@ -11,13 +16,17 @@ import javax.inject.Singleton
  *
  * 封装智谱 GLM 与 SiliconFlow 两家供应商调用，主供应商失败时自动回退。
  * 提供：文章生成、内容摘要、风格转换、主题分析四大能力。
+ * 另提供 [chatWithLocalModel]：调用本地 SFT 微调模型（ai-engine /chat）。
  *
- * @param aiApiService 注入的 Retrofit 接口。
- * @param apiKey       用户配置的 API Key，运行时由 ViewModel 调用 [setApiKey]。
+ * @param aiApiService        注入的 Retrofit 接口。
+ * @param localChatApiService 本地模型对话接口。
+ * @param context             用于读取运行时可配置的 AI 服务地址。
  */
 @Singleton
-class AiRepository @Inject constructor(
+class AiRepository(
     private val aiApiService: AiApiService,
+    private val localChatApiService: LocalChatApiService,
+    private val context: Context,
 ) {
     // 智谱 API 基础地址（Dart 中 _zhipuBaseUrl）
     private val zhipuBaseUrl: String = "https://open.bigmodel.cn/api/paas/v4/"
@@ -41,6 +50,36 @@ class AiRepository @Inject constructor(
     }
 
     fun currentProvider(): String = currentProvider
+
+    /**
+     * 调用本地训练模型（ai-engine `/chat`）。
+     *
+     * @param userId  稳定的会话用户标识（用于服务端情绪记录归档）
+     * @param message 用户本轮输入
+     * @param history 最近若干轮对话，用于维持上下文
+     * @return 模型回复及风险评估结果
+     */
+    suspend fun chatWithLocalModel(
+        userId: String,
+        message: String,
+        history: List<LocalChatTurn> = emptyList(),
+    ): LocalChatResponse {
+        val request = LocalChatRequest(
+            userId = userId,
+            message = message,
+            context = history,
+        )
+        return localChatApiService.chat(
+            "${ServerConfig.aiBaseUrl(context)}chat",
+            request,
+        )
+    }
+
+    /** 当前生效的本地模型服务地址（用于设置页展示） */
+    fun localServerUrl(): String = ServerConfig.aiBaseUrl(context)
+
+    /** 修改本地模型服务地址，下次对话即时生效 */
+    fun updateLocalServerUrl(url: String) = ServerConfig.overrideBaseUrl(context, url)
 
     suspend fun generateArticle(
         topic: String,

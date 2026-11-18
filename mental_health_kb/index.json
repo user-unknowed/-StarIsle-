@@ -1,0 +1,1016 @@
+{
+  "version": "1.1.0",
+  "generated_at": "2026-11-16",
+  "description": "心理健康知识库扁平索引。每个对象对应 articles.json 或 methods.json 中的一条详情，用 detail_file + detail_id 定位全文。",
+  "entry_count": 39,
+  "fields": [
+    "id",
+    "type",
+    "lang",
+    "title",
+    "summary",
+    "themes",
+    "populations",
+    "method_types",
+    "risk_level",
+    "source_org",
+    "url",
+    "published_at",
+    "date_type",
+    "collected_at",
+    "detail_file",
+    "detail_id"
+  ],
+  "entries": [
+    {
+      "id": "art-en-001",
+      "type": "article",
+      "lang": "en",
+      "title": "Doing What Matters in Times of Stress: An Illustrated Guide",
+      "summary": "WHO 发布的图文自助指南，面向处于压力中的人群。核心技能包括：接地（把注意力带回当下与身体）、解套（与反复的念头拉开距离而非对抗）、以及按个人价值观采取小行动。指南强调这些技能需要反复练习，目标不是消除压力，而是让人能在压力下继续做重要的事。中文版 PDF 可在 WHO IRIS 公开下载。",
+      "themes": [
+        "stress",
+        "anxiety",
+        "emotional-awareness"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "World Health Organization (WHO)",
+      "url": "https://www.who.int/publications/i/item/9789240003927",
+      "published_at": "2020-04-29",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-001"
+    },
+    {
+      "id": "art-en-002",
+      "type": "article",
+      "lang": "en",
+      "title": "I'm So Stressed Out! Fact Sheet",
+      "summary": "NIMH 科普页（NIH 出版号 20-MH-8125）区分压力与焦虑：压力通常有明确的外部来源，事件结束后会缓解；焦虑则可能在没有明显威胁时持续存在，并伴随难以控制的担忧。页面列出常见躯体与认知信号（心跳加快、肌肉紧张、注意力涣散、易怒），并给出从“压力”转向“需要求助”的判断线索，属于识别性科普，不含具体干预步骤。",
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "students",
+        "workers"
+      ],
+      "method_types": [],
+      "risk_level": "L0",
+      "source_org": "National Institute of Mental Health (NIMH)",
+      "url": "https://www.nimh.nih.gov/health/publications/so-stressed-out-fact-sheet",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-002"
+    },
+    {
+      "id": "art-en-003",
+      "type": "article",
+      "lang": "en",
+      "title": "5 steps to mental wellbeing",
+      "summary": "NHS 基于循证证据提出五条提升心理健康的日常建议：与他人建立连接、保持身体活动、持续学习新事物、给予他人（志愿服务或小帮忙）、关注当下（notice）。每条都配有可执行的小步骤，强调“小而持续”优于一次性的大改变。页面注明最近审核日期，适合作为面向普通人群的基础科普。",
+      "themes": [
+        "wellbeing",
+        "social-connection"
+      ],
+      "populations": [
+        "general"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/five-steps-to-mental-wellbeing/",
+      "published_at": "2026-10-14",
+      "date_type": "last_reviewed",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-003"
+    },
+    {
+      "id": "art-en-004",
+      "type": "article",
+      "lang": "en",
+      "title": "10 stress busters",
+      "summary": "NHS 汇总十条减压建议：识别并记录压力来源、规律运动、减少咖啡因与酒精、练习正念、与可信任的人交谈、安排真正的休息、把任务拆成可完成的小目标、给自己留出“什么都不做”的时间等。页面强调没有一种方法适合所有人，应挑选一到两项先做起来，并提示若压力已持续影响工作与生活应就医。",
+      "themes": [
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/tips-to-reduce-stress/",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-004"
+    },
+    {
+      "id": "art-en-005",
+      "type": "article",
+      "lang": "en",
+      "title": "How to fall asleep faster and sleep better",
+      "summary": "NHS 的睡眠自助指南给出可执行的睡眠卫生建议：固定起床时间、白天适度运动、睡前减少屏幕使用与咖啡因、卧室保持安静凉爽黑暗、睡不着时不要长时间躺床焦虑。页面还提示写“待办清单”把担心的事留到第二天处理，可减少入睡前的思维反刍。持续失眠超过三个月应寻求专业帮助。",
+      "themes": [
+        "sleep"
+      ],
+      "populations": [
+        "general"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/how-to-fall-asleep-faster-and-sleep-better/",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-005"
+    },
+    {
+      "id": "art-en-006",
+      "type": "article",
+      "lang": "en",
+      "title": "Improve Sleep: Tips to Improve Your Sleep When Times Are Tough",
+      "summary": "CDC/NIOSH 面向压力时期的睡眠管理指南，建议成年人每晚至少睡 7 小时；保持作息规律，工作日与休息日尽量一致；睡前约 1.5 小时开始放松程序，减少强光与屏幕；避免用酒精助眠；白天适度活动但避免临睡前剧烈运动。页面指出睡眠与情绪、免疫功能相互影响，压力时期更应优先保证睡眠。",
+      "themes": [
+        "sleep",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "CDC / NIOSH",
+      "url": "https://www.cdc.gov/niosh/bulletin/2020/sleep.html",
+      "published_at": "2020-06-29",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-006"
+    },
+    {
+      "id": "art-en-007",
+      "type": "article",
+      "lang": "en",
+      "title": "Relaxation techniques for stress relief",
+      "summary": "healthdirect 系统介绍常用放松技术：缓慢呼吸、渐进式肌肉放松（从脚趾开始，每组肌群收紧约 3 秒后放松）、引导式意象、正念冥想。页面说明每种技术适合的场景与练习频率，并强调放松反应需要练习才能建立；若练习中出现焦虑加重、呼吸不适或情绪被强烈触发，应停止并寻求专业帮助。",
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "healthdirect Australia",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-007"
+    },
+    {
+      "id": "art-en-008",
+      "type": "article",
+      "lang": "en",
+      "title": "Eating Disorders (NIMH topic page)",
+      "summary": "NIMH 将进食障碍定义为以严重紊乱的进食行为为核心特征的严重疾病，患者常对体重、体形或对进食的控制存在固着或强迫性关注，这些关注是重要警示信号。进食障碍可能危及生命，并伴随更高的医疗并发症风险与共病风险，包括抑郁、焦虑与物质使用问题。它们是可治疗的疾病，早期识别与早期治疗对完全康复尤为重要。NIMH 提醒，进食障碍并非单纯的饮食选择或意志力问题，而需要专业评估与治疗。",
+      "themes": [
+        "eating-disorders"
+      ],
+      "populations": [
+        "general",
+        "adolescents",
+        "parents-caregivers"
+      ],
+      "method_types": [],
+      "risk_level": "L0",
+      "source_org": "National Institute of Mental Health (NIMH)",
+      "url": "https://www.nimh.nih.gov/health/topics/eating-disorders",
+      "published_at": "2024-12",
+      "date_type": "last_reviewed",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-008"
+    },
+    {
+      "id": "art-en-009",
+      "type": "article",
+      "lang": "en",
+      "title": "Anorexia nervosa (NHS overview)",
+      "summary": "NHS 将神经性厌食症描述为严重的精神健康问题：患者通过吃得太少、过度运动、滥用泻药或催吐，把体重压到尽可能低的水平，并常伴体像扭曲——即使已明显偏瘦仍觉得自己胖。任何年龄、任何性别都可能发生，最常见于年轻女性，常始于十五六岁。常见表现包括体重或 BMI 明显偏低、漏餐或进食极少、过度关注食物并回避所谓致胖食物、停经、头晕、脱发与皮肤干燥。健康风险涉及骨骼（骨质疏松）、生育、心血管（心律不齐、低血压、心衰、水肿）、脑与神经（注意力与记忆下降、偶发癫痫）、肾脏与肠道、免疫力下降与贫血；厌食症是精神疾病相关死亡的主要原因之一。治疗方面，成人以谈话治疗为主（CBT、MANTRA、SSCM），18 岁以下首选家庭治疗。",
+      "themes": [
+        "eating-disorders",
+        "adolescent-development"
+      ],
+      "populations": [
+        "adolescents",
+        "parents-caregivers",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/mental-health/conditions/anorexia/overview/",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-009"
+    },
+    {
+      "id": "art-en-010",
+      "type": "article",
+      "lang": "en",
+      "title": "Post-traumatic stress disorder (PTSD) (NHS overview)",
+      "summary": "NHS 指出 PTSD 由非常紧张、可怕或痛苦的事件引起，核心症状是持续出现与创伤事件有关的痛苦念头，可表现为闪回、侵入性画面或反复噩梦。成人常见表现包括回避让人想起事件的人或地点、对事件记忆不完整、对自己持负面信念、失去兴趣、人际关系疏离、解离感、情绪失控或情感麻木、情绪低落或易怒、睡眠困难、持续警觉与反复无躯体原因的头疼、肠胃不适或疼痛。症状可在事件后立即出现，也可在数月甚至数年后出现；复杂 PTSD（CPTSD）症状相似但成因不同。诊断由全科医生转介专科完成，治疗包括创伤聚焦 CBT、EMDR 与药物。NHS 同时列出可行的自助事项：与人倾诉、用日记记录触发闪回的线索、练习呼吸放松、保持活动、均衡饮食与充足睡眠；并建议避免娱乐性药物、吸烟与过量饮酒。",
+      "themes": [
+        "trauma-ptsd"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/mental-health/conditions/post-traumatic-stress-disorder-ptsd/overview/",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-en-010"
+    },
+    {
+      "id": "art-zh-001",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "抑郁障碍（抑郁症）",
+      "summary": "WHO 事实清单指出，抑郁障碍影响全球约 5.2% 的成年人，女性患病率高于男性。核心特征是持续至少两周的情绪低落或兴趣减退，并伴随睡眠、食欲、精力与注意力改变；单次发作不等于终身疾病。清单区分了抑郁发作与日常情绪波动，说明心理治疗与药物均有效，轻中度可优先考虑心理干预与自助策略。任何年龄段都可能发生，若出现自伤或自杀念头应立即寻求紧急帮助。",
+      "themes": [
+        "depression"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "世界卫生组织（WHO）",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/depression",
+      "published_at": "2026-09-11",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-001"
+    },
+    {
+      "id": "art-zh-002",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "焦虑症",
+      "summary": "WHO 估计 2023 年全球约有 4.70 亿人受焦虑障碍影响，而接受治疗者仅约 27.6%，治疗缺口巨大。焦虑障碍的特征是过度担忧难以控制并持续存在，常伴心悸、出汗、肌肉紧张、注意力难以集中等躯体与认知表现。有效手段包括认知行为治疗与药物治疗，多数人经规范治疗可明显改善。文章强调焦虑不是性格缺陷，也不应被简单归因为“想太多”。",
+      "themes": [
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "世界卫生组织（WHO）",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/anxiety-disorders",
+      "published_at": "2026-09-15",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-002"
+    },
+    {
+      "id": "art-zh-003",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "青少年精神卫生",
+      "summary": "WHO 指出，10 至 19 岁人群中约七分之一患有精神障碍，焦虑与抑郁最为常见，且相当比例的心理健康问题在这一阶段起病。青春期既是风险窗口，也是预防与早期干预的关键期。文章列出需要关注的信号：情绪持续低落、学业骤降、社交退缩、睡眠紊乱、易怒或攻击行为。污名、羞耻感与对服务的不了解是青少年不求助的主要障碍，家庭与学校的开放沟通能显著降低门槛。",
+      "themes": [
+        "adolescent-development",
+        "depression",
+        "anxiety",
+        "help-seeking"
+      ],
+      "populations": [
+        "adolescents",
+        "parents-caregivers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "世界卫生组织（WHO）",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/adolescent-mental-health",
+      "published_at": "2025-09-01",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-003"
+    },
+    {
+      "id": "art-zh-004",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "老年人的精神健康",
+      "summary": "WHO 估计约 15% 的 70 岁以上成年人存在某种精神障碍，抑郁与焦虑最为常见。老年抑郁常以躯体不适、失眠、食欲下降与乏力为主要表现，情绪表述反而较少，容易被误认为“正常衰老”。社会孤立、丧亲、慢性疾病、功能丧失与经济压力是重要风险因素。文章强调老年心理健康问题可识别、可治疗，家属不应把持续的情绪与兴趣改变当作自然老化。",
+      "themes": [
+        "aging-mental-health",
+        "depression"
+      ],
+      "populations": [
+        "older-adults",
+        "parents-caregivers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "世界卫生组织（WHO）",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/mental-health-of-older-adults",
+      "published_at": "2026-07-20",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-004"
+    },
+    {
+      "id": "art-zh-005",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "自杀",
+      "summary": "WHO 估计每年约有 72.7 万人死于自杀，是 15 至 29 岁人群的主要死因之一。文章强调自杀可以预防，关键在于识别预警信号与及时转介：直接或间接表达轻生念头、交代后事与告别、突然极端的社交隔离、把重要物品送人。同时强调限制致命手段的可获得性、减少媒体不当渲染、提供可及的危机热线。本文仅用于识别与转介，不提供任何自我处置方法。",
+      "themes": [
+        "suicide-prevention",
+        "help-seeking"
+      ],
+      "populations": [
+        "general",
+        "adolescents",
+        "older-adults"
+      ],
+      "method_types": [],
+      "risk_level": "L3",
+      "source_org": "世界卫生组织（WHO）",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/suicide",
+      "published_at": "2025-03-25",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-005"
+    },
+    {
+      "id": "art-zh-006",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "心理健康素养十条（2018 年版）",
+      "summary": "这是国家卫健委发布的公众心理健康素养要点，以十条概括核心观念：心理健康是整体健康的重要组成部分；适量运动有助于情绪稳定；出现心理问题应主动求助而非硬扛；多数精神心理疾病可防可治；服药须遵医嘱、不自行增减；不要用“想开点”否定他人的痛苦。条目属于纯科普信息，不含可执行干预步骤，适合作为公众教育与科普入口。",
+      "themes": [
+        "wellbeing",
+        "help-seeking",
+        "emotional-awareness"
+      ],
+      "populations": [
+        "general"
+      ],
+      "method_types": [],
+      "risk_level": "L0",
+      "source_org": "国家卫生健康委员会（烟台市卫健委转载）",
+      "url": "https://www.yantai.gov.cn/art/2023/12/13/art_97355_3165628.html",
+      "published_at": "2023-12-13",
+      "date_type": "reposted",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-006"
+    },
+    {
+      "id": "art-zh-007",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "六院心声｜不必时时“好情绪”，允许生活也有阴晴圆缺",
+      "summary": "文章主张“允许生活有阴晴圆缺”，指出把“必须保持好情绪”当作标准，反而会带来二次压力与自我批评。它区分了正常的情绪波动与需要干预的状态，鼓励给情绪命名、为情绪留出空间，而不是压抑或评判。核心观点是情绪调节的目标不是永远积极，而是保持灵活性：能感受、能表达、也能在需要时求助。",
+      "themes": [
+        "emotional-awareness",
+        "wellbeing"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "北京大学第六医院",
+      "url": "https://www.pkuh6.cn/Html/News/Articles/7077.html",
+      "published_at": "2026-09-25",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-007"
+    },
+    {
+      "id": "art-zh-008",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "阳光下的面具：解读那些“看不见”的抑郁——阳光型抑郁症",
+      "summary": "文章描述所谓“阳光型抑郁”现象：在他人面前维持开朗、功能良好，独处时却持续低落、疲惫与自我否定。因为外表正常，这类痛苦常被忽视，求助被延迟。文章提醒注意“微笑背后的耗竭”，并明确指出“阳光型抑郁症”不是正式诊断名称，而是一种现象描述；若低落持续两周以上并伴随功能受损，应到精神科做正式评估，而不是自我贴标签。",
+      "themes": [
+        "depression",
+        "emotional-awareness"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms",
+        "workers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "上海市精神卫生中心（科普平台）",
+      "url": "https://www.smhc.org.cn/info/2701/13951.htm",
+      "published_at": "2025-11-28",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-008"
+    },
+    {
+      "id": "art-zh-009",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "别让乌云遮住夕阳——老年抑郁症，不可忽略",
+      "summary": "文章指出，老年抑郁常以失眠、食欲下降、乏力、各种疼痛等躯体主诉为首发表现，情绪低落反而说得少，因此容易与慢性病或认知下降混淆。家属可观察“兴趣与精力变化”这一线索：原本喜欢的事不再参与、话变少、反复说身体不舒服却查不出原因。文章强调老年抑郁是可治疗的，用药需专业评估与随访，不宜自行停药。",
+      "themes": [
+        "aging-mental-health",
+        "depression"
+      ],
+      "populations": [
+        "older-adults",
+        "parents-caregivers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "上海市精神卫生中心（科普平台）",
+      "url": "https://www.smhc.org.cn/info/2701/14001.htm",
+      "published_at": "2025-10-17",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-009"
+    },
+    {
+      "id": "art-zh-010",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "护“虑”成长 有爱无碍——儿童焦虑障碍辨析与综合干预",
+      "summary": "文章说明儿童焦虑的表现与成人不同：更多是分离困难、反复腹痛头痛等躯体不适、回避上学、不断寻求大人的保证，而不是直接说“我很担心”。它给出辨识要点——焦虑是否与年龄阶段相称、是否持续、是否明显损害学习与社交。干预强调家庭、学校与医疗三方协同，家长应避免简单斥责“胆小”或过度保护，两者都会维持回避。",
+      "themes": [
+        "anxiety",
+        "adolescent-development"
+      ],
+      "populations": [
+        "adolescents",
+        "parents-caregivers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "上海市精神卫生中心（科普平台）",
+      "url": "https://www.smhc.org.cn/info/2701/13971.htm",
+      "published_at": "2025-11-14",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-010"
+    },
+    {
+      "id": "art-zh-011",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "世界睡眠日特辑｜当精神健康遇上睡眠障碍",
+      "summary": "文章以世界睡眠日为契机，讨论精神健康与睡眠的双向关系：焦虑与抑郁可导致入睡困难与早醒，长期失眠又会反过来增加情绪问题风险。文中介绍睡眠卫生与失眠认知行为治疗（CBT-I）的核心原则，包括固定起床时间、减少卧床清醒时间、卧床约 20 分钟仍无法入睡即离床做安静活动。并提示安眠药应在医生指导下使用，不宜长期自行服用。",
+      "themes": [
+        "sleep",
+        "anxiety",
+        "depression"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "北京安定医院",
+      "url": "https://www.bjad.com.cn/Html/News/Articles/3784.html",
+      "published_at": "2025-03-21",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-011"
+    },
+    {
+      "id": "art-zh-012",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "【今晚报】警惕抑郁风险年轻化",
+      "summary": "文章引述全国性心理健康调查数据：18 至 24 岁组的抑郁风险检出率约为 24.1%，明显高于成年人整体的约 10.6%，提示抑郁风险呈年轻化趋势。文中分析学业与就业压力、社交比较、睡眠不足与求助渠道不足等因素，并呼吁校园心理服务前移、降低求助门槛。数据可作为科普与政策讨论的参考，但不用于个体自我诊断。",
+      "themes": [
+        "depression",
+        "adolescent-development",
+        "help-seeking"
+      ],
+      "populations": [
+        "students",
+        "adolescents",
+        "general"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "中国科学院心理研究所",
+      "url": "http://www.psych.ac.cn/news/cmsm/202303/t20230323_6713064.html",
+      "published_at": "2023-03-22",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-012"
+    },
+    {
+      "id": "art-zh-013",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "不是我说，最近生活总是差点意思……",
+      "summary": "文章用三层递进帮助读者区分状态：普通情绪低落（有明确诱因、可自行缓解）、抑郁倾向（持续较久、兴趣与精力下降但功能尚可）、达到临床标准的抑郁症（症状数量、持续时间与功能损害均达标）。它强调自我对照只能作为是否就医的参考，不能替代诊断，并提示持续两周以上的功能受损是重要分界线。",
+      "themes": [
+        "emotional-awareness",
+        "depression",
+        "help-seeking"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "北京安定医院",
+      "url": "https://bjad.com.cn/Html/News/Articles/4900.html",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-013"
+    },
+    {
+      "id": "art-zh-014",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "创伤后应激障碍（PTSD）",
+      "summary": "WHO 事实清单指出，全球约 3.9% 的人一生中某个时点会患 PTSD；约 70% 的人一生经历过创伤性事件，但仅约 5.6% 发展为 PTSD，说明创伤经历并不必然导致障碍。症状分四类：重新经历（侵入性记忆、噩梦、闪回）、回避（回避人、地点与念头，而回避反而强化症状）、过度警觉（持续的危险感、易惊跳）、日常功能受损；通常在事件后立即或一个月内出现。冲突与战争暴露人群的发病率约 15.3%，约为普通人群的三倍；性暴力后的发病率尤其高。治疗以循证心理干预为首选，证据最强的是创伤聚焦认知行为治疗与 EMDR，两者均含暴露技术，须由专业人员在安全环境中实施。高达 40% 的患者在一年内康复，但低收入与中等收入国家仅约四分之一患者获得帮助。",
+      "themes": [
+        "trauma-ptsd"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms",
+        "parents-caregivers"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "世界卫生组织（WHO）",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/post-traumatic-stress-disorder",
+      "published_at": "2026-09-11",
+      "date_type": "published",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-014"
+    },
+    {
+      "id": "art-zh-015",
+      "type": "article",
+      "lang": "zh-CN",
+      "title": "女孩，请不要被畸形审美绑架：青少年神经性厌食症的识别与治疗",
+      "summary": "以一名初中女生的病例说明进食障碍的典型表现：食欲与进食量显著下降、体重快速下降、明明很瘦仍自认肥胖、易疲乏头晕、情绪敏感易怒并伴自卑与抑郁。文章界定进食障碍是以进食行为异常为显著特征的一组疾病，伴体重改变、生理异常与心理社会功能紊乱，核心是对食物、体重与体形的过度关注，并伴焦虑、抑郁或恐惧情绪；常见两大类为神经性厌食症与暴食症。文中引用数据：2022 年一项针对我国大学生的 Meta 分析显示进食障碍症状检出率约 13.4%；西方国家年轻女性患病率约 5.5%～17.9%；神经性厌食是致死率最高的精神疾病之一，死亡率约 5%～9%，患者自杀率约为一般人群的 31 倍。治疗采用药物、心理治疗、营养支持、家庭支持与社交干预相结合的多学科模式。",
+      "themes": [
+        "eating-disorders",
+        "adolescent-development"
+      ],
+      "populations": [
+        "adolescents",
+        "parents-caregivers",
+        "people-with-symptoms"
+      ],
+      "method_types": [],
+      "risk_level": "L1",
+      "source_org": "北京安定医院",
+      "url": "https://bjad.com.cn/Html/News/Articles/3584.html",
+      "published_at": null,
+      "date_type": "unknown",
+      "collected_at": "2026-11-16",
+      "detail_file": "articles.json",
+      "detail_id": "art-zh-015"
+    },
+    {
+      "id": "mth-001",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "缓慢腹式呼吸",
+      "summary": "通过把呼气拉长、放慢呼吸节奏，帮助身体从紧张状态转向相对放松。NHS 建议的版本不要求屏息，操作简单，适合在紧张、心跳加快或睡前使用，每次约 5 分钟。",
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students"
+      ],
+      "method_types": [
+        "breathing"
+      ],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/breathing-exercises-for-stress/",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-001"
+    },
+    {
+      "id": "mth-002",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "渐进式肌肉放松（PMR）",
+      "summary": "通过依次收紧再放松各组肌肉，让身体学会识别紧张与放松的差别。healthdirect 建议从脚趾开始，每组肌群收紧约 3 秒后彻底放松，逐步向上至面部。适合身体紧绷、压力大或入睡困难时使用。",
+      "themes": [
+        "stress",
+        "anxiety",
+        "sleep"
+      ],
+      "populations": [
+        "general",
+        "workers"
+      ],
+      "method_types": [
+        "relaxation"
+      ],
+      "risk_level": "L1",
+      "source_org": "healthdirect Australia",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-002"
+    },
+    {
+      "id": "mth-003",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "引导式意象放松（安全场景想象）",
+      "summary": "在放松状态下想象一个让自己感到安全、平静的具体场景，并调动视觉、声音、触感等细节，使注意力从担忧转向想象内容。适合压力较大但不愿做身体放松练习的人，可睁眼进行以降低不适感。",
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [
+        "relaxation",
+        "mindfulness"
+      ],
+      "risk_level": "L1",
+      "source_org": "healthdirect Australia",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-003"
+    },
+    {
+      "id": "mth-004",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "正念呼吸与当下觉察",
+      "summary": "把注意力放在当下的呼吸或身体感受上，走神时温和带回，而不是评判自己。重点不在清空头脑，而在练习觉察到走神并回来。每天几分钟即可开始，适合应对反复担忧与注意力涣散。",
+      "themes": [
+        "stress",
+        "anxiety",
+        "emotional-awareness"
+      ],
+      "populations": [
+        "general",
+        "students",
+        "workers"
+      ],
+      "method_types": [
+        "mindfulness",
+        "breathing"
+      ],
+      "risk_level": "L1",
+      "source_org": "healthdirect Australia / World Health Organization (WHO)",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-004"
+    },
+    {
+      "id": "mth-005",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "压力下的接地练习（5-4-3 感官法）",
+      "summary": "当情绪被淹没、脑中一片混乱时，用感官把注意力拉回当下。WHO 的《压力时期的自我照顾》把接地作为核心技能之一：感受脚踩地面的支撑，依次说出看到、听到、触摸到的东西，再配合缓慢呼吸。适合在情绪突然升高时做 2-3 分钟。",
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [
+        "grounding",
+        "mindfulness"
+      ],
+      "risk_level": "L1",
+      "source_org": "World Health Organization (WHO)",
+      "url": "https://www.who.int/publications/i/item/9789240003927",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-005"
+    },
+    {
+      "id": "mth-006",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "睡眠卫生基础",
+      "summary": "通过调整作息与睡前环境改善睡眠质量：固定起床时间、白天适度运动、下午后减少咖啡因、睡前减少屏幕、卧室保持安静凉爽黑暗、避免用酒精助眠。属于基础习惯调整，见效需要持续数周。",
+      "themes": [
+        "sleep",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students"
+      ],
+      "method_types": [
+        "sleep-hygiene"
+      ],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/how-to-fall-asleep-faster-and-sleep-better/",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-006"
+    },
+    {
+      "id": "mth-007",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "固定起床时间与刺激控制（CBT-I 基础原则）",
+      "summary": "失眠认知行为治疗（CBT-I）中最常被提到的两条原则：一是固定起床时间，让生物钟有稳定锚点；二是刺激控制，即只在困了才上床，卧床约 20 分钟仍未入睡就离床做安静活动，有困意再回床。目的是重建床与睡眠之间的联系。",
+      "themes": [
+        "sleep"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [
+        "sleep-hygiene"
+      ],
+      "risk_level": "L1",
+      "source_org": "北京安定医院",
+      "url": "https://www.bjad.com.cn/Html/News/Articles/3784.html",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-007"
+    },
+    {
+      "id": "mth-008",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "担忧时间（Worry time）",
+      "summary": "把全天随时出现的担忧推迟到一个固定时段集中处理，而不是立即反复思考。白天出现担忧时先记下来，到约定的 15 分钟再逐条检视：能行动的写下一步，不能控制的练习放下。可减少担忧对工作与睡眠的侵占。",
+      "themes": [
+        "anxiety",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students"
+      ],
+      "method_types": [
+        "worry-management"
+      ],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/tackling-your-worries/",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-008"
+    },
+    {
+      "id": "mth-009",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "思维日记与情绪记录",
+      "summary": "把自己从情绪里抽出来一点：记录发生了什么、当时情绪是什么、强度多少、脑中闪过的想法是什么，再寻找支持与反对这个想法的证据，形成一个更平衡的说法。目的是看见想法与情绪之间的联系，而不是强迫自己积极。",
+      "themes": [
+        "emotional-awareness",
+        "depression",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [
+        "mood-monitoring",
+        "worry-management"
+      ],
+      "risk_level": "L1",
+      "source_org": "Centre for Clinical Interventions (CCI)",
+      "url": "https://cci.health.wa.gov.au/Resources/For-Clinicians/Depression",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-009"
+    },
+    {
+      "id": "mth-010",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "行为激活：小步骤活动安排",
+      "summary": "低落时人容易等“有动力了再做”，结果活动越少、情绪越差。行为激活反过来：先把小而具体的活动排进日程，让行动带来愉悦感或掌控感，再带动情绪。关键是把任务拆得足够小，从最容易的一项开始。",
+      "themes": [
+        "depression",
+        "wellbeing"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [
+        "behavioral-activation"
+      ],
+      "risk_level": "L1",
+      "source_org": "Centre for Clinical Interventions (CCI)",
+      "url": "https://cci.health.wa.gov.au/Resources/For-Clinicians/Depression",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-010"
+    },
+    {
+      "id": "mth-011",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "日常身体活动",
+      "summary": "规律的身体活动对情绪、睡眠与压力耐受都有帮助。NHS 的建议重点不是高强度训练，而是找到能坚持的活动并从很小的量开始，例如每天 10 分钟快走，逐步累积到每周 150 分钟中等强度。",
+      "themes": [
+        "wellbeing",
+        "stress",
+        "depression"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students",
+        "older-adults"
+      ],
+      "method_types": [
+        "physical-activity"
+      ],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS)",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/five-steps-to-mental-wellbeing/",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-011"
+    },
+    {
+      "id": "mth-012",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "睡前放松程序与屏幕管理",
+      "summary": "CDC/NIOSH 建议在睡前约 1.5 小时开始一个固定的放松程序，让身体逐步从工作状态切换到休息状态：调暗灯光、停止工作与争论、减少屏幕、做固定的睡前例行动作。固定的顺序本身会给身体发出“可以睡了”的信号。",
+      "themes": [
+        "sleep",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers"
+      ],
+      "method_types": [
+        "sleep-hygiene",
+        "relaxation"
+      ],
+      "risk_level": "L1",
+      "source_org": "CDC / NIOSH",
+      "url": "https://www.cdc.gov/niosh/bulletin/2020/sleep.html",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-012"
+    },
+    {
+      "id": "mth-013",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "社交连接与求助计划",
+      "summary": "把“找人说话”从临时起意变成事先安排的常规动作：列出可信任的人、每周主动联系一次、练习具体表达自己的状态，并提前查好当地心理援助热线与就诊科室。目的是缩短从“感觉不好”到“获得支持”的距离。",
+      "themes": [
+        "social-connection",
+        "help-seeking",
+        "wellbeing"
+      ],
+      "populations": [
+        "general",
+        "adolescents",
+        "older-adults",
+        "students"
+      ],
+      "method_types": [
+        "social-connection",
+        "help-seeking-plan"
+      ],
+      "risk_level": "L1",
+      "source_org": "National Health Service (NHS) / World Health Organization (WHO)",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/five-steps-to-mental-wellbeing/",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-013"
+    },
+    {
+      "id": "mth-014",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "创伤后日常节律与压力管理（PTSD 自助基线）",
+      "summary": "依据 WHO 与 NHS 公开建议整理的自助基线：不处理创伤记忆本身，而是先把日常生活、睡眠、活动、社交与压力反应稳住。适用于创伤事件后出现轻度侵入性回忆、睡眠紊乱或持续紧绷的人，也适合作为接受专业治疗期间的日常配合。本方法不包含暴露或重现创伤的练习，不能替代创伤聚焦心理治疗。",
+      "themes": [
+        "trauma-ptsd",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "method_types": [
+        "relaxation",
+        "sleep-hygiene",
+        "physical-activity",
+        "social-connection"
+      ],
+      "risk_level": "L1",
+      "source_org": "World Health Organization (WHO) / National Health Service (NHS)",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/post-traumatic-stress-disorder",
+      "published_at": null,
+      "date_type": "not_applicable",
+      "collected_at": "2026-11-16",
+      "detail_file": "methods.json",
+      "detail_id": "mth-014"
+    }
+  ]
+}

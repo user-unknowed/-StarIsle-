@@ -18,6 +18,9 @@ secrets.json
 *.iml
 *.swp
 *.swo
+.arts/
+.codeartsdoer/
+.screenshots/
 
 # OS
 .DS_Store
@@ -31,7 +34,9 @@ logs/
 
 # 本机私有训练数据（含个人健康信息，禁止提交/上传）
 server-services/ai-engine/data/private/
-mental_health_kb/
+
+# 留言墙目录：只含 .env/.dev.vars 密钥与 wrangler/node_modules 缓存，无源码，不提交
+message-wall/
 
 # 本机训练环境与产出（体积大，禁止提交）
 .starisle-train/

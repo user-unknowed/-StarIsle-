@@ -1,0 +1,690 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-11-16",
+  "description": "低风险自我调节方法详情。仅收录公开来源中风险可控的做法，每条注明适用场景与何时应寻求专业帮助；不做诊断，不替代治疗。",
+  "entries": [
+    {
+      "id": "mth-001",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "缓慢腹式呼吸",
+      "source_org": "National Health Service (NHS)",
+      "source_type": "government-health-agency",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/breathing-exercises-for-stress/",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "breathing"
+      ],
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students"
+      ],
+      "risk_level": "L1",
+      "summary": "通过把呼气拉长、放慢呼吸节奏，帮助身体从紧张状态转向相对放松。NHS 建议的版本不要求屏息，操作简单，适合在紧张、心跳加快或睡前使用，每次约 5 分钟。",
+      "steps": [
+        "找一个安静的地方坐下或躺下，肩膀放松。",
+        "用鼻子慢慢吸气，心里默数 1 到 5。",
+        "用嘴慢慢呼气，同样默数 1 到 5。",
+        "重复上述循环约 5 分钟；感到头晕时恢复自然呼吸，休息后再继续。"
+      ],
+      "duration": "约 5 分钟，可每天 1-2 次",
+      "suitable_for": [
+        "紧张、心慌、手心出汗等压力反应",
+        "入睡前难以平静",
+        "需要短暂从工作中抽离"
+      ],
+      "not_suitable_for": [
+        "有呼吸系统疾病且刻意控制呼吸会不适者，应缩短时长或先咨询医生",
+        "练习中出现明显头晕、手脚发麻时应立即停止"
+      ],
+      "when_to_seek_help": "呼吸练习后焦虑仍持续数周，或反复出现惊恐发作、胸闷心悸被误当作心脏病时，应就医评估。",
+      "evidence_note": "NHS 将其列为压力管理的自助技巧；放慢呼气有助于激活副交感神经、降低生理唤醒。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-zh-002",
+        "art-en-004",
+        "art-en-007"
+      ]
+    },
+    {
+      "id": "mth-002",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "渐进式肌肉放松（PMR）",
+      "source_org": "healthdirect Australia",
+      "source_type": "government-health-agency",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "relaxation"
+      ],
+      "themes": [
+        "stress",
+        "anxiety",
+        "sleep"
+      ],
+      "populations": [
+        "general",
+        "workers"
+      ],
+      "risk_level": "L1",
+      "summary": "通过依次收紧再放松各组肌肉，让身体学会识别紧张与放松的差别。healthdirect 建议从脚趾开始，每组肌群收紧约 3 秒后彻底放松，逐步向上至面部。适合身体紧绷、压力大或入睡困难时使用。",
+      "steps": [
+        "坐着或躺下，做几次自然呼吸。",
+        "把注意力放到脚趾，轻轻收紧约 3 秒，感受紧张感。",
+        "完全放松约 10 秒，注意紧张与放松的差别。",
+        "按小腿、大腿、腹部、双手、肩膀、面部的顺序重复。",
+        "结束后静坐片刻，再缓慢活动身体。"
+      ],
+      "duration": "约 10-15 分钟",
+      "suitable_for": [
+        "肩颈、下颌或背部长期紧绷",
+        "压力导致的躯体紧张",
+        "睡前放松"
+      ],
+      "not_suitable_for": [
+        "近期有肌肉拉伤、关节损伤的部位应跳过",
+        "有慢性疼痛者应收紧幅度更轻，避免诱发疼痛"
+      ],
+      "when_to_seek_help": "躯体紧张伴随持续疼痛、麻木或无力，或放松练习后症状加重时，应先就医排查躯体疾病。",
+      "evidence_note": "渐进式肌肉放松是研究较充分的放松技术，常被用于焦虑与失眠的辅助干预。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-en-007",
+        "art-en-004"
+      ]
+    },
+    {
+      "id": "mth-003",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "引导式意象放松（安全场景想象）",
+      "source_org": "healthdirect Australia",
+      "source_type": "government-health-agency",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "relaxation",
+        "mindfulness"
+      ],
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "risk_level": "L1",
+      "summary": "在放松状态下想象一个让自己感到安全、平静的具体场景，并调动视觉、声音、触感等细节，使注意力从担忧转向想象内容。适合压力较大但不愿做身体放松练习的人，可睁眼进行以降低不适感。",
+      "steps": [
+        "找安静、不会被打扰的地方坐下，做几次自然呼吸。",
+        "想一个让你感到安全平静的地方（真实或想象的都可以）。",
+        "在脑中补充细节：看到什么颜色、听到什么声音、皮肤感受到什么温度。",
+        "发现走神时，不批评自己，温和地把注意力带回这个场景。",
+        "停留 5-10 分钟后，慢慢睁眼，活动手脚再起身。"
+      ],
+      "duration": "5-10 分钟",
+      "suitable_for": [
+        "压力大、思绪杂乱",
+        "睡前难以平静",
+        "不方便做身体活动时"
+      ],
+      "not_suitable_for": [
+        "有创伤经历者可能因闭眼想象被触发不适，可改为睁眼、只关注房间里的物体",
+        "出现强烈情绪或画面闪回时应立即停止并睁眼"
+      ],
+      "when_to_seek_help": "想象练习反复引发强烈痛苦、闪回或解离感时，应停止自行练习并寻求创伤知情（trauma-informed）的专业帮助。",
+      "evidence_note": "意象放松属于常用放松技术之一，对降低主观压力感有一定帮助；证据强度弱于系统化心理治疗。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-en-007"
+      ]
+    },
+    {
+      "id": "mth-004",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "正念呼吸与当下觉察",
+      "source_org": "healthdirect Australia / World Health Organization (WHO)",
+      "source_type": "government-health-agency",
+      "url": "https://www.healthdirect.gov.au/relaxation-techniques-for-stress-relief",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "mindfulness",
+        "breathing"
+      ],
+      "themes": [
+        "stress",
+        "anxiety",
+        "emotional-awareness"
+      ],
+      "populations": [
+        "general",
+        "students",
+        "workers"
+      ],
+      "risk_level": "L1",
+      "summary": "把注意力放在当下的呼吸或身体感受上，走神时温和带回，而不是评判自己。重点不在清空头脑，而在练习觉察到走神并回来。每天几分钟即可开始，适合应对反复担忧与注意力涣散。",
+      "steps": [
+        "坐下，背自然挺直，双手放在腿上。",
+        "把注意力放到呼吸上，感受空气进出鼻腔或腹部起伏。",
+        "发现自己在想事情时，可以在心里轻轻标注（例如计划、担心），再把注意力带回呼吸。",
+        "从 3 分钟开始，逐渐延长到 10 分钟。",
+        "结束后注意一下当下的身体与情绪状态。"
+      ],
+      "duration": "3-10 分钟，建议每天一次",
+      "suitable_for": [
+        "反复担忧、思维停不下来",
+        "注意力难以集中",
+        "作为日常情绪调节的基础练习"
+      ],
+      "not_suitable_for": [
+        "焦虑很重时长时间静坐可能加重不适，可改为 1-2 分钟或行走觉察",
+        "有创伤史者在静坐中可能出现强烈情绪，应缩短时间或改为睁眼练习"
+      ],
+      "when_to_seek_help": "练习后焦虑或低落持续加重，或情绪困扰已影响工作与睡眠时，应寻求专业评估，正念不能替代治疗。",
+      "evidence_note": "正念减压与正念认知疗法在焦虑、抑郁复发预防方面有较多研究支持；非正式的自助练习效果通常弱于结构化课程。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-en-001",
+        "art-en-007",
+        "art-en-003"
+      ]
+    },
+    {
+      "id": "mth-005",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "压力下的接地练习（5-4-3 感官法）",
+      "source_org": "World Health Organization (WHO)",
+      "source_type": "international-organization",
+      "url": "https://www.who.int/publications/i/item/9789240003927",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "grounding",
+        "mindfulness"
+      ],
+      "themes": [
+        "stress",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "risk_level": "L1",
+      "summary": "当情绪被淹没、脑中一片混乱时，用感官把注意力拉回当下。WHO 的《压力时期的自我照顾》把接地作为核心技能之一：感受脚踩地面的支撑，依次说出看到、听到、触摸到的东西，再配合缓慢呼吸。适合在情绪突然升高时做 2-3 分钟。",
+      "steps": [
+        "双脚平放在地面，感受地面给予的支撑。",
+        "说出你看到的 5 样东西。",
+        "说出你听到的 4 种声音。",
+        "说出你能触摸到的 3 种触感（衣服、桌面、椅背）。",
+        "缓慢呼吸几次，注意身体与椅面、地面的接触。"
+      ],
+      "duration": "2-3 分钟，可随时使用",
+      "suitable_for": [
+        "情绪突然被淹没、脑中空白",
+        "轻度解离感或恍惚",
+        "惊恐发作刚开始时的稳定化"
+      ],
+      "not_suitable_for": [
+        "本练习用于稳定情绪，不能替代对急性危机的处理",
+        "若正在出现自伤冲动或现实感严重丧失，应立即联系他人与急救"
+      ],
+      "when_to_seek_help": "惊恐反复发作、接地练习无法缓解，或出现自伤、自杀念头时，应立即寻求紧急帮助或前往精神科急诊。",
+      "evidence_note": "接地属于稳定化技术，常用于创伤知情与危机干预的早期阶段；其作用是恢复当下感，而非治疗病因。",
+      "copyright_note": "仅转述公开指南中的技能框架，未复制原书图文内容。",
+      "related_articles": [
+        "art-en-001",
+        "art-zh-005"
+      ]
+    },
+    {
+      "id": "mth-006",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "睡眠卫生基础",
+      "source_org": "National Health Service (NHS)",
+      "source_type": "government-health-agency",
+      "url": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/how-to-fall-asleep-faster-and-sleep-better/",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "sleep-hygiene"
+      ],
+      "themes": [
+        "sleep",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students"
+      ],
+      "risk_level": "L1",
+      "summary": "通过调整作息与睡前环境改善睡眠质量：固定起床时间、白天适度运动、下午后减少咖啡因、睡前减少屏幕、卧室保持安静凉爽黑暗、避免用酒精助眠。属于基础习惯调整，见效需要持续数周。",
+      "steps": [
+        "设定一个每天（含周末）都能坚持的起床时间。",
+        "白天安排适度运动，但避免临睡前剧烈运动。",
+        "下午之后减少咖啡、浓茶与能量饮料。",
+        "睡前 1 小时减少屏幕使用，把灯光调暗。",
+        "保持卧室安静、凉爽、黑暗；床只用于睡眠与亲密关系。",
+        "不以酒精助眠。"
+      ],
+      "duration": "长期习惯，通常需 2-4 周才能感到变化",
+      "suitable_for": [
+        "轻度入睡困难、作息紊乱",
+        "轮班或假期后需要重新调整作息",
+        "压力期的睡眠波动"
+      ],
+      "not_suitable_for": [
+        "疑似睡眠呼吸暂停（打鼾伴憋醒、白天极度嗜睡）应先就医",
+        "长期服用安眠药者不应自行停药，需医生指导"
+      ],
+      "when_to_seek_help": "失眠每周至少三晚、持续三个月以上，或已明显影响白天工作与情绪时，应至睡眠门诊或精神心理科评估。",
+      "evidence_note": "睡眠卫生是失眠干预的基础组成部分；单独使用对慢性失眠效果有限，通常与 CBT-I 联合。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-en-005",
+        "art-en-006",
+        "art-zh-011"
+      ]
+    },
+    {
+      "id": "mth-007",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "固定起床时间与刺激控制（CBT-I 基础原则）",
+      "source_org": "北京安定医院",
+      "source_type": "hospital-specialist",
+      "url": "https://www.bjad.com.cn/Html/News/Articles/3784.html",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "sleep-hygiene"
+      ],
+      "themes": [
+        "sleep"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "risk_level": "L1",
+      "summary": "失眠认知行为治疗（CBT-I）中最常被提到的两条原则：一是固定起床时间，让生物钟有稳定锚点；二是刺激控制，即只在困了才上床，卧床约 20 分钟仍未入睡就离床做安静活动，有困意再回床。目的是重建床与睡眠之间的联系。",
+      "steps": [
+        "设定固定的起床时间，周末也尽量不超过 1 小时差异。",
+        "只在感到困倦时才上床。",
+        "躺下约 20 分钟仍无法入睡，就起身到别的房间做安静、不刺激的活动（如看纸质书），有困意再回床。",
+        "床只用于睡眠与亲密关系，不在床上工作、刷手机或长时间焦虑。",
+        "白天避免长时间补觉，午睡控制在 20-30 分钟内。"
+      ],
+      "duration": "连续执行 2-4 周评估效果",
+      "suitable_for": [
+        "入睡困难、夜间醒来后长时间无法再入睡",
+        "对床产生焦虑感的慢性失眠"
+      ],
+      "not_suitable_for": [
+        "轮班工作者需在医生指导下调整",
+        "双相障碍、癫痫患者不宜自行压缩或剥夺睡眠",
+        "白天已严重嗜睡或从事高危作业者应先咨询医生"
+      ],
+      "when_to_seek_help": "自行执行 2-4 周无改善，或失眠伴随明显抑郁、焦虑、白天功能严重下降时，应接受结构化 CBT-I 治疗。",
+      "evidence_note": "CBT-I 是国内外指南推荐的一线非药物干预；本条目只摘录其中相对安全的两条原则，完整的睡眠限制需专业人员指导。",
+      "copyright_note": "仅转述公开科普中的原则要点，未复制原文正文。",
+      "related_articles": [
+        "art-zh-011"
+      ]
+    },
+    {
+      "id": "mth-008",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "担忧时间（Worry time）",
+      "source_org": "National Health Service (NHS)",
+      "source_type": "government-health-agency",
+      "url": "https://www.nhs.uk/every-mind-matters/mental-wellbeing-tips/self-help-cbt-techniques/tackling-your-worries/",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "worry-management"
+      ],
+      "themes": [
+        "anxiety",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students"
+      ],
+      "risk_level": "L1",
+      "summary": "把全天随时出现的担忧推迟到一个固定时段集中处理，而不是立即反复思考。白天出现担忧时先记下来，到约定的 15 分钟再逐条检视：能行动的写下一步，不能控制的练习放下。可减少担忧对工作与睡眠的侵占。",
+      "steps": [
+        "每天固定一个 15 分钟的担忧时间（不要安排在睡前）。",
+        "白天出现担忧时，用一句话记在纸上或手机里，告诉自己稍后处理。",
+        "到担忧时间，逐条看：如果可控，写下最小的一步行动；如果不可控，承认它并转向其他事。",
+        "时间到就结束，去做别的事情。"
+      ],
+      "duration": "每天 15 分钟",
+      "suitable_for": [
+        "广泛性担忧、什么都担心",
+        "睡前思维活跃、反复预演最坏结果"
+      ],
+      "not_suitable_for": [
+        "急性危机、自伤或自杀念头不适用，应立即求助",
+        "严重抑郁伴思维迟滞者可能需要先处理情绪问题"
+      ],
+      "when_to_seek_help": "担忧已持续数月、明显影响睡眠与人际，或伴随惊恐发作时，应接受认知行为治疗评估。",
+      "evidence_note": "担忧时间源自认知行为治疗中的刺激控制与担忧管理技术，属常用自助方法。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-zh-002"
+      ]
+    },
+    {
+      "id": "mth-009",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "思维日记与情绪记录",
+      "source_org": "Centre for Clinical Interventions (CCI)",
+      "source_type": "clinical-resource-center",
+      "url": "https://cci.health.wa.gov.au/Resources/For-Clinicians/Depression",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "mood-monitoring",
+        "worry-management"
+      ],
+      "themes": [
+        "emotional-awareness",
+        "depression",
+        "anxiety"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "risk_level": "L1",
+      "summary": "把自己从情绪里抽出来一点：记录发生了什么、当时情绪是什么、强度多少、脑中闪过的想法是什么，再寻找支持与反对这个想法的证据，形成一个更平衡的说法。目的是看见想法与情绪之间的联系，而不是强迫自己积极。",
+      "steps": [
+        "记录情境：什么时候、在哪里、和谁、发生了什么。",
+        "给情绪命名（如难过、焦虑、愤怒），并用 0-100 标注强度。",
+        "写下当时脑中自动冒出的想法，尽量用原话。",
+        "分别列出支持与反对这个想法的证据。",
+        "写一个更平衡的替代想法，再重新评估情绪强度。"
+      ],
+      "duration": "每次 10-15 分钟，每周 3-5 次",
+      "suitable_for": [
+        "情绪波动大、容易自我批评",
+        "轻度抑郁或焦虑的自我觉察",
+        "想理解自己情绪触发点的人"
+      ],
+      "not_suitable_for": [
+        "中重度抑郁、强烈自责或自伤念头者应在治疗师陪同下进行",
+        "涉及创伤记忆的书写可能引发强烈反应，不宜独自深入"
+      ],
+      "when_to_seek_help": "记录过程中情绪明显恶化、出现自伤念头，或持续两周以上功能受损时，应停止自行练习并寻求专业帮助。",
+      "evidence_note": "思维记录是认知行为治疗的核心技术之一；自助形式对轻中度情绪问题有帮助，重度问题需配合治疗。",
+      "copyright_note": "仅转述公开自助材料中的方法框架，未复制手册表格与正文。",
+      "related_articles": [
+        "art-zh-007",
+        "art-zh-008",
+        "art-zh-013"
+      ]
+    },
+    {
+      "id": "mth-010",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "行为激活：小步骤活动安排",
+      "source_org": "Centre for Clinical Interventions (CCI)",
+      "source_type": "clinical-resource-center",
+      "url": "https://cci.health.wa.gov.au/Resources/For-Clinicians/Depression",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "behavioral-activation"
+      ],
+      "themes": [
+        "depression",
+        "wellbeing"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "risk_level": "L1",
+      "summary": "低落时人容易等“有动力了再做”，结果活动越少、情绪越差。行为激活反过来：先把小而具体的活动排进日程，让行动带来愉悦感或掌控感，再带动情绪。关键是把任务拆得足够小，从最容易的一项开始。",
+      "steps": [
+        "列出过去曾让你感到愉快或有掌控感的小活动（散步 10 分钟、整理桌面、给朋友发消息）。",
+        "按难度从低到高排序。",
+        "每周预先安排 3-5 项，写进具体时间。",
+        "完成后记录情绪变化（哪怕只有一点）。",
+        "状态允许时逐步增加难度或数量。"
+      ],
+      "duration": "每周安排 3-5 项，持续 4 周以上",
+      "suitable_for": [
+        "兴趣减退、动力不足",
+        "情绪低落导致的退缩与拖延",
+        "轻度抑郁的自我管理"
+      ],
+      "not_suitable_for": [
+        "中重度抑郁、无法起床或自理者需专业治疗配合",
+        "双相障碍在躁期不宜按此增加活动量"
+      ],
+      "when_to_seek_help": "连续数周无法完成任何活动、情绪持续恶化，或出现自伤念头时，应接受专业评估与治疗。",
+      "evidence_note": "行为激活是抑郁治疗中证据较强的心理干预之一，自助版本适合轻度症状。",
+      "copyright_note": "仅转述公开自助材料中的方法框架，未复制手册正文。",
+      "related_articles": [
+        "art-zh-001",
+        "art-en-003"
+      ]
+    },
+    {
+      "id": "mth-011",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "日常身体活动",
+      "source_org": "National Health Service (NHS)",
+      "source_type": "government-health-agency",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/five-steps-to-mental-wellbeing/",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "physical-activity"
+      ],
+      "themes": [
+        "wellbeing",
+        "stress",
+        "depression"
+      ],
+      "populations": [
+        "general",
+        "workers",
+        "students",
+        "older-adults"
+      ],
+      "risk_level": "L1",
+      "summary": "规律的身体活动对情绪、睡眠与压力耐受都有帮助。NHS 的建议重点不是高强度训练，而是找到能坚持的活动并从很小的量开始，例如每天 10 分钟快走，逐步累积到每周 150 分钟中等强度。",
+      "steps": [
+        "选择一项你不排斥、场地方便的活动（快走、骑车、跳舞、游泳）。",
+        "从每天 10 分钟开始，固定在日程里。",
+        "逐步增加到每周 150 分钟中等强度，可分散到多天。",
+        "把活动嵌入日常：提前一站下车、饭后散步、做家务时加快节奏。",
+        "记录完成情况，关注情绪变化而不是体重或成绩。"
+      ],
+      "duration": "每周约 150 分钟中等强度",
+      "suitable_for": [
+        "压力大、久坐、情绪低落",
+        "睡眠质量差",
+        "希望建立长期健康习惯的人"
+      ],
+      "not_suitable_for": [
+        "有心血管疾病、骨关节问题或孕期者应先咨询医生",
+        "运动中出現胸痛、明显气促或眩晕应立即停止并就医"
+      ],
+      "when_to_seek_help": "运动后情绪并未改善甚至更差，或完全无法开始任何活动时，应考虑是否存在抑郁并寻求评估。",
+      "evidence_note": "规律运动对轻中度抑郁与焦虑有辅助改善作用，是多个国家指南推荐的 lifestyle 干预。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-en-003",
+        "art-zh-006"
+      ]
+    },
+    {
+      "id": "mth-012",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "睡前放松程序与屏幕管理",
+      "source_org": "CDC / NIOSH",
+      "source_type": "government-health-agency",
+      "url": "https://www.cdc.gov/niosh/bulletin/2020/sleep.html",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "sleep-hygiene",
+        "relaxation"
+      ],
+      "themes": [
+        "sleep",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "workers"
+      ],
+      "risk_level": "L1",
+      "summary": "CDC/NIOSH 建议在睡前约 1.5 小时开始一个固定的放松程序，让身体逐步从工作状态切换到休息状态：调暗灯光、停止工作与争论、减少屏幕、做固定的睡前例行动作。固定的顺序本身会给身体发出“可以睡了”的信号。",
+      "steps": [
+        "设定睡前约 1.5 小时的放松起点，给手机设提醒。",
+        "调暗灯光，停止处理工作消息与激烈讨论。",
+        "把屏幕调为夜间模式，或提前放下手机/电脑。",
+        "按固定顺序做睡前例行动作，例如洗漱—轻度拉伸—读纸质书。",
+        "保持卧室凉爽、安静、黑暗。"
+      ],
+      "duration": "每晚，约 60-90 分钟",
+      "suitable_for": [
+        "入睡困难、睡前思维活跃",
+        "轮班后需要快速切换状态",
+        "压力期睡眠变浅"
+      ],
+      "not_suitable_for": [
+        "严重失眠需结合 CBT-I 或就医，单靠放松程序效果有限",
+        "需要夜间值守或照顾婴幼儿者应灵活调整"
+      ],
+      "when_to_seek_help": "放松程序执行数周仍无法改善睡眠，或伴随明显情绪问题、白天功能下降时，应就医评估。",
+      "evidence_note": "睡前放松程序是睡眠卫生的标准建议之一，可降低生理与认知唤醒水平。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-en-006",
+        "art-en-005",
+        "art-zh-011"
+      ]
+    },
+    {
+      "id": "mth-013",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "社交连接与求助计划",
+      "source_org": "National Health Service (NHS) / World Health Organization (WHO)",
+      "source_type": "government-health-agency",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/five-steps-to-mental-wellbeing/",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "social-connection",
+        "help-seeking-plan"
+      ],
+      "themes": [
+        "social-connection",
+        "help-seeking",
+        "wellbeing"
+      ],
+      "populations": [
+        "general",
+        "adolescents",
+        "older-adults",
+        "students"
+      ],
+      "risk_level": "L1",
+      "summary": "把“找人说话”从临时起意变成事先安排的常规动作：列出可信任的人、每周主动联系一次、练习具体表达自己的状态，并提前查好当地心理援助热线与就诊科室。目的是缩短从“感觉不好”到“获得支持”的距离。",
+      "steps": [
+        "写下 3 个可以信任的人（家人、朋友、同学、同事）。",
+        "每周主动联系其中至少一位，不必谈问题，先恢复联系。",
+        "练习把“我没事”换成具体表达，例如“最近睡得不好，有点撑不住”。",
+        "查好本地心理援助热线、精神卫生中心地址与挂号科室，存进手机。",
+        "和一位信任的人约定：如果状态明显变差，由谁陪同就医。"
+      ],
+      "duration": "每周一次联系，求助计划一次性准备",
+      "suitable_for": [
+        "孤独感、社交退缩",
+        "习惯独自硬扛、拖延求助",
+        "独居或异地求学、工作的人"
+      ],
+      "not_suitable_for": [
+        "处于危险中（有自伤自杀计划）时应直接拨打急救电话，而不是等待联系朋友",
+        "本条不能替代危机干预"
+      ],
+      "when_to_seek_help": "出现自伤或自杀念头、无法保证自身安全时，立即拨打当地急救电话或前往最近医院急诊；情绪问题持续两周以上应预约精神心理门诊。",
+      "evidence_note": "社会连接被多国指南列为心理健康保护因素；预先制定求助计划可降低危机时的行动门槛。",
+      "copyright_note": "步骤整合自公开科普建议，为中文原创转述，未复制原文表述。",
+      "related_articles": [
+        "art-zh-003",
+        "art-zh-006",
+        "art-en-003"
+      ]
+    },
+    {
+      "id": "mth-014",
+      "type": "method",
+      "lang": "zh-CN",
+      "title": "创伤后日常节律与压力管理（PTSD 自助基线）",
+      "source_org": "World Health Organization (WHO) / National Health Service (NHS)",
+      "source_type": "international-organization",
+      "url": "https://www.who.int/zh/news-room/fact-sheets/detail/post-traumatic-stress-disorder",
+      "collected_at": "2026-11-16",
+      "method_types": [
+        "relaxation",
+        "sleep-hygiene",
+        "physical-activity",
+        "social-connection"
+      ],
+      "themes": [
+        "trauma-ptsd",
+        "stress"
+      ],
+      "populations": [
+        "general",
+        "people-with-symptoms"
+      ],
+      "risk_level": "L1",
+      "summary": "依据 WHO 与 NHS 公开建议整理的自助基线：不处理创伤记忆本身，而是先把日常生活、睡眠、活动、社交与压力反应稳住。适用于创伤事件后出现轻度侵入性回忆、睡眠紊乱或持续紧绷的人，也适合作为接受专业治疗期间的日常配合。本方法不包含暴露或重现创伤的练习，不能替代创伤聚焦心理治疗。",
+      "steps": [
+        "尽量维持规律的起床、用餐与入睡时间，让一天有可预期的结构。",
+        "在愿意的时候，与信任的家人或朋友谈谈自己的感受；不想谈时不勉强。",
+        "每天安排一次轻度身体活动，例如短距离散步或拉伸，以不加重不适为度。",
+        "出现紧张、心跳加快时，使用缓慢呼吸或渐进式肌肉放松帮助身体降速。",
+        "用日记记录可能触发闪回的线索（如某些气味、声音、地点），以便提前避开或做准备。",
+        "减少或避免饮酒与非法药物，不靠酒精帮助入睡。",
+        "若两周内症状没有缓解或加重，主动联系精神卫生专业人员。"
+      ],
+      "duration": "作为日常习惯长期坚持；呼吸或放松练习每次 5-10 分钟",
+      "suitable_for": [
+        "创伤事件后出现轻度侵入性回忆、噩梦或睡眠紊乱",
+        "持续处于紧绷、易惊跳状态，希望先稳住日常节律",
+        "正在接受专业治疗，需要在两次就诊之间自我维持"
+      ],
+      "not_suitable_for": [
+        "仍处在不安全环境（如持续的家庭暴力）中的人，应先确保人身安全并联系专业机构",
+        "练习中出现闪回明显加剧、解离或强烈痛苦时应立即停止并寻求专业帮助",
+        "不可用本方法替代创伤聚焦 CBT 或 EMDR，也不应自行进行回忆创伤的暴露练习"
+      ],
+      "when_to_seek_help": "侵入性回忆、噩梦或回避持续一个月以上并影响睡眠、工作或人际；出现自伤、自杀念头、严重失眠、无法进食或无法自理时，应尽快到精神卫生机构评估，紧急情况联系当地急救。",
+      "evidence_note": "WHO 与 NHS 均将维持日常生活、社交倾诉、规律运动、睡眠卫生与压力管理列为创伤后的低风险自助措施；创伤聚焦 CBT 与 EMDR 等需要专业指导的干预不在本条目范围内。",
+      "copyright_note": "步骤为根据公开页面要点的中文转述，未复制原文表述。",
+      "related_articles": [
+        "art-zh-014",
+        "art-en-010"
+      ]
+    }
+  ]
+}

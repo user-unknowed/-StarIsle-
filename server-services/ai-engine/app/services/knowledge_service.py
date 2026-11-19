@@ -36,12 +36,14 @@ class KnowledgeService:
         """
         self.db = get_db_connection()
         self.collection_name = "psychological_knowledge"
-        # 尝试创建必要索引，失败则进入降级模式
-        self._ensure_indexes()
-        
-        # 内存缓存（用于无数据库时的降级）
+        # 内存缓存（用于无数据库时的降级）——必须先于 _ensure_indexes 初始化，
+        # 否则 _ensure_indexes 内设置的 fallback 标记会被覆盖
         self._in_memory_cache: List[Dict] = []
         self._fallback_mode = False
+        # 最近一次对话检索命中的知识标题（供响应透出，便于观测检索输出）
+        self.last_chat_hits: List[str] = []
+        # 尝试创建必要索引，失败则进入降级模式
+        self._ensure_indexes()
 
     def _ensure_indexes(self):
         """
@@ -482,44 +484,66 @@ class KnowledgeService:
     async def get_relevant_knowledge_for_chat(
         self, 
         user_message: str,
-        user_profile: Optional[Dict] = None
+        user_profile: Optional[Dict] = None,
+        context: Optional[List[Dict]] = None
     ) -> str:
         """
-        获取与用户消息相关的知识（用于RAG增强）。
+        获取与用户对话相关的知识（用于RAG增强）。
+
+        检索依据 = 对话内容（当前消息 + 最近历史用户消息）+ 记忆（用户画像文本）。
+        输出遵循「适量」原则：最多 top-3 条、单条节选有限长度、总长封顶。
 
         Args:
-            user_message: 用户消息
-            user_profile: 用户画像（可选）
+            user_message: 当前用户消息
+            user_profile: 用户画像（记忆侧，可选）
+            context: 对话历史（对话侧，可选）
 
         Returns:
             str: 拼装好的知识上下文文本；无命中则返回空字符串
         """
-        # 提取可能的心理问题类型，扩充检索查询
-        issue_keywords = self._detect_issue_type(user_message)
-        
-        # 组合用户消息与问题类型作为检索查询
-        search_query = user_message
+        self.last_chat_hits = []
+        # 1) 对话侧：当前消息 + 最近 8 条历史中的用户消息
+        conv_bits = [user_message]
+        if context:
+            for m in context[-8:]:
+                if isinstance(m, dict) and m.get("role") == "user":
+                    c = str(m.get("content", "")).strip()
+                    if c:
+                        conv_bits.append(c)
+        # 2) 记忆侧：用户画像中的文本字段（关注点、标签、状态等）
+        memory_bits: List[str] = []
+        if user_profile:
+            for v in user_profile.values():
+                if isinstance(v, str) and v.strip():
+                    memory_bits.append(v.strip()[:80])
+        combined = " ".join(conv_bits + memory_bits)
+
+        # 3) 基于整段对话文本扩充问题类型关键词
+        issue_keywords = self._detect_issue_type(combined)
+        search_query = combined
         if issue_keywords:
-            search_query = f"{user_message} {' '.join(issue_keywords)}"
-        
-        # 取 top-3 相关知识
+            search_query = f"{combined} {' '.join(issue_keywords)}"
+
+        # 4) 检索 top-3（适量）
         results = await self.search_knowledge(search_query, top_k=3)
-        
-        # 格式化返回相关知识
         if not results:
             return ""
-        
-        # 拼装 RAG 上下文：编号列出标题、核心内容、技术与适用问题
-        knowledge_context = "\n\n相关心理咨询知识参考：\n"
+
+        # 5) 拼装 RAG 上下文：单条节选 + 总量封顶，避免信息过载
+        knowledge_context = "\n\n相关心理咨询知识参考（少量、简要，仅供融入回复）：\n"
+        total = 0
         for i, result in enumerate(results, 1):
             doc = result.document
-            knowledge_context += f"""
-[{i}] 《{doc.title}》({doc.source})
-核心内容：{doc.content[:300]}
-相关技术：{', '.join(doc.techniques[:5]) if doc.techniques else '暂无'}
-适用问题：{', '.join(doc.applicable_issues[:3]) if doc.applicable_issues else '暂无'}
-"""
-        
+            snippet = (doc.content or "")[:240]
+            self.last_chat_hits.append(doc.title or "")
+            line = f"[{i}] 《{doc.title}》：{snippet}"
+            if doc.applicable_issues:
+                line += f"（适用：{'、'.join(doc.applicable_issues[:3])}）"
+            knowledge_context += line + "\n"
+            total += len(snippet)
+            if total >= 800:
+                break
+
         return knowledge_context.strip()
 
     def _detect_issue_type(self, message: str) -> List[str]:

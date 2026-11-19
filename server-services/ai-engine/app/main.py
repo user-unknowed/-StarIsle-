@@ -64,10 +64,12 @@ def _autodiscover_skills():
 
 
 # 初始化服务：在模块加载阶段创建各业务服务单例
-chat_service = ChatService()                # 对话生成服务
+# 知识库服务必须最先创建并注入 chat_service，保证对话检索与导入/搜索共用同一实例
+# （否则 chat_service 自建空缓存实例，RAG 检索永远不命中）
+knowledge_service = KnowledgeService()     # 知识库管理服务
+chat_service = ChatService(knowledge_service=knowledge_service)  # 对话生成服务
 risk_service = RiskDetectionService()      # 风险检测服务
 emotion_service = EmotionAnalysisService() # 情绪分析服务
-knowledge_service = KnowledgeService()     # 知识库管理服务
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -145,6 +147,7 @@ class ChatResponse(BaseModel):
     response_time_ms: int                      # 响应耗时（毫秒）
     rag_enhanced: bool = False                 # 是否启用 RAG 知识增强
     knowledge_mode: str = "unknown"            # 知识库模式
+    knowledge_hits: List[str] = []             # 本次检索命中的知识标题（检索输出，供观测）
     model: str = ""                            # 实际使用的模型（本地路径或 API 模型名）
 
 class RiskCheckRequest(BaseModel):
@@ -211,6 +214,7 @@ async def chat(request: ChatRequest):
             response_time_ms=response["response_time_ms"],
             rag_enhanced=response.get("rag_enhanced", False),
             knowledge_mode=response.get("knowledge_mode", "unknown"),
+            knowledge_hits=response.get("knowledge_hits", []),
             model=response.get("model") or getattr(chat_service, "model_name", "")
         )
         

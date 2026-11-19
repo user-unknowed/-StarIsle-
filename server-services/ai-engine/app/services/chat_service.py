@@ -15,6 +15,7 @@ chat_service.py - AI 对话服务（CBT 框架 + RAG 知识增强）
     - app.skills：技能三段注入
 """
 import os
+import re
 from pathlib import Path
 from typing import List, Dict, Optional
 try:
@@ -32,6 +33,18 @@ from app.skills.base_skill import BaseSkill
 from app.skills.skill_router import SkillRouter
 import time
 
+# 规则语法检查器（scripts/grammar_checker.py）：用于回复输出侧的排版归一化
+# （省略号/半角标点/重复字等确定性修正），保证交付回复语法干净
+try:
+    import importlib.util as _ilu
+    _gc_spec = _ilu.spec_from_file_location(
+        "grammar_checker",
+        str(Path(__file__).resolve().parents[2] / "scripts" / "grammar_checker.py"))
+    _gc = _ilu.module_from_spec(_gc_spec)
+    _gc_spec.loader.exec_module(_gc)  # type: ignore
+except Exception:
+    _gc = None
+
 class ChatService:
     """
     AI对话服务 - 基于国产大模型的CBT对话引擎
@@ -40,12 +53,13 @@ class ChatService:
     并通过技能路由器注入 Fork Skills 上下文，最终由大模型生成回复。
     """
     
-    def __init__(self):
+    def __init__(self, knowledge_service: Optional[KnowledgeService] = None):
         """
         初始化对话服务，加载大模型与各依赖组件。
 
         根据 USE_LOCAL_MODEL 决定使用本地推理或 API 调用，
         并初始化 System Prompt 生成器、加密工具、知识库服务与技能路由器。
+        knowledge_service 由外部注入以共享同一知识库实例（含已导入的知识文档）。
         """
         # 加载大模型（MVP阶段可使用API调用）
         self.model_name = os.getenv("MODEL_NAME", "deepseek-ai/deepseek-chat")
@@ -79,7 +93,8 @@ class ChatService:
         # 初始化各依赖组件
         self.system_prompt = Star宝SystemPrompt()   # System Prompt 生成器
         self.encryption_util = EncryptionUtil()      # 消息加密工具
-        self.knowledge_service = KnowledgeService() # RAG 知识库服务
+        # RAG 知识库服务：优先使用外部注入的共享实例（含已导入文档）
+        self.knowledge_service = knowledge_service or KnowledgeService()
         self.skill_router = SkillRouter([])          # 技能路由器（初始为空）
 
     def set_skills(self, skills: List[BaseSkill]) -> None:
@@ -116,15 +131,22 @@ class ChatService:
         # 构建System Prompt：依据用户画像生成基础人设
         system_prompt = self.system_prompt.generate_prompt(user_profile)
         
-        # RAG检索：从心理咨询知识库中检索相关知识
+        # RAG检索：依据对话内容（含历史）+ 记忆（用户画像）检索知识库，适量注入
         knowledge_context = await self.knowledge_service.get_relevant_knowledge_for_chat(
             user_message=message,
-            user_profile=user_profile
+            user_profile=user_profile,
+            context=context
         )
+        knowledge_hits = list(self.knowledge_service.last_chat_hits)
         
         # 将检索到的知识注入到System Prompt中（不修改模型参数，仅作为上下文参考）
         if knowledge_context:
-            system_prompt += f"\n\n【专业知识参考】\n你可以参考以下心理咨询专业知识来帮助用户，但请以自己的方式表达，不要直接引用原文：\n{knowledge_context}\n\n注意：这些知识仅作为参考，你需要结合小星的身份和说话风格来组织回复。"
+            system_prompt += (
+                f"\n\n【专业知识参考】\n"
+                f"你可以参考以下心理咨询专业知识来帮助用户，但请用自己的方式简要表达，"
+                f"每次只融入 1-2 个关键点，不要整段照搬或罗列原文：\n{knowledge_context}\n\n"
+                f"注意：这些知识仅作为参考，你需要结合小星的身份和说话风格来组织回复。"
+            )
 
         # +++ Skill 三段注入 +++
         # +++ Skill 三段注入：描述、预测、结果，依次拼接到 System Prompt +++
@@ -168,7 +190,8 @@ class ChatService:
                 "response_time_ms": response_time_ms,
                 "model": self.model_name,
                 "rag_enhanced": knowledge_context != "",
-                "knowledge_mode": knowledge_stats.get("mode", "unknown")
+                "knowledge_mode": knowledge_stats.get("mode", "unknown"),
+                "knowledge_hits": knowledge_hits
             }
             
         except Exception as e:
@@ -231,7 +254,17 @@ class ChatService:
             )
         # 只解码新生成的 token，避免把整段 prompt 混进回复
         new_tokens = outputs[0][inputs["input_ids"].shape[-1]:]
-        return self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+        text = self.tokenizer.decode(new_tokens, skip_special_tokens=True).strip()
+        # 输出侧排版归一化：确定性修正省略号/半角标点/重复字等，保证语法干净
+        if _gc is not None:
+            try:
+                text = _gc.auto_fix(text)
+            except Exception:
+                pass
+        # 清理基座模型偶发的方括号伪标签（如 [自动分隔情绪]）与幻觉 URL，保证回复自然
+        text = re.sub(r"\[[^\[\]]{2,16}\]", "", text)
+        text = re.sub(r"https?://\S+", "", text).strip()
+        return text
 
     async def _generate_local(self, messages: List[Dict]) -> str:
         """

@@ -115,17 +115,18 @@ def run_simulation(cfg: Dict[str, Any], steps: int = 100) -> Dict[str, Any]:
 # -------- 真正训练（FULL/LORA/CPU_OFFLOAD）
 def do_train(mode: TrainingMode, model_name: str, max_seq: int,
              epochs: int, batch: int, grad_acc: int, lr: float, smoke: bool,
-             resume: Optional[str] = None
+             resume: Optional[str] = None, data_file: Path = None
              ) -> Dict[str, Any]:
     import torch
     from transformers import (AutoModelForCausalLM, AutoTokenizer,
         TrainingArguments, Trainer, DataCollatorForLanguageModeling, set_seed)
     from datasets import load_dataset
     set_seed(42)
+    jsonl = data_file or SFT_JSONL
     tok = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tok.pad_token is None: tok.pad_token = tok.eos_token
-    ds = (load_dataset("json", data_files=str(SFT_JSONL), split="train[:64]")
-          if smoke else load_dataset("json", data_files=str(SFT_JSONL))["train"])
+    ds = (load_dataset("json", data_files=str(jsonl), split="train[:64]")
+          if smoke else load_dataset("json", data_files=str(jsonl))["train"])
     split = ds.train_test_split(test_size=0.05, seed=42)
 
     def _map(ex):
@@ -182,6 +183,22 @@ def do_train(mode: TrainingMode, model_name: str, max_seq: int,
     coll = DataCollatorForLanguageModeling(tokenizer=tok, mlm=False)
     trainer = Trainer(model=model, args=ta, data_collator=coll,
                       train_dataset=tk["train"], eval_dataset=tk["test"])
+    # 续训防护：resume 检查点若已跑满（epoch/step 达标），Trainer 会直接跳过训练，
+    # 造成「看似完成、实际未训练」的假象；此处显式拦截并如实报错。
+    if resume:
+        try:
+            _st_path = Path(resume) / "trainer_state.json"
+            _st = json.loads(_st_path.read_text(encoding="utf-8"))
+            if _st.get("global_step", 0) >= (_st.get("max_steps") or 10**9) \
+                    or _st.get("epoch", 0) >= epochs:
+                log.error("resume 检查点已训练完成（epoch=%s, global_step=%s），继续 --resume 会跳过训练；"
+                          "请改用 --model 指向已合并权重（如 final_model）重新增量训练。",
+                          _st.get("epoch"), _st.get("global_step"))
+                raise RuntimeError("resume checkpoint already complete; refusing to skip training")
+        except RuntimeError:
+            raise
+        except Exception as e:
+            log.warning("读取 resume 检查点状态失败，按正常续训继续：%s", e)
     t0 = datetime.now()
     res = trainer.train(resume_from_checkpoint=resume or None)
     elapsed = str(datetime.now() - t0)
@@ -225,8 +242,10 @@ def main():
     ap.add_argument("--allow-simulation", action="store_true",
                     help="显式允许 SIMULATION：不真正训练，产物只写入 *_SIMULATION 目录")
     ap.add_argument("--resume", default=None, help="从指定 checkpoint 目录续训")
+    ap.add_argument("--data-file", default=None, help="训练数据集 JSONL 路径（默认 data/sft_dataset_xiaoxing.jsonl）")
     args = ap.parse_args()
-    if not SFT_JSONL.exists(): raise FileNotFoundError(SFT_JSONL)
+    data_file = Path(args.data_file) if args.data_file else SFT_JSONL
+    if not data_file.exists(): raise FileNotFoundError(data_file)
     params = probe_params(args.model)
     log.info("Model %s ≈ %.2fB params", args.model, params / 1e9)
     avail = probe_gpu_gb(); log.info("Available GPU ≈ %.2f GB", avail)
@@ -253,7 +272,7 @@ def main():
         s = do_train(mode, args.model, args.max_seq_len,
                      epochs=1 if args.smoke else args.epochs,
                      batch=args.batch, grad_acc=grad_acc, lr=args.lr,
-                     smoke=args.smoke, resume=args.resume)
+                     smoke=args.smoke, resume=args.resume, data_file=data_file)
     except Exception:
         # 训练失败就如实失败：完整堆栈 + 非零退出，不做任何降级伪装
         log.exception("训练失败（未生成真实产物）")

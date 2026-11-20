@@ -334,6 +334,20 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   background: rgba(107, 123, 255, 0.10);
   color: var(--c-primary-deep); border-color: var(--c-border-strong);
 }
+/* ===== 安装包下载 ===== */
+.dl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.dl-card { display: flex; flex-direction: column; gap: 14px; padding: 26px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); box-shadow: var(--shadow-md); }
+.dl-card--latest { border-color: var(--c-border-strong); box-shadow: var(--shadow-lg); }
+.dl-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dl-card h3 { font-family: var(--font-body); font-size: 18px; font-weight: 600; }
+.dl-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; padding: 2px 10px; border-radius: var(--r-pill); color: var(--c-accent-warm); background: rgba(244, 162, 97, 0.12); border: 1px solid rgba(244, 162, 97, 0.28); white-space: nowrap; }
+.dl-desc { font-size: 13.5px; line-height: 1.7; color: var(--c-text-muted); }
+.dl-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--c-text-soft); }
+.dl-card .btn { justify-content: center; margin-top: auto; }
+.dl-hash { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--c-text-soft); word-break: break-all; }
+.dl-note { margin-top: 32px; font-size: 13px; line-height: 1.8; color: var(--c-text-muted); }
+.dl-note code { font-family: var(--font-mono); font-size: 12px; padding: 1px 6px; border-radius: var(--r-sm); background: rgba(107, 123, 255, 0.08); }
+@media (max-width: 640px) { .dl-card { padding: 20px; } }
 .contact { text-align: center; padding: clamp(80px, 12vw, 140px) 0 100px; position: relative; overflow: hidden; }
 .contact::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(167, 139, 250, 0.18), transparent 70%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(244, 162, 97, 0.10), transparent 70%); z-index: -1; }
 .contact-slogan { font-family: var(--font-display); font-style: italic; font-size: clamp(28px, 4vw, 44px); font-weight: 500; background: linear-gradient(135deg, var(--c-primary-deep) 0%, var(--c-secondary) 50%, var(--c-accent) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 24px 0 32px; line-height: 1.3; }
@@ -469,6 +483,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <a href="#security">安全合规</a>
       <a href="#testing">测试结果</a>
       <a href="#versions">版本演进</a>
+      <a href="#download">安装包下载</a>
       <a href="http://localhost:8080" class="nav-cta nav-cta--accent" id="trial-btn-nav">试用体验</a>
       <a href="https://github.com/user-unknowed/-StarIsle-" class="nav-cta" target="_blank" rel="noopener">访问 GitHub</a>
     </div>
@@ -909,6 +924,48 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         </div>
       </div>
     </div>
+  </div>
+</section>
+<section id="download" class="section">
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">安装包下载</div>
+      <h2 class="display-lg">下载已签名 APK</h2>
+      <p class="lead">三端 Android 安装包均为 release 构建，已通过 apksigner 签名，可直接下载安装。首次安装请在系统设置中允许「安装未知来源应用」。</p>
+    </div>
+    <div class="dl-grid">
+      <article class="dl-card dl-card--latest reveal" data-delay="1">
+        <div class="dl-card-head"><h3>教师端</h3><span class="dl-tag">最新构建</span></div>
+        <p class="dl-desc">班级状态总览、高风险学生告警、AI 咨询辅助与对话观察介入。</p>
+        <div class="dl-meta"><span>release</span><span>12.84 MB</span><span>2026-11-20</span><span>Android 8.0+</span></div>
+        <a class="btn btn--primary" href="./downloads/StarIsle-teacher-release.apk" download="StarIsle-teacher-release.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg>
+          下载教师端 APK
+        </a>
+        <div class="dl-hash">SHA-256: 663ec0312b3f9e4185edc4d06aeec241480fe7ccdf2c43639e6e092592fc8ced</div>
+      </article>
+      <article class="dl-card reveal" data-delay="2">
+        <div class="dl-card-head"><h3>学生端</h3><span class="dl-tag">最新构建</span></div>
+        <p class="dl-desc">心情打卡、AI 陪伴对话、情绪测评、冥想放松与紧急帮助。</p>
+        <div class="dl-meta"><span>release</span><span>12.65 MB</span><span>2026-11-17</span><span>Android 8.0+</span></div>
+        <a class="btn btn--primary" href="./downloads/StarIsle-student-release.apk" download="StarIsle-student-release.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg>
+          下载学生端 APK
+        </a>
+        <div class="dl-hash">SHA-256: 419a78d61d25d774e36eddc823522d476b74c62a8606acabe426601c67deb4fb</div>
+      </article>
+      <article class="dl-card reveal" data-delay="3">
+        <div class="dl-card-head"><h3>家长端</h3><span class="dl-tag">最新构建</span></div>
+        <p class="dl-desc">孩子情绪趋势查看、AI 心理顾问「大星」、应急预案与告警升级。</p>
+        <div class="dl-meta"><span>release</span><span>12.54 MB</span><span>2026-11-17</span><span>Android 8.0+</span></div>
+        <a class="btn btn--primary" href="./downloads/StarIsle-parent-release.apk" download="StarIsle-parent-release.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg>
+          下载家长端 APK
+        </a>
+        <div class="dl-hash">SHA-256: eca0663c14939e7be703753a7810ab55b6f832a20b452fa4c277041ae43d5935</div>
+      </article>
+    </div>
+    <p class="dl-note reveal">下载后可使用 <code>sha256sum</code> 或系统自带的文件校验工具核对上方哈希值；三端安装包共用同一 release 签名证书，可直接覆盖安装后续版本。</p>
   </div>
 </section>
 <section id="contact" class="contact">

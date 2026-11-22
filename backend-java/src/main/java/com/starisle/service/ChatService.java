@@ -146,6 +146,11 @@ public class ChatService {
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
+        // 携带内部令牌，ai-engine 只接受来自网关的调用
+        String internalToken = appConfig.getAiService().getToken();
+        if (internalToken != null && !internalToken.isBlank()) {
+            headers.set("X-Internal-Token", internalToken);
+        }
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(payload, headers);
 
         AiChatResponse ai = restTemplate.postForObject(url, request, AiChatResponse.class);

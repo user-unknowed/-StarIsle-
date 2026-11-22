@@ -39,7 +39,8 @@ class TeacherViewModel @Inject constructor(
         todos = repo.todos,
         students = repo.students,
         reports = repo.reports,
-        chatSessions = repo.chatSessions,
+        // 数据层权限防线：仅心理老师可持有学生对话会话，普通班主任 / 科任恒为空
+        chatSessions = if (repo.currentTeacher.role.canObserveStudentChats) repo.chatSessions else emptyList(),
         moodRecords = repo.moodRecords,
         selfHelpRequests = repo.selfHelpRequests,
         knowledgeBase = repo.knowledgeBase,
@@ -161,11 +162,19 @@ class TeacherViewModel @Inject constructor(
     }
 
     fun setChatSessions(sessions: List<StudentChatSession>) {
+        // 数据层权限防线：非心理老师角色忽略注入的学生会话数据
+        if (!_uiState.value.currentTeacher.role.canObserveStudentChats) return
         _uiState.update { it.copy(chatSessions = sessions) }
     }
 
     fun setCurrentTeacher(teacher: Teacher) {
-        _uiState.update { it.copy(currentTeacher = teacher) }
+        // 角色变化时同步重算会话可见性：普通班主任 / 科任切换后清空学生会话
+        _uiState.update {
+            it.copy(
+                currentTeacher = teacher,
+                chatSessions = if (teacher.role.canObserveStudentChats) it.chatSessions else emptyList(),
+            )
+        }
     }
 }
 

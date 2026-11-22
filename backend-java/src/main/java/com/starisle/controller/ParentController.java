@@ -1,5 +1,6 @@
 package com.starisle.controller;
 
+import com.starisle.consent.ConsentScope;
 import com.starisle.dto.ApiResponse;
 import com.starisle.dto.request.BindStudentRequest;
 import com.starisle.dto.request.ParentLoginRequest;
@@ -12,8 +13,10 @@ import com.starisle.entity.EmergencyAlert;
 import com.starisle.entity.EmergencyResource;
 import com.starisle.entity.ParentStudentBinding;
 import com.starisle.entity.ParentUser;
+import com.starisle.service.ConsentService;
 import com.starisle.service.ParentService;
 import com.starisle.utils.JwtUtil;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -21,7 +24,10 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -38,6 +44,8 @@ public class ParentController {
     private final ParentService parentService;
     // JWT 工具类
     private final JwtUtil jwtUtil;
+    // 同意服务，负责学生个人数据访问门禁
+    private final ConsentService consentService;
 
     /**
      * 家长注册接口
@@ -136,7 +144,7 @@ public class ParentController {
                     request.getStudentNickname(),
                     request.getBindType()
             );
-            return ResponseEntity.ok(ApiResponse.created("绑定成功", toChildBindingResponse(binding)));
+            return ResponseEntity.ok(ApiResponse.created("绑定成功", toBindingSummary(binding)));
         } catch (IllegalArgumentException e) {
             // 参数非法时返回 400
             return ResponseEntity.ok(ApiResponse.badRequest(e.getMessage()));
@@ -159,7 +167,7 @@ public class ParentController {
                 .filter(binding -> binding.getParentId().equals(parentId))
                 .map(binding -> {
                     ParentStudentBinding updated = parentService.authorizeBinding(bindingId);
-                    return ResponseEntity.ok(ApiResponse.success("授权成功", toChildBindingResponse(updated)));
+                    return ResponseEntity.ok(ApiResponse.success("授权成功", toBindingSummary(updated)));
                 })
                 .orElse(ResponseEntity.ok(ApiResponse.forbidden("无权操作该绑定记录")));
     }
@@ -192,10 +200,39 @@ public class ParentController {
      * @return 孩子绑定列表
      */
     @GetMapping("/children")
-    public ResponseEntity<ApiResponse<List<ChildBindingResponse>>> getChildren() {
+    public ResponseEntity<ApiResponse<List<ChildBindingResponse>>> getChildren(HttpServletRequest httpRequest) {
         String parentId = getCurrentUserId();
+        List<ParentStudentBinding> bindings = parentService.getChildren(parentId);
+
+        // 门禁：孩子心情与风险属于学生个人数据，需绑定已授权且学生本人同意监护人查看
+        List<Map<String, Object>> blocked = new ArrayList<>();
+        ParentStudentBinding firstBlocked = null;
+        boolean firstBlockedAuthorized = false;
+        for (ParentStudentBinding binding : bindings) {
+            boolean bindingAuthorized = Boolean.TRUE.equals(binding.getAuthorized());
+            boolean studentConsented = consentService.isActive(
+                    binding.getStudentId(), ConsentScope.GUARDIAN_MOOD_VIEW.name());
+            if (!bindingAuthorized || !studentConsented) {
+                Map<String, Object> item = new LinkedHashMap<>();
+                item.put("bindingId", binding.getId());
+                item.put("studentId", binding.getStudentId());
+                item.put("reason", bindingAuthorized ? "STUDENT_CONSENT_MISSING" : "BINDING_NOT_AUTHORIZED");
+                blocked.add(item);
+                if (firstBlocked == null) {
+                    firstBlocked = binding;
+                    firstBlockedAuthorized = bindingAuthorized;
+                }
+            }
+        }
+        if (firstBlocked != null) {
+            Map<String, Object> context = new LinkedHashMap<>();
+            context.put("blockedBindings", blocked);
+            consentService.requireGuardianView(firstBlocked.getStudentId(), firstBlockedAuthorized,
+                    httpRequest, "GET /api/v1/parents/children", context);
+        }
+
         // 查询并转换为响应
-        List<ChildBindingResponse> children = parentService.getChildren(parentId)
+        List<ChildBindingResponse> children = bindings
                 .stream()
                 .map(this::toChildBindingResponse)
                 .collect(Collectors.toList());
@@ -210,13 +247,22 @@ public class ParentController {
      * @return 孩子绑定详情
      */
     @GetMapping("/children/{bindingId}")
-    public ResponseEntity<ApiResponse<ChildBindingResponse>> getChild(@PathVariable String bindingId) {
+    public ResponseEntity<ApiResponse<ChildBindingResponse>> getChild(@PathVariable String bindingId,
+                                                                     HttpServletRequest httpRequest) {
         String parentId = getCurrentUserId();
-        // 校验归属后返回详情
-        return parentService.getBinding(bindingId)
-                .filter(binding -> binding.getParentId().equals(parentId))
-                .map(binding -> ResponseEntity.ok(ApiResponse.success(toChildBindingResponse(binding))))
-                .orElse(ResponseEntity.ok(ApiResponse.forbidden("无权查看该孩子信息")));
+        ParentStudentBinding binding = parentService.getBinding(bindingId)
+                .filter(item -> item.getParentId().equals(parentId))
+                .orElse(null);
+        if (binding == null) {
+            return ResponseEntity.ok(ApiResponse.forbidden("无权查看该孩子信息"));
+        }
+
+        // 门禁：需绑定已授权且学生本人同意监护人查看心情与风险
+        consentService.requireGuardianView(binding.getStudentId(),
+                Boolean.TRUE.equals(binding.getAuthorized()),
+                httpRequest, "GET /api/v1/parents/children/{bindingId}",
+                Map.of("bindingId", bindingId));
+        return ResponseEntity.ok(ApiResponse.success(toChildBindingResponse(binding)));
     }
 
     /**
@@ -318,6 +364,21 @@ public class ParentController {
                 .lastCheckinDate(binding.getLastCheckinDate())
                 .createdAt(binding.getCreatedAt())
                 .build();
+    }
+
+    /**
+     * 将绑定实体转换为不含隐私字段的摘要响应
+     * 绑定/授权成功时尚未取得学生本人同意，不能回传心情、风险与打卡信息。
+     *
+     * @param binding 学生绑定实体
+     * @return 不含隐私字段的孩子绑定响应
+     */
+    private ChildBindingResponse toBindingSummary(ParentStudentBinding binding) {
+        ChildBindingResponse response = toChildBindingResponse(binding);
+        response.setLatestMood(null);
+        response.setRiskLevel(null);
+        response.setLastCheckinDate(null);
+        return response;
     }
 
     /**

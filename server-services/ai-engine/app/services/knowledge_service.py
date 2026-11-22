@@ -13,11 +13,13 @@ knowledge_service.py - 知识库服务（心理咨询技术知识检索增强 RA
 """
 import os
 import json
+import random
 from typing import List, Dict, Optional
 from datetime import datetime
 import uuid
 from app.models.knowledge import KnowledgeDocument, KnowledgeSearchResult
 from app.utils.db_connection import get_db_connection
+from app.services.vector_index import VectorIndex
 
 
 class KnowledgeService:
@@ -42,6 +44,8 @@ class KnowledgeService:
         self._fallback_mode = False
         # 最近一次对话检索命中的知识标题（供响应透出，便于观测检索输出）
         self.last_chat_hits: List[str] = []
+        # 本地向量索引：关键词门控无命中时的语义兜底（无外部 embedding 依赖）
+        self._vector_index = VectorIndex()
         # 尝试创建必要索引，失败则进入降级模式
         self._ensure_indexes()
 
@@ -86,6 +90,15 @@ class KnowledgeService:
         document["_id"] = str(uuid.uuid4())
         document["created_at"] = datetime.utcnow()
         document["updated_at"] = datetime.utcnow()
+
+        # 同步登记到本地向量索引：标题 + 分类 + 标签 + 正文
+        vector_text = " ".join([
+            str(document.get("title", "")),
+            str(document.get("category", "")),
+            " ".join(document.get("tags") or []),
+            str(document.get("content", "")),
+        ])
+        self._vector_index.add(document["_id"], vector_text, document)
         
         # 降级模式：直接写入内存缓存
         if self._fallback_mode:
@@ -121,6 +134,39 @@ class KnowledgeService:
             ids.append(doc_id)
         return ids
 
+    async def pick_random_document(self, tag: str = "joke") -> Optional[Dict]:
+        """
+        按标签随机挑选一条知识文档。
+
+        用于“讲个笑话”等需要直接从知识库取一条内容原样输出的场景，
+        不经过检索打分与模型生成。
+
+        Args:
+            tag: 用于筛选的标签，默认 "joke"
+
+        Returns:
+            Optional[Dict]: 含 title/content 的文档字典；无候选时返回 None
+        """
+        candidates: List[Dict] = []
+        if self._fallback_mode or not self.db.is_connected():
+            # 降级模式：从内存缓存中筛选
+            candidates = [d for d in self._in_memory_cache if tag in (d.get("tags") or [])]
+        else:
+            try:
+                collection = self.db.get_collection(self.collection_name)
+                candidates = list(collection.find({"tags": tag}))
+            except Exception as e:
+                print(f"[KnowledgeService] Random pick error: {e}")
+                candidates = [d for d in self._in_memory_cache if tag in (d.get("tags") or [])]
+
+        if not candidates:
+            return None
+        doc = random.choice(candidates)
+        return {
+            "title": doc.get("title", ""),
+            "content": doc.get("content", ""),
+        }
+
     async def search_knowledge(
         self, 
         query: str, 
@@ -148,6 +194,39 @@ class KnowledgeService:
             # 数据库搜索
             results = self._search_in_db(query, category, top_k)
         
+        return results
+
+    def _vector_search(self, query: str, top_k: int = 3) -> List[KnowledgeSearchResult]:
+        """
+        本地向量兜底检索（TF-IDF 字符 n-gram 余弦相似度）。
+
+        Args:
+            query: 查询文本
+            top_k: 返回条数
+
+        Returns:
+            List[KnowledgeSearchResult]: 达到 RAG_MIN_VECTOR_SCORE 阈值的结果
+        """
+        hits = self._vector_index.search(query, top_k=top_k)
+        results: List[KnowledgeSearchResult] = []
+        for doc_id, score in hits:
+            raw = self._vector_index.get_doc(doc_id) or {}
+            doc = KnowledgeDocument(
+                id=doc_id,
+                title=raw.get("title", ""),
+                source=raw.get("source", ""),
+                author=raw.get("author"),
+                category=raw.get("category", ""),
+                tags=raw.get("tags", []),
+                content=raw.get("content", ""),
+                techniques=raw.get("techniques", []),
+                applicable_issues=raw.get("applicable_issues", []),
+            )
+            results.append(KnowledgeSearchResult(
+                document=doc,
+                relevance_score=score,
+                matched_keywords=[],
+            ))
         return results
 
     def _search_in_db(
@@ -526,6 +605,22 @@ class KnowledgeService:
 
         # 4) 检索 top-3（适量）
         results = await self.search_knowledge(search_query, top_k=3)
+        if not results:
+            return ""
+
+        # 4.1) 相关性门控：只有命中足够关键词才注入知识，避免无关闲聊也输出知识库内容
+        #     阈值可用 RAG_MIN_KEYWORD_HITS 调整（默认 2；设为 0 等同关闭门控）
+        try:
+            min_hits = int(os.getenv("RAG_MIN_KEYWORD_HITS", "2"))
+        except ValueError:
+            min_hits = 2
+        if min_hits > 0:
+            results = [r for r in results if len(r.matched_keywords) >= min_hits]
+
+        # 4.2) 关键词门控无结果时，用本地向量索引做语义兜底；
+        #      仍无结果说明与用户当前话题无关，直接不注入知识（避免无必要时输出）
+        if not results:
+            results = self._vector_search(search_query, top_k=3)
         if not results:
             return ""
 

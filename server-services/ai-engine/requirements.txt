@@ -1,7 +1,8 @@
 # AI对话引擎依赖
 fastapi==0.108.0
 uvicorn[standard]==0.25.0
-transformers==4.36.2
+transformers==4.46.3
+tokenizers==0.20.3
 torch==2.1.2
 openai==1.6.1
 httpx==0.26.0

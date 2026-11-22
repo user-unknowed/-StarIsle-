@@ -161,6 +161,7 @@ export interface ChatResponse {
   riskLevel?: RiskLevelType;   // 风险等级（可选）
   emotionTags?: string[];      // 情绪标签（可选）
   responseTimeMs: number;       // 响应耗时（毫秒）
+  model?: string;              // 实际使用的模型（可选）
 }
 
 // ==================== 家长端类型 ====================

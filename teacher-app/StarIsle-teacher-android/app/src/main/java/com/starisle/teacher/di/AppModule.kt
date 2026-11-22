@@ -1,6 +1,13 @@
 package com.starisle.teacher.di
 
 import android.content.Context
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.preferencesDataStore
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.starisle.teacher.data.api.GatewayApiService
 import com.starisle.teacher.data.api.SiliconFlowApiService
 import com.starisle.teacher.data.api.ZhipuApiService
 import com.starisle.teacher.data.db.MemoryDatabase
@@ -15,6 +22,9 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -76,6 +86,80 @@ object AppModule {
     fun provideSiliconFlowApi(@SiliconFlowRetrofit retrofit: Retrofit): SiliconFlowApiService =
         retrofit.create(SiliconFlowApiService::class.java)
 
+    // ===== 网关（星屿 Spring Boot，8081）相关依赖 =====
+
+    /** 网关基地址：模拟器用 10.0.2.2 映射开发机；真机需改为开发机局域网 IP。 */
+    private const val GATEWAY_BASE_URL = "http://10.0.2.2:8081/api/"
+
+    /** 教师端会话 DataStore 名称与 token key（与 TeacherSessionStore 保持一致）。 */
+    private const val TEACHER_PREFS_NAME = "starisle_teacher_prefs"
+    private val TEACHER_TOKEN_KEY = stringPreferencesKey("token")
+
+    /** 教师端会话 DataStore。 */
+    private val Context.teacherDataStore: DataStore<Preferences> by preferencesDataStore(TEACHER_PREFS_NAME)
+
+    /**
+     * Moshi：KotlinJsonAdapterFactory 反射适配，无需 codegen。
+     */
+    @Provides
+    @Singleton
+    fun provideMoshi(): Moshi = Moshi.Builder()
+        .add(KotlinJsonAdapterFactory())
+        .build()
+
+    /**
+     * 网关专用 OkHttp：注入 Authorization: Bearer <token>。
+     * 独立实例，避免把网关 JWT 发给智谱/SiliconFlow 等第三方域名。
+     */
+    @Provides
+    @Singleton
+    @GatewayOkHttp
+    fun provideGatewayOkHttp(dataStore: DataStore<Preferences>): OkHttpClient = OkHttpClient.Builder()
+        .connectTimeout(10, TimeUnit.SECONDS)
+        // 本地 SFT 模型单次推理约 20-30s，读超时放宽
+        .readTimeout(120, TimeUnit.SECONDS)
+        .writeTimeout(30, TimeUnit.SECONDS)
+        .addInterceptor(Interceptor { chain ->
+            val token = runBlocking { dataStore.data.first()[TEACHER_TOKEN_KEY] }
+            val request = if (token.isNullOrBlank()) {
+                chain.request()
+            } else {
+                chain.request().newBuilder()
+                    .header("Authorization", "Bearer $token")
+                    .build()
+            }
+            chain.proceed(request)
+        })
+        .addInterceptor(HttpLoggingInterceptor().apply {
+            level = HttpLoggingInterceptor.Level.BASIC
+        })
+        .build()
+
+    /** 网关 Retrofit。 */
+    @Provides
+    @Singleton
+    @GatewayRetrofit
+    fun provideGatewayRetrofit(
+        @GatewayOkHttp client: OkHttpClient,
+        moshi: Moshi,
+    ): Retrofit = Retrofit.Builder()
+        .baseUrl(GATEWAY_BASE_URL)
+        .client(client)
+        .addConverterFactory(MoshiConverterFactory.create(moshi))
+        .build()
+
+    /** 网关 API Service。 */
+    @Provides
+    @Singleton
+    fun provideGatewayApiService(@GatewayRetrofit retrofit: Retrofit): GatewayApiService =
+        retrofit.create(GatewayApiService::class.java)
+
+    /** 教师端会话 DataStore。 */
+    @Provides
+    @Singleton
+    fun provideTeacherDataStore(@ApplicationContext context: Context): DataStore<Preferences> =
+        context.teacherDataStore
+
     @Provides
     @Singleton
     fun provideMemoryDatabase(@ApplicationContext context: Context): MemoryDatabase =
@@ -123,4 +207,12 @@ object AppModule {
     @javax.inject.Qualifier
     @Retention(AnnotationRetention.BINARY)
     annotation class SiliconFlowRetrofit
+
+    @javax.inject.Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class GatewayOkHttp
+
+    @javax.inject.Qualifier
+    @Retention(AnnotationRetention.BINARY)
+    annotation class GatewayRetrofit
 }

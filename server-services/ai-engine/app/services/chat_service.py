@@ -105,6 +105,18 @@ class ChatService:
             skills: 技能适配器列表
         """
         self.skill_router = SkillRouter(skills)
+
+    def _is_joke_request(self, message: str) -> bool:
+        """
+        判断用户是否在要求讲一个笑话。
+
+        Args:
+            message: 用户消息
+
+        Returns:
+            bool: 命中“讲/说/来 + 个/段/点 + 笑话/段子”句式时返回 True
+        """
+        return bool(re.search(r"(讲|说|来)(一?个|一?段|点)?(笑话|段子)", message or ""))
     
     async def generate_response(
         self, 
@@ -127,6 +139,21 @@ class ChatService:
         """
         # 记录起始时间用于统计响应耗时
         start_time = time.time()
+
+        # 讲笑话意图：直接从知识库随机取一条笑话原样输出，不经过检索打分与模型生成
+        if self._is_joke_request(message):
+            joke = await self.knowledge_service.pick_random_document("joke")
+            if joke:
+                knowledge_stats = await self.knowledge_service.get_stats()
+                self.knowledge_service.last_chat_hits = [joke["title"]]
+                return {
+                    "content": joke["content"],
+                    "response_time_ms": int((time.time() - start_time) * 1000),
+                    "model": "joke-rag",
+                    "rag_enhanced": True,
+                    "knowledge_mode": knowledge_stats.get("mode", "unknown"),
+                    "knowledge_hits": [joke["title"]],
+                }
         
         # 构建System Prompt：依据用户画像生成基础人设
         system_prompt = self.system_prompt.generate_prompt(user_profile)
@@ -146,6 +173,9 @@ class ChatService:
                 f"你可以参考以下心理咨询专业知识来帮助用户，但请用自己的方式简要表达，"
                 f"每次只融入 1-2 个关键点，不要整段照搬或罗列原文：\n{knowledge_context}\n\n"
                 f"注意：这些知识仅作为参考，你需要结合小星的身份和说话风格来组织回复。"
+                f"只有当这些内容与用户当前的话题直接相关时才引用；"
+                f"如果与用户此刻说的内容无关，就不要提及它们，更不要主动把话题引向知识库内容。"
+                f"标注为 L3 的内容只用于识别风险并建议寻求专业帮助，不要据此给出自我处置建议。"
             )
 
         # +++ Skill 三段注入 +++

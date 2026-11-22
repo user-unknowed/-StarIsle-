@@ -49,7 +49,6 @@ import com.starisle.teacher.data.models.AuthorizationRequest
 import com.starisle.teacher.data.models.ChatMessage
 import com.starisle.teacher.data.models.NotificationItem
 import com.starisle.teacher.data.models.StudentChatSession
-import com.starisle.teacher.data.models.TeacherRole
 import com.starisle.teacher.data.repo.TeacherRepository
 import com.starisle.teacher.theme.StarNightBlue
 import com.starisle.teacher.theme.StarNightBlueLight
@@ -111,10 +110,10 @@ fun ChatScreen(
         return
     }
 
-    val tabs = if (role == TeacherRole.COUNSELOR) {
-        listOf("可观察对话", "系统通知")
+    val tabs = if (role.canObserveStudentChats) {
+        listOf("可观察对话", "AI 助手", "系统通知")
     } else {
-        listOf("自我求助", "系统通知")
+        listOf("自我求助", "AI 助手", "系统通知")
     }
 
     Scaffold(
@@ -131,7 +130,7 @@ fun ChatScreen(
                 }
             }
             when (selectedTab) {
-                0 -> if (role == TeacherRole.COUNSELOR) {
+                0 -> if (role.canObserveStudentChats) {
                     CounselorChatListView(
                         sessions = state.chatSessions,
                         onSessionClick = { selectedSession = it },
@@ -142,6 +141,7 @@ fun ChatScreen(
                         onNewRequest = { showSelfHelp = true },
                     )
                 }
+                1 -> TeacherAiChatTab()
                 else -> SystemNotificationsView(notifications = state.notifications)
             }
         }

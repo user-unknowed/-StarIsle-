@@ -32,6 +32,15 @@ enum class TeacherRole {
             SUBJECT_TEACHER -> "科任老师"
             COUNSELOR -> "心理老师"
         }
+
+    /**
+     * 是否可观察学生对话（仅心理老师）。
+     *
+     * 隐私权限规则：普通班主任 / 科任老师已收回「观察学生对话」权限，
+     * UI 入口与数据层均以此属性为准；后续如需调整范围只改这里。
+     */
+    val canObserveStudentChats: Boolean
+        get() = this == COUNSELOR
 }
 
 /**

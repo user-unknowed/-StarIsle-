@@ -12,12 +12,19 @@ main.py - 星屿 AI 对话引擎 FastAPI 应用入口
     - app.utils：数据库连接等基础设施
     - dotenv：从 .env 文件加载环境变量
 """
-from fastapi import FastAPI, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List, Optional
 import os
+import time
 from dotenv import load_dotenv
+
+# 加载环境变量：必须早于 transformers/huggingface_hub 导入，
+# 否则 HF_ENDPOINT / HF_HUB_OFFLINE 等下载配置不会生效
+load_dotenv()
+
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
+from typing import List, Optional
 import importlib
 import pkgutil
 from app.skills.base_skill import BaseSkill
@@ -27,9 +34,6 @@ from app.services.risk_detection_service import RiskDetectionService
 from app.services.emotion_analysis_service import EmotionAnalysisService
 from app.services.knowledge_service import KnowledgeService
 from contextlib import asynccontextmanager
-
-# 加载环境变量：从 .env 文件读取配置注入 os.environ
-load_dotenv()
 
 
 def _autodiscover_skills():
@@ -99,6 +103,30 @@ async def lifespan(app: FastAPI):
         # 文件缺失时使用空知识库，避免阻塞启动
         print("[AI-Engine] 知识库文件未找到，使用空知识库")
 
+    # 加载独立心理健康知识库（与 knowledge_base.json 分离，互不覆盖）
+    mh_kb_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data",
+        "knowledge_base_mental_health.json"
+    )
+    if os.path.exists(mh_kb_file):
+        mh_count = await knowledge_service.import_from_json(mh_kb_file)
+        print(f"[AI-Engine] 心理健康知识库加载完成，共 {mh_count} 条（含进食障碍、PTSD）")
+    else:
+        print("[AI-Engine] 未找到 knowledge_base_mental_health.json，跳过该来源")
+
+    # 加载数学笑话知识库（用于“讲个笑话”时随机取一条直接输出）
+    joke_kb_file = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+        "data",
+        "knowledge_base_jokes.json"
+    )
+    if os.path.exists(joke_kb_file):
+        joke_count = await knowledge_service.import_from_json(joke_kb_file)
+        print(f"[AI-Engine] 数学笑话知识库加载完成，共 {joke_count} 条")
+    else:
+        print("[AI-Engine] 未找到 knowledge_base_jokes.json，跳过该来源")
+
     # 打印当前知识库模式与文档数，便于确认加载状态
     stats = await knowledge_service.get_stats()
     print(f"[AI-Engine] 知识库模式: {stats.get('mode')}, 文档数: {stats.get('total_documents')}")
@@ -122,20 +150,45 @@ app = FastAPI(
     lifespan=lifespan
 )
 
-# CORS配置：允许跨域请求，生产环境需将 allow_origins 收紧为白名单
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],  # 生产环境需要限制
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+# CORS配置：默认不开放浏览器跨域；如确需直连，通过 AI_ALLOWED_ORIGINS 显式配置白名单
+_allowed_origins = [item.strip() for item in os.getenv("AI_ALLOWED_ORIGINS", "").split(",") if item.strip()]
+if _allowed_origins:
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=_allowed_origins,
+        allow_credentials=False,
+        allow_methods=["GET", "POST"],
+        allow_headers=["Content-Type", "X-Internal-Token"],
+    )
+
+# 内部调用令牌：配置后，除 /health 外的所有请求必须携带 X-Internal-Token，
+# 防止 ai-engine 端口被误暴露时被直接访问
+_internal_api_key = os.getenv("INTERNAL_API_KEY", "").strip()
+
+
+@app.middleware("http")
+async def internal_token_guard(request: Request, call_next):
+    """
+    内部令牌校验中间件
+
+    Args:
+        request: 当前 HTTP 请求
+        call_next: 下游处理函数
+
+    Returns:
+        下游响应，或 401 拒绝响应
+    """
+    # 仅在配置了内部令牌且非健康检查时启用
+    if _internal_api_key and request.url.path != "/health":
+        if request.headers.get("X-Internal-Token") != _internal_api_key:
+            return JSONResponse(status_code=401, content={"detail": "internal service only"})
+    return await call_next(request)
 
 # API数据模型：定义各端点请求/响应的数据结构
 class ChatRequest(BaseModel):
     """对话请求模型，承载用户消息及上下文画像"""
     user_id: str                              # 用户唯一标识
-    message: str                              # 用户发送的消息内容
+    message: str = Field(..., max_length=2000)  # 用户发送的消息内容（与 Java 网关限制一致）
     context: Optional[List[dict]] = []       # 历史对话上下文
     user_profile: Optional[dict] = {}         # 用户画像信息
 
@@ -160,6 +213,16 @@ class EmotionAnalysisRequest(BaseModel):
     """情绪分析请求模型，仅包含待分析文本"""
     content: str                               # 待分析的情绪文本
 
+# 红色风险固定话术：不经过模型生成，确保 2 秒内返回并包含求助热线
+CRISIS_REPLY = (
+    "小星听到你了。你现在的感受，小星能感觉到有多沉。"
+    "但小星想让你知道，你的存在本身就很珍贵。\n\n"
+    "这种感觉不应该一个人扛。这里有一些人，他们比小星更厉害，能更好地帮到你：\n"
+    "📞 12355 青少年服务热线\n"
+    "📞 400-161-9995 希望24热线\n\n"
+    "要不要试试打个电话？小星陪着你。"
+)
+
 # API端点
 @app.get("/health")
 async def health_check():
@@ -167,9 +230,16 @@ async def health_check():
     健康检查端点，供容器编排与负载均衡做存活探测。
 
     Returns:
-        dict: 包含状态、服务名与版本的健康信息
+        dict: 包含状态、服务名、版本、模型模式与推理设备的健康信息
     """
-    return {"status": "healthy", "service": "ai-engine", "version": "1.0.0"}
+    return {
+        "status": "healthy",
+        "service": "ai-engine",
+        "version": "1.0.0",
+        "model_mode": "local" if os.getenv("USE_LOCAL_MODEL") == "true" else "api",
+        "device": getattr(chat_service, "device", "cpu"),
+        "model": getattr(chat_service, "model_name", ""),
+    }
 
 @app.post("/chat", response_model=ChatResponse)
 async def chat(request: ChatRequest):
@@ -189,6 +259,26 @@ async def chat(request: ChatRequest):
         HTTPException: 当对话生成或风险检测失败时返回 500
     """
     try:
+        start_time = time.time()
+
+        # 风险检测前置：红色风险直接返回固定危机话术，避免进入模型生成（MVP FR-6.3）
+        risk_level = await risk_service.detect_risk(
+            user_id=request.user_id,
+            content=request.message
+        )
+        if risk_level == "red":
+            emotion_tags = await emotion_service.analyze(request.message)
+            return ChatResponse(
+                response=CRISIS_REPLY,
+                risk_level=risk_level,
+                emotion_tags=emotion_tags,
+                response_time_ms=int((time.time() - start_time) * 1000),
+                rag_enhanced=False,
+                knowledge_mode="crisis_rule",
+                knowledge_hits=[],
+                model="crisis-rule"
+            )
+
         # 生成对话回复（含RAG知识增强）
         response = await chat_service.generate_response(
             user_id=request.user_id,
@@ -196,13 +286,7 @@ async def chat(request: ChatRequest):
             context=request.context,
             user_profile=request.user_profile
         )
-        
-        # 实时风险检测：对用户消息进行风险评估
-        risk_level = await risk_service.detect_risk(
-            user_id=request.user_id,
-            content=request.message
-        )
-        
+
         # 情绪分析：识别消息中蕴含的情绪标签
         emotion_tags = await emotion_service.analyze(request.message)
         
@@ -305,6 +389,11 @@ async def websocket_chat(websocket, user_id: str):
         websocket: WebSocket 连接对象
         user_id: 用户唯一标识，从路径参数获取
     """
+    # 内部令牌校验：ai-engine 不直接对外，仅允许网关携带令牌访问
+    if _internal_api_key and websocket.headers.get("x-internal-token") != _internal_api_key:
+        await websocket.close(code=1008)
+        return
+
     # 接受 WebSocket 握手，建立连接
     await websocket.accept()
     
@@ -479,6 +568,7 @@ async def skills_status():
     return {"skills": [], "error": "SkillRouter 未初始化"}
 
 if __name__ == "__main__":
-    # 直接运行时以 uvicorn 启动服务，监听 8000 端口
+    # 直接运行时以 uvicorn 启动服务；默认只绑定本机回环地址，
+    # 如需容器内访问可通过 AI_BIND_HOST=0.0.0.0 显式覆盖（禁止直接映射到公网）
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run(app, host=os.getenv("AI_BIND_HOST", "127.0.0.1"), port=int(os.getenv("AI_BIND_PORT", "8000")))

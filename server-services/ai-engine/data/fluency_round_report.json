@@ -1,0 +1,12 @@
+{
+  "old_total": 2000,
+  "grammar_fix": 300,
+  "fluency_tpl": 102,
+  "case_doc": 12,
+  "public_new": 315,
+  "case_new": 10,
+  "public_total": 2315,
+  "merged_total": 2325,
+  "merged_file": "F:\\B_proj\\Big_proj\\-StarIsle-\\.starisle-train\\tmp\\sft_train_merged.jsonl",
+  "backup": "F:\\B_proj\\Big_proj\\-StarIsle-\\server-services\\ai-engine\\data\\sft_dataset_xiaoxing_v1_backup.jsonl"
+}

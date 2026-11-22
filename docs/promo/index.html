@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>星屿 StarIsle · 你的情绪星球，永远亮着灯</title>
-<meta name="description" content="星屿 StarIsle — 为 12-18 岁初高中生打造的青少年心理健康 AI 陪伴应用。三端联动（学生 / 教师 / 家长）、CBT 框架 AI 对话、危机响应、端到端加密、小星 Fork 集成训练流水线（MLM 预训练 + SFT 全参数微调 + 6 维 LLM-as-Judge 评估）。已通过 24/24 API 测试与 25/25 风险检测用例验证。">
+<meta name="description" content="星屿 StarIsle — 为 12-18 岁初高中生打造的青少年心理健康 AI 陪伴应用。三端联动（学生 / 教师 / 家长）、CBT 框架 AI 对话（App 端）、知识库与树人互助社区、危机响应、端到端加密、小星 Fork 集成训练流水线（SFT LoRA 微调 · eval perplexity 1.16 · 语法回归 0 违例）。上线验收 15/15 通过：对话 P95 2.3s、关键词拦截 P95 3ms、语义风险召回 86.7%，并保留 25/25 风险检测用例验证。">
 <meta name="theme-color" content="#6B7BFF">
 <style>
 :root {
@@ -299,6 +299,55 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
 .version-item .ver-date { font-size: 12px; color: var(--c-text-soft); }
 .version-item h4 { font-family: var(--font-body); font-size: 16px; font-weight: 600; margin: 0; }
 .version-item p { font-size: 13px; color: var(--c-text-muted); line-height: 1.6; margin-top: 4px; }
+.version-item.has-child { margin-bottom: 24px; }
+.version-item .ver-tag {
+  font-family: var(--font-body); font-size: 10px; font-weight: 600;
+  letter-spacing: 0.08em; color: var(--c-primary-deep);
+  background: rgba(107, 123, 255, 0.10);
+  border: 1px solid var(--c-border);
+  border-radius: var(--r-pill); padding: 1px 8px; white-space: nowrap;
+}
+.version-item.major .ver-tag {
+  color: var(--c-accent-warm);
+  background: rgba(244, 162, 97, 0.12);
+  border-color: rgba(244, 162, 97, 0.28);
+}
+.version-subtree { position: relative; margin-top: 14px; padding-left: 22px; }
+.version-subtree::before {
+  content: ''; position: absolute; left: 6px; top: -4px; bottom: 12px; width: 1px;
+  background: linear-gradient(180deg, var(--c-accent), rgba(244, 162, 97, 0.20));
+}
+.version-subtree::after {
+  content: ''; position: absolute; left: 2px; top: 20px; width: 9px; height: 9px;
+  border-radius: 50%; background: var(--c-accent);
+  box-shadow: 0 0 0 3px rgba(244, 162, 97, 0.14);
+}
+.version-child {
+  padding: 16px 18px; border-radius: var(--r-md);
+  background: var(--c-surface-glass); border: 1px solid var(--c-border);
+  box-shadow: var(--shadow-sm);
+}
+.version-child h4 { font-size: 15px; }
+.version-child p { font-size: 12.5px; }
+.version-child .ver-tag {
+  text-transform: none; letter-spacing: 0.04em;
+  background: rgba(107, 123, 255, 0.10);
+  color: var(--c-primary-deep); border-color: var(--c-border-strong);
+}
+/* ===== 安装包下载 ===== */
+.dl-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+.dl-card { display: flex; flex-direction: column; gap: 14px; padding: 26px; background: var(--c-surface); border: 1px solid var(--c-border); border-radius: var(--r-lg); box-shadow: var(--shadow-md); }
+.dl-card--latest { border-color: var(--c-border-strong); box-shadow: var(--shadow-lg); }
+.dl-card-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dl-card h3 { font-family: var(--font-body); font-size: 18px; font-weight: 600; }
+.dl-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; padding: 2px 10px; border-radius: var(--r-pill); color: var(--c-accent-warm); background: rgba(244, 162, 97, 0.12); border: 1px solid rgba(244, 162, 97, 0.28); white-space: nowrap; }
+.dl-desc { font-size: 13.5px; line-height: 1.7; color: var(--c-text-muted); }
+.dl-meta { display: flex; flex-wrap: wrap; gap: 6px 16px; font-family: var(--font-mono); font-size: 12px; color: var(--c-text-soft); }
+.dl-card .btn { justify-content: center; margin-top: auto; }
+.dl-hash { font-family: var(--font-mono); font-size: 11px; line-height: 1.6; color: var(--c-text-soft); word-break: break-all; }
+.dl-note { margin-top: 32px; font-size: 13px; line-height: 1.8; color: var(--c-text-muted); }
+.dl-note code { font-family: var(--font-mono); font-size: 12px; padding: 1px 6px; border-radius: var(--r-sm); background: rgba(107, 123, 255, 0.08); }
+@media (max-width: 640px) { .dl-card { padding: 20px; } }
 .contact { text-align: center; padding: clamp(80px, 12vw, 140px) 0 100px; position: relative; overflow: hidden; }
 .contact::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 60% 40% at 50% 0%, rgba(167, 139, 250, 0.18), transparent 70%), radial-gradient(ellipse 50% 40% at 50% 100%, rgba(244, 162, 97, 0.10), transparent 70%); z-index: -1; }
 .contact-slogan { font-family: var(--font-display); font-style: italic; font-size: clamp(28px, 4vw, 44px); font-weight: 500; background: linear-gradient(135deg, var(--c-primary-deep) 0%, var(--c-secondary) 50%, var(--c-accent) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; margin: 24px 0 32px; line-height: 1.3; }
@@ -398,6 +447,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   .pipeline-flow { grid-template-columns: repeat(2, 1fr); }
   .training-metrics { grid-template-columns: 1fr; }
   .degrade-chain { flex-direction: column; gap: 8px; }
+  .version-child { padding: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
@@ -433,6 +483,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <a href="#security">安全合规</a>
       <a href="#testing">测试结果</a>
       <a href="#versions">版本演进</a>
+      <a href="#download">安装包下载</a>
       <a href="http://localhost:8080" class="nav-cta nav-cta--accent" id="trial-btn-nav">试用体验</a>
       <a href="https://github.com/user-unknowed/-StarIsle-" class="nav-cta" target="_blank" rel="noopener">访问 GitHub</a>
     </div>
@@ -447,10 +498,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
   <div class="container">
     <div class="hero-inner">
       <div class="hero-content">
-        <div class="eyebrow hero-eyebrow reveal">青少年心理健康 AI 陪伴应用 · v2.0 小星形象增强版</div>
+        <div class="eyebrow hero-eyebrow reveal">青少年心理健康 AI 陪伴应用 · v2.3 小星真实微调 · 知识库 RAG · 上线验收 15/15</div>
         <h1 class="display-xl reveal" data-delay="1">你的<em>情绪星球</em><br>永远亮着灯</h1>
         <div class="hero-slogan reveal" data-delay="2">零压力的第一心理求助站</div>
-        <p class="lead hero-lead reveal" data-delay="3">为 12-18 岁初高中生打造的 AI 情绪成长伙伴。极简心情打卡 + 24/7 AI 对话 + 三端联动（学生 / 教师 / 家长）+ 危机响应 + 小星 Fork 集成训练流水线，让每一份情绪都被温柔接住。</p>
+        <p class="lead hero-lead reveal" data-delay="3">为 12-18 岁初高中生打造的 AI 情绪成长伙伴。极简心情打卡 + 24/7 AI 对话（App 端）+ 知识库与树人互助社区 + 三端联动（学生 / 教师 / 家长）+ 危机响应 + 小星 Fork 集成训练流水线，让每一份情绪都被温柔接住。</p>
         <div class="hero-cta-row reveal" data-delay="4">
           <a href="http://localhost:8080" class="btn btn--accent" id="trial-btn-hero">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
@@ -463,8 +514,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         </div>
         <div class="hero-metrics reveal" data-delay="4">
           <div class="metric-tile"><div class="v" data-count="100">100<small>%</small></div><div class="l">风险检测准确率</div></div>
-          <div class="metric-tile"><div class="v" data-count="20">20<small> 项</small></div><div class="l">单元测试全通过</div></div>
-          <div class="metric-tile"><div class="v" data-count="1784">1784<small> 条</small></div><div class="l">SFT 训练数据集</div></div>
+          <div class="metric-tile"><div class="v" data-count="15">15<small> 项</small></div><div class="l">上线验收全通过</div></div>
+          <div class="metric-tile"><div class="v" data-count="2325">2325<small> 条</small></div><div class="l">SFT 训练样本</div></div>
         </div>
       </div>
       <div class="hero-visual" aria-hidden="true">
@@ -509,20 +560,20 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <article class="card user-card reveal" data-delay="1">
         <div class="age">12 — 18 岁 · 学生端</div>
         <h3>情绪的第一聆听者</h3>
-        <p>匿名注册，AI 星宝以 CBT 框架对话，5 档心情打卡，情绪测评 PHQ-9 映射。零压力、无评判。</p>
-        <ul><li>匿名注册与隐私保护</li><li>AI 星宝 24/7 在线对话</li><li>极简心情打卡 + 趋势回顾</li><li>冥想放松与紧急帮助</li></ul>
+        <p>匿名注册，AI 星宝以 CBT 框架对话（App 端），5 档心情打卡，知识库与树人互助社区，情绪测评 PHQ-9 映射。零压力、无评判。</p>
+        <ul><li>匿名注册与隐私保护</li><li>AI 星宝 24/7 在线对话（App）</li><li>知识库文章搜索 + 量表测评</li><li>树人互助求助社区</li><li>极简心情打卡 + 趋势回顾</li><li>冥想放松与紧急帮助</li></ul>
       </article>
       <article class="card user-card reveal" data-delay="2">
         <div class="age">学校心理教师 · 教师端</div>
         <h3>班级心理守护工作台</h3>
-        <p>工作台概览高风险告警，学生情绪趋势可视化，对话观察与介入干预，专业 AI 咨询辅助决策。</p>
-        <ul><li>高风险学生告警</li><li>班级情绪趋势图表</li><li>症状反馈与上报处理</li><li>对话观察与介入干预</li></ul>
+        <p>工作台概览高风险告警，学生情绪趋势可视化，对话观察与介入干预（App 端），专业 AI 咨询辅助决策。</p>
+        <ul><li>高风险学生告警</li><li>班级情绪趋势图表</li><li>症状反馈与上报处理</li><li>对话观察与介入干预（App）</li></ul>
       </article>
       <article class="card user-card reveal" data-delay="3">
         <div class="age">家长 · 家长端</div>
         <h3>家校共育的桥梁</h3>
-        <p>孩子情绪状态查看（7/30/90 天），AI 心理顾问「大星」对话，完整应急预案与告警超时升级。</p>
-        <ul><li>孩子情绪趋势分析</li><li>AI 心理顾问（大星）</li><li>完整应急预案流程</li><li>告警超时升级机制</li></ul>
+        <p>孩子情绪状态查看（7/30/90 天），AI 心理顾问「大星」对话（App 端），完整应急预案与告警超时升级。</p>
+        <ul><li>孩子情绪趋势分析</li><li>AI 心理顾问（大星，App）</li><li>完整应急预案流程</li><li>告警超时升级机制</li></ul>
       </article>
     </div>
   </div>
@@ -544,15 +595,18 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>匿名注册与隐私保护</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>极简心情打卡（5 档表情）</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 星宝对话（CBT 框架）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 星宝对话（CBT 框架，App）</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>知识库文章搜索 + 量表测评</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>树人互助求助社区</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>情绪探索测评（PHQ-9 映射）</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>冥想放松音频</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>风险检测与危机响应</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>端到端加密通信</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>本地记忆存储管理</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 工具中心</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 工具中心（App）</li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>紧急帮助按钮<span class="badge">v1.5</span></li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>前端危机关键词检测<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>下载 App 推荐<span class="badge">v2.2</span></li>
           </ul>
         </div>
       </article>
@@ -566,9 +620,10 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>工作台概览与高风险告警</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>学生列表与情绪趋势查看</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>症状反馈与上报处理</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>对话观察与介入干预</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>对话观察与介入干预（App）</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>本地记忆存储管理</li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>紧急帮助按钮<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>下载 App 推荐<span class="badge">v2.2</span></li>
           </ul>
         </div>
       </article>
@@ -580,7 +635,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         <div class="end-card-body">
           <ul>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>孩子情绪状态查看</li>
-            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 心理顾问（大星）对话</li>
+            <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>AI 心理顾问（大星，App）对话</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>情绪趋势分析（7/30/90 天）</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>应急预案与预警管理</li>
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>心理健康知识库</li>
@@ -588,6 +643,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
             <li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>孩子绑定与授权管理</li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>完整应急预案流程<span class="badge">v1.5+</span></li>
             <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>告警超时升级机制<span class="badge">v1.5</span></li>
+            <li class="is-new"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 13l4 4L19 7"/></svg>下载 App 推荐<span class="badge">v2.2</span></li>
           </ul>
         </div>
       </article>
@@ -659,7 +715,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
     <div class="section-head reveal">
       <div class="eyebrow">小星 AI 训练流水线 · v2.0</div>
       <h2 class="display-lg">GitHub Fork 三层集成<br>让小星持续成长</h2>
-      <p class="lead">将最近 fork 的心理健康开源项目，通过自动化流水线接入小星 AI 形象——代码能力增强、RAG 知识注入、训练语料清洗，再经 MLM 预训练 + SFT 全参数微调 + 6 维 LLM-as-Judge 评估。</p>
+      <p class="lead">将最近 fork 的心理健康开源项目，通过自动化流水线接入小星 AI 形象——代码能力增强、RAG 知识注入、训练语料清洗，再经 SFT LoRA 微调与语法 / 流畅度回归验证。</p>
     </div>
     <div class="xiaoxing-pipeline reveal">
       <h4 style="font-family:var(--font-display);font-size:22px;color:var(--c-text-inverse);margin-bottom:8px">一键 Orchestrator 流水线</h4>
@@ -668,8 +724,8 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         <div class="pipeline-step s1 reveal" data-delay="1"><div class="ps-dot">M1</div><div class="ps-name">Fork 发现</div><div class="ps-desc">GitHub MCP 获取<br>fork 列表</div></div>
         <div class="pipeline-step s2 reveal" data-delay="1"><div class="ps-dot">M2</div><div class="ps-name">三层集成</div><div class="ps-desc">Skill + RAG +<br>语料清洗</div></div>
         <div class="pipeline-step s3 reveal" data-delay="2"><div class="ps-dot">M3a</div><div class="ps-name">MLM 预训练</div><div class="ps-desc">bert-base-chinese<br>继续预训练</div></div>
-        <div class="pipeline-step s4 reveal" data-delay="2"><div class="ps-dot">M3b</div><div class="ps-name">SFT 微调</div><div class="ps-desc">Qwen-1.8B-Chat<br>全参数微调</div></div>
-        <div class="pipeline-step s5 reveal" data-delay="3"><div class="ps-dot">M4</div><div class="ps-name">6 维评估</div><div class="ps-desc">LLM-as-Judge<br>60 cases</div></div>
+        <div class="pipeline-step s4 reveal" data-delay="2"><div class="ps-dot">M3b</div><div class="ps-name">SFT 微调</div><div class="ps-desc">Qwen-1.8B-Chat<br>LoRA · 54m52s</div></div>
+        <div class="pipeline-step s5 reveal" data-delay="3"><div class="ps-dot">M4</div><div class="ps-name">质量回归</div><div class="ps-desc">语法 0 违例<br>50 条用例</div></div>
         <div class="pipeline-step s6 reveal" data-delay="3"><div class="ps-dot">M5</div><div class="ps-name">汇总报告</div><div class="ps-desc">integration<br>_report.json</div></div>
       </div>
     </div>
@@ -687,29 +743,29 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <article class="card layer-card l2 reveal" data-delay="2">
         <div class="layer-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg></div>
         <h4>RAG 知识层</h4>
-        <div class="layer-source">SOURCE: Fork 文档 / README</div>
-        <p>Fork 仓库的文档和 README 自动注入 knowledge_base.json，标注 source_repo_id 追溯来源。(title + source) 双键去重避免重复知识。</p>
+        <div class="layer-source">SOURCE: 本地知识库 / 向量索引</div>
+        <p>本地心理健康知识库 39 条 + 对话语料 20 条，(title + source) 双键去重后建立 TF-IDF 字符 n-gram 向量索引；对话服务按需检索 1–2 个知识点注入 System Prompt，命中不足时门控为直答。</p>
         <div class="layer-stat">
-          <div class="stat-item"><div class="v">7+</div><div class="l">KB 文档注入</div></div>
-          <div class="stat-item"><div class="v">26</div><div class="l">心理学书籍</div></div>
+          <div class="stat-item"><div class="v">39</div><div class="l">条心理知识</div></div>
+          <div class="stat-item"><div class="v">20</div><div class="l">条对话语料</div></div>
         </div>
       </article>
       <article class="card layer-card l3 reveal" data-delay="3">
         <div class="layer-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg></div>
         <h4>训练语料层</h4>
-        <div class="layer-source">SOURCE: Fork 文本数据</div>
-        <p>Fork 仓库文本数据经语言检测（langdetect）、短文本过滤、去重清洗后写入 combined_cleaned_text.txt，供 MLM 继续预训练和 SFT 数据集构建使用。</p>
+        <div class="layer-source">SOURCE: SFT 数据集</div>
+        <p>SFT 数据集经语言检测、短文本过滤与去重清洗后并入训练集；训练按 2208 训练 / 117 评估切分，并配套 50 条语法回归用例。</p>
         <div class="layer-stat">
-          <div class="stat-item"><div class="v">3.7M</div><div class="l">字符语料</div></div>
-          <div class="stat-item"><div class="v">1784</div><div class="l">SFT 样本</div></div>
+          <div class="stat-item"><div class="v">2311</div><div class="l">行 SFT 数据</div></div>
+          <div class="stat-item"><div class="v">2325</div><div class="l">训练样本</div></div>
         </div>
       </article>
     </div>
     <div class="training-metrics">
-      <div class="training-metric reveal" data-delay="1"><div class="v" data-count="100">100<small>%</small></div><div class="l">SFT 模拟准确率</div><div class="sub">Qwen-1.8B · simulation</div></div>
-      <div class="training-metric reveal" data-delay="2"><div class="v">0.35</div><div class="l">SFT 最终 loss</div><div class="sub">100 步仿真曲线</div></div>
-      <div class="training-metric reveal" data-delay="3"><div class="v">1.92</div><div class="l">MLM Perplexity</div><div class="sub">bert-base-chinese</div></div>
-      <div class="training-metric reveal" data-delay="4"><div class="v" data-count="20">20<small>/20</small></div><div class="l">单元测试通过</div><div class="sub">7 个测试文件 · 0.08s</div></div>
+      <div class="training-metric reveal" data-delay="1"><div class="v">1.16</div><div class="l">Eval Perplexity</div><div class="sub">sft_xiaoxing_v1 · LoRA</div></div>
+      <div class="training-metric reveal" data-delay="2"><div class="v">0.151</div><div class="l">Eval Loss</div><div class="sub">train_loss 0.162 · 54m52s</div></div>
+      <div class="training-metric reveal" data-delay="3"><div class="v">0</div><div class="l">语法违例</div><div class="sub">50 条回归 · 基线 1 条</div></div>
+      <div class="training-metric reveal" data-delay="4"><div class="v">15<small>/15</small></div><div class="l">上线验收通过</div><div class="sub">契约 / 性能 / 韧性</div></div>
     </div>
     <div class="degrade-chain reveal">
       <span class="label">GPU 显存降级链：</span>
@@ -829,12 +885,18 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
         <div class="optimize-step s4"><div class="pt"></div><div class="ver">v1.9 · 终点</div><div class="acc">100%</div><div class="desc">25/25 全部正确<br>CodeQL 6/6 pass</div></div>
       </div>
     </div>
+    <div class="supp-metrics reveal" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:16px;margin-bottom:16px">
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">15<small>/15</small></div><div class="l">上线验收通过</div><div class="sub">契约 / 性能 / 韧性</div></div>
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">2.33<small>s</small></div><div class="l">对话 P95 延迟</div><div class="sub">目标 &lt; 5s · CUDA</div></div>
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">2.9<small>ms</small></div><div class="l">关键词拦截 P95</div><div class="sub">L1 快速通道</div></div>
+      <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">86.7<small>%</small></div><div class="l">语义风险召回</div><div class="sub">L2 语义兜底</div></div>
+    </div>
     <div class="supp-metrics reveal" style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:32px">
       <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">11→28</div><div class="l">高危关键词扩充</div><div class="sub">v1.6 · +17 个新词</div></div>
       <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">+393 <small>词</small></div><div class="l">词向量词汇表</div><div class="sub">+23.3% · Word2Vec 训练</div></div>
       <div class="testing-tile" style="padding:20px 22px"><div class="v" style="font-size:clamp(28px,2.6vw,36px)">11<small>/15</small></div><div class="l">数据集文件处理</div><div class="sub">心理咨询笔记 .docx</div></div>
     </div>
-    <div class="testing-footnote">训练语料源自本地脱敏心理咨询笔记 + 心理学经典文献，无联网数据写入训练语料 · 最近一次回归测试：2026 年 8 月</div>
+    <div class="testing-footnote">训练语料源自本地脱敏咨询笔记 + 心理学文献，无联网数据写入 · 最近一次上线验收：2026-11-20，15/15 通过</div>
   </div>
 </section>
 <section id="versions" class="section">
@@ -842,7 +904,7 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
     <div class="section-head reveal">
       <div class="eyebrow">版本演进</div>
       <h2 class="display-lg">从 MVP 到 100% 准确率</h2>
-      <p class="lead">9 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率。</p>
+      <p class="lead">12 个版本迭代，每一次都基于真实测试反馈。v1.5 引入危机响应，v1.6 完成移动端测试，v1.9 达到风险检测 100% 准确率；v2.1 交付心理测评小程序，v2.2 作为其子标签完成 Web 端去 AI 化并新增知识库与树人互助；v2.3 完成小星真实微调与上线验收。</p>
     </div>
     <div class="version-timeline">
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.0 MVP</span><span class="ver-date">2026-06</span></div><h4>核心功能验证</h4><p>学生端 / 教师端基础功能上线，AI 对话与心情打卡核心闭环验证通过。</p></div>
@@ -855,7 +917,63 @@ h1, h2, h3, h4 { font-family: var(--font-display); font-weight: 600; line-height
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.7 — v1.9</span><span class="ver-date">2026-08-09</span></div><h4>风险检测精准度优化至 100%</h4><p>三轮优化：关键词分层重构、积极词降级规则、社交孤立降级规则。准确率 80% → 100%（25/25 全部正确）。</p></div>
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v1.9.0</span><span class="ver-date">2026-08-10</span></div><h4>主干合并 · 版本发布</h4><p>主干分支合并，CI 全绿，CodeQL 6/6 pass，版本 tag v1.9.0 发布。</p></div>
       <div class="version-item major reveal"><div class="ver-head"><span class="ver-num">v2.0</span><span class="ver-date">2026-08-29</span></div><h4>小星形象增强 · GitHub Fork 三层集成</h4><p>新增 Skill Adapter 架构（BaseSkill + SkillRouter）+ Orchestrator 一键流水线（M1 Fork 发现 → M2 三层集成 → M3a MLM 预训练 → M3b SFT 全参数微调 → M4 6 维 LLM-as-Judge 评估 → M5 汇总报告）。支持 <code>--smoke</code> 无 GPU 仿真与 <code>--resume-from</code> 断点续跑。GPU 显存自动降级链（FULL → LoRA → CPU Offload → SIMULATION）。</p></div>
+      <div class="version-item major reveal has-child">
+        <div class="ver-head"><span class="ver-num">v2.1</span><span class="ver-date">2026-09</span><span class="ver-tag">上一代版本</span></div>
+        <h4>心理测评微信小程序</h4>
+        <p>罗夏/TAT 自定义图片投射测评、AI 情绪分析、教师复核、匿名科研数据导出与管理员危机干预，PII 默认匿名化。</p>
+        <div class="version-subtree">
+          <div class="version-child reveal">
+            <div class="ver-head"><span class="ver-num">v2.2</span><span class="ver-date">2026-09</span><span class="ver-tag">子标签</span></div>
+            <h4>Web 端去 AI 化重构 · 知识库与树人互助</h4>
+            <p>Web 端移除三端 AI 对话入口与页面，新增「知识库」（文章搜索 + 量表测评）与「树人互助」（求助社区），与 App 端功能对齐；三端「我的」页新增「下载星屿 App」推荐卡片。AI 对话保留在 App（Flutter）端与微信小程序。</p>
+          </div>
+        </div>
+      </div>
+      <div class="version-item major reveal">
+        <div class="ver-head"><span class="ver-num">v2.3</span><span class="ver-date">2026-11</span><span class="ver-tag">当前版本</span></div>
+        <h4>小星真实微调与上线验收</h4>
+        <p>SFT LoRA 训练完成（train_loss 0.162 / eval perplexity 1.16，54 分 52 秒）；50 条语法回归 0 违例；心理健康知识库扩充至 39 条并接入向量检索与按需注入；上线验收 15/15 通过；三端 release APK 完成签名并提供下载。</p>
+      </div>
     </div>
+  <div class="container">
+    <div class="section-head reveal">
+      <div class="eyebrow">安装包下载</div>
+      <h2 class="display-lg">下载已签名 APK</h2>
+      <p class="lead">三端 Android 安装包均为 release 构建，已通过 apksigner 签名，可直接下载安装。首次安装请在系统设置中允许「安装未知来源应用」。</p>
+    </div>
+    <div class="dl-grid">
+      <article class="dl-card dl-card--latest reveal" data-delay="1">
+        <div class="dl-card-head"><h3>教师端</h3><span class="dl-tag">最新构建</span></div>
+        <p class="dl-desc">班级状态总览、高风险学生告警、AI 咨询辅助与对话观察介入。</p>
+        <div class="dl-meta"><span>release</span><span>12.84 MB</span><span>2026-11-20</span><span>Android 8.0+</span></div>
+        <a class="btn btn--primary" href="./downloads/StarIsle-teacher-release.apk" download="StarIsle-teacher-release.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg>
+          下载教师端 APK
+        </a>
+        <div class="dl-hash">SHA-256: 663ec0312b3f9e4185edc4d06aeec241480fe7ccdf2c43639e6e092592fc8ced</div>
+      </article>
+      <article class="dl-card reveal" data-delay="2">
+        <div class="dl-card-head"><h3>学生端</h3><span class="dl-tag">最新构建</span></div>
+        <p class="dl-desc">心情打卡、AI 陪伴对话、情绪测评、冥想放松与紧急帮助。</p>
+        <div class="dl-meta"><span>release</span><span>12.65 MB</span><span>2026-11-17</span><span>Android 8.0+</span></div>
+        <a class="btn btn--primary" href="./downloads/StarIsle-student-release.apk" download="StarIsle-student-release.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg>
+          下载学生端 APK
+        </a>
+        <div class="dl-hash">SHA-256: 419a78d61d25d774e36eddc823522d476b74c62a8606acabe426601c67deb4fb</div>
+      </article>
+      <article class="dl-card reveal" data-delay="3">
+        <div class="dl-card-head"><h3>家长端</h3><span class="dl-tag">最新构建</span></div>
+        <p class="dl-desc">孩子情绪趋势查看、AI 心理顾问「大星」、应急预案与告警升级。</p>
+        <div class="dl-meta"><span>release</span><span>12.54 MB</span><span>2026-11-17</span><span>Android 8.0+</span></div>
+        <a class="btn btn--primary" href="./downloads/StarIsle-parent-release.apk" download="StarIsle-parent-release.apk">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M12 3v12M7 11l5 5 5-5M4 21h16"/></svg>
+          下载家长端 APK
+        </a>
+        <div class="dl-hash">SHA-256: eca0663c14939e7be703753a7810ab55b6f832a20b452fa4c277041ae43d5935</div>
+      </article>
+    </div>
+    <p class="dl-note reveal">下载后可使用 <code>sha256sum</code> 或系统自带的文件校验工具核对上方哈希值；三端安装包共用同一 release 签名证书，可直接覆盖安装后续版本。</p>
   </div>
 </section>
 <section id="contact" class="contact">

@@ -247,3 +247,19 @@ print(entry["steps"] if entry["type"] == "method" else entry["key_points"])
 | 隔离性 | **不修改** `data/knowledge_base.json`，新增条目只在内存中拼接 |
 
 注意：重新生成数据集需要训练环境（计划中的 Python 3.10 + venv），当前机器未安装 Python，脚本改动已就绪但尚未实际执行生成。新增条目会在下次运行 `build_sft_dataset.py` 时自动进入训练集。
+
+### 9.2 接入 ai-engine 的 RAG 检索库
+
+全部 39 条已导出为 ai-engine 可直接导入的格式，并接入对话链路：
+
+| 项 | 说明 |
+|---|---|
+| 数据文件 | `server-services/ai-engine/data/knowledge_base_mental_health.json`（39 条，未改动 `knowledge_base.json`） |
+| 字段映射 | `title`←标题、`source`←来源机构、`category`←首个主题中文名、`tags`←主题/人群/语言/`risk:Lx`、`content`←摘要+要点+步骤+**何时应寻求专业帮助**+风险等级+原文链接、`techniques`←方法类型、`applicable_issues`←主题中文名 |
+| 加载方式 | `app/main.py` 启动时在导入 `knowledge_base.json` 之后追加导入该文件；文件缺失则跳过，不阻塞启动 |
+| 向量索引 | `app/services/vector_index.py`：TF-IDF 字符 2-3 gram + 余弦相似度，进程内构建，无外部 embedding 服务依赖；scikit-learn 缺失时自动关闭 |
+| 检索顺序 | 关键词检索 → 命中关键词数门控（`RAG_MIN_KEYWORD_HITS`，默认 2）→ 无结果时才走向量兜底（`RAG_MIN_VECTOR_SCORE`，默认 0.15）→ 仍无结果则不注入知识 |
+| 输出约束 | `app/services/chat_service.py` 的 System Prompt 明确：仅当知识内容与用户当前话题直接相关时才引用，否则不提；`L3` 只用于识别风险并建议求助 |
+| 观测 | `/chat` 返回的 `knowledge_hits` 与 `rag_enhanced` 可观察本次是否真正注入了知识 |
+
+说明：项目当前没有 embedding 服务或外部向量数据库（`models/pretrained_word2vec` 是 479 词的演示模型，不足以做语义检索），因此这里用本地 TF-IDF 向量索引承担"向量检索"角色；若后续接入真正的 embedding（如 bge / text-embedding-3），只需替换 `vector_index.py` 的 `_fit` 与 `search` 实现。

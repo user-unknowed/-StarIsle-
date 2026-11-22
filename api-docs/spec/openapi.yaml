@@ -404,17 +404,26 @@ paths:
                   data:
                     type: object
                     properties:
-                      user_id:
+                      userId:
                         type: string
+                        description: 用户ID
                       response:
                         type: string
                         description: AI回复
-                      response_time:
-                        type: integer
-                        description: 响应耗时(ms)
                       riskLevel:
                         type: string
                         enum: [green, yellow, orange, red]
+                      emotionTags:
+                        type: array
+                        items:
+                          type: string
+                        description: 情绪标签
+                      responseTimeMs:
+                        type: integer
+                        description: 响应耗时(ms)
+                      model:
+                        type: string
+                        description: 实际使用的模型（本地路径或 API 模型名）
 
   /api/v1/chat/history/{userId}:
     get:

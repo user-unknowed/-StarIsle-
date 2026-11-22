@@ -9,6 +9,8 @@ import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.starisle.parent.data.api.AiApiService
 import com.starisle.parent.data.api.ParentApiService
+import com.starisle.parent.data.api.ServerConfig
+import com.starisle.parent.data.api.ServerHostInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,10 +39,10 @@ import javax.inject.Singleton
 object AppModule {
 
     /**
-     * 网关基地址：模拟器用 10.0.2.2 映射开发机；真机需改为开发机局域网 IP（如 http://192.168.31.122:8081/api/）。
+     * 网关基地址：构建默认值（三端统一 8081），运行时可在「我的 - 服务地址」修改。
      * 路径必须以 /api/ 结尾，接口方法不得再以 / 开头，否则会覆盖该 path 段。
      */
-    private const val BASE_URL = "http://10.0.2.2:8081/api/"
+    private val BASE_URL: String = ServerConfig.DEFAULT_API_BASE_URL
     private const val DATASTORE_NAME = "starisle_parent_prefs"
 
     /** 登录 Token 的 DataStore key（与 AuthViewModel 写入的 key 名保持一致） */
@@ -68,7 +70,10 @@ object AppModule {
      */
     @Provides
     @Singleton
-    fun provideOkHttpClient(dataStore: DataStore<Preferences>): OkHttpClient = OkHttpClient.Builder()
+    fun provideOkHttpClient(
+        dataStore: DataStore<Preferences>,
+        @ApplicationContext context: Context,
+    ): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         // 本地 SFT 模型单次推理约 20-30s，读超时必须放宽，否则必然超时
         .readTimeout(120, TimeUnit.SECONDS)
@@ -86,6 +91,7 @@ object AppModule {
             }
             chain.proceed(request)
         })
+        .addInterceptor(ServerHostInterceptor(context))
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         })

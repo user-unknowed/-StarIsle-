@@ -8,6 +8,8 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.starisle.teacher.data.api.GatewayApiService
+import com.starisle.teacher.data.api.ServerConfig
+import com.starisle.teacher.data.api.ServerHostInterceptor
 import com.starisle.teacher.data.api.SiliconFlowApiService
 import com.starisle.teacher.data.api.ZhipuApiService
 import com.starisle.teacher.data.db.MemoryDatabase
@@ -86,10 +88,10 @@ object AppModule {
     fun provideSiliconFlowApi(@SiliconFlowRetrofit retrofit: Retrofit): SiliconFlowApiService =
         retrofit.create(SiliconFlowApiService::class.java)
 
-    // ===== 网关（星屿 Spring Boot，8081）相关依赖 =====
+    // ===== 网关（星屿 Java 后端，8081）相关依赖 =====
 
-    /** 网关基地址：模拟器用 10.0.2.2 映射开发机；真机需改为开发机局域网 IP。 */
-    private const val GATEWAY_BASE_URL = "http://10.0.2.2:8081/api/"
+    /** 网关基地址：构建默认值（三端统一 8081），运行时可在「我的 - 服务地址」修改。 */
+    private val GATEWAY_BASE_URL: String = ServerConfig.DEFAULT_API_BASE_URL
 
     /** 教师端会话 DataStore 名称与 token key（与 TeacherSessionStore 保持一致）。 */
     private const val TEACHER_PREFS_NAME = "starisle_teacher_prefs"
@@ -114,7 +116,10 @@ object AppModule {
     @Provides
     @Singleton
     @GatewayOkHttp
-    fun provideGatewayOkHttp(dataStore: DataStore<Preferences>): OkHttpClient = OkHttpClient.Builder()
+    fun provideGatewayOkHttp(
+        dataStore: DataStore<Preferences>,
+        @ApplicationContext context: Context,
+    ): OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(10, TimeUnit.SECONDS)
         // 本地 SFT 模型单次推理约 20-30s，读超时放宽
         .readTimeout(120, TimeUnit.SECONDS)
@@ -130,6 +135,7 @@ object AppModule {
             }
             chain.proceed(request)
         })
+        .addInterceptor(ServerHostInterceptor(context))
         .addInterceptor(HttpLoggingInterceptor().apply {
             level = HttpLoggingInterceptor.Level.BASIC
         })

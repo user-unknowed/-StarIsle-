@@ -52,12 +52,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.starisle.parent.data.api.ServerConfig
 import com.starisle.parent.theme.AlertRed500
 import com.starisle.parent.theme.Indigo500
 import com.starisle.parent.theme.Indigo600
@@ -96,6 +98,11 @@ fun ProfileScreen(
     var editNickname by remember { mutableStateOf(auth?.user?.nickname ?: "家长") }
     var selectedArticleId by remember { mutableStateOf<String?>(null) }
     var isDarkMode by remember { mutableStateOf(false) }
+
+    val context = LocalContext.current
+    var serverUrl by remember { mutableStateOf(ServerConfig.apiBaseUrl(context)) }
+    var draftServerUrl by remember { mutableStateOf(serverUrl) }
+    var showServerDialog by remember { mutableStateOf(false) }
 
     val displayName = state.parentProfile?.nickname ?: auth.user?.nickname ?: "家长"
     val phone = state.parentProfile?.phone ?: auth.user?.phone ?: "未绑定"
@@ -245,6 +252,26 @@ fun ProfileScreen(
             }
         }
 
+        // 服务地址
+        item {
+            SectionCard(title = "服务地址", icon = Icons.Default.Settings) {
+                Column {
+                    Text(
+                        serverUrl,
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    OutlinedButton(onClick = {
+                        draftServerUrl = serverUrl
+                        showServerDialog = true
+                    }) {
+                        Text("修改服务地址")
+                    }
+                }
+            }
+        }
+
         // 深色模式与关于
         item {
             SectionCard(title = "其它设置") {
@@ -295,6 +322,39 @@ fun ProfileScreen(
                 }
             )
         }
+    }
+
+    if (showServerDialog) {
+        AlertDialog(
+            onDismissRequest = { showServerDialog = false },
+            title = { Text("服务地址") },
+            text = {
+                Column {
+                    Text(
+                        "星屿后端网关地址。默认 10.0.2.2:8081 用于模拟器映射开发机；真机请填开发机局域网 IP 或公网地址。",
+                        fontSize = 12.sp,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(Modifier.height(8.dp))
+                    androidx.compose.material3.OutlinedTextField(
+                        value = draftServerUrl,
+                        onValueChange = { draftServerUrl = it },
+                        singleLine = true,
+                        label = { Text("如 http://192.168.31.122:8081/api/") }
+                    )
+                }
+            },
+            confirmButton = {
+                Button(onClick = {
+                    ServerConfig.overrideApiBaseUrl(context, draftServerUrl)
+                    serverUrl = ServerConfig.apiBaseUrl(context)
+                    showServerDialog = false
+                }) { Text("保存") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showServerDialog = false }) { Text("取消") }
+            }
+        )
     }
 }
 

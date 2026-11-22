@@ -213,7 +213,7 @@ fun ProfileScreen(
                             value = draftUrl,
                             onValueChange = { draftUrl = it },
                             singleLine = true,
-                            label = { Text("如 http://192.168.31.122:8000/") },
+                            label = { Text("如 http://10.0.2.2:8000/") },
                         )
                     }
                 },

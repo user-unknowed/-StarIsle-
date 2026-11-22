@@ -7,6 +7,11 @@ plugins {
     id("com.google.dagger.hilt.android")
 }
 
+// 三端统一：默认服务地址可由构建参数覆盖，例如
+// ./gradlew :app:assembleRelease -PstarIsleAiBaseUrl=http://192.168.31.122:8000/
+val starIsleAiBaseUrl = (project.findProperty("starIsleAiBaseUrl") as String?)
+    ?: "http://10.0.2.2:8000/"
+
 android {
     namespace = "com.starisle.student"
     compileSdk = 35
@@ -16,11 +21,13 @@ android {
         applicationId = "com.starisle.student"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 3
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        buildConfigField("String", "DEFAULT_AI_BASE_URL", "\"$starIsleAiBaseUrl\"")
     }
 
     buildTypes {
@@ -40,6 +47,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     composeOptions {

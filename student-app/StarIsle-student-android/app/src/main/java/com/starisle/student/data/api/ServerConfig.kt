@@ -1,18 +1,19 @@
 package com.starisle.student.data.api
 
 import android.content.Context
+import com.starisle.student.BuildConfig
 
 /**
- * AI 服务地址配置。
+ * AI 服务地址配置（三端统一：默认地址由构建参数注入，运行时可改）。
  *
- * 默认指向开发机上的本地模型服务（ai-engine，监听 8000 端口）。
+ * 默认指向星屿本地模型服务（ai-engine，8000 端口），
  * 手机与开发机需处于同一局域网，真机无法访问 localhost，
- * 因此这里使用局域网 IP，并允许在应用内覆盖（见 [overrideBaseUrl]）。
+ * 因此默认使用模拟器映射地址，并允许在应用内覆盖（见 [overrideBaseUrl]）。
  */
 object ServerConfig {
 
-    /** 开发机局域网地址（随网络环境变化时可在「我的 - AI 服务地址」中修改） */
-    const val DEFAULT_AI_BASE_URL: String = "http://192.168.31.122:8000/"
+    /** 构建期默认地址（默认 http://10.0.2.2:8000/，可用 -PstarIsleAiBaseUrl 覆盖） */
+    val DEFAULT_AI_BASE_URL: String = BuildConfig.DEFAULT_AI_BASE_URL
 
     private const val PREFS_NAME = "starisle_settings"
     private const val KEY_AI_BASE_URL = "ai_base_url"

@@ -46,10 +46,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.starisle.teacher.data.api.ServerConfig
 import com.starisle.teacher.data.models.AuthorizationRequest
 import com.starisle.teacher.data.models.KnowledgeBaseItem
 import com.starisle.teacher.data.models.SelfHelpRequest
@@ -90,6 +92,11 @@ fun ProfileScreen(
     val teacher = state.currentTeacher
     val role = teacher.role
     var selectedKnowledge by remember { mutableStateOf<KnowledgeBaseItem?>(null) }
+
+    val context = LocalContext.current
+    var serverUrl by remember { mutableStateOf(ServerConfig.apiBaseUrl(context)) }
+    var draftServerUrl by remember { mutableStateOf(serverUrl) }
+    var showServerDialog by remember { mutableStateOf(false) }
 
     selectedKnowledge?.let { item ->
         KnowledgeDetailScreen(item = item, onBack = { selectedKnowledge = null })
@@ -160,20 +167,74 @@ fun ProfileScreen(
 
             SectionTitle("设置")
             Card(modifier = Modifier.fillMaxWidth()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable { }
-                        .padding(16.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Filled.Settings, contentDescription = null, tint = StarNightBlue)
-                    Spacer(Modifier.width(12.dp))
-                    Text("通用设置", modifier = Modifier.weight(1f))
-                    Text("→", color = TextSecondaryLight)
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable {
+                                draftServerUrl = serverUrl
+                                showServerDialog = true
+                            },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.Edit, contentDescription = null, tint = StarNightBlue)
+                        Spacer(Modifier.width(12.dp))
+                        Text("服务地址", modifier = Modifier.weight(1f))
+                        Text(
+                            serverUrl,
+                            fontSize = 11.sp,
+                            color = TextSecondaryLight,
+                            maxLines = 1,
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { },
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.Settings, contentDescription = null, tint = StarNightBlue)
+                        Spacer(Modifier.width(12.dp))
+                        Text("通用设置", modifier = Modifier.weight(1f))
+                        Text("→", color = TextSecondaryLight)
+                    }
                 }
             }
             Spacer(Modifier.height(30.dp))
+
+            if (showServerDialog) {
+                AlertDialog(
+                    onDismissRequest = { showServerDialog = false },
+                    title = { Text("服务地址") },
+                    text = {
+                        Column {
+                            Text(
+                                "星屿后端网关地址。默认 10.0.2.2:8081 用于模拟器映射开发机；真机请填开发机局域网 IP 或公网地址。",
+                                fontSize = 12.sp,
+                                color = TextSecondaryLight,
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            OutlinedTextField(
+                                value = draftServerUrl,
+                                onValueChange = { draftServerUrl = it },
+                                singleLine = true,
+                                label = { Text("如 http://192.168.31.122:8081/api/") },
+                            )
+                        }
+                    },
+                    confirmButton = {
+                        TextButton(onClick = {
+                            ServerConfig.overrideApiBaseUrl(context, draftServerUrl)
+                            serverUrl = ServerConfig.apiBaseUrl(context)
+                            showServerDialog = false
+                        }) { Text("保存") }
+                    },
+                    dismissButton = {
+                        TextButton(onClick = { showServerDialog = false }) { Text("取消") }
+                    },
+                )
+            }
         }
     }
 }

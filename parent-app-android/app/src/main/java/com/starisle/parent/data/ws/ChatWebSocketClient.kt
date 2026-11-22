@@ -1,6 +1,9 @@
 package com.starisle.parent.data.ws
 
+import android.content.Context
 import android.util.Log
+import com.starisle.parent.data.api.ServerConfig
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,10 +34,11 @@ import javax.inject.Singleton
  */
 @Singleton
 class ChatWebSocketClient @Inject constructor(
-    private val client: OkHttpClient
+    private val client: OkHttpClient,
+    @ApplicationContext private val context: Context,
 ) {
     private var ws: WebSocket? = null
-    private var url: String = DEFAULT_URL
+    private var url: String = ""
     private var userId: String? = null
     private var token: String? = null
 
@@ -55,7 +59,11 @@ class ChatWebSocketClient @Inject constructor(
 
     enum class WsStatus { CONNECTING, CONNECTED, DISCONNECTED, ERROR }
 
-    fun connect(url: String = DEFAULT_URL, userId: String, token: String?) {
+    /**
+     * 连接实时通道。默认地址与 REST 网关同源（8081），
+     * 用户在「我的 - 服务地址」修改后下次连接自动生效。
+     */
+    fun connect(url: String = ServerConfig.wsBaseUrl(context), userId: String, token: String?) {
         this.url = url
         this.userId = userId
         this.token = token
@@ -144,7 +152,6 @@ class ChatWebSocketClient @Inject constructor(
     }
 
     companion object {
-        const val DEFAULT_URL = "ws://10.0.2.2:8080/ws"
         private const val TAG = "ChatWS"
     }
 }

@@ -6,6 +6,11 @@ plugins {
     kotlin("plugin.serialization") version "1.9.25"
 }
 
+// 三端统一：默认服务地址可由构建参数覆盖，例如
+// ./gradlew :app:assembleRelease -PstarIsleApiBaseUrl=http://192.168.31.122:8081/api/
+val starIsleApiBaseUrl = (project.findProperty("starIsleApiBaseUrl") as String?)
+    ?: "http://10.0.2.2:8081/api/"
+
 android {
     namespace = "com.starisle.teacher"
     compileSdk = 35
@@ -15,11 +20,13 @@ android {
         applicationId = "com.starisle.teacher"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
+
+        buildConfigField("String", "DEFAULT_API_BASE_URL", "\"$starIsleApiBaseUrl\"")
     }
 
     buildTypes {
@@ -37,6 +44,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.15"

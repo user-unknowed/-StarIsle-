@@ -1,0 +1,51 @@
+{
+  "schema_version": "1.0",
+  "release": "v2.3",
+  "mode": "lora",
+  "model_name": "Qwen/Qwen-1_8B-Chat",
+  "model_output": "sft_xiaoxing_v1",
+  "training_time": "0:54:52",
+  "training_time_seconds": 3292,
+  "train_metrics": {
+    "train_loss": 0.162,
+    "train_samples": 2208
+  },
+  "eval_metrics": {
+    "eval_loss": 0.151,
+    "perplexity": 1.16,
+    "eval_samples": 117
+  },
+  "dataset": {
+    "sft_data_lines": 2311,
+    "total_samples": 2325,
+    "train_samples": 2208,
+    "eval_samples": 117,
+    "count_note": "2311 为宣传页所列 SFT 数据行数，2325 为训练样本数；2208 + 117 = 2325。"
+  },
+  "knowledge_base": {
+    "psychology_entries": 39,
+    "dialogue_corpus_entries": 20,
+    "deduplication_keys": [
+      "title",
+      "source"
+    ],
+    "index": "TF-IDF character n-gram",
+    "injection": {
+      "min_entries_per_request": 1,
+      "max_entries_per_request": 2,
+      "insufficient_match_fallback": "direct_answer"
+    }
+  },
+  "grammar_regression": {
+    "total_cases": 50,
+    "violations": 0,
+    "baseline_violations": 1
+  },
+  "completed_at": null,
+  "provenance": {
+    "source": "docs/promo/index.html",
+    "source_commit": "0b5ff2e90bd1fa634c06702c5a4a4e04f874fca8",
+    "record_type": "published_metrics_summary",
+    "note": "依据 v2.3 宣传页已发布指标整理；本次未重新执行训练。原始完成时间未知，因此 completed_at 保留为 null。"
+  }
+}

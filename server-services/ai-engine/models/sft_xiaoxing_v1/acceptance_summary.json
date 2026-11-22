@@ -1,0 +1,48 @@
+{
+  "schema_version": "1.0",
+  "release": "v2.3",
+  "acceptance_id": "starisle-v2.3-2026-11-20",
+  "acceptance_date": "2026-11-20",
+  "overall_status": "passed",
+  "summary": {
+    "total_cases": 15,
+    "passed_cases": 15,
+    "failed_cases": 0,
+    "pass_rate_percent": 100.0,
+    "categories": [
+      "契约",
+      "性能",
+      "韧性"
+    ]
+  },
+  "metrics": {
+    "chat_latency": {
+      "p95_seconds": 2.33,
+      "threshold": "p95_seconds < 5",
+      "environment": "CUDA",
+      "status": "passed"
+    },
+    "keyword_interception_latency": {
+      "layer": "L1",
+      "p95_milliseconds": 2.9,
+      "status": "passed"
+    },
+    "semantic_risk_recall": {
+      "layer": "L2",
+      "recall_percent": 86.7,
+      "status": "passed"
+    }
+  },
+  "risk_detection_regression": {
+    "total_cases": 25,
+    "passed_cases": 25,
+    "failed_cases": 0,
+    "status": "passed"
+  },
+  "provenance": {
+    "source": "docs/promo/index.html",
+    "source_commit": "0b5ff2e90bd1fa634c06702c5a4a4e04f874fca8",
+    "record_type": "published_acceptance_summary",
+    "note": "依据 v2.3 宣传页已发布结果整理；本次未重新执行验收。源页面未提供 15 条用例的逐项名称与结果，本文件仅记录汇总及已发布指标。"
+  }
+}

@@ -148,27 +148,56 @@ class AiRepository(
     }
 
     /**
-     * 统一 API 调用入口，依据 currentProvider 分发，
-     * 主供应商失败时自动切换到备用供应商重试。
+     * 统一 API 调用入口：优先使用本地 SFT 模型（ai-engine `/v1/chat/completions`），
+     * 本地不可用时回退到已配置 API Key 的云厂商。
      */
     private suspend fun callApi(systemPrompt: String, userPrompt: String): String {
-        val key = apiKey
-        require(!key.isNullOrBlank()) { "API密钥未配置，请先设置API Key" }
-
         return try {
-            when (currentProvider) {
-                "zhipu" -> callZhipu(systemPrompt, userPrompt, key)
-                else -> callSiliconFlow(systemPrompt, userPrompt, key)
-            }
-        } catch (e: Exception) {
-            // 主供应商（智谱）失败时切换到备用供应商重试
-            if (currentProvider == "zhipu") {
-                currentProvider = "siliconflow"
-                callSiliconFlow(systemPrompt, userPrompt, key)
-            } else {
-                throw e
+            callLocal(systemPrompt, userPrompt)
+        } catch (localError: Exception) {
+            val key = apiKey
+            // 未配置 API Key 时直接抛出本地调用错误
+            if (key.isNullOrBlank()) throw localError
+
+            try {
+                when (currentProvider) {
+                    "zhipu" -> callZhipu(systemPrompt, userPrompt, key)
+                    else -> callSiliconFlow(systemPrompt, userPrompt, key)
+                }
+            } catch (e: Exception) {
+                // 主供应商（智谱）失败时切换到备用供应商重试
+                if (currentProvider == "zhipu") {
+                    currentProvider = "siliconflow"
+                    callSiliconFlow(systemPrompt, userPrompt, key)
+                } else {
+                    throw e
+                }
             }
         }
+    }
+
+    /**
+     * 调用本地 SFT 模型（OpenAI 兼容格式），与对话使用同一服务地址。
+     * 单次限制新生成 token 数，避免长文生成超过本地推理耗时上限。
+     */
+    private suspend fun callLocal(
+        systemPrompt: String,
+        userPrompt: String,
+    ): String {
+        val request = ChatCompletionRequest(
+            model = "local-sft",
+            messages = listOf(
+                ChatMessage(role = "system", content = systemPrompt),
+                ChatMessage(role = "user", content = userPrompt),
+            ),
+            maxTokens = 600,
+        )
+        val response = localChatApiService.chatCompletion(
+            "${ServerConfig.aiBaseUrl(context)}v1/chat/completions",
+            request,
+        )
+        return response.choices.firstOrNull()
+            ?.message?.content?.trim().orEmpty().ifEmpty { "生成失败" }
     }
 
     /**

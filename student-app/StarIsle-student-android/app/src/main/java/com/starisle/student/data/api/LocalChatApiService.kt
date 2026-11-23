@@ -18,4 +18,15 @@ interface LocalChatApiService {
         @Url url: String,
         @Body body: LocalChatRequest,
     ): LocalChatResponse
+
+    /**
+     * OpenAI 兼容补全（ai-engine `/v1/chat/completions`）。
+     * 供文章生成、摘要、风格转换、主题分析等写作功能复用本地模型，
+     * 由本地客户端提供更宽松的读超时。
+     */
+    @POST
+    suspend fun chatCompletion(
+        @Url url: String,
+        @Body body: ChatCompletionRequest,
+    ): ChatCompletionResponse
 }

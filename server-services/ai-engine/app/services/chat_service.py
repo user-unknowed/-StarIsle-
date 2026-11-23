@@ -56,8 +56,14 @@ class ChatService:
         
         # 如果本地部署，加载模型
         if os.getenv("USE_LOCAL_MODEL") == "true":
+            # 按可用设备加载：有 GPU 时用 bfloat16 上显存，否则回退 CPU float32
+            self.device = "cuda" if torch is not None and torch.cuda.is_available() else "cpu"
+            torch_dtype = torch.bfloat16 if self.device == "cuda" else torch.float32
             self.tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-            self.model = AutoModelForCausalLM.from_pretrained(self.model_name)
+            self.model = AutoModelForCausalLM.from_pretrained(
+                self.model_name, torch_dtype=torch_dtype
+            ).to(self.device)
+            self.model.eval()
         else:
             # 使用API调用：构造 OpenAI 兼容客户端，指向国产模型服务
             from openai import OpenAI
@@ -304,33 +310,74 @@ class ChatService:
         ]
         return random.choice(generic_responses)
 
-    async def _generate_local(self, messages: List[Dict]) -> str:
+    async def generate_completion(
+        self,
+        messages: List[Dict],
+        max_new_tokens: int = 200,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> str:
+        """
+        OpenAI 兼容的补全入口：直接按给定 messages 生成本地模型回复。
+
+        供 /v1/chat/completions 端点使用（学生端文章生成/摘要/风格转换/主题分析）。
+
+        Args:
+            messages: 完整对话消息列表
+            max_new_tokens: 最大新生成 token 数
+            temperature: 采样温度
+            top_p: 核采样阈值
+
+        Returns:
+            str: 模型生成的回复文本
+        """
+        # 本地模型不可用时退回 API / 规则兜底，保证端点始终有响应
+        if os.getenv("USE_LOCAL_MODEL") != "true":
+            try:
+                return await self._generate_api(messages)
+            except Exception:
+                return await self._generate_fallback(messages)
+        return await self._generate_local(messages, max_new_tokens, temperature, top_p)
+
+    async def _generate_local(
+        self,
+        messages: List[Dict],
+        max_new_tokens: int = 200,
+        temperature: float = 0.7,
+        top_p: float = 0.9,
+    ) -> str:
         """
         本地模型推理。
 
         Args:
             messages: 完整对话消息列表（含 System Prompt）
+            max_new_tokens: 最大新生成 token 数
+            temperature: 采样温度
+            top_p: 核采样阈值
 
         Returns:
             str: 模型生成的回复文本
         """
-        # TODO: 实现本地模型推理逻辑
-        # 应用聊天模板构造模型输入
-        prompt = self.tokenizer.apply_chat_template(messages, tokenize=False)
-        
-        # 对输入文本做分词，返回 PyTorch 张量
-        inputs = self.tokenizer(prompt, return_tensors="pt")
-        
+        # 应用聊天模板构造模型输入（add_generation_prompt 让模型从 assistant 位置开始续写）
+        prompt = self.tokenizer.apply_chat_template(
+            messages, tokenize=False, add_generation_prompt=True
+        )
+
+        # 对输入文本做分词，返回 PyTorch 张量（随模型迁移到同一设备）
+        inputs = self.tokenizer(prompt, return_tensors="pt").to(self.device)
+
         # 在无梯度上下文中执行采样生成
         with torch.no_grad():
             outputs = self.model.generate(
-                inputs.input_ids,
-                max_new_tokens=200,
-                temperature=0.7,
-                top_p=0.9,
-                do_sample=True
+                **inputs,
+                max_new_tokens=max_new_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                do_sample=True,
+                pad_token_id=self.tokenizer.eos_token_id
             )
-        
-        # 解码输出张量为文本，跳过特殊 token
-        response = self.tokenizer.decode(outputs[0], skip_special_tokens=True)
-        return response
+
+        # 仅解码新生成的部分，避免把 System Prompt 与用户输入一并返回
+        new_tokens = outputs[0][inputs["input_ids"].shape[-1]:]
+        response = self.tokenizer.decode(new_tokens, skip_special_tokens=True)
+        return response.strip()

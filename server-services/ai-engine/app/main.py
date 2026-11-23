@@ -17,6 +17,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import os
+import time
+import uuid
 from dotenv import load_dotenv
 import importlib
 import pkgutil
@@ -168,6 +170,14 @@ class EmotionAnalysisRequest(BaseModel):
     """情绪分析请求模型，仅包含待分析文本"""
     content: str                               # 待分析的情绪文本
 
+class ChatCompletionRequest(BaseModel):
+    """OpenAI 兼容补全请求模型（学生端写作/摘要等 AI 功能使用）"""
+    model: Optional[str] = None                # 模型名（可选，本地模型忽略）
+    messages: List[dict]                       # OpenAI 格式消息列表
+    max_tokens: Optional[int] = 300            # 最大新生成 token 数
+    temperature: Optional[float] = 0.7         # 采样温度
+    top_p: Optional[float] = 0.9               # 核采样阈值
+
 # API端点
 @app.get("/health")
 async def health_check():
@@ -226,6 +236,49 @@ async def chat(request: ChatRequest):
         
     except Exception as e:
         # 任意环节异常均返回 500，并携带错误详情
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/v1/chat/completions")
+async def chat_completions(request: ChatCompletionRequest):
+    """
+    OpenAI 兼容补全接口 - 统一由本地模型提供
+
+    学生端的文章生成、对话摘要、风格转换、主题分析等写作类功能
+    原先直连智谱/SiliconFlow，现改为调用本端点，与本地 SFT 模型保持一致。
+
+    Args:
+        request: OpenAI 格式的补全请求（model/messages/max_tokens 等）
+
+    Returns:
+        dict: OpenAI 格式的补全响应
+
+    Raises:
+        HTTPException: 生成失败时返回 500
+    """
+    try:
+        # 直接按 messages 调用本地模型生成
+        content = await chat_service.generate_completion(
+            messages=request.messages,
+            max_new_tokens=request.max_tokens or 300,
+            temperature=request.temperature if request.temperature is not None else 0.7,
+            top_p=request.top_p if request.top_p is not None else 0.9,
+        )
+
+        return {
+            "id": f"chatcmpl-{uuid.uuid4().hex[:24]}",
+            "object": "chat.completion",
+            "created": int(time.time()),
+            "model": request.model or os.getenv("MODEL_NAME", "local-sft"),
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": content},
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 0, "completion_tokens": 0, "total_tokens": 0},
+        }
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/risk/check")

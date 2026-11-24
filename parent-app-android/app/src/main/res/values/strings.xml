@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">星屿-家长端</string>
+    <string name="role_parent">家长端</string>
+    <string name="tab_home">首页</string>
+    <string name="tab_chat">聊一聊</string>
+    <string name="tab_profile">我的</string>
+    <string name="ai_name">大星</string>
+    <string name="ai_subtitle">AI心理顾问 · 专注家长咨询</string>
+    <string name="emergency_help">紧急帮助</string>
+    <string name="emergency_hotline_12355">12355 青少年服务热线</string>
+    <string name="emergency_hotline_hope">希望24热线</string>
+    <string name="emergency_hotline_bj">北京心理危机干预中心</string>
+</resources>

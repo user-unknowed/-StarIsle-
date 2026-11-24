@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-"""SkillRouter 路由、异常降级、激活注入。"""
-=======
 """
 test_skill_router.py - SkillRouter 路由与降级单元测试
 
@@ -14,40 +11,12 @@ test_skill_router.py - SkillRouter 路由与降级单元测试
          描述文本须包含各技能的 display_name 与匹配关键词
 测试对象：app.skills.skill_router.SkillRouter、ACTIVATE_THRESHOLD
 """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 import asyncio
 import pytest
 from typing import Dict, List, Any
 from app.skills.base_skill import BaseSkill
 from app.skills.skill_router import SkillRouter, ACTIVATE_THRESHOLD
 
-<<<<<<< HEAD
-class SkillA(BaseSkill):
-    name="skill_a"; display_name="技能A"; source_repo="t/a"; description="处理foo相关"
-    def can_handle(self,m,c,u): return 0.95 if "foo" in m else 0.0
-    async def execute(self,m,c,**kw): return {"text":f"A by {m}","confidence":0.95,"raw_data":{}}
-
-class SkillB(BaseSkill):
-    name="skill_b"; display_name="技能B"; source_repo="t/b"; description="处理bar相关"
-    def can_handle(self,m,c,u): return 0.85 if "bar" in m else 0.0
-    async def execute(self,m,c,**kw): return {"text":f"B by {m}","confidence":0.85,"raw_data":{}}
-
-class Broken(BaseSkill):
-    name="broken"; display_name="坏技能"; source_repo="t/x"; description="总报错"
-    def can_handle(self,m,c,u): return 1.0
-    async def execute(self,m,c,**kw): raise RuntimeError("boom")
-
-def test_empty_router():
-    assert SkillRouter([]).build_prompt_context("x",[],{}) == ""
-    assert SkillRouter([]).build_available_skills_description() == ""
-
-def test_multi_match_and_degrade():
-    async def _run():
-        r = SkillRouter([SkillA(),SkillB(),Broken()])
-        ctx = await r.inject_for_chat("hi foo and bar", [], {})
-        assert "A by" in ctx and "B by" in ctx
-        # broken应该disabled
-=======
 
 class SkillA(BaseSkill):
     """测试技能 A：匹配 'foo' 关键词，返回高置信度结果。"""
@@ -96,18 +65,13 @@ def test_multi_match_and_degrade():
         # 上下文须同时包含 A 与 B 的输出
         assert "A by" in ctx and "B by" in ctx
         # broken 应被禁用，并记录错误信息
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         st = {s["name"]:s for s in r.status()}
         assert st["broken"]["state"] == "disabled" and "boom" in st["broken"]["last_error"]
     asyncio.run(_run())
 
-<<<<<<< HEAD
-def test_available_description_shows_active():
-=======
 
 def test_available_description_shows_active():
     """可用技能描述：须包含技能 display_name 与描述关键词。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     txt = SkillRouter([SkillA(),SkillB()]).build_available_skills_description()
     assert "技能A" in txt and "处理foo" in txt
     assert "技能B" in txt and "处理bar" in txt

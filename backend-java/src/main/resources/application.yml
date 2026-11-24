@@ -1,5 +1,11 @@
 server:
   port: ${SERVER_PORT:8081}
+  # 错误响应不暴露堆栈与内部信息
+  error:
+    include-stacktrace: never
+    include-message: never
+  # 仅在可信反向代理之后开启，用于正确解析客户端 IP
+  forward-headers-strategy: ${FORWARD_HEADERS_STRATEGY:none}
 
 spring:
   application:
@@ -60,13 +66,32 @@ starisle:
 
   ai-service:
     url: ${AI_SERVICE_URL:http://localhost:8000}
+    # 与 ai-engine 的 INTERNAL_API_KEY 保持一致，防止绕过网关直连
+    token: ${AI_INTERNAL_TOKEN:}
 
   encryption:
     key: ${ENCRYPTION_KEY:starisle2026securekey32byteslong}
     master-key: ${ENCRYPTION_MASTER_KEY:starmaster2026securekey32byteslo}
 
   rate-limit:
+    enabled: ${RATE_LIMIT_ENABLED:true}
     rps: ${RATE_LIMIT_RPS:100}
+    burst: ${RATE_LIMIT_BURST:0}
+    trust-proxy: ${RATE_LIMIT_TRUST_PROXY:false}
+
+  # CORS 白名单：生产环境必须显式配置可信来源，禁止使用 *
+  allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:3000,http://localhost:5173}
+
+  # 个人数据同意策略
+  consent:
+    policy-version: ${CONSENT_POLICY_VERSION:2026-11-21}
+    default-ttl-days: ${CONSENT_DEFAULT_TTL_DAYS:180}
+    max-ttl-days: ${CONSENT_MAX_TTL_DAYS:365}
+
+  # 内部管理令牌：为空时 /api/migration、/actuator、/h2-console 一律拒绝
+  admin-token: ${ADMIN_API_TOKEN:}
+  # 是否启用管理端点，默认关闭；公网部署必须保持 false
+  admin-enabled: ${ADMIN_ENABLED:false}
 
   migration:
     source-url: ${MIGRATION_SOURCE_URL:jdbc:h2:mem:starisle;DB_CLOSE_DELAY=-1}

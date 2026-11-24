@@ -1,0 +1,292 @@
+name: Android Release - Student / Teacher / Parent
+
+# 三端 APK 自动构建、签名、发布（GitHub Release + Gitee Release）并同步宣传页至 GitHub Pages。
+# 触发方式：
+#   1. 推送 v* 标签：构建 -> 发布 Release -> 部署宣传页
+#   2. 手动触发（workflow_dispatch）：可指定发布标签，留空则仅构建
+#   3. 推送到 codex/kotlin-android-migration 分支：仅构建校验，不发布
+#
+# 需要的仓库 Secrets：ANDROID_KEYSTORE_BASE64 / ANDROID_KEYSTORE_PASSWORD /
+#   ANDROID_KEY_ALIAS / ANDROID_KEY_PASSWORD / GITEE_TOKEN（可选，配置后同步发布到 Gitee）
+# 可选仓库 Variables：AI_BASE_URL / API_BASE_URL / GITEE_REPO
+
+on:
+  push:
+    tags:
+      - 'v*'
+    branches:
+      - codex/kotlin-android-migration
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '发布标签（例如 v1.1.0；留空则只构建，不创建 Release）'
+        required: false
+        default: ''
+      ai_base_url:
+        description: '学生端 AI 服务地址（默认取 Variables.AI_BASE_URL）'
+        required: false
+        default: ''
+      api_base_url:
+        description: '教师/家长端网关地址（默认取 Variables.API_BASE_URL）'
+        required: false
+        default: ''
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: android-release
+  cancel-in-progress: false
+
+env:
+  AI_BASE_URL: ${{ inputs.ai_base_url || vars.AI_BASE_URL || 'http://192.168.31.122:8000/' }}
+  API_BASE_URL: ${{ inputs.api_base_url || vars.API_BASE_URL || 'http://192.168.31.122:8081/api/' }}
+  GITEE_REPO: ${{ vars.GITEE_REPO || 'chenytsspace/StarIsle' }}
+
+jobs:
+  build:
+    name: Build & Sign APKs
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    outputs:
+      signed: ${{ steps.signing.outputs.available }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Detect signing secrets
+        id: signing
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -n "${KEYSTORE_BASE64:-}" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "已检测到签名密钥，本次构建将签名并发布"
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::未配置 ANDROID_KEYSTORE_BASE64，本次仅构建未签名 APK，不发布 Release / 宣传页"
+          fi
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Gradle cache
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Ensure Android SDK packages
+        run: |
+          set -euo pipefail
+          SDK="${ANDROID_SDK_ROOT:-${ANDROID_HOME:-}}"
+          if [ -z "$SDK" ] || [ ! -d "$SDK" ]; then
+            echo "::error::未找到 Android SDK，请检查 runner 环境"
+            exit 1
+          fi
+          echo "ANDROID_SDK_ROOT=$SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_HOME=$SDK" >> "$GITHUB_ENV"
+          if command -v sdkmanager >/dev/null 2>&1; then
+            yes | sdkmanager --licenses >/dev/null 2>&1 || true
+            sdkmanager "platform-tools" "platforms;android-35" "build-tools;35.0.0" >/dev/null
+          fi
+          echo "SDK 就绪: $SDK"
+
+      - name: Check Android sources exist
+        run: |
+          for d in student-app/StarIsle-student-android teacher-app/StarIsle-teacher-android parent-app-android; do
+            if [ ! -f "$d/gradlew" ]; then
+              echo "::error::缺少 Android 源码目录 $d（该工作流需在包含 Kotlin Android 代码的分支或标签上运行）"
+              exit 1
+            fi
+          done
+
+      - name: Prepare signing keystore
+        if: steps.signing.outputs.available == 'true'
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/keys"
+          printf '%s' "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/keys/release.jks"
+          test -s "$RUNNER_TEMP/keys/release.jks"
+
+      - name: Build three apps
+        run: |
+          set -euo pipefail
+          S="$GITHUB_WORKSPACE/student-app/StarIsle-student-android"
+          T="$GITHUB_WORKSPACE/teacher-app/StarIsle-teacher-android"
+          P="$GITHUB_WORKSPACE/parent-app-android"
+          for d in "$S" "$T" "$P"; do
+            chmod +x "$d/gradlew"
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > "$d/local.properties"
+          done
+          echo "学生端 AI 地址: $AI_BASE_URL"
+          echo "教师/家长端网关: $API_BASE_URL"
+          ( cd "$S" && ./gradlew :app:assembleRelease --no-daemon "--stacktrace" "-PstarIsleAiBaseUrl=$AI_BASE_URL" )
+          ( cd "$T" && ./gradlew :app:assembleRelease --no-daemon "--stacktrace" "-PstarIsleApiBaseUrl=$API_BASE_URL" )
+          ( cd "$P" && ./gradlew :app:assembleRelease --no-daemon "--stacktrace" "-PstarIsleApiBaseUrl=$API_BASE_URL" )
+
+      - name: Align and sign APKs
+        env:
+          SIGNING: ${{ steps.signing.outputs.available }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          BT="$ANDROID_SDK_ROOT/build-tools/35.0.0"
+          mkdir -p out
+          SRC_STUDENT="$GITHUB_WORKSPACE/student-app/StarIsle-student-android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SRC_TEACHER="$GITHUB_WORKSPACE/teacher-app/StarIsle-teacher-android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SRC_PARENT="$GITHUB_WORKSPACE/parent-app-android/app/build/outputs/apk/release/app-release-unsigned.apk"
+          if [ "$SIGNING" != "true" ]; then
+            # 未配置签名密钥：仅做 zipalign 并保留 unsigned 标识，避免误发布
+            cp "$SRC_STUDENT" out/StarIsle-student-android-release-unsigned.apk
+            cp "$SRC_TEACHER" out/StarIsle-teacher-android-release-unsigned.apk
+            cp "$SRC_PARENT" out/StarIsle-parent-android-release-unsigned.apk
+            ls -lh out
+            exit 0
+          fi
+          sign() {
+            src="$1"; dst="$2"
+            "$BT/zipalign" -f -p 4 "$src" "$RUNNER_TEMP/aligned.apk"
+            "$BT/apksigner" sign \
+              --ks "$RUNNER_TEMP/keys/release.jks" \
+              --ks-key-alias "$KEY_ALIAS" \
+              --ks-pass "pass:$KEYSTORE_PASSWORD" \
+              --key-pass "pass:$KEY_PASSWORD" \
+              --out "out/$dst" "$RUNNER_TEMP/aligned.apk"
+            "$BT/apksigner" verify "out/$dst"
+            echo "已签名: out/$dst"
+          }
+          sign "$SRC_STUDENT" "StarIsle-student-android-release.apk"
+          sign "$SRC_TEACHER" "StarIsle-teacher-android-release.apk"
+          sign "$SRC_PARENT" "StarIsle-parent-android-release.apk"
+          ls -lh out
+
+      - name: Upload APK artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-release-apks
+          path: out/*.apk
+          if-no-files-found: error
+
+  release-github:
+    name: Publish GitHub Release
+    needs: build
+    if: ${{ needs.build.outputs.signed == 'true' && (inputs.tag != '' || startsWith(github.ref, 'refs/tags/')) }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-apks
+          path: out
+
+      - name: Create or update GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) }}
+        run: |
+          set -euo pipefail
+          ls -lh out
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" out/*.apk --clobber
+            echo "已更新既有 Release: $TAG"
+          else
+            gh release create "$TAG" out/*.apk --title "$TAG" --generate-notes
+            echo "已创建新 Release: $TAG"
+          fi
+
+  release-gitee:
+    name: Publish Gitee Release
+    needs: build
+    if: ${{ needs.build.outputs.signed == 'true' && (inputs.tag != '' || startsWith(github.ref, 'refs/tags/')) }}
+    runs-on: ubuntu-latest
+    env:
+      GITEE_TOKEN: ${{ secrets.GITEE_TOKEN }}
+      TAG: ${{ inputs.tag || (startsWith(github.ref, 'refs/tags/') && github.ref_name) }}
+    steps:
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-apks
+          path: out
+
+      - name: Upload assets to Gitee Release
+        if: env.GITEE_TOKEN != ''
+        run: |
+          set -euo pipefail
+          API="https://gitee.com/api/v5/repos/$GITEE_REPO"
+          RESP="$(curl -sS "$API/releases/tags/$TAG?access_token=$GITEE_TOKEN" || true)"
+          RID="$(echo "$RESP" | jq -r '.id // empty')"
+          if [ -z "$RID" ]; then
+            RESP="$(curl -sS -X POST "$API/releases" \
+              -d "access_token=$GITEE_TOKEN" \
+              -d "tag_name=$TAG" \
+              -d "target_commitish=$GITHUB_SHA" \
+              -d "name=$TAG" \
+              -d "body=Android 三端自动构建发布（学生端/教师端/家长端）")"
+            RID="$(echo "$RESP" | jq -r '.id // empty')"
+            echo "已创建 Gitee Release: $RID"
+          fi
+          if [ -z "$RID" ]; then echo "::error::Gitee Release 创建失败: $RESP"; exit 1; fi
+
+          # 删除同名旧附件，保证 clobber 语义
+          EXISTING="$(curl -sS "$API/releases/$RID/attach_files?access_token=$GITEE_TOKEN" || true)"
+          for f in out/*.apk; do
+            NAME="$(basename "$f")"
+            AID="$(echo "$EXISTING" | jq -r --arg n "$NAME" '.[]? | select(.name==$n) | .id' | head -n1)"
+            if [ -n "$AID" ]; then
+              curl -sS -X DELETE "$API/releases/$RID/attach_files/$AID?access_token=$GITEE_TOKEN" >/dev/null || true
+              echo "已删除旧附件: $NAME"
+            fi
+          done
+          for f in out/*.apk; do
+            curl -sS -X POST "$API/releases/$RID/attach_files" \
+              -F "access_token=$GITEE_TOKEN" \
+              -F "file=@$f" >/dev/null
+            echo "已上传到 Gitee: $(basename "$f")"
+          done
+
+  deploy-pages:
+    name: Deploy Promo Page with APKs
+    needs: build
+    if: ${{ needs.build.outputs.signed == 'true' && (inputs.tag != '' || startsWith(github.ref, 'refs/tags/')) }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download APK artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: android-release-apks
+          path: out
+
+      - name: Sync APKs into promo page
+        run: |
+          set -euo pipefail
+          mkdir -p docs/promo/downloads
+          cp out/StarIsle-student-android-release.apk docs/promo/downloads/StarIsle-student-release.apk
+          cp out/StarIsle-teacher-android-release.apk docs/promo/downloads/StarIsle-teacher-release.apk
+          cp out/StarIsle-parent-android-release.apk docs/promo/downloads/StarIsle-parent-release.apk
+          ls -lh docs/promo/downloads
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/promo
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

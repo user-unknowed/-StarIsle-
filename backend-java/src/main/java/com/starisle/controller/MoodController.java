@@ -1,8 +1,11 @@
 package com.starisle.controller;
 
+import com.starisle.consent.ConsentScope;
 import com.starisle.dto.ApiResponse;
 import com.starisle.entity.MoodRecord;
 import com.starisle.repository.MoodRecordRepository;
+import com.starisle.service.ConsentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -33,6 +36,8 @@ public class MoodController {
 
     // 心情记录仓储
     private final MoodRecordRepository moodRecordRepository;
+    // 同意服务，负责个人数据访问门禁
+    private final ConsentService consentService;
 
     /**
      * 心情打卡请求 DTO
@@ -60,12 +65,16 @@ public class MoodController {
      * @return 含打卡日期、心情等级与连续天数的响应
      */
     @PostMapping("/checkin")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> moodCheckin(@Validated @RequestBody MoodCheckinRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> moodCheckin(@Validated @RequestBody MoodCheckinRequest request,
+                                                                        HttpServletRequest httpRequest) {
         // 校验权限，禁止替他人打卡
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(request.getUserId())) {
             return ResponseEntity.ok(ApiResponse.forbidden("无权替他人打卡"));
         }
+
+        // 门禁：心情记录属于个人数据，必须本人显式授权
+        consentService.require(currentUserId, ConsentScope.MOOD, httpRequest, "POST /api/v1/mood/checkin");
 
         // 构造心情记录实体并保存
         MoodRecord record = MoodRecord.builder()
@@ -99,12 +108,16 @@ public class MoodController {
     @GetMapping("/history/{userId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getMoodHistory(
             @PathVariable String userId,
-            @RequestParam(defaultValue = "7") @Min(1) @Max(90) Integer days) {
+            @RequestParam(defaultValue = "7") @Min(1) @Max(90) Integer days,
+            HttpServletRequest httpRequest) {
         // 校验权限，仅可查看本人记录
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(userId)) {
             return ResponseEntity.ok(ApiResponse.forbidden("无权查看他人心情记录"));
         }
+
+        // 门禁：心情记录属于个人数据，必须本人显式授权
+        consentService.require(currentUserId, ConsentScope.MOOD, httpRequest, "GET /api/v1/mood/history");
 
         // 计算时间范围并查询历史记录
         LocalDate startDate = LocalDate.now().minusDays(days - 1);
@@ -135,12 +148,16 @@ public class MoodController {
      * @return 柱状图数据
      */
     @GetMapping("/chart/{userId}")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> getMoodChart(@PathVariable String userId) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> getMoodChart(@PathVariable String userId,
+                                                                        HttpServletRequest httpRequest) {
         // 校验权限
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(userId)) {
             return ResponseEntity.ok(ApiResponse.forbidden("无权查看他人心情图表"));
         }
+
+        // 门禁：心情记录属于个人数据，必须本人显式授权
+        consentService.require(currentUserId, ConsentScope.MOOD, httpRequest, "GET /api/v1/mood/chart");
 
         // 查询近 7 天心情记录
         LocalDate startDate = LocalDate.now().minusDays(6);

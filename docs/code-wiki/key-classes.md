@@ -358,7 +358,7 @@
 
 ---
 
-## 4. Flutter 移动端
+## 4. Flutter 移动端 `参考实现 v2.2`
 
 ### 4.1 学生端
 
@@ -414,6 +414,87 @@
 #### `TeacherModels`
 - **路径**: `lib/models/teacher_models.dart`
 - **职责**: 教师端专用数据模型
+
+---
+
+## 4b. Kotlin 三端 Android App `v2.2新增`
+
+> 三端移动 App 已迁移为 Kotlin + Jetpack Compose 实现，Flutter 版本（见上文 §4）保留为参考实现。三端统一遵循 **单 Activity + Compose Navigation + Hilt + Room + Retrofit** 架构。
+
+### 4b.1 学生端 (`student-app/StarIsle-student-android/`)
+
+#### `StarIsleStudentApp`
+- **路径**: `app/src/main/java/com/starisle/student/StarIsleStudentApp.kt`
+- **职责**: `Application` 入口，`@HiltAndroidApp`，初始化 WorkManager 与本地数据库
+- **关键函数**: `onCreate()` — 触发 `WorkManager.initialize` 与 `MaintenanceScheduler.enqueue()`
+
+#### `MainActivity`
+- **路径**: `app/src/main/java/com/starisle/student/MainActivity.kt`
+- **职责**: 单 Activity 入口，`@AndroidEntryPoint`，承载 Compose 导航图
+- **关键函数**: `onCreate()` — `setContent { StarIsleNavGraph() }`
+
+#### `StarIsleDatabase`
+- **路径**: `app/src/main/java/com/starisle/student/data/local/StarIsleDatabase.kt`
+- **职责**: Room 数据库（7 张表：用户、心情记录、聊天消息、记忆存储、AI 工具记录、冥想记录、应用设置）
+- **关键 DAO**: `UserDao` / `MoodRecordDao` / `ChatMessageDao` / `MemoryDao` / `AiToolRecordDao` / `MeditationDao` / `SettingsDao`
+
+#### `HomeViewModel`
+- **路径**: `app/src/main/java/com/starisle/student/vm/HomeViewModel.kt`
+- **职责**: 学生首页状态（心情打卡、情绪晴雨表、快捷入口）
+- **关键函数**: `checkinMood(level, tags)` — `viewModelScope.launch { repo.checkin(...) }`，StateFlow 更新 UI
+
+#### `ChatViewModel`
+- **路径**: `app/src/main/java/com/starisle/student/vm/ChatViewModel.kt`
+- **职责**: AI 对话状态，通过 OkHttp WebSocket 实时收发，HTTP 备选
+- **关键函数**: `sendMessage(text)` — `viewModelScope.launch { repo.sendMessage(...) }`
+
+### 4b.2 教师端 (`teacher-app/StarIsle-teacher-android/`)
+
+#### `StarIsleApp`
+- **路径**: `app/src/main/java/com/starisle/teacher/StarIsleApp.kt`
+- **职责**: `Application` 入口，`@HiltAndroidApp`
+
+#### `MainActivity`
+- **路径**: `app/src/main/java/com/starisle/teacher/MainActivity.kt`
+- **职责**: 单 Activity 入口，承载 4 Tab 底部导航（工作台 / 学生 / 对话 / 我的）
+
+#### `WorkbenchViewModel`
+- **路径**: `app/src/main/java/com/starisle/teacher/vm/WorkbenchViewModel.kt`
+- **职责**: 工作台首页状态（今日概览、高风险学生告警列表）
+- **关键函数**: `loadStats(classId)` — 调用 `GET /api/v1/classroom/{id}/stats`
+
+#### `StudentsViewModel`
+- **路径**: `app/src/main/java/com/starisle/teacher/vm/StudentsViewModel.kt`
+- **职责**: 学生列表与情绪趋势
+- **关键函数**: `loadStudents(classId)` — 调用 `GET /api/v1/classroom/{id}/students`
+
+### 4b.3 家长端 (`parent-app-android/`)
+
+#### `StarIsleApp`
+- **路径**: `app/src/main/java/com/starisle/parent/StarIsleApp.kt`
+- **职责**: `Application` 入口，`@HiltAndroidApp`
+
+#### `MainActivity`
+- **路径**: `app/src/main/java/com/starisle/parent/MainActivity.kt`
+- **职责**: 单 Activity 入口，承载 3 Tab 底部导航（首页 / 聊一聊 / 我的），共 8 个屏幕
+
+#### `HomeViewModel`
+- **路径**: `app/src/main/java/com/starisle/parent/vm/HomeViewModel.kt`
+- **职责**: 家长首页状态（孩子情绪卡片、7 天柱状图、打卡日历、AI 关怀建议）
+- **关键函数**:
+  - `loadChildren()` — `GET /api/v1/parents/children`
+  - `loadMoodTrend(studentId, days)` — `GET /api/v1/parents/mood-trend`
+  - `loadMoodSummary(studentId)` — `GET /api/v1/parents/mood-summary`
+
+#### `ChatViewModel`
+- **路径**: `app/src/main/java/com/starisle/parent/vm/ChatViewModel.kt`
+- **职责**: 大星 AI 对话状态，OkHttp WebSocket 实时连接
+- **关键函数**: `sendMessage(text)` — 通过 WebSocket 推送，流式接收 AI 回复
+
+#### `ChildrenViewModel`
+- **路径**: `app/src/main/java/com/starisle/parent/vm/ChildrenViewModel.kt`
+- **职责**: 孩子绑定与授权管理
+- **关键函数**: `bindChild(code)` — `POST /api/v1/parents/bind`
 
 ---
 

@@ -1,0 +1,87 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-11-16",
+  "lang": "zh-CN",
+  "description": "心理健康知识库受控词表。索引与详情条目中的所有分类字段，取值必须来自本文件；如需新增取值，请先在此登记并注明含义。",
+  "dimensions": {
+    "themes": {
+      "label": "主题",
+      "note": "按内容讨论的核心心理议题划分，可多选。用于回答『关于 X 有没有资料』。",
+      "values": {
+        "depression": "抑郁 / 抑郁障碍 / 情绪低落",
+        "anxiety": "焦虑 / 广泛性焦虑 / 惊恐 / 社交焦虑",
+        "stress": "压力与应激反应",
+        "sleep": "睡眠问题与睡眠卫生",
+        "suicide-prevention": "自杀预防与危机识别",
+        "emotional-awareness": "情绪觉察与情绪调节",
+        "wellbeing": "整体心理健康与幸福感",
+        "social-connection": "人际连接与社会支持",
+        "help-seeking": "求助路径与就医意识",
+        "adolescent-development": "青少年心理发展",
+        "aging-mental-health": "老年心理健康",
+        "eating-disorders": "进食障碍（神经性厌食、神经性贪食、暴食障碍、回避性限制性摄食障碍等）",
+        "trauma-ptsd": "创伤后应激障碍与创伤相关反应（含复杂 PTSD）"
+      }
+    },
+    "populations": {
+      "label": "目标人群",
+      "note": "条目主要面向的读者，可多选。用于回答『给 X 人群看什么』。",
+      "values": {
+        "general": "普通成年人",
+        "adolescents": "青少年（约 10-19 岁）",
+        "older-adults": "老年人（约 60/65 岁以上）",
+        "parents-caregivers": "家长与照护者",
+        "students": "学生（含大学生）",
+        "workers": "职场人群",
+        "people-with-symptoms": "已出现轻中度情绪困扰的人"
+      }
+    },
+    "method_types": {
+      "label": "方法类型",
+      "note": "仅对自助方法类条目填写；文章类条目通常为空数组。用于回答『有没有 X 类练习』。",
+      "values": {
+        "breathing": "呼吸调节",
+        "relaxation": "身体放松（含渐进式肌肉放松、意象放松）",
+        "mindfulness": "正念与当下觉察",
+        "grounding": "接地 / 稳定化技术",
+        "sleep-hygiene": "睡眠卫生与作息管理",
+        "worry-management": "担忧管理与认知重构",
+        "mood-monitoring": "情绪/思维记录",
+        "behavioral-activation": "行为激活与活动安排",
+        "physical-activity": "身体活动",
+        "social-connection": "社交连接与支持网络",
+        "help-seeking-plan": "求助计划与转介"
+      }
+    },
+    "risk_levels": {
+      "label": "风险等级",
+      "note": "衡量『按此内容自行操作』的风险，不衡量内容本身的严重程度。检索时应以此字段做安全过滤。",
+      "values": {
+        "L0": "纯信息 / 科普，不含可执行干预步骤，自行阅读无风险",
+        "L1": "低风险自助做法，健康成人可自行尝试，出现不适应停止",
+        "L2": "需谨慎或在专业指导下使用，如涉及症状较重的自我干预",
+        "L3": "仅用于识别与转介，不得据此自行处理，如自杀风险相关内容"
+      }
+    },
+    "source_types": {
+      "label": "来源类型",
+      "note": "用于来源可靠性分层。检索时可据此做权威度排序。",
+      "values": {
+        "international-organization": "国际组织（如 WHO）",
+        "government-health-agency": "国家级卫生机构（如 NHS、CDC/NIOSH、国家卫健委）",
+        "hospital-specialist": "精神专科医院或综合医院专科科普",
+        "academic-institute": "科研院所与心理学科研机构",
+        "clinical-resource-center": "临床资源中心（含可公开获取的自助手册）"
+      }
+    }
+  },
+  "risk_policy": {
+    "default_for_articles": "L1",
+    "default_for_methods": "L1",
+    "hard_rules": [
+      "L3 内容只可作为识别与转介依据，AI 不得据此给出自我处置建议",
+      "任何条目的输出都必须附带 when_to_seek_help 字段内容",
+      "本知识库不做诊断，不替代专业治疗"
+    ]
+  }
+}

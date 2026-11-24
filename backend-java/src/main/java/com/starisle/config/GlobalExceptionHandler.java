@@ -1,8 +1,11 @@
 package com.starisle.config;
 
 import com.starisle.dto.ApiResponse;
+import com.starisle.exception.ConsentRequiredException;
 import com.starisle.exception.EncryptionException;
 import com.starisle.exception.MigrationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.AccessDeniedException;
@@ -21,6 +24,9 @@ import java.util.Map;
  */
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    // 日志记录器，用于记录未预期异常
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     /**
      * 处理请求参数校验失败异常
@@ -56,6 +62,32 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ApiResponse<Void>> handleIllegalArgumentException(IllegalArgumentException ex) {
         // 将非法参数异常转换为 400 响应
         return ResponseEntity.ok(ApiResponse.badRequest(ex.getMessage()));
+    }
+
+    /**
+     * 处理未获得本人授权异常
+     * 返回 403 与明确的业务码 40301，禁止用空数据降级。
+     *
+     * @param ex 未授权异常
+     * @return 包含缺失范围与授权入口的统一响应
+     */
+    @ExceptionHandler(ConsentRequiredException.class)
+    public ResponseEntity<ApiResponse<Map<String, Object>>> handleConsentRequired(ConsentRequiredException ex) {
+        Map<String, Object> details = new HashMap<>();
+        details.put("scope", ex.getScope());
+        details.put("policyVersion", ex.getPolicyVersion());
+        details.put("grantEndpoint", "POST /api/v1/consent/grant");
+        details.put("statusEndpoint", "GET /api/v1/consent");
+        if (ex.getContext() != null && !ex.getContext().isEmpty()) {
+            details.putAll(ex.getContext());
+        }
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                .body(ApiResponse.<Map<String, Object>>builder()
+                        .code(40301)
+                        .message("CONSENT_REQUIRED: " + ex.getMessage())
+                        .data(details)
+                        .build());
     }
 
     /**
@@ -123,6 +155,8 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Void>> handleGenericException(Exception ex) {
+        // 记录异常堆栈，便于运维定位；对外只返回通用提示
+        log.error("未处理的服务器异常", ex);
         // 返回服务器内部错误提示
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.internalError("服务器内部错误"));

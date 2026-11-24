@@ -135,8 +135,7 @@ class Star宝SystemPrompt:
 这种感觉不应该一个人扛。这里有一些人，他们比小星更厉害，能更好地帮到你。
 📞 12355 青少年服务热线
 📞 400-161-9995 希望24热线
-要不要试试打个电话？小星陪着你。"
-"""
+要不要试试打个电话？小星陪着你。"""
 
     def add_available_skills_context(self, available_skills_description: str,
                                       skill_predict: str,

@@ -1,0 +1,164 @@
+# Gitee Go 流水线：三端 Android APK 自动构建与发布
+#
+# 使用前提（需在 Gitee 仓库网页操作，无法由代码完成）：
+#   1. 在仓库「服务 → Gitee Go」中启用流水线，Gitee Go 会自动识别本文件（.workflow/android-release.yml）。
+#   2. 如需签名，在 Gitee Go 流水线「变量」中添加私有变量：
+#        ANDROID_KEYSTORE_BASE64   release.jks 的 base64 单行文本
+#        ANDROID_KEYSTORE_PASSWORD keystore 密码
+#        ANDROID_KEY_PASSWORD      key 密码
+#        ANDROID_KEY_ALIAS         key 别名（默认 starisle，已在下方 variables 中给出）
+#      未配置 ANDROID_KEYSTORE_BASE64 时只产出 unsigned APK，流水线不会失败。
+#
+# 为什么不用内置 build@gradle：
+#   内置插件仅支持 Gradle 4.1~4.4 / JDK ≤17，且镜像内没有 Android SDK；
+#   本项目需要 Gradle 8.9 + AGP 8.5.2 + Android SDK 35，
+#   因此改用 build@gcc（Ubuntu 20.04 基础镜像，自带 wget/unzip/git/jq），
+#   在流水线内自行安装 JDK 17 与 Android commandline-tools。
+#
+# 注意：Gitee Go 的阶段字段（name/displayName/steps）与 `stage:` 同级，
+#       不能缩进在 `stage:` 之下，否则会报 “stages[0].steps 配置缺失或格式错误”。
+
+version: '1.0'
+name: android-release
+displayName: 三端 Android 构建与发布
+
+triggers:
+  # Push 触发：向 Android 源码分支提交时自动执行
+  push:
+    branches:
+      precise:
+        - codex/kotlin-android-migration
+
+variables:
+  # 学生端本地 AI 服务地址（构建时写入 BuildConfig.DEFAULT_AI_BASE_URL）
+  AI_BASE_URL: http://192.168.31.122:8000/
+  # 教师端 / 家长端 Java 网关地址
+  API_BASE_URL: http://192.168.31.122:8081/api/
+  ANDROID_KEY_ALIAS: starisle
+
+stages:
+  - stage:
+    name: build
+    displayName: 构建三端 APK
+    trigger: auto
+    strategy: naturally
+    steps:
+      - step: build@gcc
+        name: build_android
+        displayName: Android 构建（JDK17 + SDK35）
+        gccVersion: 10.3
+        commands: |
+          set -e
+          BUILD_ROOT="$PWD"
+          CI_DIR="$BUILD_ROOT/.ci"
+          mkdir -p "$CI_DIR" out
+          echo "构建号: ${GITEE_PIPELINE_BUILD_NUMBER}，分支: ${GITEE_BRANCH}"
+
+          # ---------- 1. 安装 JDK 17（优先华为镜像，失败回退 Adoptium） ----------
+          wget -q --tries=3 -O "$CI_DIR/jdk.tar.gz" \
+            "https://repo.huaweicloud.com/openjdk/17.0.2/openjdk-17.0.2_linux-x64_bin.tar.gz" \
+            || wget -q --tries=3 -O "$CI_DIR/jdk.tar.gz" \
+            "https://api.adoptium.net/v3/binary/latest/17/ga/linux/x64/jdk/hotspot/normal/eclipse?project=jdk"
+          tar -xzf "$CI_DIR/jdk.tar.gz" -C "$CI_DIR"
+          JAVA_DIR=$(find "$CI_DIR" -maxdepth 1 -mindepth 1 -type d -name 'jdk*' | head -n 1)
+          export JAVA_HOME="$JAVA_DIR"
+          export PATH="$JAVA_HOME/bin:$PATH"
+          java -version
+
+          # ---------- 2. 安装 Android SDK 35 ----------
+          export ANDROID_SDK_ROOT="$CI_DIR/android-sdk"
+          export ANDROID_HOME="$ANDROID_SDK_ROOT"
+          wget -q --tries=3 -O "$CI_DIR/cmdtools.zip" \
+            "https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
+          ls -lh "$CI_DIR/cmdtools.zip"
+          rm -rf "$CI_DIR/cmdtools" "$ANDROID_SDK_ROOT/cmdline-tools"
+          unzip -q "$CI_DIR/cmdtools.zip" -d "$CI_DIR/cmdtools"
+          # 压缩包内顶层目录可能是 cmdline-tools/，也可能多一层版本号目录；
+          # 这里直接用 sdkmanager 文件反推其所属目录，避免多套一层导致 127
+          SDKMANAGER_SRC=$(find "$CI_DIR/cmdtools" -maxdepth 3 -type f -name sdkmanager | head -n 1)
+          if [ -z "$SDKMANAGER_SRC" ]; then
+            echo "ERROR: 解压后未找到 sdkmanager，目录结构："
+            find "$CI_DIR/cmdtools" -maxdepth 3 | head -n 50
+            exit 1
+          fi
+          mkdir -p "$ANDROID_SDK_ROOT/cmdline-tools"
+          mv "$(dirname "$(dirname "$SDKMANAGER_SRC")")" "$ANDROID_SDK_ROOT/cmdline-tools/latest"
+          SDKM="$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager"
+          chmod +x "$SDKM"
+          "$SDKM" --version
+          yes | "$SDKM" --sdk_root="$ANDROID_SDK_ROOT" --licenses >/dev/null || true
+          "$SDKM" --sdk_root="$ANDROID_SDK_ROOT" "platform-tools" "platforms;android-35" "build-tools;35.0.0"
+
+          # ---------- 3. Gradle 分发包走腾讯镜像加速（不存在对应文件时跳过） ----------
+          for dir in student-app/StarIsle-student-android teacher-app/StarIsle-teacher-android parent-app-android; do
+            prop="$dir/gradle/wrapper/gradle-wrapper.properties"
+            if [ -f "$prop" ]; then
+              sed -i 's#services.gradle.org/distributions#mirrors.cloud.tencent.com/gradle#' "$prop"
+            fi
+          done
+
+          # ---------- 4. 构建三端 release ----------
+          STUDENT="$BUILD_ROOT/student-app/StarIsle-student-android"
+          TEACHER="$BUILD_ROOT/teacher-app/StarIsle-teacher-android"
+          PARENT="$BUILD_ROOT/parent-app-android"
+          for dir in "$STUDENT" "$TEACHER" "$PARENT"; do
+            chmod +x "$dir/gradlew"
+            echo "sdk.dir=$ANDROID_SDK_ROOT" > "$dir/local.properties"
+          done
+          echo "学生端 AI 地址: ${AI_BASE_URL}"
+          echo "教师/家长端网关: ${API_BASE_URL}"
+          ( cd "$STUDENT" && ./gradlew :app:assembleRelease --no-daemon "--stacktrace" "-PstarIsleAiBaseUrl=${AI_BASE_URL}" )
+          ( cd "$TEACHER" && ./gradlew :app:assembleRelease --no-daemon "--stacktrace" "-PstarIsleApiBaseUrl=${API_BASE_URL}" )
+          ( cd "$PARENT"  && ./gradlew :app:assembleRelease --no-daemon "--stacktrace" "-PstarIsleApiBaseUrl=${API_BASE_URL}" )
+
+          # ---------- 5. 对齐并签名（未配置密钥时保留 unsigned） ----------
+          BT="$ANDROID_SDK_ROOT/build-tools/35.0.0"
+          SRC_STUDENT="$STUDENT/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SRC_TEACHER="$TEACHER/app/build/outputs/apk/release/app-release-unsigned.apk"
+          SRC_PARENT="$PARENT/app/build/outputs/apk/release/app-release-unsigned.apk"
+          KS_B64="$ANDROID_KEYSTORE_BASE64"
+          if [ -n "$KS_B64" ] && [ "${KS_B64#\$}" = "$KS_B64" ]; then
+            printf '%s' "$KS_B64" | base64 -d > "$CI_DIR/release.jks"
+            test -s "$CI_DIR/release.jks"
+            sign_apk() {
+              "$BT/zipalign" -f -p 4 "$1" "$CI_DIR/aligned.apk"
+              "$BT/apksigner" sign \
+                --ks "$CI_DIR/release.jks" \
+                --ks-key-alias "${ANDROID_KEY_ALIAS}" \
+                --ks-pass "pass:${ANDROID_KEYSTORE_PASSWORD}" \
+                --key-pass "pass:${ANDROID_KEY_PASSWORD}" \
+                --out "out/$2" "$CI_DIR/aligned.apk"
+              "$BT/apksigner" verify "out/$2"
+              echo "已签名: out/$2"
+            }
+            sign_apk "$SRC_STUDENT" "StarIsle-student-android-release.apk"
+            sign_apk "$SRC_TEACHER" "StarIsle-teacher-android-release.apk"
+            sign_apk "$SRC_PARENT"  "StarIsle-parent-android-release.apk"
+          else
+            echo "未配置 ANDROID_KEYSTORE_BASE64，仅产出 unsigned APK"
+            cp "$SRC_STUDENT" out/StarIsle-student-android-release-unsigned.apk
+            cp "$SRC_TEACHER" out/StarIsle-teacher-android-release-unsigned.apk
+            cp "$SRC_PARENT"  out/StarIsle-parent-android-release-unsigned.apk
+          fi
+          ls -lh out
+        artifacts:
+          - name: BUILD_ARTIFACT
+            path:
+              - ./out
+
+      - step: publish@general_artifacts
+        name: publish_artifacts
+        displayName: 上传 APK 到制品库
+        dependsOn: build_android
+        dependArtifact: BUILD_ARTIFACT
+        artifactRepository: default
+        artifactName: starisle-apks
+
+      - step: publish@release_artifacts
+        name: publish_release
+        displayName: 发布 APK 版本
+        dependsOn: publish_artifacts
+        dependArtifact: starisle-apks
+        artifactRepository: release
+        version: '1.0.0.0'
+        autoIncrement: true

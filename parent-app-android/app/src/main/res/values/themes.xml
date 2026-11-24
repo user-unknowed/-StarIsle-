@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <style name="Theme.StarIsleParent" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:statusBarColor">@color/warm_400</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowBackground">@color/bg_window</item>
+    </style>
+
+    <style name="Theme.StarIsleParent.Splash" parent="Theme.StarIsleParent">
+        <item name="android:windowBackground">@color/warm_50</item>
+    </style>
+</resources>

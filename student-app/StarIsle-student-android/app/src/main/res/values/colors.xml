@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="star_night_blue">#FF2B3A67</color>
+    <color name="star_night_blue_light">#FF4A6FA5</color>
+    <color name="warm_orange">#FFFF9A56</color>
+    <color name="warm_orange_light">#FFFFC93C</color>
+    <color name="light_gold">#FFFFE5A0</color>
+    <color name="deep_blue_purple">#FF1A1B3A</color>
+    <color name="pale_pink">#FFFFB5B5</color>
+
+    <color name="scaffold_light">#FFF8F9FE</color>
+    <color name="surface_light">#FFFFFFFF</color>
+    <color name="scaffold_dark">#FF1A1B3A</color>
+    <color name="surface_dark">#FF2B3A67</color>
+    <color name="error_color">#FFFF5252</color>
+
+    <color name="ic_launcher_background">#FF2B3A67</color>
+</resources>

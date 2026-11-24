@@ -13,11 +13,13 @@ knowledge_service.py - 知识库服务（心理咨询技术知识检索增强 RA
 """
 import os
 import json
+import random
 from typing import List, Dict, Optional
 from datetime import datetime
 import uuid
 from app.models.knowledge import KnowledgeDocument, KnowledgeSearchResult
 from app.utils.db_connection import get_db_connection
+from app.services.vector_index import VectorIndex
 
 
 class KnowledgeService:
@@ -36,12 +38,16 @@ class KnowledgeService:
         """
         self.db = get_db_connection()
         self.collection_name = "psychological_knowledge"
-        # 尝试创建必要索引，失败则进入降级模式
-        self._ensure_indexes()
-        
-        # 内存缓存（用于无数据库时的降级）
+        # 内存缓存（用于无数据库时的降级）——必须先于 _ensure_indexes 初始化，
+        # 否则 _ensure_indexes 内设置的 fallback 标记会被覆盖
         self._in_memory_cache: List[Dict] = []
         self._fallback_mode = False
+        # 最近一次对话检索命中的知识标题（供响应透出，便于观测检索输出）
+        self.last_chat_hits: List[str] = []
+        # 本地向量索引：关键词门控无命中时的语义兜底（无外部 embedding 依赖）
+        self._vector_index = VectorIndex()
+        # 尝试创建必要索引，失败则进入降级模式
+        self._ensure_indexes()
 
     def _ensure_indexes(self):
         """
@@ -84,6 +90,15 @@ class KnowledgeService:
         document["_id"] = str(uuid.uuid4())
         document["created_at"] = datetime.utcnow()
         document["updated_at"] = datetime.utcnow()
+
+        # 同步登记到本地向量索引：标题 + 分类 + 标签 + 正文
+        vector_text = " ".join([
+            str(document.get("title", "")),
+            str(document.get("category", "")),
+            " ".join(document.get("tags") or []),
+            str(document.get("content", "")),
+        ])
+        self._vector_index.add(document["_id"], vector_text, document)
         
         # 降级模式：直接写入内存缓存
         if self._fallback_mode:
@@ -119,6 +134,39 @@ class KnowledgeService:
             ids.append(doc_id)
         return ids
 
+    async def pick_random_document(self, tag: str = "joke") -> Optional[Dict]:
+        """
+        按标签随机挑选一条知识文档。
+
+        用于“讲个笑话”等需要直接从知识库取一条内容原样输出的场景，
+        不经过检索打分与模型生成。
+
+        Args:
+            tag: 用于筛选的标签，默认 "joke"
+
+        Returns:
+            Optional[Dict]: 含 title/content 的文档字典；无候选时返回 None
+        """
+        candidates: List[Dict] = []
+        if self._fallback_mode or not self.db.is_connected():
+            # 降级模式：从内存缓存中筛选
+            candidates = [d for d in self._in_memory_cache if tag in (d.get("tags") or [])]
+        else:
+            try:
+                collection = self.db.get_collection(self.collection_name)
+                candidates = list(collection.find({"tags": tag}))
+            except Exception as e:
+                print(f"[KnowledgeService] Random pick error: {e}")
+                candidates = [d for d in self._in_memory_cache if tag in (d.get("tags") or [])]
+
+        if not candidates:
+            return None
+        doc = random.choice(candidates)
+        return {
+            "title": doc.get("title", ""),
+            "content": doc.get("content", ""),
+        }
+
     async def search_knowledge(
         self, 
         query: str, 
@@ -146,6 +194,39 @@ class KnowledgeService:
             # 数据库搜索
             results = self._search_in_db(query, category, top_k)
         
+        return results
+
+    def _vector_search(self, query: str, top_k: int = 3) -> List[KnowledgeSearchResult]:
+        """
+        本地向量兜底检索（TF-IDF 字符 n-gram 余弦相似度）。
+
+        Args:
+            query: 查询文本
+            top_k: 返回条数
+
+        Returns:
+            List[KnowledgeSearchResult]: 达到 RAG_MIN_VECTOR_SCORE 阈值的结果
+        """
+        hits = self._vector_index.search(query, top_k=top_k)
+        results: List[KnowledgeSearchResult] = []
+        for doc_id, score in hits:
+            raw = self._vector_index.get_doc(doc_id) or {}
+            doc = KnowledgeDocument(
+                id=doc_id,
+                title=raw.get("title", ""),
+                source=raw.get("source", ""),
+                author=raw.get("author"),
+                category=raw.get("category", ""),
+                tags=raw.get("tags", []),
+                content=raw.get("content", ""),
+                techniques=raw.get("techniques", []),
+                applicable_issues=raw.get("applicable_issues", []),
+            )
+            results.append(KnowledgeSearchResult(
+                document=doc,
+                relevance_score=score,
+                matched_keywords=[],
+            ))
         return results
 
     def _search_in_db(
@@ -482,44 +563,82 @@ class KnowledgeService:
     async def get_relevant_knowledge_for_chat(
         self, 
         user_message: str,
-        user_profile: Optional[Dict] = None
+        user_profile: Optional[Dict] = None,
+        context: Optional[List[Dict]] = None
     ) -> str:
         """
-        获取与用户消息相关的知识（用于RAG增强）。
+        获取与用户对话相关的知识（用于RAG增强）。
+
+        检索依据 = 对话内容（当前消息 + 最近历史用户消息）+ 记忆（用户画像文本）。
+        输出遵循「适量」原则：最多 top-3 条、单条节选有限长度、总长封顶。
 
         Args:
-            user_message: 用户消息
-            user_profile: 用户画像（可选）
+            user_message: 当前用户消息
+            user_profile: 用户画像（记忆侧，可选）
+            context: 对话历史（对话侧，可选）
 
         Returns:
             str: 拼装好的知识上下文文本；无命中则返回空字符串
         """
-        # 提取可能的心理问题类型，扩充检索查询
-        issue_keywords = self._detect_issue_type(user_message)
-        
-        # 组合用户消息与问题类型作为检索查询
-        search_query = user_message
+        self.last_chat_hits = []
+        # 1) 对话侧：当前消息 + 最近 8 条历史中的用户消息
+        conv_bits = [user_message]
+        if context:
+            for m in context[-8:]:
+                if isinstance(m, dict) and m.get("role") == "user":
+                    c = str(m.get("content", "")).strip()
+                    if c:
+                        conv_bits.append(c)
+        # 2) 记忆侧：用户画像中的文本字段（关注点、标签、状态等）
+        memory_bits: List[str] = []
+        if user_profile:
+            for v in user_profile.values():
+                if isinstance(v, str) and v.strip():
+                    memory_bits.append(v.strip()[:80])
+        combined = " ".join(conv_bits + memory_bits)
+
+        # 3) 基于整段对话文本扩充问题类型关键词
+        issue_keywords = self._detect_issue_type(combined)
+        search_query = combined
         if issue_keywords:
-            search_query = f"{user_message} {' '.join(issue_keywords)}"
-        
-        # 取 top-3 相关知识
+            search_query = f"{combined} {' '.join(issue_keywords)}"
+
+        # 4) 检索 top-3（适量）
         results = await self.search_knowledge(search_query, top_k=3)
-        
-        # 格式化返回相关知识
         if not results:
             return ""
-        
-        # 拼装 RAG 上下文：编号列出标题、核心内容、技术与适用问题
-        knowledge_context = "\n\n相关心理咨询知识参考：\n"
+
+        # 4.1) 相关性门控：只有命中足够关键词才注入知识，避免无关闲聊也输出知识库内容
+        #     阈值可用 RAG_MIN_KEYWORD_HITS 调整（默认 2；设为 0 等同关闭门控）
+        try:
+            min_hits = int(os.getenv("RAG_MIN_KEYWORD_HITS", "2"))
+        except ValueError:
+            min_hits = 2
+        if min_hits > 0:
+            results = [r for r in results if len(r.matched_keywords) >= min_hits]
+
+        # 4.2) 关键词门控无结果时，用本地向量索引做语义兜底；
+        #      仍无结果说明与用户当前话题无关，直接不注入知识（避免无必要时输出）
+        if not results:
+            results = self._vector_search(search_query, top_k=3)
+        if not results:
+            return ""
+
+        # 5) 拼装 RAG 上下文：单条节选 + 总量封顶，避免信息过载
+        knowledge_context = "\n\n相关心理咨询知识参考（少量、简要，仅供融入回复）：\n"
+        total = 0
         for i, result in enumerate(results, 1):
             doc = result.document
-            knowledge_context += f"""
-[{i}] 《{doc.title}》({doc.source})
-核心内容：{doc.content[:300]}
-相关技术：{', '.join(doc.techniques[:5]) if doc.techniques else '暂无'}
-适用问题：{', '.join(doc.applicable_issues[:3]) if doc.applicable_issues else '暂无'}
-"""
-        
+            snippet = (doc.content or "")[:240]
+            self.last_chat_hits.append(doc.title or "")
+            line = f"[{i}] 《{doc.title}》：{snippet}"
+            if doc.applicable_issues:
+                line += f"（适用：{'、'.join(doc.applicable_issues[:3])}）"
+            knowledge_context += line + "\n"
+            total += len(snippet)
+            if total >= 800:
+                break
+
         return knowledge_context.strip()
 
     async def recommend_for_user(self, user_id: str, context_hint: str = "") -> List[Dict]:

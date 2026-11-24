@@ -1,0 +1,145 @@
+{
+  "version": "1.0.0",
+  "generated_at": "2026-11-16",
+  "description": "来源机构清单与可靠性说明。每条来源附采集状态，抓取失败或信息不全的已如实标注。",
+  "reliability_tiers": [
+    {
+      "tier": "A",
+      "label": "国际组织与国家级卫生机构",
+      "why": "有明确的循证审校流程、更新日期与编辑责任主体，适合作为首选依据。"
+    },
+    {
+      "tier": "B",
+      "label": "精神专科医院 / 科研院所科普",
+      "why": "由专业人员撰写，但多为单篇科普，未必经过系统同行评审，适合作为补充与本土化表述。"
+    },
+    {
+      "tier": "C",
+      "label": "临床资源中心公开自助材料",
+      "why": "面向临床的自助手册，方法成熟，但需要配合专业指导使用；本库只摘录其中低风险部分。"
+    }
+  ],
+  "sources": [
+    {
+      "org_id": "who",
+      "name_zh": "世界卫生组织",
+      "name_en": "World Health Organization",
+      "homepage": "https://www.who.int/zh",
+      "source_type": "international-organization",
+      "tier": "A",
+      "used_for": ["depression", "anxiety", "adolescent-development", "aging-mental-health", "suicide-prevention", "stress", "trauma-ptsd"],
+      "status": "ok",
+      "note": "中文事实清单页可直接访问，含发布日期。PTSD 中文事实清单（2026-09-11）可直接访问；但进食障碍中文事实清单页已失效（返回资源已移除），故进食障碍无 WHO 中文来源。"
+    },
+    {
+      "org_id": "nimh",
+      "name_zh": "美国国家精神卫生研究所",
+      "name_en": "National Institute of Mental Health (NIMH)",
+      "homepage": "https://www.nimh.nih.gov",
+      "source_type": "government-health-agency",
+      "tier": "A",
+      "used_for": ["stress", "anxiety", "eating-disorders"],
+      "status": "partial",
+      "note": "GAD 专题页抓取返回空内容，改用《I'm So Stressed Out! Fact Sheet》作为压力/焦虑来源；该缺口已在 README 记录。进食障碍使用 topic 页与《Eating Disorders: What You Need to Know》手册页（Last Reviewed 2024-12）。"
+    },
+    {
+      "org_id": "nhs",
+      "name_zh": "英国国家医疗服务体系",
+      "name_en": "National Health Service (NHS)",
+      "homepage": "https://www.nhs.uk",
+      "source_type": "government-health-agency",
+      "tier": "A",
+      "used_for": ["wellbeing", "stress", "sleep", "breathing", "worry-management", "cbt-self-help", "eating-disorders", "trauma-ptsd"],
+      "status": "ok",
+      "note": "页面通常标注 last reviewed 日期，适合作为方法类条目的主要依据。进食障碍入口「/mental-health/conditions/eating-disorders/」已失效，改用神经性厌食症（anorexia）页面；PTSD 使用其 overview 页。"
+    },
+    {
+      "org_id": "cdc-niosh",
+      "name_zh": "美国疾病控制与预防中心 / 国家职业安全卫生研究所",
+      "name_en": "CDC / NIOSH",
+      "homepage": "https://www.cdc.gov/niosh",
+      "source_type": "government-health-agency",
+      "tier": "A",
+      "used_for": ["sleep", "stress"],
+      "status": "ok",
+      "note": "面向特殊时期睡眠管理的公开指南，发布日期明确。"
+    },
+    {
+      "org_id": "healthdirect",
+      "name_zh": "澳大利亚 healthdirect 国家健康服务平台",
+      "name_en": "healthdirect Australia",
+      "homepage": "https://www.healthdirect.gov.au",
+      "source_type": "government-health-agency",
+      "tier": "A",
+      "used_for": ["relaxation", "breathing", "mindfulness"],
+      "status": "ok",
+      "note": "放松技术页面内容详尽，覆盖渐进式肌肉放松、意象放松等；未标注单一发布日期。"
+    },
+    {
+      "org_id": "nhc-cn",
+      "name_zh": "国家卫生健康委员会（经地方卫健委转载）",
+      "name_en": "National Health Commission of China",
+      "homepage": "http://www.nhc.gov.cn",
+      "source_type": "government-health-agency",
+      "tier": "A",
+      "used_for": ["help-seeking", "emotional-awareness", "wellbeing"],
+      "status": "partial",
+      "note": "《心理健康素养十条（2018年版）》原始页面定位困难，采用烟台市卫健委 2023-12-13 的转载版本作为可访问入口。"
+    },
+    {
+      "org_id": "pkuh6",
+      "name_zh": "北京大学第六医院",
+      "name_en": "Peking University Sixth Hospital",
+      "homepage": "https://www.pkuh6.cn",
+      "source_type": "hospital-specialist",
+      "tier": "B",
+      "used_for": ["emotional-awareness", "depression"],
+      "status": "ok",
+      "note": "医院官方科普栏目，单篇发布日期可查。"
+    },
+    {
+      "org_id": "smhc",
+      "name_zh": "上海市精神卫生中心（科普平台）",
+      "name_en": "Shanghai Mental Health Center",
+      "homepage": "https://www.smhc.org.cn",
+      "source_type": "hospital-specialist",
+      "tier": "B",
+      "used_for": ["depression", "anxiety", "aging-mental-health"],
+      "status": "ok",
+      "note": "科普文章标注发布日期与作者单位，作者多为区级精神卫生中心医师。"
+    },
+    {
+      "org_id": "bjad",
+      "name_zh": "北京安定医院",
+      "name_en": "Beijing Anding Hospital",
+      "homepage": "https://www.bjad.com.cn",
+      "source_type": "hospital-specialist",
+      "tier": "B",
+      "used_for": ["sleep", "emotional-awareness", "eating-disorders"],
+      "status": "partial",
+      "note": "睡眠专题篇发布日期明确；情绪主题文章与进食障碍科普《女孩，请不要被畸形审美绑架》未在页面标注发布时间，故这两条 published_at 记为 null、date_type 记为 unknown。"
+    },
+    {
+      "org_id": "psych-ac-cn",
+      "name_zh": "中国科学院心理研究所",
+      "name_en": "Institute of Psychology, Chinese Academy of Sciences",
+      "homepage": "http://www.psych.ac.cn",
+      "source_type": "academic-institute",
+      "tier": "B",
+      "used_for": ["depression", "adolescent-development"],
+      "status": "ok",
+      "note": "媒体访谈转载，含全国性调查数据，可作为流行病学数字的来源。"
+    },
+    {
+      "org_id": "cci",
+      "name_zh": "西澳大利亚临床干预中心",
+      "name_en": "Centre for Clinical Interventions (CCI), Western Australia",
+      "homepage": "https://cci.health.wa.gov.au",
+      "source_type": "clinical-resource-center",
+      "tier": "C",
+      "used_for": ["mood-monitoring", "behavioral-activation", "worry-management"],
+      "status": "ok",
+      "note": "公开发布的抑郁自助工作手册（Back from the Bluez 系列），本库仅摘录思维日记与行为激活的低风险步骤，不复制手册正文。"
+    }
+  ]
+}

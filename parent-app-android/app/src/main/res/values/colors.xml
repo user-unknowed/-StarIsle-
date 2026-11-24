@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 家长端温暖色/安心色 -->
+    <color name="warm_50">#FFF9F5F0</color>
+    <color name="warm_100">#FFE8D5B7</color>
+    <color name="warm_400">#FFF4A261</color>
+    <color name="warm_500">#FFE76F51</color>
+    <color name="warm_600">#FFD85F45</color>
+    <!-- 印象紫 -->
+    <color name="indigo_50">#FFE8EAF6</color>
+    <color name="indigo_400">#FF5C6BC0</color>
+    <color name="indigo_500">#FF3F51B5</color>
+    <color name="indigo_600">#FF303F9F</color>
+    <color name="purple_500">#FF8E24AA</color>
+    <color name="purple_600">#FF7B1FA2</color>
+    <!-- 告警色 -->
+    <color name="alert_red_50">#FFEF9A9A</color>
+    <color name="alert_red_500">#FFEF5350</color>
+    <color name="alert_red_600">#FFE53935</color>
+    <color name="alert_orange_500">#FFFB8C00</color>
+    <color name="alert_yellow_500">#FFFBC02D</color>
+    <color name="safe_green_500">#FF43A047</color>
+    <color name="safe_green_600">#FF2E7D32</color>
+    <!-- 中性色 -->
+    <color name="bg_window">#FFF5F7FA</color>
+    <color name="text_primary">#FF1F242B</color>
+    <color name="text_secondary">#FF5A6473</color>
+    <color name="text_hint">#FF9CA3AF</color>
+    <color name="card_white">#FFFFFFFF</color>
+    <color name="divider">#FFE5E7EB</color>
+</resources>

@@ -1,6 +1,3 @@
-<<<<<<< HEAD
-"""Test BaseSkill ABC contract and helpers."""
-=======
 """
 test_base_skill.py - BaseSkill 抽象基类契约与辅助方法单元测试
 
@@ -12,30 +9,11 @@ test_base_skill.py - BaseSkill 抽象基类契约与辅助方法单元测试
       3. __repr__ 输出包含技能名，便于日志调试
 测试对象：app.skills.base_skill.BaseSkill
 """
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
 import asyncio
 import pytest
 from typing import List, Dict, Any
 from app.skills.base_skill import BaseSkill
 
-<<<<<<< HEAD
-class DummySkill(BaseSkill):
-    name = "dummy"; display_name = "虚拟技能"; source_repo = "test/test-repo"
-    description = "测试用技能，匹配包含'dummy'的用户输入"
-    def can_handle(self, msg, ctx, up): return 0.9 if "dummy" in msg.lower() else 0.0
-    async def execute(self, msg, ctx, **kw):
-        return {"text":"[Dummy参考]已触发样例能力","confidence":0.9,"raw_data":{"matched":True}}
-
-def test_base_skill_abc_cannot_instantiate():
-    with pytest.raises(TypeError): BaseSkill()
-
-def test_dummy_contract():
-    async def _run():
-        s = DummySkill()
-        assert s.name == "dummy" and s.source_repo == "test/test-repo"
-        assert s.can_handle("hello DUMMY here", [], {}) == 0.9
-        assert s.can_handle("nothing", [], {}) == 0.0
-=======
 
 class DummySkill(BaseSkill):
     """测试桩技能：匹配包含 'dummy' 的用户输入，返回固定参考结果。"""
@@ -65,17 +43,12 @@ def test_dummy_contract():
         # 不相关输入应返回 0
         assert s.can_handle("nothing", [], {}) == 0.0
         # execute 返回的字典须含 text 字段且 confidence 在 [0,1]
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
         out = await s.execute("hello dummy", [])
         assert isinstance(out, dict) and "text" in out and 0<=out["confidence"]<=1
     asyncio.run(_run())
 
-<<<<<<< HEAD
-def test_repr_contains_name():
-=======
 
 def test_repr_contains_name():
     """__repr__ 输出须包含技能 name，便于在日志中定位技能实例。"""
->>>>>>> c910bed10166fb378779b4a29914eceaa70b49ca
     s = DummySkill()
     assert "dummy" in repr(s)

@@ -1,9 +1,12 @@
 package com.starisle.controller;
 
+import com.starisle.consent.ConsentScope;
 import com.starisle.dto.ApiResponse;
 import com.starisle.entity.ChatMessage;
 import com.starisle.repository.ChatMessageRepository;
 import com.starisle.service.ChatService;
+import com.starisle.service.ConsentService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
@@ -33,6 +36,8 @@ public class ChatController {
     private final ChatService chatService;
     // 聊天消息仓储
     private final ChatMessageRepository chatMessageRepository;
+    // 同意服务，负责个人数据访问门禁
+    private final ConsentService consentService;
 
     /**
      * 发送消息请求 DTO
@@ -64,12 +69,16 @@ public class ChatController {
      * @return 包含响应耗时等信息的响应
      */
     @PostMapping("/message")
-    public ResponseEntity<ApiResponse<Map<String, Object>>> sendMessage(@Validated @RequestBody SendMessageRequest request) {
+    public ResponseEntity<ApiResponse<Map<String, Object>>> sendMessage(@Validated @RequestBody SendMessageRequest request,
+                                                                        HttpServletRequest httpRequest) {
         // 校验权限，禁止替他人发送消息
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(request.getUserId())) {
             return ResponseEntity.ok(ApiResponse.forbidden("无权替他人发送消息"));
         }
+
+        // 门禁：对话记忆属于个人数据，必须本人显式授权
+        consentService.require(currentUserId, ConsentScope.CHAT_MEMORY, httpRequest, "POST /api/v1/chat/message");
 
         // 调用服务生成 AI 回复
         ChatService.ChatResponse response = chatService.generateResponse(
@@ -79,14 +88,14 @@ public class ChatController {
             request.getUserProfile()
         );
 
-        // 返回与客户端 AI 模型约定的完整字段（camelCase，与教师/家长端 DTO 对齐）
+        // 返回与客户端 AI 模型约定的完整 camelCase 字段，并保证集合与枚举字段非空
         Map<String, Object> data = new java.util.HashMap<>();
         data.put("userId", request.getUserId());
         data.put("response", response.getContent());
-        data.put("riskLevel", response.getRiskLevel());
-        data.put("emotionTags", response.getEmotionTags());
+        data.put("riskLevel", response.getRiskLevel() == null ? "green" : response.getRiskLevel());
+        data.put("emotionTags", response.getEmotionTags() == null ? List.of() : response.getEmotionTags());
         data.put("responseTimeMs", response.getResponseTimeMs());
-        data.put("model", response.getModel());
+        data.put("model", response.getModel() == null ? "" : response.getModel());
         return ResponseEntity.ok(ApiResponse.success("消息发送成功", data));
     }
 
@@ -101,12 +110,16 @@ public class ChatController {
     @GetMapping("/history/{userId}")
     public ResponseEntity<ApiResponse<Map<String, Object>>> getChatHistory(
             @PathVariable String userId,
-            @RequestParam(defaultValue = "50") @jakarta.validation.constraints.Max(100) Integer limit) {
+            @RequestParam(defaultValue = "50") @jakarta.validation.constraints.Max(100) Integer limit,
+            HttpServletRequest httpRequest) {
         // 校验权限，仅可查看本人历史
         String currentUserId = getCurrentUserId();
         if (!currentUserId.equals(userId)) {
             return ResponseEntity.ok(ApiResponse.forbidden("无权查看他人聊天记录"));
         }
+
+        // 门禁：对话历史属于个人数据，必须本人显式授权
+        consentService.require(currentUserId, ConsentScope.CHAT_MEMORY, httpRequest, "GET /api/v1/chat/history");
 
         // 查询最近聊天记录
         List<ChatMessage> messages = chatMessageRepository.findByUserIdOrderByCreatedAtDesc(userId, limit);

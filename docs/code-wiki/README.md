@@ -1,12 +1,14 @@
 # StarIsle Code Wiki
 
-> **版本**: v2.0（小星形象增强版）
-> **最后更新**: 2026-08-29
+> **版本**: v2.2（移动三端 Kotlin 迁移版）
+> **最后更新**: 2026-09-18
 > **项目定位**: 青少年心理健康 AI 陪伴应用
 
 ## 项目简介
 
 「星屿」StarIsle 是专为 12-18 岁初高中生打造的 AI 心理健康应用，通过极简心情打卡和 24/7 AI 对话，为学生提供零压力的情绪支持。同时为教师提供心理守护协同工作台，为家长提供孩子情绪状态查看与 AI 心理咨询服务，实现家校共育。
+
+**v2.2 重大更新**：移动三端（学生端、教师端、家长端）源代码从 Flutter/React 全部迁移为 Kotlin + Jetpack Compose 实现，保持功能、业务逻辑与界面行为不变。三端 APK 均成功构建并通过 Android 模拟器（API 35）启动 / UI 渲染 / 页面跳转 / 底部导航 / 文本输入全流程测试。原 Flutter / React 源码保留作为参考实现。
 
 ## 文档导航
 
@@ -43,7 +45,14 @@ mvn spring-boot:run
 | 层级 | 技术 | 版本 |
 |------|------|------|
 | Web 前端 | React + TypeScript + Vite | 18.x / 5.8.x / 6.3.x |
-| 原生移动端 | Flutter | 3.x |
+| 原生移动端（v2.2 主实现） | Kotlin + Jetpack Compose | 1.9.25 / BOM 2024.09 `v2.2新增` |
+| 原生移动端（参考实现） | Flutter | 3.x |
+| 原生移动端依赖注入 | Hilt + KSP | 2.51.1 / 1.9.25-1.0.20 `v2.2新增` |
+| 原生移动端数据库 | Room | 2.6.1 `v2.2新增` |
+| 原生移动端 HTTP | Retrofit + OkHttp | 2.11.0 / 4.12.0 `v2.2新增` |
+| 原生移动端导航 | Navigation Compose | 2.8.1 `v2.2新增` |
+| 原生移动端后台任务 | WorkManager | 2.9.1 `v2.2新增` |
+| 原生移动端构建链 | AGP + Gradle | 8.5.2 / 8.9 `v2.2新增` |
 | 后端服务 | Java + Spring Boot | 21 / 3.2.x |
 | API 网关 | Go + Gin | 1.21 / 1.9.x |
 | AI 引擎 | Python + FastAPI | 3.10 / 0.108.x |
@@ -66,9 +75,14 @@ mvn spring-boot:run
 │   ├── backend/           # Go API 网关
 │   ├── database/          # 数据库初始化脚本
 │   └── deployment/        # Docker/K8s 部署配置
-├── student-app/                 # Flutter 学生端 App
-├── teacher-app/                 # Flutter 教师端 App
-├── parent-app/                 # React 家长端页面扩展
+├── student-app/                   # 学生端 App
+│   ├── StarIsle-student-android/  # Kotlin + Compose 实现 `v2.2新增`
+│   └── StarIsle-student/          # Flutter 参考实现
+├── teacher-app/                   # 教师端 App
+│   ├── StarIsle-teacher-android/  # Kotlin + Compose 实现 `v2.2新增`
+│   └── StarIsle-teacher/          # Flutter 参考实现
+├── parent-app/                    # React 家长端页面扩展（参考实现）
+├── parent-app-android/            # Kotlin + Compose 家长端 Android App `v2.2新增`
 ├── api-docs/              # API 文档（Electron 桌面应用）
 ├── security-assessment/   # 安全评估文档
 └── docs/                  # 项目文档
@@ -76,13 +90,13 @@ mvn spring-boot:run
 
 ## 核心功能
 
-- **学生端**: 匿名注册、心情打卡、AI 星宝对话、情绪测评、冥想放松、风险检测、紧急帮助按钮 `v1.5新增`、前端危机关键词检测 `v1.5新增`、AI 工具中心、小星 Skill 自适应能力（Fork 三层集成）`v2.0新增`
-- **教师端**: 工作台概览、学生情绪趋势、高风险告警、对话观察与干预、紧急帮助按钮 `v1.5新增`
-- **家长端**: 孩子情绪查看、AI 心理顾问对话、情绪趋势分析、应急预案（全屏阻断+二次确认）`v1.5增强`、告警超时升级机制 `v1.5新增`
+- **学生端**: 匿名注册、心情打卡、AI 星宝对话、情绪测评、冥想放松、风险检测、紧急帮助按钮 `v1.5新增`、前端危机关键词检测 `v1.5新增`、AI 工具中心、小星 Skill 自适应能力（Fork 三层集成）`v2.0新增`、Kotlin + Compose 迁移版（6 屏幕 + Room 7 表 + WorkManager）`v2.2新增`
+- **教师端**: 工作台概览、学生情绪趋势、高风险告警、对话观察与干预、紧急帮助按钮 `v1.5新增`、Kotlin + Compose 迁移版（5 屏幕 + 4 Tab 底部导航）`v2.2新增`
+- **家长端**: 孩子情绪查看、AI 心理顾问对话、情绪趋势分析、应急预案（全屏阻断+二次确认）`v1.5增强`、告警超时升级机制 `v1.5新增`、Kotlin + Compose 迁移版（8 屏幕 + OkHttp WebSocket）`v2.2新增`
 
 ## 版本历史
 
-- v1.0 MVP → v1.9.0（CodeQL 6/6 pass）→ **v2.0 小星形象增强版**（Skill 架构 + GitHub Fork 三层集成 + 训练流水线 Orchestrator + 6维 LLM-as-Judge 评估）
+- v1.0 MVP → v1.9.0（CodeQL 6/6 pass）→ v2.0 小星形象增强版（Skill 架构 + GitHub Fork 三层集成 + 训练流水线 Orchestrator + 6维 LLM-as-Judge 评估）→ v2.1 心理测评微信小程序增强版 → **v2.2 移动三端 Kotlin 迁移版**（Flutter/React → Kotlin + Jetpack Compose，三端 APK 构建并通过模拟器全流程测试）
 
 ## 贡献与维护
 

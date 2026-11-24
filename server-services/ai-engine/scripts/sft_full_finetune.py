@@ -1,19 +1,23 @@
-"""M3b SFT 全参数微调 + 自动降级链 FULL→LoRA→CPU→SIMULATION
-基座默认 Qwen/Qwen-1_8B-Chat。"""
+"""M3b SFT 微调（FULL→LoRA→CPU_OFFLOAD）
+基座默认 Qwen/Qwen2.5-1.5B-Instruct。
+训练失败会如实报错退出，不再自动降级为 SIMULATION；仿真必须显式传 --allow-simulation。"""
 from __future__ import annotations
-import argparse, gc, json, logging, math, os, random
+import argparse, gc, json, logging, math, os, random, sys
 from datetime import datetime
 from enum import Enum
 from pathlib import Path
-from typing import Any, Dict
-
-log = logging.getLogger("sft_ff")
-logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
-    handlers=[logging.FileHandler("sft_full_finetune.log"), logging.StreamHandler()])
+from typing import Any, Dict, Optional
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "data"; SFT_JSONL = DATA / "sft_dataset_xiaoxing.jsonl"
 OUT = ROOT / "models" / "sft_xiaoxing_v1"
+# 仿真产物隔离目录：绝不与真实训练结果混放
+SIM_OUT = ROOT / "models" / "sft_xiaoxing_v1_SIMULATION"
+
+log = logging.getLogger("sft_ff")
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s",
+    handlers=[logging.FileHandler(str(ROOT / "sft_full_finetune.log"), encoding="utf-8"),
+              logging.StreamHandler()])
 
 class TrainingMode(str, Enum):
     FULL="full"; LORA="lora"; CPU_OFFLOAD="cpu_offload"; SIMULATION="simulation"
@@ -65,6 +69,7 @@ def format_row(row: Dict[str, Any], tokenizer, max_seq: int):
                 f"<|im_start|>assistant\n{row['output']}<|im_end|>\n")
     enc = tokenizer(text, truncation=True, max_length=max_seq, padding="max_length")
     iids = enc["input_ids"]
+    am = enc["attention_mask"]
     labels = list(iids)
     try: anchor = tokenizer.encode("assistant\n", add_special_tokens=False)
     except Exception: anchor = tokenizer("assistant\n", add_special_tokens=False)["input_ids"]
@@ -72,7 +77,9 @@ def format_row(row: Dict[str, Any], tokenizer, max_seq: int):
     for i in range(len(iids) - len(anchor)):
         if iids[i:i+len(anchor)] == anchor: start = i + len(anchor); break
     for i in range(len(labels)):
-        if i < start or labels[i] == tokenizer.pad_token_id: labels[i] = -100
+        # 用 attention_mask 判 padding：pad_token == eos_token 时若按 id 判会把真实 EOS 也屏蔽，
+        # 导致模型学不会在结尾停止
+        if am[i] == 0 or i < start: labels[i] = -100
     enc["labels"] = labels
     return enc
 
@@ -107,17 +114,19 @@ def run_simulation(cfg: Dict[str, Any], steps: int = 100) -> Dict[str, Any]:
 
 # -------- 真正训练（FULL/LORA/CPU_OFFLOAD）
 def do_train(mode: TrainingMode, model_name: str, max_seq: int,
-             epochs: int, batch: int, grad_acc: int, lr: float, smoke: bool
+             epochs: int, batch: int, grad_acc: int, lr: float, smoke: bool,
+             resume: Optional[str] = None, data_file: Path = None
              ) -> Dict[str, Any]:
     import torch
     from transformers import (AutoModelForCausalLM, AutoTokenizer,
         TrainingArguments, Trainer, DataCollatorForLanguageModeling, set_seed)
     from datasets import load_dataset
     set_seed(42)
+    jsonl = data_file or SFT_JSONL
     tok = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
     if tok.pad_token is None: tok.pad_token = tok.eos_token
-    ds = (load_dataset("json", data_files=str(SFT_JSONL), split="train[:64]")
-          if smoke else load_dataset("json", data_files=str(SFT_JSONL))["train"])
+    ds = (load_dataset("json", data_files=str(jsonl), split="train[:64]")
+          if smoke else load_dataset("json", data_files=str(jsonl))["train"])
     split = ds.train_test_split(test_size=0.05, seed=42)
 
     def _map(ex):
@@ -132,21 +141,31 @@ def do_train(mode: TrainingMode, model_name: str, max_seq: int,
         return out
     tk = split.map(_map, batched=True, remove_columns=split["train"].column_names)
 
-    kw: Dict[str, Any] = {"trust_remote_code": True}
+    # AMP 精度：有 CUDA 时优先 bf16（sm_80+ 稳定，无需 GradScaler），否则退 fp16；
+    # 纯 CPU 则用 fp32 且不开 AMP。必须与 TrainingArguments 的 fp16/bf16 保持一致，
+    # 否则 fp16 权重在不带 autocast/scaler 的情况下训练极易出 NaN。
+    amp_dtype = None
+    if torch.cuda.is_available():
+        amp_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+    kw: Dict[str, Any] = {"trust_remote_code": True,
+                          "torch_dtype": amp_dtype or torch.float32}
     if mode == TrainingMode.FULL:
-        kw["torch_dtype"] = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
         model = AutoModelForCausalLM.from_pretrained(model_name, **kw)
     elif mode == TrainingMode.LORA:
         from peft import LoraConfig, get_peft_model, TaskType
-        model = AutoModelForCausalLM.from_pretrained(
-            model_name, torch_dtype=torch.float16, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(model_name, **kw)
         lc = LoraConfig(task_type=TaskType.CAUSAL_LM, r=16, lora_alpha=32, lora_dropout=0.05,
                         target_modules=["q_proj","k_proj","v_proj","o_proj",
                                           "gate_proj","up_proj","down_proj"])
-        model = get_peft_model(model, lc); model.print_trainable_parameters()
+        model = get_peft_model(model, lc)
+        # LoRA + gradient checkpointing 组合必需：让输入 embedding 参与梯度计算
+        model.enable_input_require_grads()
+        model.config.use_cache = False
+        model.print_trainable_parameters()
     else:  # CPU_OFFLOAD
         kw.update({"device_map": "auto", "torch_dtype": torch.float16})
         model = AutoModelForCausalLM.from_pretrained(model_name, **kw)
+        model.config.use_cache = False
 
     OUT.mkdir(parents=True, exist_ok=True)
     ta = TrainingArguments(output_dir=str(OUT),
@@ -157,25 +176,54 @@ def do_train(mode: TrainingMode, model_name: str, max_seq: int,
         bf16=kw.get("torch_dtype") == torch.bfloat16,
         logging_steps=5, save_strategy="epoch", evaluation_strategy="epoch",
         weight_decay=0.1, warmup_ratio=0.05,
+        gradient_checkpointing=True,
+        gradient_checkpointing_kwargs={"use_reentrant": False},
         seed=42, report_to="none", dataloader_num_workers=0,
         save_total_limit=2, load_best_model_at_end=False)
     coll = DataCollatorForLanguageModeling(tokenizer=tok, mlm=False)
     trainer = Trainer(model=model, args=ta, data_collator=coll,
                       train_dataset=tk["train"], eval_dataset=tk["test"])
+    # 续训防护：resume 检查点若已跑满（epoch/step 达标），Trainer 会直接跳过训练，
+    # 造成「看似完成、实际未训练」的假象；此处显式拦截并如实报错。
+    if resume:
+        try:
+            _st_path = Path(resume) / "trainer_state.json"
+            _st = json.loads(_st_path.read_text(encoding="utf-8"))
+            if _st.get("global_step", 0) >= (_st.get("max_steps") or 10**9) \
+                    or _st.get("epoch", 0) >= epochs:
+                log.error("resume 检查点已训练完成（epoch=%s, global_step=%s），继续 --resume 会跳过训练；"
+                          "请改用 --model 指向已合并权重（如 final_model）重新增量训练。",
+                          _st.get("epoch"), _st.get("global_step"))
+                raise RuntimeError("resume checkpoint already complete; refusing to skip training")
+        except RuntimeError:
+            raise
+        except Exception as e:
+            log.warning("读取 resume 检查点状态失败，按正常续训继续：%s", e)
     t0 = datetime.now()
-    res = trainer.train()
+    res = trainer.train(resume_from_checkpoint=resume or None)
     elapsed = str(datetime.now() - t0)
     m = res.metrics; m["train_samples"] = len(tk["train"])
-    fd = OUT / "final_model"
-    if mode == TrainingMode.LORA:
-        try: model = model.merge_and_unload()
-        except Exception as e: log.warning("LoRA merge failed: %s", e)
-    model.save_pretrained(str(fd)); tok.save_pretrained(str(fd))
+    # 先在 GPU 上评估，再合并/保存：合并后模型被搬到 CPU，评估会慢很多
     ev = trainer.evaluate(); ev["eval_samples"] = len(tk["test"])
     try: ev["perplexity"] = math.exp(ev["eval_loss"])
     except Exception: ev["perplexity"] = None
-    summary = {"mode": mode.value, "model_name": model_name, "max_seq_len": max_seq,
+    fd = OUT / "final_model"
+    if mode == TrainingMode.LORA:
+        try:
+            # 合并前先落到 CPU，避免 8GB 显存上同时持有权重与合并副本导致 OOM
+            model = model.to("cpu"); gc.collect(); torch.cuda.empty_cache()
+            model = model.merge_and_unload()
+        except Exception as e: log.warning("LoRA merge failed: %s", e)
+    model.save_pretrained(str(fd)); tok.save_pretrained(str(fd))
+    # 从 Trainer 日志中提取真实 loss 曲线，便于核对 loss 是否真的下降
+    loss_curve = [{"step": h.get("step"), "loss": h.get("loss"),
+                   "eval_loss": h.get("eval_loss"), "lr": h.get("learning_rate")}
+                  for h in trainer.state.log_history
+                  if ("loss" in h or "eval_loss" in h)]
+    summary = {"mode": mode.value, "base_model": model_name, "model_name": model_name,
+               "max_seq_len": max_seq, "dataset_rows": len(split),
                "training_time": elapsed, "train_metrics": m, "eval_metrics": ev,
+               "loss_curve": loss_curve, "completed": True,
                "completed_at": datetime.now().isoformat(timespec="seconds")}
     (OUT / "training_summary.json").write_text(json.dumps(summary, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
     return summary
@@ -184,15 +232,20 @@ def do_train(mode: TrainingMode, model_name: str, max_seq: int,
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--smoke", action="store_true")
-    ap.add_argument("--model", default=os.getenv("MODEL_NAME_SFT", "Qwen/Qwen-1_8B-Chat"))
+    ap.add_argument("--model", default=os.getenv("MODEL_NAME_SFT", "Qwen/Qwen2.5-1.5B-Instruct"))
     ap.add_argument("--epochs", type=int, default=3)
     ap.add_argument("--batch", type=int, default=4)
     ap.add_argument("--grad-acc", type=int, default=None)
-    ap.add_argument("--lr", type=float, default=2e-5)
+    ap.add_argument("--lr", type=float, default=1e-4)
     ap.add_argument("--max-seq-len", type=int, default=2048)
     ap.add_argument("--force-mode", choices=[m.value for m in TrainingMode], default=None)
+    ap.add_argument("--allow-simulation", action="store_true",
+                    help="显式允许 SIMULATION：不真正训练，产物只写入 *_SIMULATION 目录")
+    ap.add_argument("--resume", default=None, help="从指定 checkpoint 目录续训")
+    ap.add_argument("--data-file", default=None, help="训练数据集 JSONL 路径（默认 data/sft_dataset_xiaoxing.jsonl）")
     args = ap.parse_args()
-    if not SFT_JSONL.exists(): raise FileNotFoundError(SFT_JSONL)
+    data_file = Path(args.data_file) if args.data_file else SFT_JSONL
+    if not data_file.exists(): raise FileNotFoundError(data_file)
     params = probe_params(args.model)
     log.info("Model %s ≈ %.2fB params", args.model, params / 1e9)
     avail = probe_gpu_gb(); log.info("Available GPU ≈ %.2f GB", avail)
@@ -200,25 +253,34 @@ def main():
     log.info("Chosen mode = %s", mode.value)
     grad_acc = args.grad_acc or max(1, 32 // max(1, args.batch))
     log.info("batch=%d grad_acc=%d -> global=%d", args.batch, grad_acc, args.batch*grad_acc)
-    try:
-        if mode == TrainingMode.SIMULATION:
-            s = run_simulation(vars(args))
-        else:
-            import torch as _t
-            s = do_train(mode, args.model, args.max_seq_len,
-                         epochs=1 if args.smoke else args.epochs,
-                         batch=args.batch, grad_acc=grad_acc, lr=args.lr, smoke=args.smoke)
-    except Exception as e:
-        if "cuda" in str(type(e)).lower() or "out of memory" in str(e).lower():
-            log.error("OOM/GPU err: %s -> 自动切 SIMULATION", e)
-        else:
-            log.error("训练异常 %s -> 降级 SIMULATION", e)
-        try:
-            import torch as _t2; gc.collect(); _t2.cuda.empty_cache()
-        except Exception: pass
+
+    # 仿真模式必须显式开启，且产物隔离，避免把假指标当成训练结果
+    if mode == TrainingMode.SIMULATION:
+        if not args.allow_simulation:
+            log.error("判定为 SIMULATION 但未显式传 --allow-simulation；拒绝伪造训练结果。"
+                      "请改用 --force-mode lora 或 --force-mode cpu_offload。")
+            sys.exit(2)
         s = run_simulation(vars(args))
-    OUT.mkdir(parents=True, exist_ok=True)
-    (OUT / "training_summary.json").write_text(json.dumps(s, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+        SIM_OUT.mkdir(parents=True, exist_ok=True)
+        (SIM_OUT / "training_summary.json").write_text(
+            json.dumps(s, ensure_ascii=False, indent=2, default=str), encoding="utf-8")
+        print("\n===== SIMULATION Summary（未训练）=====\n"
+              + json.dumps(s, ensure_ascii=False, indent=2, default=str))
+        return s
+
+    try:
+        s = do_train(mode, args.model, args.max_seq_len,
+                     epochs=1 if args.smoke else args.epochs,
+                     batch=args.batch, grad_acc=grad_acc, lr=args.lr,
+                     smoke=args.smoke, resume=args.resume, data_file=data_file)
+    except Exception:
+        # 训练失败就如实失败：完整堆栈 + 非零退出，不做任何降级伪装
+        log.exception("训练失败（未生成真实产物）")
+        try:
+            import torch as _t; gc.collect(); _t.cuda.empty_cache()
+        except Exception:
+            pass
+        sys.exit(1)
     print("\n===== SFT Summary =====\n" + json.dumps(s, ensure_ascii=False, indent=2, default=str))
     return s
 

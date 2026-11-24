@@ -8,10 +8,15 @@
 | `web-frontend/` | React 18 + TypeScript + Vite | Web 多端应用 | Docker / 静态资源 |
 | `server-services/ai-engine/` | Python 3.10 + FastAPI | AI 对话与情绪分析 | Docker / Python |
 | `server-services/backend/` | Go 1.21 + Gin | API 网关（过渡期） | Docker / 二进制 |
-| `student-app/StarIsle-student/` | Flutter 3.x | 学生移动端 App | APK / IPA |
-| `teacher-app/StarIsle-teacher/` | Flutter 3.x | 教师移动端 App | APK / IPA |
+| `student-app/StarIsle-student-android/` `v2.2新增` | Kotlin 1.9 + Jetpack Compose | 学生移动端 App（Android 原生） | APK |
+| `teacher-app/StarIsle-teacher-android/` `v2.2新增` | Kotlin 1.9 + Jetpack Compose | 教师移动端 App（Android 原生） | APK |
+| `parent-app-android/` `v2.2新增` | Kotlin 1.9 + Jetpack Compose | 家长移动端 App（Android 原生） | APK |
+| `student-app/StarIsle-student/` | Flutter 3.x（参考实现 `v2.2`） | 学生移动端 App（Flutter 原始实现） | APK / IPA |
+| `teacher-app/StarIsle-teacher/` | Flutter 3.x（参考实现 `v2.2`） | 教师移动端 App（Flutter 原始实现） | APK / IPA |
 | `parent-app/` | React + TypeScript | 家长端 Web 页面扩展 | 同 web-frontend |
 | `api-docs/` | React + Electron | API 文档桌面应用 | Electron 安装包 |
+
+> **v2.2 迁移说明**：学生/教师/家长三端移动 App 已迁移为 Kotlin + Jetpack Compose 实现（目录带 `-android` 后缀），Flutter 版本保留为参考实现。详见下文 5/6/7 节。
 
 ---
 
@@ -313,7 +318,169 @@ server-services/backend/
 
 ---
 
-## 5. student-app/StarIsle-student（Flutter 学生 App）
+## 5. student-app/StarIsle-student-android（Kotlin 学生 App）`v2.2新增`
+
+### 职责
+- 学生移动端 Android 原生体验
+- 本地数据库存储（Room，未加密，后续将接入 SQLCipher）
+- 本地记忆存储管理（定时整理、存储监控）
+- 音频冥想播放、动画交互
+- AI 工具中心（文本生成、摘要、风格转换）
+
+### 目录结构
+
+```
+student-app/StarIsle-student-android/
+├── app/
+│   ├── src/main/
+│   │   ├── java/com/starisle/student/
+│   │   │   ├── StarIsleStudentApp.kt          # Application 入口（Hilt）
+│   │   │   ├── MainActivity.kt               # 单 Activity 入口
+│   │   │   ├── di/                            # Hilt 模块
+│   │   │   ├── data/
+│   │   │   │   ├── local/                     # Room 数据库与 DAO
+│   │   │   │   │   ├── entity/                # 7 张表实体
+│   │   │   │   │   ├── dao/                    # DAO 接口
+│   │   │   │   │   └── StarIsleDatabase.kt
+│   │   │   │   ├── remote/                    # Retrofit 接口
+│   │   │   │   └── repository/                # 仓库实现
+│   │   │   ├── domain/                        # 用例
+│   │   │   ├── ui/                            # Compose 屏幕
+│   │   │   │   ├── home/                      # 首页（心情打卡 / 情绪晴雨表）
+│   │   │   │   ├── chat/                      # AI 对话
+│   │   │   │   ├── ai_tools/                  # AI 工具中心
+│   │   │   │   ├── relax/                     # 放松冥想
+│   │   │   │   ├── explore/                   # 探索
+│   │   │   │   ├── profile/                   # 个人中心
+│   │   │   │   └── splash/                    # 启动页
+│   │   │   └── vm/                            # ViewModel（StateFlow）
+│   │   └── res/                              # 资源（drawable/values）
+│   └── build.gradle.kts
+├── build.gradle.kts                          # 项目级
+├── settings.gradle.kts
+└── gradle/
+    └── wrapper/
+```
+
+### 核心依赖
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| androidx.compose BOM | 2024.09 | Compose UI 体系 |
+| androidx.hilt | 2.51.1 | 依赖注入 |
+| androidx.room | 2.6.1 | 本地数据库 |
+| retrofit + okhttp | 2.11.0 | HTTP 客户端 |
+| androidx.navigation.compose | 2.8.1 | 路由导航 |
+| androidx.work | 2.9.1 | 后台任务 |
+| coil | 2.7.0 | 图片加载 |
+
+---
+
+## 6. teacher-app/StarIsle-teacher-android（Kotlin 教师 App）`v2.2新增`
+
+### 职责
+- 教师工作台概览与高风险学生告警
+- 学生列表与情绪趋势查看
+- 症状反馈与上报处理
+- 对话观察与介入干预
+- 本地记忆存储管理
+
+### 目录结构
+
+```
+teacher-app/StarIsle-teacher-android/
+├── app/
+│   ├── src/main/
+│   │   ├── java/com/starisle/teacher/
+│   │   │   ├── StarIsleApp.kt                # Application 入口（Hilt）
+│   │   │   ├── MainActivity.kt               # 单 Activity 入口
+│   │   │   ├── di/                            # Hilt 模块
+│   │   │   ├── data/                          # Room + Retrofit + Repository
+│   │   │   ├── domain/
+│   │   │   ├── ui/
+│   │   │   │   ├── workbench/                 # 工作台（今日概览 + 高风险告警）
+│   │   │   │   ├── students/                  # 学生列表
+│   │   │   │   ├── chat/                      # AI 对话
+│   │   │   │   ├── ai_tools/
+│   │   │   │   ├── profile/
+│   │   │   │   └── splash/
+│   │   │   └── vm/                            # ViewModel
+│   │   └── res/
+│   └── build.gradle.kts
+├── build.gradle.kts
+└── settings.gradle.kts
+```
+
+### 核心依赖
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| androidx.compose BOM | 2024.09 | Compose UI 体系 |
+| androidx.hilt | 2.51.1 | 依赖注入 |
+| androidx.room | 2.6.1 | 本地数据库 |
+| retrofit + okhttp | 2.11.0 | HTTP 客户端 |
+| androidx.navigation.compose | 2.8.1 | 路由导航 |
+| androidx.work | 2.9.1 | 后台任务 |
+
+---
+
+## 7. parent-app-android（Kotlin 家长 App）`v2.2新增`
+
+### 职责
+- 家长端 Android 原生体验（8 屏幕）
+- 孩子情绪状态实时查看（7/30/90 天趋势）
+- AI 心理顾问（大星）对话
+- 应急预案与预警管理
+- 心理健康知识库
+- 孩子绑定与授权管理
+- OkHttp WebSocket 实时对话
+
+### 目录结构
+
+```
+parent-app-android/
+├── app/
+│   ├── src/main/
+│   │   ├── java/com/starisle/parent/
+│   │   │   ├── StarIsleApp.kt                # Application 入口（Hilt）
+│   │   │   ├── MainActivity.kt               # 单 Activity 入口
+│   │   │   ├── di/                            # Hilt 模块
+│   │   │   ├── data/
+│   │   │   │   ├── local/                     # Room
+│   │   │   │   ├── remote/                    # Retrofit + OkHttp WebSocket
+│   │   │   │   └── repository/
+│   │   │   ├── domain/
+│   │   │   ├── ui/
+│   │   │   │   ├── home/                      # 首页（情绪卡片 + 7 天柱状图 + 日历）
+│   │   │   │   ├── chat/                      # AI 对话（WebSocket）
+│   │   │   │   ├── children/                  # 孩子绑定管理
+│   │   │   │   ├── emergency/                 # 应急预案
+│   │   │   │   ├── knowledge/                 # 知识库
+│   │   │   │   ├── profile/
+│   │   │   │   ├── login/
+│   │   │   │   └── splash/
+│   │   │   └── vm/                            # ViewModel
+│   │   └── res/
+│   └── build.gradle.kts
+├── build.gradle.kts
+└── settings.gradle.kts
+```
+
+### 核心依赖
+
+| 依赖 | 版本 | 用途 |
+|------|------|------|
+| androidx.compose BOM | 2024.09 | Compose UI 体系 |
+| androidx.hilt | 2.51.1 | 依赖注入 |
+| androidx.room | 2.6.1 | 本地数据库 |
+| retrofit + okhttp | 2.11.0 | HTTP + WebSocket 客户端 |
+| androidx.navigation.compose | 2.8.1 | 路由导航 |
+| androidx.work | 2.9.1 | 后台任务 |
+| vico | 2.0.0-alpha.23 | 柱状图渲染 |
+
+---
+
+## 8. student-app/StarIsle-student（Flutter 学生 App）`参考实现 v2.2`
 
 ### 职责
 - 学生移动端原生体验（iOS/Android）
@@ -365,7 +532,7 @@ student-app/StarIsle-student/
 
 ---
 
-## 6. teacher-app/StarIsle-teacher（Flutter 教师 App）
+## 9. teacher-app/StarIsle-teacher（Flutter 教师 App）`参考实现 v2.2`
 
 ### 职责
 - 教师工作台概览与高风险学生告警
@@ -404,7 +571,7 @@ teacher-app/StarIsle-teacher/
 
 ---
 
-## 7. 家长端（React Web 扩展）
+## 10. 家长端（React Web 扩展）
 
 ### 职责
 - 孩子情绪状态实时查看
@@ -433,7 +600,7 @@ parent-app/
 
 ---
 
-## 8. api-docs（API 文档桌面应用）
+## 11. api-docs（API 文档桌面应用）
 
 ### 职责
 - 基于 OpenAPI 规范的可视化 API 文档

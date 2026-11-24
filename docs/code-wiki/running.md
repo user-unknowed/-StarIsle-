@@ -9,7 +9,12 @@
 | Maven | 3.8 | Java 构建 |
 | Go | 1.21 | API 网关 |
 | Python | 3.10 | AI 引擎 |
-| Flutter SDK | 3.0 | 移动端 |
+| Flutter SDK | 3.0 | 移动端（参考实现 `v2.2`） |
+| JDK | 17 `v2.2新增` | Kotlin 三端 Android App 编译 |
+| Kotlin | 1.9.25 `v2.2新增` | Kotlin 编译器 |
+| Android SDK | API 35 `v2.2新增` | compileSdk=35 / minSdk=24 / targetSdk=35 |
+| Android Gradle Plugin | 8.5.2 `v2.2新增` | Android 构建插件 |
+| Gradle | 8.9 `v2.2新增` | 构建工具 |
 | Docker | 20.10+ | 容器化部署 |
 | Docker Compose | 2.0+ | 多服务编排 |
 
@@ -240,7 +245,62 @@ go run cmd/api-gateway/main.go
 # 服务运行在 http://localhost:8080
 ```
 
-### 5. 学生端 Flutter App (`student-app/StarIsle-student/`)
+### 5. 学生端 Kotlin App (`student-app/StarIsle-student-android/`) `v2.2新增`
+
+```bash
+cd student-app/StarIsle-student-android
+
+# 方式 A：Android Studio 打开项目，Sync Gradle，点击 Run
+# 方式 B：命令行（需 JDK 17 + Android SDK 35 + ANDROID_HOME 已配置）
+
+# Windows
+.\gradlew.bat assembleDebug
+# macOS / Linux
+./gradlew assembleDebug
+
+# 输出 APK：app/build/outputs/apk/debug/app-debug.apk
+
+# 安装到已连接设备/模拟器
+.\gradlew.bat installDebug
+# 或
+adb install app/build/outputs/apk/debug/app-debug.apk
+
+# 运行单元测试
+.\gradlew.bat test
+
+# Lint 检查
+.\gradlew.bat lint
+```
+
+### 6. 教师端 Kotlin App (`teacher-app/StarIsle-teacher-android/`) `v2.2新增`
+
+```bash
+cd teacher-app/StarIsle-teacher-android
+
+# 构建与安装（Windows）
+.\gradlew.bat assembleDebug
+.\gradlew.bat installDebug
+
+# macOS / Linux
+./gradlew assembleDebug
+./gradlew installDebug
+```
+
+### 7. 家长端 Kotlin App (`parent-app-android/`) `v2.2新增`
+
+```bash
+cd parent-app-android
+
+# 构建与安装（Windows）
+.\gradlew.bat assembleDebug
+.\gradlew.bat installDebug
+
+# macOS / Linux
+./gradlew assembleDebug
+./gradlew installDebug
+```
+
+### 8. 学生端 Flutter App (`student-app/StarIsle-student/`) `参考实现 v2.2`
 
 ```bash
 cd student-app/StarIsle-student
@@ -258,7 +318,7 @@ flutter build apk
 flutter build ios
 ```
 
-### 6. 教师端 Flutter App (`teacher-app/StarIsle-teacher/`)
+### 9. 教师端 Flutter App (`teacher-app/StarIsle-teacher/`) `参考实现 v2.2`
 
 ```bash
 cd teacher-app/StarIsle-teacher
@@ -267,7 +327,7 @@ flutter pub get
 flutter run
 ```
 
-### 7. API 文档桌面应用 (`api-docs/`)
+### 10. API 文档桌面应用 (`api-docs/`)
 
 ```bash
 cd api-docs

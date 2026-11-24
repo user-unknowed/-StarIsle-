@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.starisle.config.AppConfig;
 import com.starisle.utils.EncryptionUtil;
 import lombok.Data;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.net.URI;
@@ -19,17 +21,22 @@ import java.util.Map;
 
 /**
  * 聊天服务
- * 将用户消息转发到 ai-engine（本地 SFT 模型）生成回复，
- * 并把回复内容、风险等级、情绪标签与耗时回传给客户端。
+ * 将用户消息转发到 ai-engine 的 {@code POST /chat}（本地 SFT 模型 + RAG），
+ * 并把模型回复、风险等级、情绪标签与耗时封装为统一结果。
  */
 @Service
 public class ChatService {
+
+    private static final Logger log = LoggerFactory.getLogger(ChatService.class);
+
+    /** ai-engine 不可用或返回空内容时的兜底文案 */
+    private static final String FALLBACK_REPLY = "小星好像有点迷糊了，请稍后再试试～";
 
     /** 系统提示生成器，保留用于引擎不可用时的话术扩展 */
     private final StarIsleSystemPrompt systemPrompt;
     /** 加密工具，用于敏感数据加密 */
     private final EncryptionUtil encryptionUtil;
-    /** 应用配置，提供 ai-engine 接入地址 */
+    /** 应用配置，提供 ai-engine 接入地址与内部令牌 */
     private final AppConfig appConfig;
     /** JSON 序列化工具 */
     private final ObjectMapper objectMapper;
@@ -60,8 +67,8 @@ public class ChatService {
 
     /**
      * 生成聊天响应
-     * 调用 ai-engine 的 /chat 端点（本地 SFT 模型 + RAG），
-     * 失败时返回兜底文案，保证客户端始终有可展示内容。
+     * 调用 ai-engine 的 /chat 端点（本地 SFT 模型 + RAG），历史上下文最多取最近 10 条；
+     * System Prompt 由 ai-engine 统一生成，失败时返回兜底文案。
      *
      * @param userId      用户标识
      * @param message     用户消息
@@ -74,16 +81,34 @@ public class ChatService {
                                           Map<String, Object> userProfile) {
         long startTime = System.currentTimeMillis();
 
+        // 只转发最近 10 条对话上下文，剔除 system 消息
+        List<Map<String, Object>> chatContext = new ArrayList<>();
+        if (context != null && !context.isEmpty()) {
+            int startIndex = Math.max(0, context.size() - 10);
+            for (Map<String, Object> item : context.subList(startIndex, context.size())) {
+                Object role = item.get("role");
+                if (role != null && "system".equals(role.toString())) {
+                    continue;
+                }
+                chatContext.add(item);
+            }
+        }
+
         try {
-            ChatResponse response = callAiEngine(userId, message, context, userProfile);
+            ChatResponse response = callAiEngine(userId, message, chatContext, userProfile);
             // 引擎返回空文本时使用兜底文案，避免客户端展示空白
             if (response.getContent() == null || response.getContent().isBlank()) {
-                response.setContent("小星好像有点迷糊了，请稍后再试试～");
+                response.setContent(FALLBACK_REPLY);
             }
             return response;
         } catch (Exception e) {
+            // 不静默吞掉：记录原因后再走兜底文案
+            log.warn("调用 ai-engine 失败，使用兜底回复: {}", e.toString());
             long responseTimeMs = System.currentTimeMillis() - startTime;
-            return new ChatResponse("小星好像有点迷糊了，请稍后再试试～", responseTimeMs, "unavailable");
+            ChatResponse response = new ChatResponse(FALLBACK_REPLY, responseTimeMs, "unavailable");
+            response.setRiskLevel("green");
+            response.setEmotionTags(List.of());
+            return response;
         }
     }
 
@@ -108,9 +133,15 @@ public class ChatService {
         payload.put("user_profile", userProfile != null ? userProfile : Map.of());
 
         String url = trimTrailingSlash(appConfig.getAiService().getUrl()) + "/chat";
-        HttpRequest request = HttpRequest.newBuilder(URI.create(url))
+        HttpRequest.Builder requestBuilder = HttpRequest.newBuilder(URI.create(url))
                 .timeout(Duration.ofSeconds(180))
-                .header("Content-Type", "application/json; charset=utf-8")
+                .header("Content-Type", "application/json; charset=utf-8");
+        // 携带内部令牌，ai-engine 只接受来自网关的调用
+        String internalToken = appConfig.getAiService().getToken();
+        if (internalToken != null && !internalToken.isBlank()) {
+            requestBuilder.header("X-Internal-Token", internalToken);
+        }
+        HttpRequest request = requestBuilder
                 .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload)))
                 .build();
 
@@ -150,7 +181,7 @@ public class ChatService {
 
     /**
      * 聊天响应结果
-     * 封装响应内容、风险等级、情绪标签、响应时间与使用模型。
+     * 封装响应内容、响应时间、风险等级、情绪标签与使用模型。
      */
     @Data
     public static class ChatResponse {

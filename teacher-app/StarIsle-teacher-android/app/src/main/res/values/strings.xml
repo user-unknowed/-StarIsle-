@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">星屿-教师端</string>
+    <string name="tab_workbench">工作台</string>
+    <string name="tab_students">学生</string>
+    <string name="tab_chat">对话</string>
+    <string name="tab_profile">我的</string>
+    <string name="tab_ai_tools">AI工具</string>
+</resources>

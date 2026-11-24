@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 星屿品牌色 -->
+    <color name="star_night_blue">#FF2B3A67</color>
+    <color name="star_night_blue_light">#FF4A6FA5</color>
+    <color name="warm_orange">#FFFF9A56</color>
+    <color name="warm_orange_light">#FFFFC93C</color>
+    <color name="light_gold">#FFFFE5A0</color>
+    <color name="deep_blue_purple">#FF1A1B3A</color>
+    <color name="pale_pink">#FFFFB5B5</color>
+
+    <!-- 风险等级色 -->
+    <color name="risk_green">#FF66BB6A</color>
+    <color name="risk_yellow">#FFFFCA28</color>
+    <color name="risk_orange">#FFFF9800</color>
+    <color name="risk_red">#FFEF5350</color>
+
+    <!-- 状态语义色 -->
+    <color name="success_color">#FF4CAF50</color>
+    <color name="warning_color">#FFFF9800</color>
+    <color name="error_color">#FFF44336</color>
+    <color name="info_color">#FF2196F3</color>
+
+    <!-- 通用色 -->
+    <color name="white">#FFFFFFFF</color>
+    <color name="black">#FF000000</color>
+    <color name="scaffold_bg_light">#FFF5F7FA</color>
+    <color name="scaffold_bg_dark">#FF1A1B3A</color>
+    <color name="text_secondary_light">#FF666666</color>
+    <color name="text_secondary_dark">#FFAAAAAA</color>
+    <color name="nav_unselected_light">#FF999999</color>
+    <color name="nav_unselected_dark">#FF666666</color>
+
+    <!-- 告警卡片背景 -->
+    <color name="alert_red_bg">#FFFFEBEE</color>
+    <color name="alert_orange_bg">#FFFFF8E1</color>
+
+    <!-- 通知类型色 -->
+    <color name="notification_alert">#FFEF5350</color>
+    <color name="notification_report">#FF4A6FA5</color>
+    <color name="notification_auth">#FFFF9A56</color>
+    <color name="notification_system">#FF999999</color>
+</resources>

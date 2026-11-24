@@ -1,0 +1,124 @@
+{
+  "generated_at": "2026-11-20 10:17:01",
+  "duration_s": 17.7,
+  "environment": {
+    "status": "healthy",
+    "service": "ai-engine",
+    "version": "1.0.0",
+    "model_mode": "local",
+    "device": "cpu",
+    "model": "f:/B_proj/Big_proj/-StarIsle-/server-services/ai-engine/models/sft_xiaoxing_v1/final_model"
+  },
+  "mvp_summary": {},
+  "records": [
+    {
+      "name": "health_contract",
+      "category": "contract",
+      "status": "pass",
+      "metrics": {
+        "model_mode": "local",
+        "device": "cpu"
+      },
+      "detail": "f:/B_proj/Big_proj/-StarIsle-/server-services/ai-engine/models/sft_xiaoxing_v1/final_model",
+      "timestamp": "2026-11-20 10:16:44"
+    },
+    {
+      "name": "chat_contract",
+      "category": "contract",
+      "status": "pass",
+      "metrics": {
+        "client_ms": 17290,
+        "server_ms": 17006
+      },
+      "detail": "model=f:/B_proj/Big_proj/-StarIsle-/server-services/ai-engine/models/sft_xiaoxing_v1/final_model, risk=green",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "chat_joke_shortcut",
+      "category": "contract",
+      "status": "pass",
+      "metrics": {
+        "client_ms": 53,
+        "server_ms": 0
+      },
+      "detail": "数学笑话-尺子",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "chat_overlong_rejected",
+      "category": "contract",
+      "status": "pass",
+      "metrics": {
+        "status": 422
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "risk_check_contract",
+      "category": "contract",
+      "status": "pass",
+      "metrics": {
+        "risk_level": "yellow",
+        "confidence": 0.95
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "emotion_analyze_contract",
+      "category": "contract",
+      "status": "pass",
+      "metrics": {
+        "labels": 2,
+        "confidence": 0.92
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "knowledge_stats_fallback",
+      "category": "resilience",
+      "status": "pass",
+      "metrics": {
+        "mode": "fallback_memory",
+        "total_documents": 96
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "chat_missing_field_422",
+      "category": "resilience",
+      "status": "pass",
+      "metrics": {
+        "status": 422
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "unknown_route_404",
+      "category": "resilience",
+      "status": "pass",
+      "metrics": {
+        "status": 404
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    },
+    {
+      "name": "concurrent_risk_checks",
+      "category": "resilience",
+      "status": "pass",
+      "metrics": {
+        "requests": 10,
+        "levels": [
+          "red"
+        ]
+      },
+      "detail": "",
+      "timestamp": "2026-11-20 10:17:01"
+    }
+  ]
+}

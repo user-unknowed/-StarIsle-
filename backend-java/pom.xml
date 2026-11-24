@@ -110,7 +110,7 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- SQLite 驱动：MemoryStorageService 使用的本地学生数据存储 -->
+        <!-- SQLite 驱动：MemoryStorageService 使用 jdbc:sqlite 存储本地记忆 -->
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -132,6 +132,7 @@
                     <source>${java.version}</source>
                     <target>${java.version}</target>
                     <encoding>UTF-8</encoding>
+                    <!-- JDK 23+ 默认不启用注解处理，必须显式声明 Lombok 处理器，否则 getter/builder 不生成 -->
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

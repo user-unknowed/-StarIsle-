@@ -56,3 +56,13 @@ local.properties
 pylibs/
 .trae/
 .preferences
+
+# 本地大文件与运行时产物（不入库）
+.tmp-*/
+.starisle-train/
+pylibs-ai310/
+releases/
+backend-java/data/
+server-services/ai-engine/data/private/
+server-services/ai-engine/models/
+.trae-html-share-packages/

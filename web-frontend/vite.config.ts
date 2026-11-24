@@ -4,6 +4,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
   base: './',
+  server: {
+    allowedHosts: ['.trycloudflare.com'],
+  },
   build: {
     sourcemap: 'hidden',
     chunkSizeWarningLimit: 1000,

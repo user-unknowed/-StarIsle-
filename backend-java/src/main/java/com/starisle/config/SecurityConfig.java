@@ -62,6 +62,7 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // 健康检查与公开接口放行
                 .requestMatchers("/health").permitAll()
+                .requestMatchers("/api/v1/system/**").permitAll()
                 .requestMatchers("/api/v1/users/register").permitAll()
                 .requestMatchers("/api/v1/users/login").permitAll()
                 .requestMatchers("/api/v1/parents/register").permitAll()

@@ -43,6 +43,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -50,6 +51,10 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.platform.LocalContext
+import com.starisle.student.data.api.ConnectionResult
+import com.starisle.student.data.api.ServerConfig
+import kotlinx.coroutines.launch
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -65,6 +70,9 @@ fun ProfileScreen(
     val serverUrl by viewModel.serverUrl.collectAsStateWithLifecycle()
     var showServerDialog by remember { mutableStateOf(false) }
     var draftUrl by remember { mutableStateOf(serverUrl) }
+    var testing by remember { mutableStateOf(false) }
+    var connectionResult by remember { mutableStateOf<ConnectionResult?>(null) }
+    val scope = rememberCoroutineScope()
 
     Scaffold(
         topBar = {
@@ -211,20 +219,52 @@ fun ProfileScreen(
                         Spacer(Modifier.height(8.dp))
                         OutlinedTextField(
                             value = draftUrl,
-                            onValueChange = { draftUrl = it },
+                            onValueChange = {
+                                draftUrl = it
+                                connectionResult = null
+                            },
                             singleLine = true,
                             label = { Text("如 http://10.0.2.2:8000/") },
                         )
+                        Spacer(Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            TextButton(
+                                enabled = !testing,
+                                onClick = {
+                                    testing = true
+                                    connectionResult = null
+                                    scope.launch {
+                                        connectionResult = ServerConfig.testConnection(draftUrl)
+                                        testing = false
+                                    }
+                                },
+                            ) {
+                                Text(if (testing) "测试中…" else "测试连通")
+                            }
+                            connectionResult?.let { result ->
+                                val (label, color) = when (result) {
+                                    is ConnectionResult.Connected -> "🟢 可达 ${result.elapsedMs}ms" to Color(0xFF2E7D32)
+                                    is ConnectionResult.HttpError -> "🟡 HTTP ${result.code}" to Color(0xFFF57C00)
+                                    is ConnectionResult.Unreachable -> "🔴 不可达 ${result.detail.take(20)}" to Color(0xFFC62828)
+                                }
+                                Text(label, color = color, fontSize = 12.sp)
+                            }
+                        }
                     }
                 },
                 confirmButton = {
                     TextButton(onClick = {
                         viewModel.updateServerUrl(draftUrl)
                         showServerDialog = false
+                        connectionResult = null
                     }) { Text("保存") }
                 },
                 dismissButton = {
-                    TextButton(onClick = { showServerDialog = false }) { Text("取消") }
+                    TextButton(onClick = { showServerDialog = false; connectionResult = null }) { Text("取消") }
                 },
             )
         }

@@ -2,6 +2,11 @@ package com.starisle.student.data.api
 
 import android.content.Context
 import com.starisle.student.BuildConfig
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.util.concurrent.TimeUnit
 
 /**
  * AI 服务地址配置（三端统一：默认地址由构建参数注入，运行时可改）。
@@ -11,6 +16,11 @@ import com.starisle.student.BuildConfig
  * 因此默认使用模拟器映射地址，并允许在应用内覆盖（见 [overrideBaseUrl]）。
  */
 object ServerConfig {
+
+    private val client = OkHttpClient.Builder()
+        .connectTimeout(5, TimeUnit.SECONDS)
+        .readTimeout(10, TimeUnit.SECONDS)
+        .build()
 
     /** 构建期默认地址（默认 http://10.0.2.2:8000/，可用 -PstarIsleAiBaseUrl 覆盖） */
     val DEFAULT_AI_BASE_URL: String = BuildConfig.DEFAULT_AI_BASE_URL
@@ -33,6 +43,38 @@ object ServerConfig {
             .apply()
     }
 
+    /**
+     * 测试指定 AI 服务地址是否可达
+     *
+     * 用 OkHttp GET {url}/health，测量耗时；200 → CONNECTED（毫秒），
+     * 其它状态码 → HTTP_{code}，网络异常 → 网络错误。
+     */
+    suspend fun testConnection(url: String): ConnectionResult =
+        withContext(Dispatchers.IO) {
+            val base = url.trim().ensureTrailingSlash()
+            val healthUrl = base + "health"
+            val start = System.currentTimeMillis()
+            try {
+                val request = Request.Builder().url(healthUrl).get().build()
+                client.newCall(request).execute().use { response ->
+                    val elapsed = System.currentTimeMillis() - start
+                    if (response.isSuccessful) {
+                        ConnectionResult.Connected(elapsed)
+                    } else {
+                        ConnectionResult.HttpError(response.code, elapsed)
+                    }
+                }
+            } catch (e: Exception) {
+                ConnectionResult.Unreachable(e.message ?: "网络不可达")
+            }
+        }
+
     /** Retrofit 要求 baseUrl 以 '/' 结尾 */
     private fun String.ensureTrailingSlash(): String = if (endsWith("/")) this else "$this/"
+}
+
+sealed class ConnectionResult {
+    data class Connected(val elapsedMs: Long) : ConnectionResult()
+    data class HttpError(val code: Int, val elapsedMs: Long) : ConnectionResult()
+    data class Unreachable(val detail: String) : ConnectionResult()
 }

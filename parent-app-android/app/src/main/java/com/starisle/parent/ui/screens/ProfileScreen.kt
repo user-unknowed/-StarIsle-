@@ -46,6 +46,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,6 +60,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.starisle.parent.data.api.ConnectionResult
 import com.starisle.parent.data.api.ServerConfig
 import com.starisle.parent.theme.AlertRed500
 import com.starisle.parent.theme.Indigo500
@@ -72,6 +74,7 @@ import com.starisle.parent.ui.viewmodel.AuthViewModel
 import com.starisle.parent.ui.viewmodel.ParentViewModel
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 /**
  * 家长「我的」页面（对应 ParentProfile.tsx 双源）。
@@ -103,6 +106,9 @@ fun ProfileScreen(
     var serverUrl by remember { mutableStateOf(ServerConfig.apiBaseUrl(context)) }
     var draftServerUrl by remember { mutableStateOf(serverUrl) }
     var showServerDialog by remember { mutableStateOf(false) }
+    var testing by remember { mutableStateOf(false) }
+    var connectionResult by remember { mutableStateOf<ConnectionResult?>(null) }
+    val scope = rememberCoroutineScope()
 
     val displayName = state.parentProfile?.nickname ?: auth.user?.nickname ?: "家长"
     val phone = state.parentProfile?.phone ?: auth.user?.phone ?: "未绑定"
@@ -338,10 +344,41 @@ fun ProfileScreen(
                     Spacer(Modifier.height(8.dp))
                     androidx.compose.material3.OutlinedTextField(
                         value = draftServerUrl,
-                        onValueChange = { draftServerUrl = it },
+                        onValueChange = {
+                            draftServerUrl = it
+                            connectionResult = null
+                        },
                         singleLine = true,
                         label = { Text("如 http://192.168.31.122:8081/api/") }
                     )
+                    Spacer(Modifier.height(8.dp))
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        TextButton(
+                            enabled = !testing,
+                            onClick = {
+                                testing = true
+                                connectionResult = null
+                                scope.launch {
+                                    connectionResult = ServerConfig.testApiConnection(draftServerUrl)
+                                    testing = false
+                                }
+                            },
+                        ) {
+                            Text(if (testing) "测试中…" else "测试连通")
+                        }
+                        connectionResult?.let { result ->
+                            val (label, color) = when (result) {
+                                is ConnectionResult.Connected -> "🟢 可达 ${result.elapsedMs}ms" to SafeGreen500
+                                is ConnectionResult.HttpError -> "🟡 HTTP ${result.code}" to Warm500
+                                is ConnectionResult.Unreachable -> "🔴 不可达 ${result.detail.take(20)}" to AlertRed500
+                            }
+                            Text(label, color = color, fontSize = 12.sp)
+                        }
+                    }
                 }
             },
             confirmButton = {
@@ -349,10 +386,11 @@ fun ProfileScreen(
                     ServerConfig.overrideApiBaseUrl(context, draftServerUrl)
                     serverUrl = ServerConfig.apiBaseUrl(context)
                     showServerDialog = false
+                    connectionResult = null
                 }) { Text("保存") }
             },
             dismissButton = {
-                TextButton(onClick = { showServerDialog = false }) { Text("取消") }
+                TextButton(onClick = { showServerDialog = false; connectionResult = null }) { Text("取消") }
             }
         )
     }

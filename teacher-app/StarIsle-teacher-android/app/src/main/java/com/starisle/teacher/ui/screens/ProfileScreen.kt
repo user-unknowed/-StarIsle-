@@ -40,6 +40,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +52,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import com.starisle.teacher.data.api.ConnectionResult
 import com.starisle.teacher.data.api.ServerConfig
 import com.starisle.teacher.data.models.AuthorizationRequest
 import com.starisle.teacher.data.models.KnowledgeBaseItem
@@ -68,6 +70,7 @@ import com.starisle.teacher.ui.components.TextBadge
 import com.starisle.teacher.ui.viewmodel.TeacherViewModel
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import kotlinx.coroutines.launch
 
 /**
  * 我的页面。
@@ -97,6 +100,9 @@ fun ProfileScreen(
     var serverUrl by remember { mutableStateOf(ServerConfig.apiBaseUrl(context)) }
     var draftServerUrl by remember { mutableStateOf(serverUrl) }
     var showServerDialog by remember { mutableStateOf(false) }
+    var testing by remember { mutableStateOf(false) }
+    var connectionResult by remember { mutableStateOf<ConnectionResult?>(null) }
+    val scope = rememberCoroutineScope()
 
     selectedKnowledge?.let { item ->
         KnowledgeDetailScreen(item = item, onBack = { selectedKnowledge = null })
@@ -217,10 +223,41 @@ fun ProfileScreen(
                             Spacer(Modifier.height(8.dp))
                             OutlinedTextField(
                                 value = draftServerUrl,
-                                onValueChange = { draftServerUrl = it },
+                                onValueChange = {
+                                    draftServerUrl = it
+                                    connectionResult = null
+                                },
                                 singleLine = true,
                                 label = { Text("如 http://192.168.31.122:8081/api/") },
                             )
+                            Spacer(Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                TextButton(
+                                    enabled = !testing,
+                                    onClick = {
+                                        testing = true
+                                        connectionResult = null
+                                        scope.launch {
+                                            connectionResult = ServerConfig.testApiConnection(draftServerUrl)
+                                            testing = false
+                                        }
+                                    },
+                                ) {
+                                    Text(if (testing) "测试中…" else "测试连通")
+                                }
+                                connectionResult?.let { result ->
+                                    val (label, color) = when (result) {
+                                        is ConnectionResult.Connected -> "🟢 可达 ${result.elapsedMs}ms" to RiskGreen
+                                        is ConnectionResult.HttpError -> "🟡 HTTP ${result.code}" to RiskOrange
+                                        is ConnectionResult.Unreachable -> "🔴 不可达 ${result.detail.take(20)}" to RiskRed
+                                    }
+                                    Text(label, color = color, fontSize = 12.sp)
+                                }
+                            }
                         }
                     },
                     confirmButton = {
@@ -228,10 +265,11 @@ fun ProfileScreen(
                             ServerConfig.overrideApiBaseUrl(context, draftServerUrl)
                             serverUrl = ServerConfig.apiBaseUrl(context)
                             showServerDialog = false
+                            connectionResult = null
                         }) { Text("保存") }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showServerDialog = false }) { Text("取消") }
+                        TextButton(onClick = { showServerDialog = false; connectionResult = null }) { Text("取消") }
                     },
                 )
             }

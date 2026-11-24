@@ -21,8 +21,8 @@ android {
         applicationId = "com.starisle.student"
         minSdk = 24
         targetSdk = 35
-        versionCode = 3
-        versionName = "1.1.0"
+        versionCode = 5
+        versionName = "1.1.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables.useSupportLibrary = true
@@ -37,6 +37,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            buildConfigField("String", "EXPECTED_SIGNATURE_SHA256", "\"c9a4eac978679d621fe9ac9a0265d3cb90695c71d4fa6a021a8e78273f43bc7a\"")
         }
     }
 
